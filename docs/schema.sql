@@ -86,8 +86,6 @@ CREATE TABLE affiliations (
     CONSTRAINT fk_affiliations_organization FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE
 );
 
--- IGNORE STUFF BELOW, NEEDS REVIEW
-
 -- CLASSES
 CREATE TABLE classes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -105,10 +103,12 @@ CREATE TABLE classes (
 CREATE INDEX idx_classes_organization_id ON classes (organization_id);
 
 -- USER ↔ CLASS (JOIN TABLE)
+-- Soft delete preserves enrollment history
 CREATE TABLE user_classes (
     user_id UUID NOT NULL,
     class_id UUID NOT NULL,
     enrolled_at TIMESTAMP NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMP,
     PRIMARY KEY (user_id, class_id),
     CONSTRAINT fk_user_classes_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_classes_class FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE
@@ -125,6 +125,7 @@ CREATE TABLE models (
 );
 
 -- CHALLENGES
+-- If class_id is NULL, the challenge is standalone and accessible by any organization
 CREATE TABLE challenges (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     class_id UUID,
@@ -144,8 +145,8 @@ CREATE TABLE challenges (
 CREATE INDEX idx_challenges_class_id ON challenges (class_id);
 CREATE INDEX idx_challenges_model_id ON challenges (model_id);
 
--- SESSIONS
-CREATE TABLE sessions (
+-- WORK SESSIONS (user working on a challenge)
+CREATE TABLE work_sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
     class_id UUID,
@@ -153,13 +154,13 @@ CREATE TABLE sessions (
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     last_message_at TIMESTAMP,
     ended_at TIMESTAMP,
-    CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_sessions_class FOREIGN KEY (class_id) REFERENCES classes(id),
-    CONSTRAINT fk_sessions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id)
+    CONSTRAINT fk_work_sessions_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_work_sessions_class FOREIGN KEY (class_id) REFERENCES classes(id),
+    CONSTRAINT fk_work_sessions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id)
 );
-CREATE INDEX idx_sessions_user_id ON sessions (user_id);
-CREATE INDEX idx_sessions_class_id ON sessions (class_id);
-CREATE INDEX idx_sessions_challenge_id ON sessions (challenge_id);
+CREATE INDEX idx_work_sessions_user_id ON work_sessions (user_id);
+CREATE INDEX idx_work_sessions_class_id ON work_sessions (class_id);
+CREATE INDEX idx_work_sessions_challenge_id ON work_sessions (challenge_id);
 
 -- LLM INTERACTIONS
 CREATE TABLE llm_interactions (
@@ -173,7 +174,7 @@ CREATE TABLE llm_interactions (
     stdin TEXT,
     stdout TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_interactions_session FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_interactions_work_session FOREIGN KEY (session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
     CONSTRAINT fk_interactions_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_interactions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id)
 );
@@ -204,7 +205,7 @@ CREATE TABLE challenge_solutions_history (
     challenge_id UUID NOT NULL,
     solution TEXT NOT NULL,
     saved_at TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_solutions_history_session FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_solutions_history_work_session FOREIGN KEY (session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
     CONSTRAINT fk_solutions_history_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_solutions_history_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id)
 );
