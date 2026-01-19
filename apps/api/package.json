@@ -1,0 +1,41 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e .env.development -e .env.local -- tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "kubb": "dotenv -e .env.development -- kubb generate",
+    "kubb:clean": "tsx cleanKubb.ts",
+    "lint": "eslint . --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.1",
+    "@fastify/cors": "^10.0.1",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.2",
+    "@repo/infra": "*",
+    "fastify": "^5.2.1",
+    "fastify-type-provider-zod": "^4.0.2",
+    "js-yaml": "^4.1.0",
+    "swagger-themes": "^1.4.3",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@kubb/cli": "^3.7.2",
+    "@kubb/core": "^3.7.2",
+    "@kubb/plugin-oas": "^3.7.2",
+    "@kubb/plugin-react-query": "^3.7.2",
+    "@kubb/plugin-ts": "^3.7.2",
+    "@kubb/plugin-zod": "^3.7.2",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.17.17",
+    "dotenv-cli": "^11.0.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0"
+  }
+}
