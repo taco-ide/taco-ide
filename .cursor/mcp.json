@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "PostgreSQL": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgres://local_user:fyxmub-nyDby0-vurzob@localhost:5490/local_db"
+      ],
+      "env": {}
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"],
+      "env": {
+        "DEFAULT_MINIMUM_TOKENS": "10000"
+      }
+    },
+    "Better Auth": {
+      "url": "https://mcp.chonkie.ai/better-auth/better-auth-builder/mcp",
+      "headers": {}
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    },
+    "trigger": {
+      "command": "npx",
+      "args": ["trigger.dev@latest", "mcp", "--dev-only"]
+    }
+  }
+}
