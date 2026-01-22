@@ -51,7 +51,7 @@
 
 ## Requisitos Técnicos
 
-- [ ] Configurar controle de acesso com CASL (implementação padrão, sem plugin Prisma).
-- [ ] Definir/Refinar schema do Prisma (`infra/prisma/schema.prisma`) para todas as entidades (incluindo `ChatThread`, `MensagemChat`, `Tag`, e relacionamento N:N Problema-Tag).
-- [ ] Implementar Migrations do Prisma.
+- [ ] Configurar controle de acesso com CASL.
+- [ ] Definir/Refinar schema do Drizzle (`packages/infra/src/db/schema/`) para todas as entidades (incluindo `ChatThread`, `MensagemChat`, `Tag`, e relacionamento N:N Problema-Tag).
+- [ ] Implementar Migrations do Drizzle.
 - [ ] Implementar Seed do banco de dados (se necessário).

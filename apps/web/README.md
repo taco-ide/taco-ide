@@ -45,85 +45,105 @@ cd taco
 
 ```bash
 npm install
-# or
-yarn install
 ```
 
-3. Choose your development mode:
-
-#### Quick Start (All-in-one)
+3. Start the infrastructure (database):
 
 ```bash
+cd packages/infra
+npm run docker:up
+```
+
+4. Run database migrations:
+
+```bash
+cd packages/infra
+npm run db:push
+# or for production migrations
+npm run db:migrate
+```
+
+5. (Optional) Seed the database:
+
+```bash
+cd packages/infra
+npm run db:seed
+```
+
+6. Start the API backend:
+
+```bash
+cd apps/api
 npm run dev
-# or
-yarn dev
 ```
 
-This command will automatically set up everything, but might take longer and could make debugging harder. It will:
-
-- Start the required Docker services
-- Run database migrations
-- Generate Prisma client
-- Seed the database
-- Start the Next.js development server
-
-#### Step-by-Step Start (Recommended for first run)
+7. Start the frontend (in another terminal):
 
 ```bash
-# First time setup
-npm run services:up        # or: yarn services:up
-npm run prisma:migrate:deploy:dev # or: yarn prisma:migrate:dev
-npm run prisma:seed:dev   # or: yarn prisma:seed:dev
-
-# For subsequent development
-npm run dev:next          # or: yarn dev:next
+cd apps/web
+npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+8. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Development Flow with Prisma
+### Development Flow with Drizzle
 
-When you need to make changes to the database schema, follow these steps:
+When you need to make changes to the database schema:
 
-1. Modify the schema in `infra/prisma/schema.prisma`
-2. Generate a new migration and update the client:
+1. Modify the schema in `packages/infra/src/db/schema/`
+2. Generate and apply migrations:
 
 ```bash
-npm run prisma:migrate:dev
-# or
-yarn prisma:migrate:dev
+cd packages/infra
+npm run db:generate  # Generate migration
+npm run db:migrate   # Apply migration
+# or for development
+npm run db:push      # Push schema directly (no migration)
 ```
 
-3. To view and manage data using Prisma Studio:
+3. To view and manage data using Drizzle Studio:
 
 ```bash
-npm run prisma:studio
-# or
-yarn prisma:studio
+cd packages/infra
+npm run db:studio
 ```
 
-4. When you're done developing, you can stop the services:
+4. After updating API routes, regenerate code for the frontend:
 
 ```bash
-npm run services:stop  # Stops containers but preserves data
-# or
-yarn services:stop    # Stops containers but preserves data
-
-# To remove containers and delete data:
-npm run services:down  # Stops and removes containers (will delete database data)
-# or
-yarn services:down    # Stops and removes containers (will delete database data)
+cd apps/api
+npm run kubb
 ```
+
+### Architecture
+
+This is a **monorepo** with the following structure:
+
+- `apps/api` - Fastify backend with typed routes
+- `apps/web` - Next.js frontend
+- `packages/infra` - Shared infrastructure (Database, Auth, Docker)
+- `packages/types` - Shared TypeScript types
 
 ### Technologies
 
-- Next.js 14
+**Frontend:**
+- Next.js 16
 - TypeScript
 - Tailwind CSS
-- Prisma
+- React Query
+- Better Auth
+
+**Backend:**
+- Fastify
+- Drizzle ORM
 - PostgreSQL
+- Zod validation
+- Better Auth
+
+**Infrastructure:**
 - Docker
-- Python (Backend Services)
+- Turbo (Monorepo)
+- Resend (Emails)
 
 ---
 
@@ -170,85 +190,105 @@ cd taco
 
 ```bash
 npm install
-# ou
-yarn install
 ```
 
-3. Escolha seu modo de desenvolvimento:
-
-#### Início Rápido (Tudo-em-um)
+3. Inicie a infraestrutura (banco de dados):
 
 ```bash
+cd packages/infra
+npm run docker:up
+```
+
+4. Execute as migrações do banco:
+
+```bash
+cd packages/infra
+npm run db:push
+# ou para migrações de produção
+npm run db:migrate
+```
+
+5. (Opcional) Popule o banco de dados:
+
+```bash
+cd packages/infra
+npm run db:seed
+```
+
+6. Inicie o backend da API:
+
+```bash
+cd apps/api
 npm run dev
-# ou
-yarn dev
 ```
 
-Este comando configurará tudo automaticamente, mas pode demorar mais e dificultar a depuração. Ele irá:
-
-- Iniciar os serviços Docker necessários
-- Executar as migrações do banco de dados
-- Gerar o cliente Prisma
-- Popular o banco de dados
-- Iniciar o servidor de desenvolvimento Next.js
-
-#### Início Passo a Passo (Recomendado para primeira execução)
+7. Inicie o frontend (em outro terminal):
 
 ```bash
-# Configuração inicial
-npm run services:up        # ou: yarn services:up
-npm run prisma:migrate:deploy:dev # ou: yarn prisma:migrate:dev
-npm run prisma:seed:dev   # ou: yarn prisma:seed:dev
-
-# Para desenvolvimento subsequente
-npm run dev:next          # ou: yarn dev:next
+cd apps/web
+npm run dev
 ```
 
-4. Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
+8. Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
 
-### Fluxo de Desenvolvimento com Prisma
+### Fluxo de Desenvolvimento com Drizzle
 
-Quando precisar fazer alterações no schema do banco de dados, siga estes passos:
+Quando precisar fazer alterações no schema do banco de dados:
 
-1. Modifique o schema em `infra/prisma/schema.prisma`
-2. Gere uma nova migração e atualize o cliente:
+1. Modifique o schema em `packages/infra/src/db/schema/`
+2. Gere e aplique as migrações:
 
 ```bash
-npm run prisma:migrate:dev
-# ou
-yarn prisma:migrate:dev
+cd packages/infra
+npm run db:generate  # Gerar migração
+npm run db:migrate   # Aplicar migração
+# ou para desenvolvimento
+npm run db:push      # Push direto do schema (sem migração)
 ```
 
-3. Para visualizar e gerenciar os dados usando o Prisma Studio:
+3. Para visualizar e gerenciar os dados usando Drizzle Studio:
 
 ```bash
-npm run prisma:studio
-# ou
-yarn prisma:studio
+cd packages/infra
+npm run db:studio
 ```
 
-4. Quando terminar o desenvolvimento, você pode parar os serviços:
+4. Após atualizar rotas da API, regenere o código para o frontend:
 
 ```bash
-npm run services:stop  # Para os containers mas preserva os dados
-# ou
-yarn services:stop    # Para os containers mas preserva os dados
-
-# Para remover containers e deletar dados:
-npm run services:down  # Para e remove os containers (irá deletar os dados do banco)
-# ou
-yarn services:down    # Para e remove os containers (irá deletar os dados do banco)
+cd apps/api
+npm run kubb
 ```
+
+### Arquitetura
+
+Este é um **monorepo** com a seguinte estrutura:
+
+- `apps/api` - Backend Fastify com rotas tipadas
+- `apps/web` - Frontend Next.js
+- `packages/infra` - Infraestrutura compartilhada (Database, Auth, Docker)
+- `packages/types` - Tipos TypeScript compartilhados
 
 ### Tecnologias
 
-- Next.js 14
+**Frontend:**
+- Next.js 16
 - TypeScript
 - Tailwind CSS
-- Prisma
+- React Query
+- Better Auth
+
+**Backend:**
+- Fastify
+- Drizzle ORM
 - PostgreSQL
+- Validação Zod
+- Better Auth
+
+**Infraestrutura:**
 - Docker
-- Python (Serviços Backend)
+- Turbo (Monorepo)
+- Resend (Emails)
 
 ---
 

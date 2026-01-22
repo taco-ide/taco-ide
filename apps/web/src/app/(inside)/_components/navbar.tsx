@@ -43,9 +43,6 @@ const Navbar = () => {
               className="transform hover:scale-110 transition-transform duration-300"
             />
           </div>
-          {/* <span className="text-2xl font-bold bg-gradient-to-r from-[#FFB800] to-[#FFA000] text-transparent bg-clip-text">
-            TACO
-          </span> */}
         </div>
 
         <div className="flex items-center gap-4">
