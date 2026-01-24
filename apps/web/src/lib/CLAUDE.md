@@ -1,136 +1,152 @@
 # src/lib/ Directory Guide
 
-This directory contains utility functions, authentication logic, and shared libraries.
+This directory contains utility functions and shared libraries.
 
 ## Directory Structure
 
 ```
 lib/
-├── auth/             # Authentication-related modules
-│   ├── config.ts     # Auth configuration constants
-│   ├── jwt.ts        # JWT token creation and verification
-│   ├── middleware.ts # Auth middleware logic
-│   ├── schemas.ts    # Zod validation schemas
-│   ├── utils.ts      # Auth utility functions
-│   ├── client-cookies.ts  # Client-side cookie handling
-│   └── server-cookies.ts  # Server-side cookie handling
-└── utils.ts          # General utility functions (cn helper)
+├── auth.ts       # Better Auth client re-export
+├── apiClient.ts  # API client for Fastify backend
+├── schemas.ts    # Zod validation schemas
+└── utils.ts      # General utility functions (cn helper)
 ```
 
-## Authentication Module (`auth/`)
+## Files
 
-### config.ts
-Configuration constants for authentication:
+### auth.ts
+Re-exports Better Auth client from `@repo/infra`:
+
 ```typescript
-// Server-only config (JWT secret, etc.)
-export const SERVER_AUTH_CONFIG = { ... }
+import { authClient } from "@/lib/auth"
 
-// Shared config (token names, expiration times)
-export const SHARED_AUTH_CONFIG = {
-  SESSION_TOKEN_NAME: "session_token",
-  VERIFICATION_TOKEN_NAME: "verification_token",
-  SESSION_EXPIRATION: 7 * 24 * 60 * 60, // 7 days
-  VERIFICATION_EXPIRATION: 15 * 60,     // 15 minutes
-}
-
-// Environment helpers
-export function isProduction(): boolean
-export function shouldUse2FA(): boolean
+// Available methods
+await authClient.signUp.email({ email, password, name })
+await authClient.signIn.email({ email, password })
+await authClient.signOut()
+await authClient.getSession()
+await authClient.forgetPassword({ email })
+await authClient.resetPassword({ newPassword })
 ```
 
-### jwt.ts
-JWT token handling using `jose` library:
+Better Auth handles all authentication:
+- Session management via HTTP-only cookies
+- Email/password authentication
+- Email verification
+- Password reset
+
+### apiClient.ts
+Custom fetch wrapper for API calls to the Fastify backend:
+
 ```typescript
-// Token types
-interface SessionTokenPayload {
-  userId: number;
-  email: string;
-  name?: string;
-  role: string;
-}
+import { apiClient } from "@/lib/apiClient"
 
-interface VerificationTokenPayload {
-  userId: number;
-  email: string;
-  type: "2FA" | "PASSWORD_RESET";
-}
+// GET request
+const response = await apiClient.get<UserData>("/v1/users/me")
 
-// Functions
-createSessionToken(payload): Promise<string>
-createVerificationToken(payload): Promise<string>
-verifySessionToken(token): Promise<SessionTokenPayload>
-verifyVerificationToken(token): Promise<VerificationTokenPayload>
+// POST request
+const response = await apiClient.post<CreateResult>("/v1/resource", {
+  data: { ... }
+})
+
+// PUT request
+await apiClient.put("/v1/resource/123", { data: { ... } })
+
+// DELETE request
+await apiClient.delete("/v1/resource/123")
 ```
 
-### middleware.ts
-Authentication middleware for protected routes:
-```typescript
-authMiddleware(request, publicPaths): Promise<NextResponse>
-checkRole(request, allowedRoles): Promise<boolean>
-```
+Features:
+- Automatic base URL (`NEXT_PUBLIC_API_URL`)
+- Error handling
+- TypeScript generic types for responses
+- Credentials included (cookies)
 
 ### schemas.ts
-Zod validation schemas for auth forms:
-- `loginSchema` - Email, password, turnstile token
-- `signupSchema` - Name, email, password, turnstile token
-- Additional schemas for verification and password reset
+Zod validation schemas for forms:
 
-### utils.ts
-Utility functions for authentication:
 ```typescript
-hashPassword(password): Promise<string>
-verifyPassword(password, hash): Promise<boolean>
-generateVerificationCode(): string
-saveVerificationCode(userId, code, type): Promise<number>
-sendVerificationEmail(email, code): Promise<void>
-verifyTurnstileToken(token): Promise<boolean>
+import { loginSchema, signupSchema } from "@/lib/schemas"
+
+// Login schema
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+})
+
+// Signup schema
+const signupSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  password: z.string().min(8),
+})
 ```
 
-### Cookie Handling
-- `client-cookies.ts` - Client-side cookie access (js-cookie)
-- `server-cookies.ts` - Server-side cookie access (Next.js cookies())
+Used with React Hook Form for validation.
 
-## General Utilities (`utils.ts`)
+### utils.ts
+General utility functions:
 
 ```typescript
-// Tailwind class name merger
 import { cn } from "@/lib/utils"
 
-// Usage
+// Tailwind class name merger
 cn("base-class", conditional && "conditional-class", "override-class")
 ```
 
+The `cn` function merges Tailwind classes intelligently, handling conflicts.
+
 ## Usage Examples
 
-### Protecting an API Route
+### Making Authenticated API Calls
 ```typescript
-import { verifySessionToken } from "@/lib/auth/jwt"
-import { SHARED_AUTH_CONFIG } from "@/lib/auth/config"
+import { authClient } from "@/lib/auth"
+import { apiClient } from "@/lib/apiClient"
 
-export async function GET(request: NextRequest) {
-  const token = request.cookies.get(SHARED_AUTH_CONFIG.SESSION_TOKEN_NAME)?.value
-  if (!token) return unauthorized()
+// Sign in first
+await authClient.signIn.email({ email, password })
 
-  const payload = await verifySessionToken(token)
-  // Use payload.userId, payload.role, etc.
+// Session cookie is automatically included in subsequent requests
+const user = await apiClient.get("/v1/users/me")
+```
+
+### Form Validation
+```typescript
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { loginSchema } from "@/lib/schemas"
+
+const form = useForm({
+  resolver: zodResolver(loginSchema),
+  defaultValues: {
+    email: "",
+    password: "",
+  },
+})
+
+const onSubmit = form.handleSubmit(async (data) => {
+  await authClient.signIn.email(data)
+})
+```
+
+### Checking Authentication Status
+```typescript
+import { authClient } from "@/lib/auth"
+
+const session = await authClient.getSession()
+
+if (session) {
+  console.log("Authenticated as:", session.user.name)
+} else {
+  console.log("Not authenticated")
 }
 ```
 
-### Validating Request Body
-```typescript
-import { loginSchema } from "@/lib/auth/schemas"
+## Important Notes
 
-const validation = loginSchema.safeParse(body)
-if (!validation.success) {
-  return NextResponse.json({ error: validation.error.issues }, { status: 400 })
-}
-const { email, password } = validation.data
-```
-
-### Hashing Passwords
-```typescript
-import { hashPassword, verifyPassword } from "@/lib/auth/utils"
-
-const hash = await hashPassword(plainPassword)
-const isValid = await verifyPassword(plainPassword, storedHash)
-```
+- Authentication is handled entirely by Better Auth (no custom JWT logic)
+- Better Auth manages sessions via HTTP-only cookies
+- API client automatically includes credentials (cookies) in requests
+- All auth operations go through the Fastify backend
+- Email verification and password reset are built into Better Auth
+- Use `authClient` for auth operations, `apiClient` for other API calls

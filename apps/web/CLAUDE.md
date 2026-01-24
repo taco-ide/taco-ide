@@ -135,8 +135,23 @@ function MyComponent() {
 }
 ```
 
+## Directory Documentation
+
+For detailed guidance on specific directories:
+- **Source code**: `src/CLAUDE.md` - Web app source structure
+- **App routes**: `src/app/CLAUDE.md` - Next.js pages and routing
+- **Components**: `src/components/CLAUDE.md` - UI components
+- **Contexts**: `src/contexts/CLAUDE.md` - React contexts
+- **Hooks**: `src/hooks/CLAUDE.md` - Custom hooks
+- **Store**: `src/store/CLAUDE.md` - Zustand stores
+- **Lib**: `src/lib/CLAUDE.md` - Utilities and auth client
+- **Types**: `src/types/CLAUDE.md` - Type definitions
+- **Data**: `src/data/CLAUDE.md` - Static data files
+
 ## Related Documentation
 
-- Backend API: See `apps/api/CLAUDE.md`
-- Infrastructure: See `packages/infra/`
-- Shared Types: See `packages/types/`
+- **Backend API**: `apps/api/CLAUDE.md` - Fastify API guide
+- **Infrastructure**: `packages/infra/CLAUDE.md` - Database and auth
+- **Database**: `packages/infra/src/db/CLAUDE.md` - Schema and queries
+- **Auth**: `packages/infra/src/auth/CLAUDE.md` - Better Auth configuration
+- **Shared Types**: `packages/types/` - Generated types from Kubb

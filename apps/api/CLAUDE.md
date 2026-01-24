@@ -173,8 +173,17 @@ BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3333
 ```
 
+## Directory Documentation
+
+For detailed guidance on specific directories:
+- **Source code**: `src/CLAUDE.md` - API source structure
+- **HTTP layer**: `src/http/CLAUDE.md` - Server config, middleware, types
+- **Routes**: `src/http/routes/CLAUDE.md` - Route organization and patterns
+
 ## Related Documentation
 
-- Frontend: See `apps/web/CLAUDE.md`
-- Infrastructure: See `packages/infra/`
-- Shared Types: See `packages/types/`
+- **Frontend**: `apps/web/CLAUDE.md` - Next.js frontend guide
+- **Infrastructure**: `packages/infra/CLAUDE.md` - Database and auth
+- **Database**: `packages/infra/src/db/CLAUDE.md` - Schema and queries
+- **Auth**: `packages/infra/src/auth/CLAUDE.md` - Better Auth configuration
+- **Shared Types**: `packages/types/` - Generated types from Kubb
