@@ -28,63 +28,9 @@ TACO-IDE is an intelligent platform designed to help teachers create and manage 
 
 ### Getting Started
 
-#### Prerequisites
+> **Note:** For complete installation instructions, please refer to the [main README](../../README.md) at the repository root.
 
-- Node.js 18.18 or higher
-- Docker and Docker Compose
-- Git
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/taco-ide/taco.git
-cd taco
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Start the infrastructure (database):
-
-```bash
-cd packages/infra
-npm run docker:up
-```
-
-4. Run database migrations:
-
-```bash
-cd packages/infra
-npm run db:push
-# or for production migrations
-npm run db:migrate
-```
-
-5. (Optional) Seed the database:
-
-```bash
-cd packages/infra
-npm run db:seed
-```
-
-6. Start the API backend:
-
-```bash
-cd apps/api
-npm run dev
-```
-
-7. Start the frontend (in another terminal):
-
-```bash
-cd apps/web
-npm run dev
-```
-
-8. Open [http://localhost:3000](http://localhost:3000) in your browser.
+This README focuses on the frontend-specific development workflow.
 
 ### Development Flow with Drizzle
 
@@ -173,63 +119,9 @@ O TACO-IDE é uma plataforma inteligente projetada para ajudar professores a cri
 
 ### Como Começar
 
-#### Pré-requisitos
+> **Nota:** Para instruções completas de instalação, consulte o [README principal](../../README.md) na raiz do repositório.
 
-- Node.js 18.18 ou superior
-- Docker e Docker Compose
-- Git
-
-1. Clone o repositório:
-
-```bash
-git clone https://github.com/taco-ide/taco.git
-cd taco
-```
-
-2. Instale as dependências:
-
-```bash
-npm install
-```
-
-3. Inicie a infraestrutura (banco de dados):
-
-```bash
-cd packages/infra
-npm run docker:up
-```
-
-4. Execute as migrações do banco:
-
-```bash
-cd packages/infra
-npm run db:push
-# ou para migrações de produção
-npm run db:migrate
-```
-
-5. (Opcional) Popule o banco de dados:
-
-```bash
-cd packages/infra
-npm run db:seed
-```
-
-6. Inicie o backend da API:
-
-```bash
-cd apps/api
-npm run dev
-```
-
-7. Inicie o frontend (em outro terminal):
-
-```bash
-cd apps/web
-npm run dev
-```
-
-8. Abra [http://localhost:3000](http://localhost:3000) no seu navegador.
+Este README foca no fluxo de desenvolvimento específico do frontend.
 
 ### Fluxo de Desenvolvimento com Drizzle
 

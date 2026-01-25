@@ -63,39 +63,56 @@ npm install
 
 ### Environment Setup
 
-Create environment files:
+Create environment files for both applications:
+
+**1. API Environment (`apps/api/.env.development`):**
 
 ```bash
-# For the infra package
-cp packages/infra/.env.example packages/infra/.env
+# Database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 
-# Edit with your values:
-# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
-# BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-# BETTER_AUTH_URL=http://localhost:3333
+# Better Auth (minimum 32 characters)
+BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
+BETTER_AUTH_URL=http://localhost:3333
+
+# Frontend URL (for redirects)
+FRONTEND_URL=http://localhost:3000
+
+# Email (optional - only if using Resend)
+# RESEND_API_KEY=your-resend-api-key
+# EMAIL_FROM=noreply@taco-ide.com
 ```
+
+**2. Web Environment (`apps/web/.env.local`):**
+
+```bash
+# API URL
+NEXT_PUBLIC_API_URL=http://localhost:3333
+```
+
+> **Note:** The `.env.development` and `.env.local` files are gitignored. Make sure to create them before running the application.
 
 ### Database Setup
 
 ```bash
 # Start PostgreSQL container
 cd packages/infra
-npm run docker:up
+npm run services:up
 
-# Push schema to database
-npm run db:push
+# Apply migrations to database
+npm run db:migrate
 
-# Seed initial data
+# Seed initial data (optional)
 npm run db:seed
 
-# (Optional) Open Drizzle Studio
+# (Optional) Open Drizzle Studio to view/manage data
 npm run db:studio
 ```
 
 ### Running the Application
 
 ```bash
-# From the root directory, start all apps
+# From the root directory, start all apps in development mode
 npm run dev
 
 # Or start individually:
@@ -105,6 +122,11 @@ cd apps/api && npm run dev
 # Web frontend (port 3000)
 cd apps/web && npm run dev
 ```
+
+Access the application:
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:3333
+- **API Docs**: http://localhost:3333/docs
 
 ### API Documentation
 
@@ -151,11 +173,11 @@ This generates:
 ### packages/infra
 | Script | Description |
 |--------|-------------|
-| `npm run docker:up` | Start PostgreSQL container |
-| `npm run docker:down` | Stop PostgreSQL container |
+| `npm run services:up` | Start PostgreSQL container |
+| `npm run services:stop` | Stop PostgreSQL container |
+| `npm run services:down` | Stop and remove PostgreSQL container |
 | `npm run db:generate` | Generate Drizzle migration |
 | `npm run db:migrate` | Apply migrations |
-| `npm run db:push` | Push schema (no migration) |
 | `npm run db:studio` | Open Drizzle Studio |
 | `npm run db:seed` | Seed database |
 
