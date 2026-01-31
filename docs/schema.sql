@@ -20,9 +20,9 @@ CREATE TABLE organizations (
     -- PLAN INFORMATION GOES HERE IN THE FUTURE
     -- AT THE MOMENT EVERYONE IS ON THE FREE PLAN
 
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
 );
 CREATE INDEX idx_organizations_active ON organizations(id)
 WHERE deleted_at IS NULL;
@@ -34,9 +34,9 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email TEXT NOT NULL,
     password_hash TEXT, -- NULL for OAuth-only users
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX idx_users_email ON users (email)
 WHERE deleted_at IS NULL;
@@ -49,11 +49,11 @@ CREATE TABLE providers (
     access_token TEXT NOT NULL,
     refresh_token TEXT,
     id_token TEXT,
-    access_token_expires_at TIMESTAMP,
-    refresh_token_expires_at TIMESTAMP,
+    access_token_expires_at TIMESTAMPTZ,
+    refresh_token_expires_at TIMESTAMPTZ,
     scope TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT pk_providers PRIMARY KEY (user_id, provider_name),
     CONSTRAINT fk_providers_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (provider_name, provider_user_id)
@@ -63,12 +63,12 @@ CREATE TABLE providers (
 CREATE TABLE sessions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
     token TEXT UNIQUE NOT NULL,
     ip_address TEXT,
     user_agent TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_session_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX idx_sessions_user_id ON sessions(user_id);
@@ -79,7 +79,7 @@ CREATE TABLE verifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     identifier TEXT NOT NULL,
     value TEXT NOT NULL,
-    expires_at TIMESTAMP NOT NULL
+    expires_at TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX idx_verifications_identifier ON verifications(identifier);
 CREATE INDEX idx_verifications_expires_at ON verifications(expires_at);
@@ -89,9 +89,9 @@ CREATE TABLE affiliations (
     organization_id UUID NOT NULL,
     user_id UUID NOT NULL,
     role user_role NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
     CONSTRAINT pk_affiliations PRIMARY KEY (organization_id, user_id),
     CONSTRAINT fk_affiliations_organization FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     CONSTRAINT fk_affiliations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -107,9 +107,9 @@ CREATE TABLE classrooms (
     subject TEXT,
     description TEXT,
     created_by_user_id UUID,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
     CONSTRAINT fk_classrooms_organization FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_classrooms_creator FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
@@ -122,8 +122,8 @@ WHERE deleted_at IS NULL;
 CREATE TABLE user_classrooms (
     user_id UUID NOT NULL,
     classroom_id UUID NOT NULL,
-    enrolled_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP,
+    enrolled_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
     PRIMARY KEY (user_id, classroom_id),
     CONSTRAINT fk_user_classrooms_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_classrooms_classroom FOREIGN KEY (classroom_id) REFERENCES classrooms(id) ON DELETE CASCADE
@@ -137,7 +137,7 @@ CREATE TABLE models (
     version TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (name, version)
 );
 
@@ -154,8 +154,8 @@ CREATE TABLE teaching_assistants (
     target_audience VARCHAR(50),
     -- 'beginner', 'advanced', etc.
     is_active BOOLEAN DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(alias, version),
     CONSTRAINT fk_teaching_assistants_model FOREIGN KEY (model_id) REFERENCES models(id)
 );
@@ -173,9 +173,9 @@ CREATE TABLE challenges (
     support_materials JSONB,
     possible_solutions JSONB,
     created_by_user_id UUID,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ,
     CONSTRAINT fk_challenges_classroom FOREIGN KEY (classroom_id) REFERENCES classrooms(id),
     CONSTRAINT fk_challenges_creator FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
@@ -188,7 +188,7 @@ CREATE TABLE challenge_teaching_assistants (
     challenge_id UUID NOT NULL,
     teaching_assistant_id UUID NOT NULL,
     is_default BOOLEAN DEFAULT false,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (challenge_id, teaching_assistant_id),
     CONSTRAINT fk_challenge_tas_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
     CONSTRAINT fk_challenge_tas_ta FOREIGN KEY (teaching_assistant_id) REFERENCES teaching_assistants(id) ON DELETE CASCADE
@@ -204,10 +204,10 @@ CREATE TABLE work_sessions (
     user_id UUID NOT NULL,
     classroom_id UUID,
     challenge_id UUID NOT NULL,
-    teaching_assistant_id UUID,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    last_message_at TIMESTAMP,
-    ended_at TIMESTAMP,
+    teaching_assistant_id UUID, -- For now, users can't change TA mid-session
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    last_message_at TIMESTAMPTZ,
+    ended_at TIMESTAMPTZ,
     CONSTRAINT fk_work_sessions_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_work_sessions_classroom FOREIGN KEY (classroom_id) REFERENCES classrooms(id),
     CONSTRAINT fk_work_sessions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id),
@@ -218,21 +218,21 @@ CREATE INDEX idx_work_sessions_classroom_id ON work_sessions (classroom_id);
 CREATE INDEX idx_work_sessions_challenge_id ON work_sessions (challenge_id);
 CREATE INDEX idx_work_sessions_teaching_assistant ON work_sessions(teaching_assistant_id);
 
--- USER INTERACTIONS ON CHALLENGES
+-- USER INTERACTIONS ON CHALLENGES (messages, prompts, responses, code runs, etc.)
 CREATE TABLE user_interactions_on_challenges (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    session_id UUID NOT NULL,
+    work_session_id UUID NOT NULL,
     challenge_id UUID NOT NULL,
     user_prompt TEXT NOT NULL,
     model_response TEXT NOT NULL,
     code TEXT,
     stdin TEXT,
     stdout TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    CONSTRAINT fk_interactions_work_session FOREIGN KEY (session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_interactions_work_session FOREIGN KEY (work_session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
     CONSTRAINT fk_interactions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id)
 );
-CREATE INDEX idx_interactions_session_id ON user_interactions_on_challenges (session_id);
+CREATE INDEX idx_interactions_work_session_id ON user_interactions_on_challenges (work_session_id);
 CREATE INDEX idx_interactions_challenge_id ON user_interactions_on_challenges (challenge_id);
 
 -- CHALLENGE SOLUTIONS (Current)
@@ -245,8 +245,8 @@ CREATE TABLE challenge_solutions (
     code TEXT,
     stdin TEXT,
     stdout TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
-    updated_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_solutions_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_solutions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id),
     UNIQUE (user_id, challenge_id)
@@ -261,10 +261,10 @@ CREATE TABLE knowledge_base (
     classroom_id UUID,
     challenge_id UUID,
     created_by_user_id UUID,
-    text TEXT NOT NULL,
+    content TEXT NOT NULL,
     metadata JSONB,
     embedding VECTOR(1536), -- Need to match the embedding used in vector search
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_kb_organization FOREIGN KEY (organization_id) REFERENCES organizations(id),
     CONSTRAINT fk_kb_classroom FOREIGN KEY (classroom_id) REFERENCES classrooms(id),
     CONSTRAINT fk_kb_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id),
@@ -279,18 +279,18 @@ CREATE INDEX idx_kb_embedding ON knowledge_base USING hnsw (embedding vector_cos
 -- CONVERSATION REPLAYS (for A/B comparison)
 CREATE TABLE conversation_replays (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    original_session_id UUID NOT NULL,
+    original_work_session_id UUID NOT NULL,
     replay_teaching_assistant_id UUID NOT NULL,
-    replayed_at TIMESTAMP NOT NULL DEFAULT now(),
+    replayed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     notes TEXT,
     UNIQUE(
-        original_session_id,
+        original_work_session_id,
         replay_teaching_assistant_id
     ),
-    CONSTRAINT fk_replays_session FOREIGN KEY (original_session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_replays_work_session FOREIGN KEY (original_work_session_id) REFERENCES work_sessions(id) ON DELETE CASCADE,
     CONSTRAINT fk_replays_teaching_assistant FOREIGN KEY (replay_teaching_assistant_id) REFERENCES teaching_assistants(id) ON DELETE RESTRICT
 );
-CREATE INDEX idx_replays_session ON conversation_replays(original_session_id);
+CREATE INDEX idx_replays_work_session ON conversation_replays(original_work_session_id);
 CREATE INDEX idx_replays_ta ON conversation_replays(replay_teaching_assistant_id);
 
 -- REPLAYED INTERACTIONS (counterfactual responses)
@@ -303,7 +303,7 @@ CREATE TABLE replay_interactions (
     code TEXT,
     stdin TEXT,
     stdout TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_replay_interactions_replay FOREIGN KEY (replay_id) REFERENCES conversation_replays(id) ON DELETE CASCADE,
     CONSTRAINT fk_replay_interactions_original FOREIGN KEY (original_interaction_id) REFERENCES user_interactions_on_challenges(id)
 );

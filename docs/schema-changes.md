@@ -39,7 +39,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 - `provider_name` (TEXT PK) - e.g., "google", "github"
 - `provider_user_id` (TEXT NOT NULL)
 - `access_token`, `refresh_token`, `id_token` (TEXT)
-- `access_token_expires_at`, `refresh_token_expires_at` (TIMESTAMP)
+- `access_token_expires_at`, `refresh_token_expires_at` (TIMESTAMPTZ)
 - `scope` (TEXT)
 - Unique constraint on (provider_name, provider_user_id)
 
@@ -51,7 +51,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 **Fields:**
 - `id` (UUID PK)
 - `user_id` (UUID FK → users)
-- `expires_at` (TIMESTAMP NOT NULL)
+- `expires_at` (TIMESTAMPTZ NOT NULL)
 - `token` (TEXT UNIQUE NOT NULL)
 - `ip_address`, `user_agent` (TEXT)
 
@@ -64,7 +64,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 - `id` (UUID PK)
 - `identifier` (TEXT NOT NULL) - email or other identifier
 - `value` (TEXT NOT NULL) - verification code/token
-- `expires_at` (TIMESTAMP NOT NULL)
+- `expires_at` (TIMESTAMPTZ NOT NULL)
 
 **Rationale:** Email verification, password reset, and other verification flows.
 
@@ -95,8 +95,8 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 
 ### 8. **User-Classrooms Join Table** - Enhanced
 **Added:**
-- `enrolled_at` (TIMESTAMP) - Track enrollment date
-- `deleted_at` (TIMESTAMP) - Soft delete preserves enrollment history
+- `enrolled_at` (TIMESTAMPTZ) - Track enrollment date
+- `deleted_at` (TIMESTAMPTZ) - Soft delete preserves enrollment history
 
 **Rationale:** Useful for analytics and access control based on enrollment periods. Soft delete allows tracking when students unenrolled.
 
@@ -108,7 +108,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 - `version` (TEXT NOT NULL)
 - `name` (TEXT NOT NULL)
 - `description` (TEXT)
-- `created_at` (TIMESTAMP)
+- `created_at` (TIMESTAMPTZ)
 - Unique constraint on (name, version)
 
 **Rationale:** From Issue #7 - track available LLM models/versions (Claude 3.5, GPT-4, etc.). Decoupled from challenges to enable flexible teaching assistant configurations.
@@ -142,7 +142,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 - `challenge_id` (UUID PK, FK → challenges)
 - `teaching_assistant_id` (UUID PK, FK → teaching_assistants)
 - `is_default` (BOOLEAN DEFAULT false) - Which TA is shown first
-- `created_at` (TIMESTAMP)
+- `created_at` (TIMESTAMPTZ)
 - Unique partial index on `challenge_id WHERE is_default = true` - ensures at most one default TA per challenge
 
 **Rationale:** Many-to-many relationship enables **flexible TA assignment**:
@@ -159,7 +159,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 - `title` (TEXT NOT NULL) - Challenge title
 - `support_materials` (JSONB) - Reference documents/materials
 - `possible_solutions` (JSONB) - Teacher's reference implementations
-- `deleted_at` (TIMESTAMP) - Soft delete support
+- `deleted_at` (TIMESTAMPTZ) - Soft delete support
 
 **Changed:**
 - `classroom_id` now nullable - standalone challenges are accessible by any organization
@@ -176,8 +176,8 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 
 **Added:**
 - `teaching_assistant_id` (UUID FK → teaching_assistants) - Which TA the student is using
-- `last_message_at` (TIMESTAMP) - Track most recent interaction
-- `ended_at` (TIMESTAMP) - Track when session closed
+- `last_message_at` (TIMESTAMPTZ) - Track most recent interaction
+- `ended_at` (TIMESTAMPTZ) - Track when session closed
 
 **Changed:**
 - `classroom_id` now nullable - aligns with standalone challenges
@@ -191,14 +191,14 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 
 **Fields:**
 - `id` (UUID PK)
-- `session_id` (UUID FK → work_sessions, CASCADE DELETE)
+- `work_session_id` (UUID FK → work_sessions, CASCADE DELETE)
 - `challenge_id` (UUID FK → challenges)
 - `user_prompt` (TEXT NOT NULL) - Student's question
 - `model_response` (TEXT NOT NULL) - TA's answer
 - `code` (TEXT) - Code snapshot at interaction time
 - `stdin` (TEXT) - Input for code execution
 - `stdout` (TEXT) - Output from code execution
-- `created_at` (TIMESTAMP)
+- `created_at` (TIMESTAMPTZ)
 
 **Rationale:** THE CORE FEATURE - stores the entire student-TA conversation history. Teachers evaluate learning progress by reviewing this interaction history, not test case results. The teaching assistant used is determined via `work_sessions.teaching_assistant_id`.
 
@@ -211,7 +211,7 @@ Merged the initial schema draft with requirements from Issue #7 (taco-ide/dummy-
 
 **Changed:**
 - Removed `class_id` FK (redundant via challenge)
-- Removed `session_id` FK (current solution transcends sessions)
+- Removed `work_session_id` FK (current solution transcends work sessions)
 - Added `UNIQUE (user_id, challenge_id)` - One current solution per user per challenge
 
 **Rationale:** Simplified to store ONLY the latest solution. Students reopen challenges and load their most recent work. **Now includes cached state** (chat history, code snapshots) for faster loading. Historical evolution is tracked via `user_interactions_on_challenges` linked to work sessions, eliminating the need for a separate history table.
@@ -235,11 +235,11 @@ This enables precise RAG retrieval for LLM assistance. The HNSW (Hierarchical Na
 ### 17. **Conversation Replays Table** - NEW (A/B Testing)
 **Fields:**
 - `id` (UUID PK)
-- `original_session_id` (UUID FK → work_sessions, ON DELETE CASCADE)
+- `original_work_session_id` (UUID FK → work_sessions, ON DELETE CASCADE)
 - `replay_teaching_assistant_id` (UUID FK → teaching_assistants, ON DELETE RESTRICT)
-- `replayed_at` (TIMESTAMP DEFAULT now())
+- `replayed_at` (TIMESTAMPTZ DEFAULT now())
 - `notes` (TEXT) - Why this replay was conducted
-- Unique constraint on (original_session_id, replay_teaching_assistant_id)
+- Unique constraint on (original_work_session_id, replay_teaching_assistant_id)
 
 **Foreign Key Behaviors:**
 - `ON DELETE CASCADE` for work_sessions: If the original session is deleted, replays become meaningless and should also be deleted
@@ -255,7 +255,7 @@ This enables precise RAG retrieval for LLM assistance. The HNSW (Hierarchical Na
 
 **Key Design Decisions:**
 - **Manual/Teacher-Initiated**: Replays are triggered intentionally, not automatic
-- **One replay per (session, TA) pair**: Unique constraint prevents duplicate experiments
+- **One replay per (work session, TA) pair**: Unique constraint prevents duplicate experiments
 - **Metadata Storage**: `notes` field explains the hypothesis being tested
 - **Future Extensions**: Could add `total_tokens`, `total_cost` for cost analysis
 
@@ -269,7 +269,7 @@ This enables precise RAG retrieval for LLM assistance. The HNSW (Hierarchical Na
 - `user_prompt` (TEXT NOT NULL) - Student's original question
 - `model_response` (TEXT NOT NULL) - TA's counterfactual answer
 - `code`, `stdin`, `stdout` (TEXT) - Execution state during replay
-- `created_at` (TIMESTAMP)
+- `created_at` (TIMESTAMPTZ)
 
 **Rationale:** Stores the actual counterfactual messages generated during replay experiments. Mirrors the structure of `user_interactions_on_challenges` to enable side-by-side comparison.
 
@@ -285,23 +285,66 @@ This enables precise RAG retrieval for LLM assistance. The HNSW (Hierarchical Na
 
 **Workflow Example:**
 ```sql
--- 1. Select a session to replay (e.g., struggling student with Bob v1)
+-- 1. Select a work session to replay (e.g., struggling student with Bob v1)
 -- 2. Create replay event
-INSERT INTO conversation_replays (original_session_id, replay_teaching_assistant_id, notes)
+INSERT INTO conversation_replays (original_work_session_id, replay_teaching_assistant_id, notes)
 VALUES ('session-123', 'bob-v2-id', 'Testing improved hint quality');
 
--- 3. For each student message in original session, generate Bob v2 response
+-- 3. For each student message in original work session, generate Bob v2 response
 -- 4. Store in replay_interactions with link to original interaction
 
 -- 5. Compare results side-by-side
 SELECT 'Original' as version, model_response
-FROM user_interactions_on_challenges WHERE session_id = 'session-123'
+FROM user_interactions_on_challenges WHERE work_session_id = 'session-123'
 UNION ALL
 SELECT 'Replay' as version, model_response
 FROM replay_interactions ri
 JOIN conversation_replays cr ON ri.replay_id = cr.id
-WHERE cr.original_session_id = 'session-123';
+WHERE cr.original_work_session_id = 'session-123';
 ```
+
+---
+
+### 19. **TIMESTAMPTZ Migration** - Schema-Wide Improvement
+
+**Changed:** All `TIMESTAMP` columns migrated to `TIMESTAMPTZ` (TIMESTAMP WITH TIME ZONE)
+
+**Affected Columns (24 total):**
+
+**Audit Trail Columns:**
+- organizations, users, providers, sessions, affiliations, classrooms, teaching_assistants, challenges, challenge_solutions, knowledge_base: `created_at`, `updated_at`
+- organizations, users, affiliations, classrooms, challenges: `deleted_at`
+- user_classrooms: `deleted_at`
+
+**Security-Critical Expiration Columns:**
+- providers: `access_token_expires_at`, `refresh_token_expires_at`
+- sessions: `expires_at`
+- verifications: `expires_at`
+
+**Event Timestamp Columns:**
+- user_classrooms: `enrolled_at`
+- work_sessions: `last_message_at`, `ended_at`
+- conversation_replays: `replayed_at`
+- user_interactions_on_challenges, replay_interactions: `created_at`
+
+**Rationale:** Timezone-aware timestamps prevent critical issues in a multi-timezone, multi-organizational platform:
+- **Security:** Session/token expiration times are unambiguous and work correctly across timezones
+- **Data Integrity:** Audit trails (created_at, updated_at, deleted_at) have precise, unambiguous timestamps
+- **DST Handling:** PostgreSQL automatically handles Daylight Saving Time transitions
+- **Server Migration:** Moving servers across timezones doesn't corrupt timestamp data
+- **User Experience:** Enrollment dates, message timestamps, and replay times display correctly for all users
+
+**Technical Details:**
+- Plain `TIMESTAMP` stores values without timezone context, leading to ambiguity
+- `TIMESTAMPTZ` stores values in UTC internally and converts to local timezone on retrieval
+- `DEFAULT now()` automatically returns timezone-aware timestamps when column type is TIMESTAMPTZ
+- No application code changes needed; PostgreSQL handles conversion transparently
+
+**Migration Impact:**
+- **Fresh Deployments:** Apply updated schema.sql directly - no migration needed
+- **Existing Databases:** Run `ALTER TABLE ... ALTER COLUMN ... TYPE TIMESTAMPTZ USING column_name AT TIME ZONE 'UTC'` for each column
+- **Breaking Change:** Existing PostgreSQL databases require explicit migration script
+- **Backward Compatibility:** Once migrated, all timestamp operations are timezone-aware
 
 ---
 
@@ -399,7 +442,7 @@ If migrating from initial schema:
 ### Phase 4: Solutions & Interactions
 18. Restructure `challenge_solutions`:
     - Remove `class_id` FK (redundant via challenge)
-    - Remove `session_id` FK (current solution transcends sessions)
+    - Remove `work_session_id` FK (current solution transcends work sessions)
     - Add `chat_history` (JSONB)
     - Add `code`, `stdin`, `stdout` (TEXT)
     - Add `UNIQUE (user_id, challenge_id)`
@@ -414,10 +457,17 @@ If migrating from initial schema:
 ### Phase 6: Security & Performance Improvements (Code Review Fixes)
 24. Make `users.password_hash` nullable to support OAuth-only users
 25. Add HNSW vector index on `knowledge_base.embedding` for RAG performance
-26. Add `ON DELETE CASCADE` to `conversation_replays.original_session_id`
+26. Add `ON DELETE CASCADE` to `conversation_replays.original_work_session_id`
 27. Add `ON DELETE RESTRICT` to `conversation_replays.replay_teaching_assistant_id`
 28. Add unique partial index on `challenge_teaching_assistants(challenge_id) WHERE is_default = true`
 29. Reorder table definitions: move `challenge_teaching_assistants` after `challenges` table
+
+### Phase 7: Timezone-Aware Timestamps
+30. Migrate all `TIMESTAMP` columns to `TIMESTAMPTZ` (24 columns across 18 tables)
+    - Audit trails: created_at, updated_at, deleted_at
+    - Security-critical expirations: expires_at, access_token_expires_at, refresh_token_expires_at
+    - Event timestamps: enrolled_at, last_message_at, ended_at, replayed_at
+31. For existing databases, run: `ALTER TABLE table_name ALTER COLUMN column_name TYPE TIMESTAMPTZ USING column_name AT TIME ZONE 'UTC'`
 
 ### Post-Migration Tasks
 - Seed `teaching_assistants` with initial TA configurations (e.g., Bob v1, Alice v1)
