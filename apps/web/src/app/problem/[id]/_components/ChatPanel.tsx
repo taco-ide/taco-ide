@@ -18,6 +18,8 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { Button } from "@/components/ui/button";
 import { CopyIcon, CornerDownLeft, Mic, Paperclip } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { usePostV1AiChat } from "@/kubb/hooks/aiHooks/usePostV1AiChat";
+import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 
 const ChatAiIcons = [
   {
@@ -29,9 +31,15 @@ const ChatAiIcons = [
 function ChatPanel() {
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [input, setInput] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Get code and language from editor store
+  const getCode = useCodeEditorStore((state) => state.getCode);
+  const language = useCodeEditorStore((state) => state.language);
+
+  // AI chat mutation
+  const chatMutation = usePostV1AiChat();
 
   useEffect(() => {
     if (messagesRef.current) {
@@ -41,28 +49,45 @@ function ChatPanel() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || chatMutation.isPending) return;
 
-    setIsGenerating(true);
     const newMessage = { role: "user", content: input };
     setMessages((prev) => [...prev, newMessage]);
     setInput("");
 
-    // Simular resposta do assistente
-    setTimeout(() => {
+    try {
+      // TODO: Get actual exercise ID from URL params when implemented
+      const exerciseId = 1;
+      const currentCode = getCode();
+
+      const result = await chatMutation.mutateAsync({
+        data: {
+          exerciseId,
+          code: currentCode,
+          language,
+          message: input,
+        },
+      });
+
       const assistantMessage = {
         role: "assistant",
-        content: "Esta é uma resposta simulada do assistente.",
+        content: result.data.response,
       };
       setMessages((prev) => [...prev, assistantMessage]);
-      setIsGenerating(false);
-    }, 1000);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      const errorMessage = {
+        role: "assistant",
+        content: "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (isGenerating || !input) return;
+      if (chatMutation.isPending || !input) return;
       onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
@@ -130,7 +155,7 @@ function ChatPanel() {
                     {message.role === "assistant" &&
                       messages.length - 1 === index && (
                         <div className="flex items-center mt-1.5 gap-1">
-                          {!isGenerating && (
+                          {!chatMutation.isPending && (
                             <>
                               {ChatAiIcons.map((icon, iconIndex) => {
                                 const Icon = icon.icon;
@@ -154,7 +179,7 @@ function ChatPanel() {
                 </ChatBubble>
               ))}
 
-              {isGenerating && (
+              {chatMutation.isPending && (
                 <ChatBubble variant="received">
                   <ChatBubbleAvatar src="" fallback="🤖" />
                   <ChatBubbleMessage isLoading />
@@ -188,7 +213,7 @@ function ChatPanel() {
                 </Button>
 
                 <Button
-                  disabled={!input || isGenerating}
+                  disabled={!input || chatMutation.isPending}
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5"

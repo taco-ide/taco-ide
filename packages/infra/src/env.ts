@@ -21,6 +21,10 @@ const envSchema = z.object({
 
   // Cloudflare Turnstile (optional)
   CLOUDFLARE_TURNSTILE_SECRET: z.string().optional(),
+
+  // AI Service
+  AI_SERVICE_URL: z.string().url().default("http://ai-service:8000"),
+  INTERNAL_API_SECRET: z.string().min(32),
 });
 
 const parsed = envSchema.safeParse(process.env);

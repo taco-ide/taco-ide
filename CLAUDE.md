@@ -12,7 +12,8 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 taco-ide/
 ├── apps/
 │   ├── api/          # Fastify backend API (port 3333)
-│   └── web/          # Next.js frontend (port 3000)
+│   ├── web/          # Next.js frontend (port 3000)
+│   └── ai-service/   # Python FastAPI AI service (port 8000)
 ├── packages/
 │   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
 │   ├── types/        # Generated TypeScript types (Kubb)
@@ -24,6 +25,7 @@ taco-ide/
 
 - **Backend**: Fastify 5, Zod validation, Swagger/OpenAPI, Better Auth
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, Radix UI, Zustand, React Query
+- **AI Service**: Python 3.11+, FastAPI, Anthropic Claude, Pydantic, httpx
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth (email/password, password reset)
 - **Code Generation**: Kubb (generates types, React Query hooks, Zod schemas from OpenAPI)
@@ -58,29 +60,38 @@ npm run db:studio
 
 ### Environment Variables
 
-Create `.env.development` in `apps/api/` and `.env.local` in `apps/web/`:
+Create `.env.development` in `apps/api/`, `.env.local` in `apps/web/`, and `.env` in `apps/ai-service/`:
 
 ```env
-# Database
+# apps/api/.env.development
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
-
-# Better Auth
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3333
+AI_SERVICE_URL=http://localhost:8000
+INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
 
-# Frontend (apps/web/.env.local)
+# apps/web/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:3333
+
+# apps/ai-service/.env
+BACKEND_API_URL=http://localhost:3333
+INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
+ANTHROPIC_API_KEY=sk-ant-your-api-key
 ```
 
 ### Running the Application
 
 ```bash
+# Start infrastructure services (PostgreSQL + AI service)
+cd packages/infra && npm run services:up
+
 # From root - start all apps
 npm run dev
 
 # Or start individually:
-cd apps/api && npm run dev    # API on :3333
-cd apps/web && npm run dev    # Web on :3000
+cd apps/api && npm run dev              # API on :3333
+cd apps/web && npm run dev              # Web on :3000
+cd apps/ai-service && uv run uvicorn src.main:app --reload  # AI on :8000
 ```
 
 ## Common Development Commands
@@ -93,12 +104,15 @@ cd apps/web && npm run dev    # Web on :3000
 | `npm run lint` | Lint all packages |
 | `npm run check-types` | Type check all packages |
 
-### Database (packages/infra)
+### Infrastructure Services (packages/infra)
 | Command | Description |
 |---------|-------------|
-| `npm run services:up` | Start PostgreSQL container |
-| `npm run services:stop` | Stop PostgreSQL container |
-| `npm run services:down` | Stop and remove container/volumes |
+| `npm run services:up` | Start PostgreSQL + AI service containers |
+| `npm run services:stop` | Stop all service containers |
+| `npm run services:down` | Stop and remove containers/volumes |
+| `npm run services:logs` | View logs from all services |
+| `npm run ai:logs` | View AI service logs only |
+| `npm run ai:restart` | Restart AI service container |
 | `npm run db:generate` | Generate Drizzle migration |
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:push` | Push schema (no migration files) |
@@ -211,6 +225,9 @@ This repository uses directory-specific CLAUDE.md files throughout:
   - `apps/web/src/lib/CLAUDE.md` - Utilities
   - `apps/web/src/types/CLAUDE.md` - Type definitions
   - `apps/web/src/data/CLAUDE.md` - Static data
+
+- **AI Service**: `apps/ai-service/CLAUDE.md` - Python AI service guide
+  - `apps/ai-service/README.md` - Quick start guide
 
 ### Package Documentation
 - **Infrastructure**: `packages/infra/CLAUDE.md` - Shared infra package

@@ -5,3 +5,29 @@ services:
       - ../../../apps/api/.env.development
     ports:
       - "5490:5432"
+    networks:
+      - taco_network
+
+  ai_service:
+    build:
+      context: ../../../apps/ai-service
+      dockerfile: Dockerfile
+    container_name: taco_ai_service
+    ports:
+      - "8000:8000"
+    environment:
+      - BACKEND_API_URL=http://host.docker.internal:3333
+      - INTERNAL_API_SECRET=${INTERNAL_API_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - ../../../apps/ai-service/src:/app/src:ro
+    networks:
+      - taco_network
+    depends_on:
+      - database_taco_ide
+
+networks:
+  taco_network:
+    driver: bridge

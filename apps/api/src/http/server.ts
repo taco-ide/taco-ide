@@ -42,6 +42,7 @@ app.register(fastifyCors, {
     "Content-Type",
     "Authorization",
     "X-Requested-With",
+    "X-Internal-Secret",
     "Accept",
     "Cookie",
   ],
@@ -52,7 +53,13 @@ app.register(fastifyCookie);
 
 // Global authentication hook
 app.addHook("onRequest", async (request, reply) => {
-  const publicRoutes = ["/v1/auth/", "/api/auth/", "/v1/status", "/docs"];
+  const publicRoutes = [
+    "/v1/auth/",
+    "/api/auth/",
+    "/v1/status",
+    "/v1/internal/", // Internal routes use their own auth
+    "/docs",
+  ];
 
   const isPublicRoute = publicRoutes.some((route) =>
     request.url.startsWith(route)
@@ -84,6 +91,11 @@ app.register(fastifySwagger, {
       { name: "auth", description: "Authentication endpoints" },
       { name: "users", description: "User management endpoints" },
       { name: "status", description: "Health check endpoints" },
+      { name: "ai", description: "AI-powered features" },
+      {
+        name: "internal",
+        description: "Internal API endpoints (AI Service only)",
+      },
     ],
   },
   transform: jsonSchemaTransform,
