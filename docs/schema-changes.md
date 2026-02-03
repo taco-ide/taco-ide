@@ -312,7 +312,7 @@ WHERE cr.original_work_session_id = 'session-123';
 **Affected Columns (24 total):**
 
 **Audit Trail Columns:**
-- organizations, users, providers, sessions, affiliations, classrooms, teaching_assistants, challenges, challenge_solutions, knowledge_base: `created_at`, `updated_at`
+- organizations, users, providers, sessions, affiliations, classrooms, teaching_assistants, challenges, knowledge_base: `created_at`, `updated_at`
 - organizations, users, affiliations, classrooms, challenges: `deleted_at`
 - user_classrooms: `deleted_at`
 
@@ -391,13 +391,12 @@ WHERE cr.original_work_session_id = 'session-123';
 2. **Selects TA** (or uses default) → Creates `work_session` with `teaching_assistant_id`
 3. **Asks TA question** → Stores in `user_interactions_on_challenges`, updates `work_sessions.last_message_at`
 4. **Runs code** → Updates interaction with stdin/stdout
-5. **Saves work** → Updates `challenge_solutions` with latest code + chat_history snapshot
+5. **Saves work** → Solution state tracked via `user_interactions_on_challenges` with full conversation history
 6. **Closes session** → Sets `work_sessions.ended_at`
-7. **Reopens challenge later** → Loads from `challenge_solutions`, can switch to different TA
+7. **Reopens challenge later** → Loads interaction history, can switch to different TA
 
 ### Teacher Reviews Student Progress
-1. **Queries `challenge_solutions`** → Sees final solution and cached chat history
-2. **Queries `user_interactions_on_challenges`** → Analyzes full conversation history across all work sessions
+1. **Queries `user_interactions_on_challenges`** → Analyzes full conversation history and solution development across all work sessions
 3. **Queries `work_sessions`** → Identifies which TA was used, session duration, completion status
 4. **Evaluates based on journey** → Reviews how student asked questions, iterated on solutions, engaged with TA
 
@@ -440,13 +439,8 @@ If migrating from initial schema:
 17. Migrate existing sessions: assign a default TA based on historical model usage
 
 ### Phase 4: Solutions & Interactions
-18. Restructure `challenge_solutions`:
-    - Remove `class_id` FK (redundant via challenge)
-    - Remove `work_session_id` FK (current solution transcends work sessions)
-    - Add `chat_history` (JSONB)
-    - Add `code`, `stdin`, `stdout` (TEXT)
-    - Add `UNIQUE (user_id, challenge_id)`
-19. **Remove `challenge_solutions_history` table** (no longer needed; history tracked via `user_interactions_on_challenges`)
+18. **Remove `challenge_solutions` table** → Solution state fully tracked via `user_interactions_on_challenges` with conversation history
+19. **Remove `challenge_solutions_history` table** → History tracked via `user_interactions_on_challenges`
 20. Enhance `challenges` with `title`, `support_materials`, `possible_solutions`, `deleted_at`
 
 ### Phase 5: A/B Testing Framework
@@ -468,6 +462,19 @@ If migrating from initial schema:
     - Security-critical expirations: expires_at, access_token_expires_at, refresh_token_expires_at
     - Event timestamps: enrolled_at, last_message_at, ended_at, replayed_at
 31. For existing databases, run: `ALTER TABLE table_name ALTER COLUMN column_name TYPE TIMESTAMPTZ USING column_name AT TIME ZONE 'UTC'`
+
+### Phase 8: Schema Refinements & Multi-Org Support
+32. Add `model_parameters JSONB` to `models` table
+    - Stores flexible model configuration: `{"temperature": 0.7, "max_tokens": 2000, "top_p": 1.0}`
+33. Add `created_by_organization_id UUID` to `teaching_assistants` table
+    - NULL = system-created TA (globally available)
+    - Non-NULL = organization-specific TA
+    - Foreign key: `ON DELETE SET NULL` (org deletion converts TAs to global)
+34. Add index `idx_teaching_assistants_organization` for multi-tenant query performance
+35. **Remove `challenge_solutions` table** → Solution state fully tracked via `user_interactions_on_challenges`
+36. Remove execution fields (`code`, `stdin`, `stdout`) from `replay_interactions`
+    - Replay interactions focus on conversational A/B testing
+    - Execution context remains in original `user_interactions_on_challenges`
 
 ### Post-Migration Tasks
 - Seed `teaching_assistants` with initial TA configurations (e.g., Bob v1, Alice v1)

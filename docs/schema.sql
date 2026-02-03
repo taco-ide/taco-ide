@@ -137,6 +137,7 @@ CREATE TABLE models (
     version TEXT NOT NULL,
     name TEXT NOT NULL,
     description TEXT,
+    model_parameters JSONB, -- Configuration: {"temperature": 0.7, "max_tokens": 2000, "top_p": 1.0}
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (name, version)
 );
@@ -144,24 +145,24 @@ CREATE TABLE models (
 -- TEACHING ASSISTANTS (versioned TA configurations)
 CREATE TABLE teaching_assistants (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    alias VARCHAR(50) NOT NULL,
-    -- 'Bob', 'Alice', etc.
+    alias VARCHAR(50) NOT NULL, -- 'Bob', 'Alice', etc.
     version INTEGER NOT NULL,
     model_id UUID NOT NULL,
     system_prompt TEXT NOT NULL,
-    description TEXT,
-    -- What changed in this version
-    target_audience VARCHAR(50),
-    -- 'beginner', 'advanced', etc.
+    description TEXT, -- What changed in this version
+    target_audience VARCHAR(50), -- 'beginner', 'advanced', etc.
     is_active BOOLEAN DEFAULT false,
+    created_by_organization_id UUID, -- NULL = system-created TA (global), otherwise organization-specific
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(alias, version),
-    CONSTRAINT fk_teaching_assistants_model FOREIGN KEY (model_id) REFERENCES models(id)
+    CONSTRAINT fk_teaching_assistants_model FOREIGN KEY (model_id) REFERENCES models(id),
+    CONSTRAINT fk_teaching_assistants_organization FOREIGN KEY (created_by_organization_id) REFERENCES organizations(id) ON DELETE SET NULL
 );
 CREATE INDEX idx_teaching_assistants_alias ON teaching_assistants(alias);
 CREATE INDEX idx_teaching_assistants_active ON teaching_assistants(alias, is_active)
 WHERE is_active = true;
+CREATE INDEX idx_teaching_assistants_organization ON teaching_assistants(created_by_organization_id);
 
 -- CHALLENGES
 -- If classroom_id is NULL, the challenge is standalone and accessible by any organization
@@ -235,25 +236,6 @@ CREATE TABLE user_interactions_on_challenges (
 CREATE INDEX idx_interactions_work_session_id ON user_interactions_on_challenges (work_session_id);
 CREATE INDEX idx_interactions_challenge_id ON user_interactions_on_challenges (challenge_id);
 
--- CHALLENGE SOLUTIONS (Current)
-CREATE TABLE challenge_solutions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL,
-    challenge_id UUID NOT NULL,
-    solution TEXT NOT NULL,
-    chat_history JSONB,
-    code TEXT,
-    stdin TEXT,
-    stdout TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_solutions_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_solutions_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id),
-    UNIQUE (user_id, challenge_id)
-);
-CREATE INDEX idx_solutions_user_id ON challenge_solutions (user_id);
-CREATE INDEX idx_solutions_challenge_id ON challenge_solutions (challenge_id);
-
 -- KNOWLEDGE BASE (RAG)
 CREATE TABLE knowledge_base (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -300,9 +282,6 @@ CREATE TABLE replay_interactions (
     original_interaction_id UUID,
     user_prompt TEXT NOT NULL,
     model_response TEXT NOT NULL,
-    code TEXT,
-    stdin TEXT,
-    stdout TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_replay_interactions_replay FOREIGN KEY (replay_id) REFERENCES conversation_replays(id) ON DELETE CASCADE,
     CONSTRAINT fk_replay_interactions_original FOREIGN KEY (original_interaction_id) REFERENCES user_interactions_on_challenges(id)
