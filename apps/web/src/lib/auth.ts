@@ -5,6 +5,6 @@ export {
   signUp,
   signOut,
   useSession,
-  forgetPassword,
+  requestPasswordReset,
   resetPassword,
 } from "@repo/infra/auth/client";

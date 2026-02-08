@@ -51,7 +51,7 @@ export async function authRoutes(app: FastifyTypedInstance) {
   // POST /v1/auth/sign-up/email
   // POST /v1/auth/sign-in/email
   // POST /v1/auth/sign-out
-  // POST /v1/auth/forget-password
+  // POST /v1/auth/request-password-reset
   // POST /v1/auth/reset-password
   // GET  /v1/auth/session
 
