@@ -1,24 +1,14 @@
-import { db } from "./index";
-import { role } from "./schema";
-
 async function seed() {
-  console.log("🌱 Seeding database...");
+  console.log("Seeding database...");
 
-  // Create default roles
-  const existingRoles = await db.select().from(role);
+  // No default seed data needed - organization roles are managed by Better Auth plugin
+  console.log("No seed data to insert. Roles are managed by the Organization plugin.");
 
-  if (existingRoles.length === 0) {
-    await db.insert(role).values([{ name: "student" }, { name: "professor" }]);
-    console.log("✅ Roles created: student, professor");
-  } else {
-    console.log("ℹ️ Roles already exist, skipping...");
-  }
-
-  console.log("✅ Seed completed");
+  console.log("Seed completed");
   process.exit(0);
 }
 
 seed().catch((error) => {
-  console.error("❌ Seed failed:", error);
+  console.error("Seed failed:", error);
   process.exit(1);
 });
