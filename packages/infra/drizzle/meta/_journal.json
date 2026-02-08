@@ -5,8 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1768672232705,
-      "tag": "0000_better-auth-table",
+      "when": 1770160958941,
+      "tag": "0000_first_migration",
       "breakpoints": true
     }
   ]
