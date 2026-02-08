@@ -17,7 +17,6 @@ export interface User {
   email: string;
   emailVerified: boolean;
   isActive: boolean;
-  role: string | null;
 }
 
 // Context interface
