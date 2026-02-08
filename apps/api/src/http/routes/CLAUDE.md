@@ -97,7 +97,7 @@ POST /v1/auth/sign-up/email     - Register
 POST /v1/auth/sign-in/email     - Login
 POST /v1/auth/sign-out          - Logout
 GET  /v1/auth/session           - Get session
-POST /v1/auth/forget-password   - Request reset
+POST /v1/auth/request-password-reset - Request reset
 POST /v1/auth/reset-password    - Reset password
 POST /v1/auth/verify-email      - Verify email
 ```

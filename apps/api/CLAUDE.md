@@ -90,7 +90,7 @@ Authentication is handled by Better Auth. The auth routes are automatically prov
 - `POST /v1/auth/sign-up/email` - Register new user
 - `POST /v1/auth/sign-in/email` - Login
 - `POST /v1/auth/sign-out` - Logout
-- `POST /v1/auth/forget-password` - Request password reset
+- `POST /v1/auth/request-password-reset` - Request password reset
 - `POST /v1/auth/reset-password` - Reset password
 - `GET /v1/auth/session` - Get current session
 

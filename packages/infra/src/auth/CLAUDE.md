@@ -29,7 +29,7 @@ await authClient.signUp.email({ email, password, name })
 await authClient.signIn.email({ email, password })
 await authClient.signOut()
 await authClient.getSession()
-await authClient.forgetPassword({ email })
+await authClient.requestPasswordReset({ email })
 await authClient.resetPassword({ newPassword })
 ```
 
@@ -102,7 +102,7 @@ POST /v1/auth/sign-up/email     - Register new user
 POST /v1/auth/sign-in/email     - Login
 POST /v1/auth/sign-out          - Logout
 GET  /v1/auth/session           - Get current session
-POST /v1/auth/forget-password   - Request password reset
+POST /v1/auth/request-password-reset - Request password reset
 POST /v1/auth/reset-password    - Reset password
 POST /v1/auth/verify-email      - Verify email with OTP
 ```

@@ -25,7 +25,7 @@ await authClient.signUp.email({ email, password, name })
 await authClient.signIn.email({ email, password })
 await authClient.signOut()
 await authClient.getSession()
-await authClient.forgetPassword({ email })
+await authClient.requestPasswordReset({ email })
 await authClient.resetPassword({ newPassword })
 ```
 
