@@ -1,7 +1,7 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
-import { user, role } from "@repo/infra/db/schema";
+import { user } from "@repo/infra/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function authMiddleware(
@@ -27,7 +27,7 @@ export async function authMiddleware(
       });
     }
 
-    // Get additional user data with role
+    // Get additional user data
     const userData = await db
       .select({
         id: user.id,
@@ -35,13 +35,10 @@ export async function authMiddleware(
         name: user.name,
         emailVerified: user.emailVerified,
         isActive: user.isActive,
-        roleId: user.roleId,
-        roleName: role.name,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })
       .from(user)
-      .leftJoin(role, eq(user.roleId, role.id))
       .where(eq(user.id, session.user.id))
       .limit(1);
 
@@ -59,8 +56,6 @@ export async function authMiddleware(
       name: userData[0].name,
       emailVerified: userData[0].emailVerified,
       isActive: userData[0].isActive,
-      roleId: userData[0].roleId,
-      roleName: userData[0].roleName ?? undefined,
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
     };

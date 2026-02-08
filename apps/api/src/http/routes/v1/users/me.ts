@@ -10,7 +10,6 @@ const UserDataSchema = z.object({
   name: z.string(),
   emailVerified: z.boolean(),
   isActive: z.boolean(),
-  role: z.string().nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -53,7 +52,6 @@ export async function meRoute(app: FastifyTypedInstance) {
           name: user.name,
           emailVerified: user.emailVerified,
           isActive: user.isActive,
-          role: user.roleName ?? null,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
         },

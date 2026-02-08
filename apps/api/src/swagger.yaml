@@ -110,9 +110,6 @@ paths:
                         type: boolean
                       isActive:
                         type: boolean
-                      role:
-                        type: string
-                        nullable: true
                       createdAt:
                         type: string
                       updatedAt:
@@ -123,7 +120,6 @@ paths:
                       - name
                       - emailVerified
                       - isActive
-                      - role
                       - createdAt
                       - updatedAt
                     additionalProperties: false
