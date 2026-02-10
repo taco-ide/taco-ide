@@ -8,10 +8,6 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # Internal API Communication
-    backend_api_url: str
-    internal_api_secret: str
-
     # LLM Provider (at least one required)
     anthropic_api_key: str | None = None
     openai_api_key: str | None = None

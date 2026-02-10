@@ -5,7 +5,7 @@ LLM service for generating code hints and analysis.
 from anthropic import Anthropic
 
 from ..config import settings
-from ..models.exercise import Exercise
+from ..models.chat import ChatRequest
 
 
 class LLMService:
@@ -17,78 +17,65 @@ class LLMService:
             self.client = Anthropic(api_key=settings.anthropic_api_key)
             self.provider = "anthropic"
         elif settings.openai_api_key:
-            # TODO: Implement OpenAI client when needed
             raise NotImplementedError("OpenAI support not yet implemented")
         else:
-            raise ValueError(
-                "No LLM API key configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY"
-            )
+            raise ValueError("No LLM API key configured.")
 
-    async def generate_hint(
-        self, exercise: Exercise, code: str, message: str
-    ) -> str:
-        """
-        Generate a helpful hint for the student.
-
-        Args:
-            exercise: The exercise being worked on
-            code: Student's current code
-            message: Student's question or request
-
-        Returns:
-            AI-generated hint as a string
-
-        Guidelines:
-            - Provide hints, not complete solutions
-            - Guide the student's thinking process
-            - Point out errors or issues without fixing them directly
-            - Encourage learning through discovery
-        """
-        system_prompt = self._build_system_prompt(exercise)
-        user_message = self._build_user_message(code, message)
+    async def generate_hint(self, request: ChatRequest) -> str:
+        system_prompt = self._build_system_prompt(request)
+        messages = self._build_messages(request)
 
         if self.provider == "anthropic":
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=1024,
                 system=system_prompt,
-                messages=[{"role": "user", "content": user_message}],
+                messages=messages,
             )
             return response.content[0].text
 
         raise NotImplementedError(f"Provider {self.provider} not implemented")
 
-    def _build_system_prompt(self, exercise: Exercise) -> str:
-        """Build the system prompt with exercise context."""
-        return f"""You are a helpful programming tutor for students learning to code.
+    def _build_system_prompt(self, request: ChatRequest) -> str:
+        ta = request.teaching_assistant
+        exercise = request.exercise
 
-EXERCISE CONTEXT:
-Title: {exercise.title}
-Description: {exercise.description}
-Difficulty: {exercise.difficulty}
+        # Start with the TA's own system prompt
+        prompt = ta.system_prompt
 
-GUIDELINES:
-1. Provide hints and guidance, NOT complete solutions
-2. Help students discover answers through questioning
-3. Point out errors without directly fixing them
-4. Encourage good programming practices
-5. Be supportive and patient
-6. Use simple, clear language
-7. If the student asks for the answer directly, gently redirect them to think through the problem
+        # Append exercise context
+        prompt += f"\n\nEXERCISE CONTEXT:\nTitle: {exercise.title}"
+        if exercise.description:
+            prompt += f"\nDescription: {exercise.description}"
 
-Your goal is to help the student learn by guiding their thinking process."""
+        # Append knowledge base if available
+        if request.knowledge_base:
+            prompt += "\n\nREFERENCE MATERIALS:\n"
+            for i, entry in enumerate(request.knowledge_base, 1):
+                prompt += f"\n--- Reference {i} ---\n{entry}\n"
 
-    def _build_user_message(self, code: str, message: str) -> str:
-        """Build the user message with code and question."""
-        return f"""STUDENT'S CURRENT CODE:
-```python
-{code}
+        return prompt
+
+    def _build_messages(self, request: ChatRequest) -> list[dict]:
+        messages = []
+
+        # Add chat history
+        for msg in request.chat_history:
+            messages.append({"role": msg.role, "content": msg.content})
+
+        # Add current user message with code context
+        user_message = f"""STUDENT'S CURRENT CODE:
+```{request.language}
+{request.code}
 ```
 
 STUDENT'S QUESTION:
-{message}
+{request.message}
 
 Please provide a helpful hint or guidance."""
+
+        messages.append({"role": "user", "content": user_message})
+        return messages
 
 
 # Global LLM service instance

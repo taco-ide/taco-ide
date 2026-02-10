@@ -4,12 +4,31 @@
 
 import { env } from "@repo/infra/env";
 
+interface ExerciseContext {
+  title: string;
+  description: string | null;
+  supportMaterials: unknown;
+  possibleSolutions: unknown;
+}
+
+interface TeachingAssistantContext {
+  systemPrompt: string;
+  targetAudience: string | null;
+}
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
 interface ChatRequest {
-  exercise_id: number;
   code: string;
   language: string;
   message: string;
-  user_id: number;
+  exercise: ExerciseContext;
+  teaching_assistant: TeachingAssistantContext;
+  knowledge_base: string[];
+  chat_history: ChatMessage[];
 }
 
 interface ChatResponse {
@@ -19,19 +38,15 @@ interface ChatResponse {
 
 class AIServiceClient {
   private baseUrl: string;
-  private headers: HeadersInit;
+  private headers: Record<string, string>;
 
   constructor() {
     this.baseUrl = env.AI_SERVICE_URL;
     this.headers = {
       "Content-Type": "application/json",
-      "X-Internal-Secret": env.INTERNAL_API_SECRET,
     };
   }
 
-  /**
-   * Send a chat request to the AI service.
-   */
   async sendChatRequest(data: ChatRequest): Promise<ChatResponse> {
     const response = await fetch(`${this.baseUrl}/chat`, {
       method: "POST",
@@ -46,7 +61,8 @@ class AIServiceClient {
       );
     }
 
-    return response.json();
+    const json = await response.json();
+    return json as ChatResponse;
   }
 }
 
