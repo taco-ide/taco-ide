@@ -57,7 +57,6 @@ app.addHook("onRequest", async (request, reply) => {
     "/v1/auth/",
     "/api/auth/",
     "/v1/status",
-    "/v1/internal/", // Internal routes use their own auth
     "/docs",
   ];
 
@@ -92,10 +91,6 @@ app.register(fastifySwagger, {
       { name: "users", description: "User management endpoints" },
       { name: "status", description: "Health check endpoints" },
       { name: "ai", description: "AI-powered features" },
-      {
-        name: "internal",
-        description: "Internal API endpoints (AI Service only)",
-      },
     ],
   },
   transform: jsonSchemaTransform,

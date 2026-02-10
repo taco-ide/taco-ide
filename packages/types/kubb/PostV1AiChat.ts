@@ -84,12 +84,53 @@ export type PostV1AiChat400 = {
     };
 };
 
+/**
+ * @description Default Response
+*/
+export type PostV1AiChat401 = {
+    /**
+     * @type boolean
+    */
+    success: boolean;
+    /**
+     * @type string
+    */
+    message: string;
+};
+
+/**
+ * @description Default Response
+*/
+export type PostV1AiChat404 = {
+    /**
+     * @type boolean
+    */
+    success: boolean;
+    /**
+     * @type string
+    */
+    message: string;
+};
+
+/**
+ * @description Default Response
+*/
+export type PostV1AiChat500 = {
+    /**
+     * @type boolean
+    */
+    success: boolean;
+    /**
+     * @type string
+    */
+    message: string;
+};
+
 export type PostV1AiChatMutationRequest = {
     /**
-     * @minLength 0
-     * @type integer
+     * @type string
     */
-    exerciseId: number;
+    workSessionId: string;
     /**
      * @type string
     */
@@ -110,5 +151,5 @@ export type PostV1AiChatMutationResponse = PostV1AiChat200;
 export type PostV1AiChatMutation = {
     Response: PostV1AiChat200;
     Request: PostV1AiChatMutationRequest;
-    Errors: PostV1AiChat400;
+    Errors: PostV1AiChat400 | PostV1AiChat401 | PostV1AiChat404 | PostV1AiChat500;
 };

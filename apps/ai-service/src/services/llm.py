@@ -2,7 +2,7 @@
 LLM service for generating code hints and analysis.
 """
 
-from anthropic import Anthropic
+from anthropic import AsyncAnthropic
 
 from ..config import settings
 from ..models.chat import ChatRequest
@@ -14,7 +14,7 @@ class LLMService:
     def __init__(self):
         """Initialize LLM client based on available API keys."""
         if settings.anthropic_api_key:
-            self.client = Anthropic(api_key=settings.anthropic_api_key)
+            self.client = AsyncAnthropic(api_key=settings.anthropic_api_key)
             self.provider = "anthropic"
         elif settings.openai_api_key:
             raise NotImplementedError("OpenAI support not yet implemented")
@@ -26,7 +26,7 @@ class LLMService:
         messages = self._build_messages(request)
 
         if self.provider == "anthropic":
-            response = self.client.messages.create(
+            response = await self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=1024,
                 system=system_prompt,

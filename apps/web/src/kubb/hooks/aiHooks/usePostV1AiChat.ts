@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1AiChatMutationRequest, PostV1AiChatMutationResponse, PostV1AiChat400 } from "../../../../../../packages/types/kubb/PostV1AiChat.ts";
+import type { PostV1AiChatMutationRequest, PostV1AiChatMutationResponse, PostV1AiChat400, PostV1AiChat401, PostV1AiChat404, PostV1AiChat500 } from "../../../../../../packages/types/kubb/PostV1AiChat.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -22,7 +22,7 @@ export async function postV1AiChat(data: PostV1AiChatMutationRequest, config: Pa
   
   const requestData = data  
   
-  const res = await request<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400>, PostV1AiChatMutationRequest>({ method : "POST", url : `/v1/ai/chat`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400 | PostV1AiChat401 | PostV1AiChat404 | PostV1AiChat500>, PostV1AiChatMutationRequest>({ method : "POST", url : `/v1/ai/chat`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -32,7 +32,7 @@ export async function postV1AiChat(data: PostV1AiChatMutationRequest, config: Pa
  */
 export function usePostV1AiChat<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400>, {data: PostV1AiChatMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400 | PostV1AiChat401 | PostV1AiChat404 | PostV1AiChat500>, {data: PostV1AiChatMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1AiChatMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -40,7 +40,7 @@ export function usePostV1AiChat<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1AiChatMutationKey()
 
-  return useMutation<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400>, {data: PostV1AiChatMutationRequest}, TContext>({
+  return useMutation<PostV1AiChatMutationResponse, ResponseErrorConfig<PostV1AiChat400 | PostV1AiChat401 | PostV1AiChat404 | PostV1AiChat500>, {data: PostV1AiChatMutationRequest}, TContext>({
     mutationFn: async({ data }) => {
       return postV1AiChat(data, config)
     },

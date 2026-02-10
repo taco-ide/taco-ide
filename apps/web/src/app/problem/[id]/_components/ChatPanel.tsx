@@ -56,13 +56,13 @@ function ChatPanel() {
     setInput("");
 
     try {
-      // TODO: Get actual exercise ID from URL params when implemented
-      const exerciseId = 1;
+      // TODO: Get actual workSessionId from context or params when available
+      const workSessionId = "ws-placeholder";
       const currentCode = getCode();
 
       const result = await chatMutation.mutateAsync({
         data: {
-          exerciseId,
+          workSessionId,
           code: currentCode,
           language,
           message: input,

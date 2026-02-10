@@ -34,8 +34,32 @@ export const postV1AiChat400Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const postV1AiChat401Schema = z.object({
+    "success": z.boolean(),
+"message": z.string()
+    })
+
+/**
+ * @description Default Response
+ */
+export const postV1AiChat404Schema = z.object({
+    "success": z.boolean(),
+"message": z.string()
+    })
+
+/**
+ * @description Default Response
+ */
+export const postV1AiChat500Schema = z.object({
+    "success": z.boolean(),
+"message": z.string()
+    })
+
 export const postV1AiChatMutationRequestSchema = z.object({
-    "exerciseId": z.number().int().min(0),
+    "workSessionId": z.string(),
 "code": z.string(),
 "language": z.string(),
 "message": z.string().min(1)

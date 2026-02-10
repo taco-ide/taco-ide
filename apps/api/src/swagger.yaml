@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: TACO-IDE API
+  description: Backend API for TACO-IDE educational platform
+  version: 1.0.0
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+  schemas: {}
+paths:
+  /api/auth/{*}:
+    get: &ref_0
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: '*'
+          required: true
+      responses:
+        '200':
+          description: Default Response
+    head: *ref_0
+    trace: *ref_0
+    delete: *ref_0
+    options: *ref_0
+    patch: *ref_0
+    put: *ref_0
+    post: *ref_0
+  /v1/auth/{*}:
+    get: &ref_1
+      parameters:
+        - schema:
+            type: string
+          in: path
+          name: '*'
+          required: true
+      responses:
+        '200':
+          description: Default Response
+    head: *ref_1
+    trace: *ref_1
+    delete: *ref_1
+    options: *ref_1
+    patch: *ref_1
+    put: *ref_1
+    post: *ref_1
+  /v1/status:
+    get:
+      summary: Health check endpoint
+      tags:
+        - status
+      description: Returns the API health status and uptime
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  message:
+                    type: string
+                  timestamp:
+                    type: string
+                  uptime:
+                    type: number
+                required:
+                  - success
+                  - message
+                  - timestamp
+                  - uptime
+                additionalProperties: false
+  /v1/users/me:
+    get:
+      summary: Get current authenticated user data
+      tags:
+        - users
+      description: Returns the profile of the currently authenticated user
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      emailVerified:
+                        type: boolean
+                      isActive:
+                        type: boolean
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+                    required:
+                      - id
+                      - email
+                      - name
+                      - emailVerified
+                      - isActive
+                      - createdAt
+                      - updatedAt
+                    additionalProperties: false
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      page:
+                        type: number
+                      perPage:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - total
+                      - page
+                      - perPage
+                      - totalPages
+                    additionalProperties: false
+                required:
+                  - success
+                  - data
+                additionalProperties: false
+        '401':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  message:
+                    type: string
+                  errors:
+                    type: object
+                    additionalProperties:
+                      anyOf:
+                        - type: array
+                          items:
+                            type: string
+                        - type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+  /v1/ai/chat:
+    post:
+      tags:
+        - ai
+      description: Get AI-powered code hints and suggestions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workSessionId:
+                  type: string
+                code:
+                  type: string
+                language:
+                  type: string
+                message:
+                  type: string
+                  minLength: 1
+              required:
+                - workSessionId
+                - code
+                - language
+                - message
+              additionalProperties: false
+        required: true
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      response:
+                        type: string
+                      suggestions:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - response
+                      - suggestions
+                    additionalProperties: false
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      page:
+                        type: number
+                      perPage:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - total
+                      - page
+                      - perPage
+                      - totalPages
+                    additionalProperties: false
+                required:
+                  - success
+                  - data
+                additionalProperties: false
+        '400':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  message:
+                    type: string
+                  errors:
+                    type: object
+                    additionalProperties:
+                      anyOf:
+                        - type: array
+                          items:
+                            type: string
+                        - type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+        '401':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+        '404':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+        '500':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: users
+    description: User management endpoints
+  - name: status
+    description: Health check endpoints
+  - name: ai
+    description: AI-powered features
+  - name: internal
+    description: Internal API endpoints (AI Service only)

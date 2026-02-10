@@ -49,7 +49,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
     async (request, reply) => {
       const { workSessionId, code, language, message } = request.body;
 
-      const userId = (request as any).user?.id;
+      const userId = request.user?.id;
 
       if (!userId) {
         return reply.status(401).send({
@@ -104,7 +104,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           .from(schema.knowledgeBase)
           .where(eq(schema.knowledgeBase.challengeId, session.challengeId));
 
-        // 5. Get recent chat history for this work session
+        // 5. Get recent chat history for this work session (limit to prevent unbounded growth)
         const history = await db
           .select({
             userPrompt: schema.userInteractionOnChallenge.userPrompt,
@@ -112,7 +112,8 @@ export async function chatRoute(app: FastifyTypedInstance) {
           })
           .from(schema.userInteractionOnChallenge)
           .where(eq(schema.userInteractionOnChallenge.workSessionId, workSessionId))
-          .orderBy(schema.userInteractionOnChallenge.createdAt);
+          .orderBy(schema.userInteractionOnChallenge.createdAt)
+          .limit(20);
 
         // 6. Build chat history array
         const chatHistory = history.flatMap(h => [

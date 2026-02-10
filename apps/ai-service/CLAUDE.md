@@ -10,7 +10,7 @@ The AI service:
 - Generates helpful hints for students (not complete solutions)
 - Analyzes student code in context of the exercise
 - Provides educational guidance to promote learning
-- Calls the backend API for exercise data (no direct database access)
+- Acts as a stateless LLM wrapper (receives all context in request payload)
 
 ## Tech Stack
 
@@ -18,42 +18,46 @@ The AI service:
 - **Language**: Python 3.11+
 - **Dependency Management**: uv
 - **LLM Provider**: Anthropic Claude (Sonnet 3.5)
-- **HTTP Client**: httpx (for calling backend API)
 - **Validation**: Pydantic v2
 
 ## Architecture
 
-### Service Communication
+### Service Communication (Unidirectional)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Backend API (Fastify)                     │
-│  ┌────────────────────┐      ┌───────────────────────────┐  │
-│  │ POST /v1/ai/chat   │      │ GET /v1/internal/exercises │  │
-│  │ (from frontend)    │      │ (for AI service)           │  │
-│  └─────────┬──────────┘      └──────────▲────────────────┘  │
-└────────────┼────────────────────────────┼───────────────────┘
-             │                            │
-             │ Calls AI service           │ Fetches data
-             ▼                            │
-┌─────────────────────────────────────────┼───────────────────┐
-│            Python AI Service            │                   │
-│  ┌─────────────────────┐    ┌──────────┴─────────────────┐ │
-│  │ POST /chat          │    │ backend_api.py             │ │
-│  │ - Validates secret  │───▶│ - Calls backend /internal  │ │
-│  │ - Gets exercise     │    │ - Returns exercise data    │ │
-│  │ - Calls LLM         │    └────────────────────────────┘ │
-│  │ - Returns hint      │                                   │
-│  └─────────────────────┘                                   │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │ POST /v1/ai/chat                                        │ │
+│  │ - Gathers context from database                         │ │
+│  │ - Sends complete payload (exercise, TA, KB, history)    │ │
+│  └─────────┬──────────────────────────────────────────────┘ │
+│            │                                                 │
+│            │ Sends full context                              │
+│            ▼                                                 │
+└─────────────────────────────────────────────────────────────┘
+             │
+             │
+             ▼
+┌─────────────────────────────────────────────────────────────┐
+│            Python AI Service                                 │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ POST /chat                                               ││
+│  │ - Receives complete context in request                   ││
+│  │ - Builds system prompt with TA config and knowledge base││
+│  │ - Calls Claude LLM                                       ││
+│  │ - Returns hint response                                  ││
+│  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Design Decisions
 
-1. **No Database Access**: AI service calls backend API for all data operations
-2. **Service-to-Service Auth**: Uses `X-Internal-Secret` header for authentication
-3. **Educational Focus**: Prompts are designed to guide learning, not provide solutions
-4. **Stateless**: No session management, each request is independent
+1. **Unidirectional Communication**: Backend API sends all context in single request
+2. **Stateless Design**: AI service has no dependencies on backend API or database
+3. **No Service-to-Service Auth**: AI service runs on internal network (Docker)
+4. **Educational Focus**: Prompts are designed to guide learning, not provide solutions
+5. **Multi-turn Conversation**: Supports chat history for contextual hints
 
 ## Project Structure
 
@@ -119,10 +123,6 @@ npm run ai:restart
 Required environment variables (see `.env.example`):
 
 ```env
-# Backend API Communication
-BACKEND_API_URL=http://localhost:3333          # Backend API URL
-INTERNAL_API_SECRET=your-secret-here           # Shared secret with backend
-
 # LLM Provider (at least one required)
 ANTHROPIC_API_KEY=sk-ant-...                   # Anthropic API key
 # OPENAI_API_KEY=sk-...                        # OpenAI API key (future)
@@ -138,16 +138,29 @@ PORT=8000
 
 Generate AI-powered hint for student.
 
-**Authentication**: `X-Internal-Secret` header required
+**No authentication required** (runs on internal Docker network)
 
 **Request**:
 ```json
 {
-  "exercise_id": 1,
   "code": "def add(a, b):\n    pass",
   "language": "python",
   "message": "How do I add two numbers?",
-  "user_id": 123
+  "exercise": {
+    "title": "Add Two Numbers",
+    "description": "Write a function that adds two numbers",
+    "supportMaterials": null,
+    "possibleSolutions": null
+  },
+  "teachingAssistant": {
+    "systemPrompt": "You are a helpful Python tutor...",
+    "targetAudience": "Beginner"
+  },
+  "knowledgeBase": ["Python documentation on functions..."],
+  "chatHistory": [
+    { "role": "user", "content": "What is a function?" },
+    { "role": "assistant", "content": "A function is..." }
+  ]
 }
 ```
 
@@ -178,12 +191,11 @@ Health check endpoint (no auth required).
 
 ```python
 # src/routers/my_feature.py
-from fastapi import APIRouter, Depends
-from ..middleware.auth import verify_internal_secret
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/my-feature", tags=["my-feature"])
 
-@router.post("", dependencies=[Depends(verify_internal_secret)])
+@router.post("")
 async def my_feature():
     # Implementation
     pass
@@ -201,23 +213,25 @@ app.include_router(my_feature.router)
 
 ```python
 # src/models/my_model.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 class MyModel(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: int
     name: str = Field(..., description="Name field")
 ```
 
-### 3. Call Backend API for Data
+### 3. Update LLM Service
+
+The LLM service is called directly from routers with request data:
 
 ```python
 # In your endpoint
-from ..services.backend_api import backend_api
+from ..services.llm import llm_service
+from ..models.chat import ChatRequest
 
-# Fetch exercise
-exercise = await backend_api.get_exercise(exercise_id)
-
-# Or add new method to backend_api.py
+hint = await llm_service.generate_hint(request)
 ```
 
 ## LLM Configuration
@@ -233,13 +247,17 @@ exercise = await backend_api.get_exercise(exercise_id)
 Edit `src/services/llm.py`:
 
 ```python
-def _build_system_prompt(self, exercise: Exercise) -> str:
+def _build_system_prompt(self, request: ChatRequest) -> str:
     # Customize system prompt here
-    return f"""You are a helpful programming tutor..."""
+    ta = request.teaching_assistant
+    exercise = request.exercise
+    # Build prompt with TA config and exercise context
+    return ta.system_prompt + f"\n\nEXERCISE: {exercise.title}"
 
-def _build_user_message(self, code: str, message: str) -> str:
-    # Customize user message format
-    return f"""STUDENT'S CODE:\n{code}\n\nQUESTION:\n{message}"""
+def _build_messages(self, request: ChatRequest) -> list[dict]:
+    # Build messages with chat history and current question
+    messages = [...]
+    return messages
 ```
 
 ## Development Workflow
@@ -288,14 +306,13 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 ### AI service won't start
 - Check `.env` file exists with all required variables
 - Verify `ANTHROPIC_API_KEY` is valid
-- Check backend API is running and accessible
 - View logs: `npm run ai:logs` or `uv run uvicorn src.main:app --reload`
+- Check Python dependencies: `uv sync`
 
-### Can't connect to backend API
-- Verify `BACKEND_API_URL` points to correct host
-- Check `INTERNAL_API_SECRET` matches backend configuration
-- Ensure backend is running on specified port
-- Check network connectivity (Docker network for containers)
+### Invalid request format
+- Verify request JSON matches expected schema with camelCase fields
+- Check `teachingAssistant` and `knowledgeBase` are using camelCase
+- Ensure all required fields are present in request body
 
 ### LLM responses are slow
 - Normal: First request takes longer (model loading)
@@ -303,10 +320,10 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 - Verify network latency
 - Consider caching common questions
 
-### Authentication errors
-- Verify `X-Internal-Secret` header is sent
-- Check secret matches between services
-- Ensure backend API is configured with same secret
+### Type validation errors from Pydantic
+- Ensure field names match aliases (accept both snake_case and camelCase)
+- Check ConfigDict has `populate_by_name=True`
+- Verify Field definitions have proper aliases
 
 ## Related Documentation
 
