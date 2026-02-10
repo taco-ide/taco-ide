@@ -35,7 +35,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
         )
 
         # Build and run before-LLM guardrails
-        preset = build_preset(request.guardrail_preset)
+        try:
+            preset = build_preset(request.guardrail_preset)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(e),
+            ) from e
+
         before_result = await preset.run_before(ctx)
 
         # If a guardrail blocked, return blocked response

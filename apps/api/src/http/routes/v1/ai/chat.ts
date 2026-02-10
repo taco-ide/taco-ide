@@ -18,6 +18,7 @@ const ChatResponseSchema = ResponseSchema200.extend({
   data: z.object({
     response: z.string(),
     suggestions: z.array(z.string()),
+    guardrailBlocked: z.boolean().default(false),
   }),
 });
 
@@ -147,6 +148,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           data: {
             response: aiResponse.response,
             suggestions: aiResponse.suggestions,
+            guardrailBlocked: aiResponse.guardrailBlocked ?? false,
           },
         });
       } catch (error) {
