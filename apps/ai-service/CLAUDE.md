@@ -329,3 +329,337 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 - **Backend API**: `apps/api/CLAUDE.md`
 - **Root CLAUDE.md**: Repository overview
 - **OpenAI API**: https://platform.openai.com/docs/
+
+---
+
+## Coding Standards
+
+Standards for writing Python code in this service. All code must follow these conventions.
+
+### Toolchain
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| `uv` | Dependency management | `uv sync`, `uv add <pkg>` |
+| `ruff` | Linting + formatting | `uv run ruff check src/ tests/` |
+| `pyright` | Type checking | `uv run pyright src/` |
+| `pytest` | Testing | `uv run pytest` |
+
+#### Required dev dependencies
+
+```toml
+# pyproject.toml
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "ruff>=0.4.0",
+    "pyright>=1.1.0",
+]
+```
+
+#### Ruff configuration
+
+```toml
+# pyproject.toml
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+```
+
+---
+
+### Code Style
+
+- Python 3.11+ — use modern syntax: `X | Y` unions, `list[str]` generics, `match` when appropriate
+- Line length: **100 characters**
+- All public functions, methods, and classes must have **docstrings** (Google style)
+- Type hints on **all** function signatures
+
+#### Naming
+
+| Kind | Convention | Example |
+|------|-----------|---------|
+| Class | PascalCase | `GuardrailChain` |
+| Function / method | snake_case | `build_system_prompt` |
+| Variable | snake_case | `student_code` |
+| Constant | UPPER_SNAKE_CASE | `DEFAULT_MODEL` |
+| Private | `_` prefix | `_build_messages` |
+
+#### Imports
+
+Order: stdlib → third-party → local. Alphabetise within each group. One blank line between groups.
+
+```python
+import os
+from abc import ABC, abstractmethod
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from ..config import settings
+from ..models.chat import ChatRequest
+```
+
+---
+
+### Pydantic Models
+
+- All models use `ConfigDict(populate_by_name=True)` so both snake_case and camelCase are accepted
+- Use `Field(..., alias="camelCase")` for JSON fields that are camelCase in the API contract
+- Never use `Optional[X]` — use `X | None` instead
+
+```python
+# src/models/my_model.py
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class MyModel(BaseModel):
+    """Brief description of what this model represents."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: int
+    display_name: str = Field(..., alias="displayName", description="Human-readable name")
+    optional_field: str | None = Field(default=None, alias="optionalField")
+```
+
+Every endpoint must declare a `response_model`. Return the typed model explicitly — do not return bare dicts.
+
+```python
+@router.post("", response_model=ChatResponse)
+async def chat(request: ChatRequest) -> ChatResponse:
+    ...
+    return ChatResponse(response=hint, suggestions=[])
+```
+
+---
+
+### FastAPI Routers
+
+```python
+# src/routers/my_feature.py
+from fastapi import APIRouter, HTTPException, status
+
+from ..models.my_feature import MyRequest, MyResponse
+
+router = APIRouter(prefix="/my-feature", tags=["my-feature"])
+
+
+@router.post(
+    "",
+    response_model=MyResponse,
+    summary="Short action summary",
+    description="Longer description for Swagger docs",
+)
+async def my_endpoint(request: MyRequest) -> MyResponse:
+    """Handle my feature request."""
+    try:
+        result = await some_service.do_thing(request)
+        return MyResponse(data=result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected error. Please try again.",
+        ) from e
+```
+
+- Always `raise ... from e` to preserve the exception chain
+- Re-raise `HTTPException` without wrapping: `except HTTPException: raise`
+- Map exceptions to HTTP status codes at the router layer, not in services
+
+---
+
+### Services
+
+Services contain business logic. They are **async classes** instantiated as module-level singletons.
+
+```python
+# src/services/my_service.py
+"""My service for doing X."""
+
+
+class MyService:
+    """Brief description of the service."""
+
+    def __init__(self, config_value: str) -> None:
+        self._config = config_value
+
+    async def do_thing(self, input: str) -> str:
+        """Do a thing.
+
+        Args:
+            input: The input string to process.
+
+        Returns:
+            The processed result.
+
+        Raises:
+            ValueError: When input is invalid.
+        """
+        if not input:
+            raise ValueError("Input cannot be empty")
+        return input.upper()
+
+
+# Module-level singleton — import this in routers
+my_service = MyService(config_value="default")
+```
+
+- Services must not import from `routers` (one-way dependency)
+- Services must not raise `HTTPException` — raise domain exceptions instead
+- Async methods for all I/O (LLM calls, HTTP requests)
+
+---
+
+### Guardrails
+
+Guardrails follow the **Chain of Responsibility** pattern via `Guardrail` ABC.
+
+```python
+# src/guardrails/my_check.py
+"""My custom guardrail."""
+
+from .base import Guardrail, GuardrailAction, GuardrailContext, GuardrailResult
+
+
+class MyCheck(Guardrail):
+    """Blocks requests that contain forbidden content."""
+
+    @property
+    def name(self) -> str:
+        return "my-check"
+
+    async def execute(self, ctx: GuardrailContext) -> GuardrailResult:
+        """Check student message for forbidden patterns.
+
+        Returns:
+            BLOCK result if forbidden, ALLOW otherwise.
+        """
+        if "forbidden" in ctx.student_message.lower():
+            return GuardrailResult(
+                action=GuardrailAction.BLOCK,
+                reason="Forbidden content detected",
+            )
+        return GuardrailResult(action=GuardrailAction.ALLOW)
+```
+
+- One guardrail per file, named after what it checks
+- `execute` must always return a `GuardrailResult` — never raise
+- Guardrails are stateless; all state lives in `GuardrailContext`
+- Register new guardrails in `src/guardrails/presets.py`
+
+---
+
+### Configuration
+
+All settings come from environment variables via `pydantic-settings`. No hardcoded values.
+
+- Add new settings to `Settings`, `.env.example`, and document in this file
+- Use `model_config` dict style (not inner `class Config`) for Pydantic v2
+
+---
+
+### Error Handling
+
+```python
+# Good — specific exception, preserves chain
+try:
+    result = await llm_service.generate(prompt, messages)
+except ValueError as e:
+    raise HTTPException(status_code=422, detail=str(e)) from e
+
+# Bad — bare except, swallows context
+try:
+    result = await llm_service.generate(prompt, messages)
+except:
+    raise HTTPException(status_code=500, detail="Error")
+```
+
+- Use specific exception types — never `except Exception` as a first resort
+- Catch broad `Exception` only at the router boundary as a safety net
+- Always log the error before re-raising or returning an HTTP error
+
+---
+
+### Testing
+
+#### File layout
+
+```
+tests/
+├── conftest.py                      # Shared fixtures
+├── test_api.py                      # Integration tests (httpx AsyncClient)
+├── test_models.py                   # Pydantic model validation
+├── test_prompts.py                  # Prompt builder logic
+├── test_guardrails_<name>.py        # One file per guardrail area
+└── test_<service>.py                # Service unit tests
+```
+
+#### Conventions
+
+- `asyncio_mode = "auto"` in `pyproject.toml` — no `@pytest.mark.asyncio` decorator needed
+- Test function names: `test_<unit>_<scenario>_<expected_outcome>`
+- One assertion per test (or closely related assertions)
+- Mock external I/O — never call real OpenAI API in tests
+
+```python
+# Good — descriptive name, single concern, mocked I/O
+async def test_chat_llm_error_returns_500(async_client):
+    with patch("src.routers.chat.llm_service") as mock_llm:
+        mock_llm.generate = AsyncMock(side_effect=RuntimeError("OpenAI down"))
+        response = await async_client.post("/chat", json=VALID_CHAT_PAYLOAD)
+
+    assert response.status_code == 500
+```
+
+#### conftest.py rules
+
+- Set `os.environ["OPENAI_API_KEY"]` **before** any `src.*` imports (prevents module-level init errors)
+- Put shared fixtures in `conftest.py`, not repeated per test file
+- Use `async_client` fixture (ASGI transport via httpx) for all endpoint tests
+
+---
+
+### Dependency Management
+
+```bash
+uv add <package>              # runtime dependency
+uv add --group dev <package>  # dev-only dependency
+uv sync                       # sync after pulling or pyproject.toml change
+uv add <package>@latest       # update a specific package
+```
+
+- **Never** manually edit `uv.lock` — let `uv` manage it
+- Pin direct dependencies with minimum versions (`>=`), not exact (`==`)
+
+---
+
+### Module Responsibility Rules
+
+- `src/main.py` — app factory only; no business logic
+- `src/config.py` — settings only; no logic
+- `src/models/` — Pydantic schemas only; no logic
+- `src/routers/` — HTTP layer only; delegates to services/prompts
+- `src/services/` — stateless async business logic
+- `src/prompts/` — prompt construction only
+- `src/guardrails/` — guardrail implementations + chain + presets
+- `src/middleware/` — FastAPI middleware only
+
+Cross-layer imports are **one-directional**:
+
+```
+routers → services / prompts / guardrails / models
+services → models / config
+guardrails → base types only
+models → (nothing internal)
+```
