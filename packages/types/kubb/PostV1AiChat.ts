@@ -126,6 +126,14 @@ export type PostV1AiChat500 = {
     message: string;
 };
 
+export const postV1AiChatMutationRequestGuardrailPresetEnum = {
+    "loose": "loose",
+    "medium": "medium",
+    "strict": "strict"
+} as const;
+
+export type PostV1AiChatMutationRequestGuardrailPresetEnum = (typeof postV1AiChatMutationRequestGuardrailPresetEnum)[keyof typeof postV1AiChatMutationRequestGuardrailPresetEnum];
+
 export type PostV1AiChatMutationRequest = {
     /**
      * @type string
@@ -144,6 +152,11 @@ export type PostV1AiChatMutationRequest = {
      * @type string
     */
     message: string;
+    /**
+     * @default "medium"
+     * @type string | undefined
+    */
+    guardrailPreset?: PostV1AiChatMutationRequestGuardrailPresetEnum;
 };
 
 export type PostV1AiChatMutationResponse = PostV1AiChat200;

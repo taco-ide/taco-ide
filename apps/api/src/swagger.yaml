@@ -189,6 +189,13 @@ paths:
                 message:
                   type: string
                   minLength: 1
+                guardrailPreset:
+                  type: string
+                  enum:
+                    - loose
+                    - medium
+                    - strict
+                  default: medium
               required:
                 - workSessionId
                 - code
@@ -323,5 +330,3 @@ tags:
     description: Health check endpoints
   - name: ai
     description: AI-powered features
-  - name: internal
-    description: Internal API endpoints (AI Service only)

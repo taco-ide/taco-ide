@@ -1,6 +1,6 @@
 export type { GetV1Status200SuccessEnum, GetV1Status200, GetV1StatusQueryResponse, GetV1StatusQuery } from "../../../../../packages/types/kubb/GetV1Status.ts";
 export type { GetV1UsersMe200SuccessEnum, GetV1UsersMe200, GetV1UsersMe401SuccessEnum, GetV1UsersMe401, GetV1UsersMeQueryResponse, GetV1UsersMeQuery } from "../../../../../packages/types/kubb/GetV1UsersMe.ts";
-export type { PostV1AiChat200SuccessEnum, PostV1AiChat200, PostV1AiChat400SuccessEnum, PostV1AiChat400, PostV1AiChat401, PostV1AiChat404, PostV1AiChat500, PostV1AiChatMutationRequest, PostV1AiChatMutationResponse, PostV1AiChatMutation } from "../../../../../packages/types/kubb/PostV1AiChat.ts";
+export type { PostV1AiChat200SuccessEnum, PostV1AiChat200, PostV1AiChat400SuccessEnum, PostV1AiChat400, PostV1AiChat401, PostV1AiChat404, PostV1AiChat500, PostV1AiChatMutationRequestGuardrailPresetEnum, PostV1AiChatMutationRequest, PostV1AiChatMutationResponse, PostV1AiChatMutation } from "../../../../../packages/types/kubb/PostV1AiChat.ts";
 export type { PostV1AiChatMutationKey } from "../../../../web/src/kubb/hooks/aiHooks/usePostV1AiChat.ts";
 export type { GetV1StatusQueryKey } from "../../../../web/src/kubb/hooks/statusHooks/useGetV1Status.ts";
 export type { GetV1StatusSuspenseQueryKey } from "../../../../web/src/kubb/hooks/statusHooks/useGetV1StatusSuspense.ts";
@@ -8,7 +8,7 @@ export type { GetV1UsersMeQueryKey } from "../../../../web/src/kubb/hooks/usersH
 export type { GetV1UsersMeSuspenseQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeSuspense.ts";
 export { getV1Status200SuccessEnum } from "../../../../../packages/types/kubb/GetV1Status.ts";
 export { getV1UsersMe200SuccessEnum, getV1UsersMe401SuccessEnum } from "../../../../../packages/types/kubb/GetV1UsersMe.ts";
-export { postV1AiChat200SuccessEnum, postV1AiChat400SuccessEnum } from "../../../../../packages/types/kubb/PostV1AiChat.ts";
+export { postV1AiChat200SuccessEnum, postV1AiChat400SuccessEnum, postV1AiChatMutationRequestGuardrailPresetEnum } from "../../../../../packages/types/kubb/PostV1AiChat.ts";
 export { postV1AiChatMutationKey, postV1AiChat, usePostV1AiChat } from "../../../../web/src/kubb/hooks/aiHooks/usePostV1AiChat.ts";
 export { getV1StatusQueryKey, getV1Status, getV1StatusQueryOptions, useGetV1Status } from "../../../../web/src/kubb/hooks/statusHooks/useGetV1Status.ts";
 export { getV1StatusSuspenseQueryKey, getV1StatusSuspense, getV1StatusSuspenseQueryOptions, useGetV1StatusSuspense } from "../../../../web/src/kubb/hooks/statusHooks/useGetV1StatusSuspense.ts";

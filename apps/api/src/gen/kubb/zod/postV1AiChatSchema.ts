@@ -62,7 +62,8 @@ export const postV1AiChatMutationRequestSchema = z.object({
     "workSessionId": z.string(),
 "code": z.string(),
 "language": z.string(),
-"message": z.string().min(1)
+"message": z.string().min(1),
+"guardrailPreset": z.enum(["loose", "medium", "strict"]).default("medium")
     })
 
 export const postV1AiChatMutationResponseSchema = z.lazy(() => postV1AiChat200Schema)

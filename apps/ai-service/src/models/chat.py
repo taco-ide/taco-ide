@@ -51,12 +51,21 @@ class ChatRequest(BaseModel):
     chat_history: list[ChatMessage] = Field(
         default_factory=list, alias="chatHistory", description="Previous conversation"
     )
+    guardrail_preset: str = Field(
+        default="medium", alias="guardrailPreset", description="Guardrail preset: loose, medium, or strict"
+    )
 
 
 class ChatResponse(BaseModel):
     """Response model for AI chat endpoint."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     response: str = Field(..., description="AI-generated response")
     suggestions: list[str] = Field(
         default_factory=list, description="Optional suggestions"
+    )
+    guardrail_blocked: bool = Field(default=False, alias="guardrailBlocked", description="Whether request was blocked by guardrails")
+    guardrail_log: list[str] = Field(
+        default_factory=list, alias="guardrailLog", description="Log of guardrail execution"
     )

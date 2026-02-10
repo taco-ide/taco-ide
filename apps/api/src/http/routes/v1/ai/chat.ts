@@ -11,6 +11,7 @@ const ChatRequestSchema = z.object({
   code: z.string(),
   language: z.string(),
   message: z.string().min(1),
+  guardrailPreset: z.enum(["loose", "medium", "strict"]).optional().default("medium"),
 });
 
 const ChatResponseSchema = ResponseSchema200.extend({
@@ -47,7 +48,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
       },
     },
     async (request, reply) => {
-      const { workSessionId, code, language, message } = request.body;
+      const { workSessionId, code, language, message, guardrailPreset } = request.body;
 
       const userId = request.user?.id;
 
@@ -138,6 +139,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           },
           knowledge_base: kbEntries.map(kb => kb.content),
           chat_history: chatHistory,
+          guardrailPreset,
         });
 
         return reply.send({

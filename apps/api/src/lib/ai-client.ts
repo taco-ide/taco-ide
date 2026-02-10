@@ -29,11 +29,14 @@ interface ChatRequest {
   teaching_assistant: TeachingAssistantContext;
   knowledge_base: string[];
   chat_history: ChatMessage[];
+  guardrailPreset: string;
 }
 
 interface ChatResponse {
   response: string;
   suggestions: string[];
+  guardrailBlocked: boolean;
+  guardrailLog: string[];
 }
 
 class AIServiceClient {
