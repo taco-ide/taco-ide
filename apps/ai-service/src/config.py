@@ -8,8 +8,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # LLM Provider (at least one required)
-    anthropic_api_key: str | None = None
+    # LLM Provider
     openai_api_key: str | None = None
 
     # Server Configuration
@@ -19,6 +18,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"
 
 
 # Global settings instance

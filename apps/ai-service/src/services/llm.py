@@ -2,7 +2,7 @@
 LLM service for generating code hints and analysis.
 """
 
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
 
 from ..config import settings
 
@@ -12,13 +12,10 @@ class LLMService:
 
     def __init__(self):
         """Initialize LLM client based on available API keys."""
-        if settings.anthropic_api_key:
-            self.client = AsyncAnthropic(api_key=settings.anthropic_api_key)
-            self.provider = "anthropic"
-        elif settings.openai_api_key:
-            raise NotImplementedError("OpenAI support not yet implemented")
+        if settings.openai_api_key:
+            self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         else:
-            raise ValueError("No LLM API key configured.")
+            raise ValueError("No LLM API key configured. Set OPENAI_API_KEY.")
 
     async def generate(self, system_prompt: str, messages: list[dict]) -> str:
         """Generate text from the LLM.
@@ -30,16 +27,14 @@ class LLMService:
         Returns:
             The LLM-generated response text
         """
-        if self.provider == "anthropic":
-            response = await self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=1024,
-                system=system_prompt,
-                messages=messages,
-            )
-            return response.content[0].text
+        llm_messages = [{"role": "system", "content": system_prompt}, *messages]
 
-        raise NotImplementedError(f"Provider {self.provider} not implemented")
+        response = await self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            max_tokens=1024,
+            messages=llm_messages,
+        )
+        return response.choices[0].message.content
 
 
 # Global LLM service instance

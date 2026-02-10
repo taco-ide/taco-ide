@@ -7,7 +7,7 @@ LLM-powered code hints and analysis for educational programming platform.
 ### Prerequisites
 - Python 3.11+
 - uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-- Anthropic API key
+- OpenAI API key
 
 ### Setup
 
@@ -15,8 +15,8 @@ LLM-powered code hints and analysis for educational programming platform.
 # 1. Copy environment template
 cp .env.example .env
 
-# 2. Add your Anthropic API key to .env
-# ANTHROPIC_API_KEY=sk-ant-...
+# 2. Add your OpenAI API key to .env
+# OPENAI_API_KEY=sk-...
 
 # 3. Install dependencies
 uv sync
@@ -37,14 +37,9 @@ Once running, visit:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `BACKEND_API_URL` | Backend API URL | Yes |
-| `INTERNAL_API_SECRET` | Shared secret for service auth | Yes |
-| `ANTHROPIC_API_KEY` | Anthropic API key | Yes* |
-| `OPENAI_API_KEY` | OpenAI API key | Yes* |
+| `OPENAI_API_KEY` | OpenAI API key | Yes |
 | `HOST` | Server host | No (default: 0.0.0.0) |
 | `PORT` | Server port | No (default: 8000) |
-
-*At least one LLM provider key required
 
 ## Development
 
@@ -87,7 +82,7 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 This service:
 - **Has NO direct database access**
 - Calls backend API for all data operations
-- Uses Anthropic Claude for generating hints
+- Uses OpenAI GPT for generating hints
 - Provides educational guidance (not solutions)
 
 ## Documentation

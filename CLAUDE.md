@@ -25,7 +25,7 @@ taco-ide/
 
 - **Backend**: Fastify 5, Zod validation, Swagger/OpenAPI, Better Auth
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, Radix UI, Zustand, React Query
-- **AI Service**: Python 3.11+, FastAPI, Anthropic Claude, Pydantic, httpx
+- **AI Service**: Python 3.11+, FastAPI, OpenAI GPT, Pydantic, httpx
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth (email/password, password reset)
 - **Code Generation**: Kubb (generates types, React Query hooks, Zod schemas from OpenAPI)
@@ -76,7 +76,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3333
 # apps/ai-service/.env
 BACKEND_API_URL=http://localhost:3333
 INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
-ANTHROPIC_API_KEY=sk-ant-your-api-key
+OPENAI_API_KEY=sk-your-openai-api-key
 ```
 
 ### Running the Application

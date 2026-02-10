@@ -17,7 +17,7 @@ The AI service:
 - **Framework**: FastAPI
 - **Language**: Python 3.11+
 - **Dependency Management**: uv
-- **LLM Provider**: Anthropic Claude (Sonnet 3.5)
+- **LLM Provider**: OpenAI GPT (gpt-4o-mini)
 - **Validation**: Pydantic v2
 
 ## Architecture
@@ -26,27 +26,27 @@ The AI service:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Backend API (Fastify)                     │
+│                    Backend API (Fastify)                    │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │ POST /v1/ai/chat                                        │ │
-│  │ - Gathers context from database                         │ │
-│  │ - Sends complete payload (exercise, TA, KB, history)    │ │
+│  │ POST /v1/ai/chat                                       │ │
+│  │ - Gathers context from database                        │ │
+│  │ - Sends complete payload (exercise, TA, KB, history)   │ │
 │  └─────────┬──────────────────────────────────────────────┘ │
-│            │                                                 │
-│            │ Sends full context                              │
-│            ▼                                                 │
+│            │                                                │
+│            │ Sends full context                             │
+│            ▼                                                │
 └─────────────────────────────────────────────────────────────┘
              │
              │
              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│            Python AI Service                                 │
+│            Python AI Service                                │
 │  ┌─────────────────────────────────────────────────────────┐│
-│  │ POST /chat                                               ││
-│  │ - Receives complete context in request                   ││
+│  │ POST /chat                                              ││
+│  │ - Receives complete context in request                  ││
 │  │ - Builds system prompt with TA config and knowledge base││
-│  │ - Calls Claude LLM                                       ││
-│  │ - Returns hint response                                  ││
+│  │ - Calls OpenAI LLM                                      ││
+│  │ - Returns hint response                                 ││
 │  └─────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -71,7 +71,7 @@ apps/ai-service/
 │   │   └── exercise.py      # Exercise model
 │   ├── services/
 │   │   ├── backend_api.py   # HTTP client to call backend
-│   │   └── llm.py           # Anthropic LLM integration
+│   │   └── llm.py           # OpenAI LLM integration
 │   ├── routers/
 │   │   └── chat.py          # POST /chat endpoint
 │   └── middleware/
@@ -94,8 +94,8 @@ cd apps/ai-service
 # Copy environment template
 cp .env.example .env
 
-# Edit .env and add your Anthropic API key
-# ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env and add your OpenAI API key
+# OPENAI_API_KEY=sk-...
 
 # Run with uv (hot reload enabled)
 uv run uvicorn src.main:app --reload --port 8000
@@ -107,7 +107,7 @@ uv run uvicorn src.main:app --reload --port 8000
 # From monorepo root
 cd packages/infra
 
-# Set ANTHROPIC_API_KEY in apps/api/.env.development
+# Set OPENAI_API_KEY in apps/api/.env.development
 # Start all services
 npm run services:up
 
@@ -123,9 +123,8 @@ npm run ai:restart
 Required environment variables (see `.env.example`):
 
 ```env
-# LLM Provider (at least one required)
-ANTHROPIC_API_KEY=sk-ant-...                   # Anthropic API key
-# OPENAI_API_KEY=sk-...                        # OpenAI API key (future)
+# LLM Provider
+OPENAI_API_KEY=sk-...                          # OpenAI API key
 
 # Server Configuration
 HOST=0.0.0.0
@@ -237,10 +236,10 @@ hint = await llm_service.generate_hint(request)
 ## LLM Configuration
 
 ### Current Setup
-- **Provider**: Anthropic
-- **Model**: claude-3-5-sonnet-20241022
+- **Provider**: OpenAI
+- **Model**: gpt-4o-mini
 - **Max Tokens**: 1024
-- **Temperature**: Default (controlled by Anthropic)
+- **Temperature**: Default
 
 ### Customizing Prompts
 
@@ -267,26 +266,26 @@ def _build_messages(self, request: ChatRequest) -> list[dict]:
 uv sync
 ```
 
-### Run Tests (future)
+### Run Tests
 ```bash
 uv run pytest
 ```
 
-### Format Code (future)
+### Lint & Format
 ```bash
-uv run black src/
-uv run isort src/
+uv run ruff check src/ tests/
+uv run ruff format src/ tests/
 ```
 
-### Type Check (future)
+### Type Check
 ```bash
-uv run mypy src/
+uv run pyright src/
 ```
 
 ## Deployment Considerations
 
 ### Production Checklist
-- [ ] Set production `ANTHROPIC_API_KEY`
+- [ ] Set production `OPENAI_API_KEY`
 - [ ] Use secure `INTERNAL_API_SECRET` (32+ characters)
 - [ ] Configure proper logging (structured JSON logs)
 - [ ] Set up health check monitoring
@@ -305,7 +304,7 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 
 ### AI service won't start
 - Check `.env` file exists with all required variables
-- Verify `ANTHROPIC_API_KEY` is valid
+- Verify `OPENAI_API_KEY` is valid
 - View logs: `npm run ai:logs` or `uv run uvicorn src.main:app --reload`
 - Check Python dependencies: `uv sync`
 
@@ -316,7 +315,7 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 
 ### LLM responses are slow
 - Normal: First request takes longer (model loading)
-- Check Anthropic API status
+- Check OpenAI API status
 - Verify network latency
 - Consider caching common questions
 
@@ -329,4 +328,4 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 
 - **Backend API**: `apps/api/CLAUDE.md`
 - **Root CLAUDE.md**: Repository overview
-- **Anthropic API**: https://docs.anthropic.com/
+- **OpenAI API**: https://platform.openai.com/docs/

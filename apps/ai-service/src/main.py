@@ -15,7 +15,7 @@ from .routers import chat
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     print(f"AI Service starting on {settings.host}:{settings.port}")
-    print(f"LLM Provider: {'Anthropic' if settings.anthropic_api_key else 'None'}")
+    print(f"LLM Provider: {'OpenAI' if settings.openai_api_key else 'None'}")
     yield
     print("Shutting down AI Service...")
 
