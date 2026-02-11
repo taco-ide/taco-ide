@@ -21,10 +21,7 @@ export { ac, studentRole, teacherRole, coordinatorRole, adminRole } from "./perm
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [
-    "http://localhost:3000",
-    env.BETTER_AUTH_URL,
-  ],
+  trustedOrigins: [env.FRONTEND_URL, env.BETTER_AUTH_URL],
 
   database: drizzleAdapter(db, {
     provider: "pg",

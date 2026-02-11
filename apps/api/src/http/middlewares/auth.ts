@@ -14,6 +14,8 @@ export async function authMiddleware(
     for (const [key, value] of Object.entries(request.headers)) {
       if (typeof value === "string") {
         headersObj.append(key, value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => headersObj.append(key, v));
       }
     }
 

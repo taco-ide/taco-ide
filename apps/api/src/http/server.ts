@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { env } from "@repo/infra/env";
 import { registerRoutes } from "./routes/v1/index";
 import { authMiddleware } from "./middlewares/auth";
 
@@ -31,9 +32,7 @@ app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
 
 // CORS configuration
-const allowedOrigins = [process.env.BASE_URL || "http://localhost:3000"].filter(
-  Boolean
-) as string[];
+const allowedOrigins = [env.FRONTEND_URL];
 
 app.register(fastifyCors, {
   origin: allowedOrigins,

@@ -15,7 +15,7 @@ export const BaseErrorResponseSchema = z.object({
 
 // Success responses by status code
 export const ResponseSchema200 = BaseSuccessResponseSchema.extend({
-  data: z.any(),
+  data: z.unknown(),
   pagination: z
     .object({
       total: z.number(),
@@ -27,7 +27,7 @@ export const ResponseSchema200 = BaseSuccessResponseSchema.extend({
 });
 
 export const ResponseSchema201 = BaseSuccessResponseSchema.extend({
-  data: z.any(),
+  data: z.unknown(),
 });
 
 export const ResponseSchema204 = BaseSuccessResponseSchema;
