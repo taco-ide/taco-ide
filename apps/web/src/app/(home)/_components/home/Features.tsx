@@ -24,14 +24,21 @@ const FeatureSection: FC<FeatureSectionProps> = ({
   <div className="text-center mb-24 relative">
     <h2 className="text-4xl font-bold mb-6 inline-block">
       <span
-        className={`bg-gradient-to-r from-[${accentColor}] to-[#FFA000] text-transparent bg-clip-text`}
+        className="bg-gradient-to-r to-[#FFA000] text-transparent bg-clip-text"
+        style={{
+          backgroundImage: `linear-gradient(to right, ${accentColor}, #FFA000)`,
+        }}
       >
         {title}
       </span>
     </h2>
     <p className="text-xl text-gray-300 max-w-2xl mx-auto">{description}</p>
     <div
-      className={`absolute -top-10 -${position}-10 w-40 h-40 bg-[${accentColor}] rounded-full filter blur-[100px] opacity-20`}
+      className="absolute -top-10 w-40 h-40 rounded-full filter blur-[100px] opacity-20"
+      style={{
+        backgroundColor: accentColor,
+        [position === "right" ? "right" : "left"]: "-2.5rem",
+      }}
     ></div>
   </div>
 );
@@ -192,10 +199,25 @@ const Features = () => {
       {features.map((feature, index) => (
         <div
           key={index}
-          className={`group relative bg-gradient-to-b from-[#2a2f3e] to-[#252a38] p-8 rounded-2xl hover:transform hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-[${accentColor}]/10`}
+          className="group relative bg-gradient-to-b from-[#2a2f3e] to-[#252a38] p-8 rounded-2xl hover:transform hover:scale-105 transition-all duration-300 hover:shadow-xl"
+          style={
+            {
+              "--accent-color": accentColor,
+              "--accent-shadow": `${accentColor}1a`,
+            } as React.CSSProperties
+          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = `0 20px 25px -5px ${accentColor}1a`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "";
+          }}
         >
           <div
-            className={`absolute inset-0 bg-gradient-to-r from-[${accentColor}]/10 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300`}
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"
+            style={{
+              backgroundImage: `linear-gradient(to right, ${accentColor}1a, transparent)`,
+            }}
           ></div>
           <div className="relative">
             <div className="flex items-center gap-4 mb-6">
@@ -209,7 +231,8 @@ const Features = () => {
                   className="flex items-center gap-2 text-gray-300 group-hover:text-white transition-colors"
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full bg-[${accentColor}]`}
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: accentColor }}
                   ></span>
                   {item}
                 </li>
