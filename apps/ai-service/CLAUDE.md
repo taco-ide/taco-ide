@@ -120,15 +120,53 @@ npm run ai:restart
 
 ## Environment Variables
 
-Required environment variables (see `.env.example`):
+Required and optional environment variables (see `.env.example`):
 
 ```env
-# LLM Provider
-OPENAI_API_KEY=sk-...                          # OpenAI API key
+# LLM Provider Configuration (required)
+OPENAI_API_KEY=sk-...                          # OpenAI API key (required)
 
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
+# LLM Configuration (optional, with defaults)
+LLM_BASE_URL=https://api.openai.com/v1         # Default: OpenAI API URL
+LLM_MODEL=gpt-4o-mini                          # Default: gpt-4o-mini
+LLM_MAX_TOKENS=1024                            # Default: 1024
+LLM_TEMPERATURE=1.0                            # Default: 1.0
+
+# Server Configuration (optional)
+HOST=0.0.0.0                                   # Default: 0.0.0.0
+PORT=8000                                      # Default: 8000
+```
+
+### LLM Configuration
+
+The service supports any OpenAI-compatible LLM provider by configuring:
+
+- **LLM_BASE_URL**: Base URL for LLM API endpoint (default: OpenAI)
+- **LLM_MODEL**: Model name to use (default: gpt-4o-mini)
+- **LLM_MAX_TOKENS**: Maximum tokens in response (default: 1024)
+- **LLM_TEMPERATURE**: Temperature for response generation (default: 1.0)
+
+#### Examples
+
+**Using Ollama (local model)**:
+```env
+OPENAI_API_KEY=ollama  # Required but not validated for local endpoints
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL=mistral
+```
+
+**Using vLLM (local inference server)**:
+```env
+OPENAI_API_KEY=vllm  # Required but not validated
+LLM_BASE_URL=http://localhost:8000/v1
+LLM_MODEL=meta-llama/Llama-2-7b-chat-hf
+```
+
+**Using Azure OpenAI**:
+```env
+OPENAI_API_KEY=your-azure-key
+LLM_BASE_URL=https://<resource-name>.openai.azure.com/v1
+LLM_MODEL=deployment-name
 ```
 
 ## API Endpoints
@@ -173,14 +211,16 @@ Generate AI-powered hint for student.
 
 ### GET /health
 
-Health check endpoint (no auth required).
+Health check endpoint (no auth required). Returns service status and LLM provider information.
 
 **Response**:
 ```json
 {
   "status": "healthy",
   "service": "ai-service",
-  "version": "0.1.0"
+  "version": "0.2.0",
+  "llmModel": "gpt-4o-mini",
+  "llmBaseUrl": "https://api.openai.com/v1"
 }
 ```
 
@@ -235,31 +275,44 @@ hint = await llm_service.generate_hint(request)
 
 ## LLM Configuration
 
-### Current Setup
-- **Provider**: OpenAI
-- **Model**: gpt-4o-mini
-- **Max Tokens**: 1024
-- **Temperature**: Default
+All LLM parameters are configurable via environment variables. The service can work with any OpenAI-compatible provider (OpenAI, Ollama, vLLM, Azure OpenAI, LiteLLM, etc.).
 
-### Customizing Prompts
+### Configuration Parameters
 
-Edit `src/services/llm.py`:
+- **OPENAI_API_KEY** (required): API key for the LLM provider
+- **LLM_BASE_URL**: Base URL for LLM API (default: `https://api.openai.com/v1`)
+- **LLM_MODEL**: Model name to use (default: `gpt-4o-mini`)
+- **LLM_MAX_TOKENS**: Max tokens in response (default: `1024`)
+- **LLM_TEMPERATURE**: Temperature for sampling (default: `1.0`)
+
+The `LLMService` class reads these values from `settings` and automatically:
+1. Initializes the AsyncOpenAI client with the configured `base_url`
+2. Uses the configured `model`, `max_tokens`, and `temperature` in API calls
+3. Logs provider information at startup
+
+### Customizing Behavior
+
+To customize request/response handling beyond configuration, edit `src/routers/chat.py`:
 
 ```python
-def _build_system_prompt(self, request: ChatRequest) -> str:
-    # Customize system prompt here
-    ta = request.teaching_assistant
-    exercise = request.exercise
-    # Build prompt with TA config and exercise context
-    return ta.system_prompt + f"\n\nEXERCISE: {exercise.title}"
+# src/routers/chat.py
+from ..services.llm import llm_service
 
-def _build_messages(self, request: ChatRequest) -> list[dict]:
-    # Build messages with chat history and current question
-    messages = [...]
-    return messages
+@router.post("")
+async def chat(request: ChatRequest) -> ChatResponse:
+    # Build custom prompts here
+    system_prompt = f"{request.teaching_assistant.system_prompt}..."
+    # Call LLM service
+    hint = await llm_service.generate(system_prompt, messages)
+    return ChatResponse(response=hint, guardrail_blocked=False)
 ```
 
 ## Development Workflow
+
+### Step 0: Navigate to the AI service directory
+```bash
+cd apps/ai-service
+```
 
 ### Install Dependencies
 ```bash

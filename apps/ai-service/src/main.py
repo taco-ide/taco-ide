@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
+from .models.health import HealthResponse
 from .routers import chat
 
 
@@ -16,6 +17,10 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     print(f"AI Service starting on {settings.host}:{settings.port}")
     print(f"LLM Provider: {'OpenAI' if settings.openai_api_key else 'None'}")
+    print(f"LLM Model: {settings.llm_model}")
+    print(f"LLM Base URL: {settings.llm_base_url}")
+    print(f"LLM Max Tokens: {settings.llm_max_tokens}")
+    print(f"LLM Temperature: {settings.llm_temperature}")
     yield
     print("Shutting down AI Service...")
 
@@ -38,13 +43,16 @@ app.add_middleware(
 app.include_router(chat.router)
 
 
-@app.get("/health", tags=["health"])
-async def health_check():
-    return {
-        "status": "healthy",
-        "service": "ai-service",
-        "version": "0.2.0",
-    }
+@app.get("/health", tags=["health"], response_model=HealthResponse)
+async def health_check() -> HealthResponse:
+    """Health check endpoint with LLM provider information."""
+    return HealthResponse(
+        status="healthy",
+        service="ai-service",
+        version="0.2.0",
+        llm_model=settings.llm_model,
+        llm_base_url=settings.llm_base_url,
+    )
 
 
 if __name__ == "__main__":

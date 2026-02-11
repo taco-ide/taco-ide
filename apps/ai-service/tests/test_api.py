@@ -28,15 +28,28 @@ VALID_CHAT_PAYLOAD = {
 # --- Health endpoint ---
 
 async def test_health_returns_200(async_client):
+    """Health endpoint should return 200 OK."""
     response = await async_client.get("/health")
     assert response.status_code == 200
 
 
 async def test_health_returns_healthy_status(async_client):
+    """Health endpoint should return healthy status and service info."""
     response = await async_client.get("/health")
     data = response.json()
     assert data["status"] == "healthy"
     assert data["service"] == "ai-service"
+    assert "version" in data
+
+
+async def test_health_includes_llm_provider_info(async_client):
+    """Health endpoint should include LLM provider information."""
+    response = await async_client.get("/health")
+    data = response.json()
+    assert "llmModel" in data
+    assert "llmBaseUrl" in data
+    assert data["llmModel"] == "gpt-4o-mini"
+    assert data["llmBaseUrl"] == "https://api.openai.com/v1"
 
 
 # --- POST /chat happy path ---
