@@ -73,6 +73,7 @@ export const teachingAssistant = pgTable(
     systemPrompt: text("system_prompt").notNull(),
     description: text("description"),
     targetAudience: varchar("target_audience", { length: 50 }),
+    guardrailConfig: jsonb("guardrail_config"),
     isActive: boolean("is_active").notNull().default(false),
     createdByOrganizationId: text("created_by_organization_id").references(
       () => organization.id,

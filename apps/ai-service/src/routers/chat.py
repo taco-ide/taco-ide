@@ -36,7 +36,10 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         # Build and run before-LLM guardrails
         try:
-            preset = build_preset(request.guardrail_preset)
+            # Extract per-TA guardrail config (new path) with fallback to request.guardrail_preset
+            guardrail_config = request.teaching_assistant.guardrail_config
+            preset_name = guardrail_config.preset if guardrail_config else request.guardrail_preset
+            preset = build_preset(preset_name, config=guardrail_config)
         except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

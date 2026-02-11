@@ -137,6 +137,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           teaching_assistant: {
             systemPrompt: ta.systemPrompt,
             targetAudience: ta.targetAudience,
+            guardrailConfig: ta.guardrailConfig,
           },
           knowledge_base: kbEntries.map(kb => kb.content),
           chat_history: chatHistory,

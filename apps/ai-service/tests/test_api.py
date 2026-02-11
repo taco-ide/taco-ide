@@ -121,3 +121,70 @@ async def test_chat_llm_error_returns_500(async_client):
         response = await async_client.post("/chat", json=VALID_CHAT_PAYLOAD)
 
     assert response.status_code == 500
+
+
+# --- GuardrailConfig integration ---
+
+
+async def test_chat_with_guardrail_config_in_teaching_assistant(async_client):
+    """Chat endpoint accepts guardrailConfig in teachingAssistant field."""
+    payload = {
+        **VALID_CHAT_PAYLOAD,
+        "teachingAssistant": {
+            "systemPrompt": "You are a helpful tutor.",
+            "targetAudience": "Beginner",
+            "guardrailConfig": {
+                "preset": "strict",
+                "maxInputTokens": 2000,
+                "maxOutputTokens": 500,
+                "blockCode": True,
+            },
+        },
+    }
+    with patch("src.routers.chat.llm_service") as mock_llm:
+        mock_llm.generate = AsyncMock(return_value="Here's a hint.")
+        response = await async_client.post("/chat", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["response"] == "Here's a hint."
+    assert data["guardrailBlocked"] is False
+
+
+async def test_chat_with_guardrail_config_token_limit_blocks_oversized_request(async_client):
+    """Chat endpoint respects max_input_tokens from guardrailConfig."""
+    payload = {
+        **VALID_CHAT_PAYLOAD,
+        "code": "x" * 5000,
+        "message": "y" * 5000,
+        "teachingAssistant": {
+            "systemPrompt": "You are helpful.",
+            "guardrailConfig": {
+                "maxInputTokens": 100,  # Very small limit
+            },
+        },
+    }
+    response = await async_client.post("/chat", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["guardrailBlocked"] is True
+
+
+async def test_chat_falls_back_to_guardrail_preset_when_no_config(async_client):
+    """Chat endpoint falls back to guardrailPreset if no guardrailConfig provided."""
+    payload = {
+        **VALID_CHAT_PAYLOAD,
+        "guardrailPreset": "strict",
+        "teachingAssistant": {
+            "systemPrompt": "You are helpful.",
+            # No guardrailConfig
+        },
+    }
+    with patch("src.routers.chat.llm_service") as mock_llm:
+        mock_llm.generate = AsyncMock(return_value="Hint here.")
+        response = await async_client.post("/chat", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["response"] == "Hint here."

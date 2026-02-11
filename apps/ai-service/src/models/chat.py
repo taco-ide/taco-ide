@@ -6,6 +6,22 @@ from pydantic import BaseModel, ConfigDict, Field
 from typing import Any
 
 
+class GuardrailConfig(BaseModel):
+    """Per-TA guardrail configuration overrides.
+
+    All fields are optional. Absent fields fall back to the preset defaults.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    preset: str = Field(default="medium", description="Base preset: loose, medium, or strict")
+    block_code: bool | None = Field(default=None, alias="blockCode")
+    block_pseudocode: bool | None = Field(default=None, alias="blockPseudocode")
+    max_input_tokens: int | None = Field(default=None, alias="maxInputTokens")
+    max_output_tokens: int | None = Field(default=None, alias="maxOutputTokens")
+    custom_rules: str | None = Field(default=None, alias="customRules")
+
+
 class ExerciseContext(BaseModel):
     """Exercise data sent by the backend."""
 
@@ -24,6 +40,7 @@ class TeachingAssistantContext(BaseModel):
 
     system_prompt: str = Field(..., alias="systemPrompt")
     target_audience: str | None = Field(default=None, alias="targetAudience")
+    guardrail_config: GuardrailConfig | None = Field(default=None, alias="guardrailConfig")
 
 
 class ChatMessage(BaseModel):

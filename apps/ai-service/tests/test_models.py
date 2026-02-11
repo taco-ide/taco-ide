@@ -4,7 +4,13 @@ Tests for Pydantic models (ChatRequest, ChatResponse, etc.).
 
 import pytest
 
-from src.models.chat import ChatRequest, ChatResponse, ExerciseContext, TeachingAssistantContext
+from src.models.chat import (
+    ChatRequest,
+    ChatResponse,
+    ExerciseContext,
+    GuardrailConfig,
+    TeachingAssistantContext,
+)
 
 
 # --- ExerciseContext ---
@@ -50,6 +56,69 @@ def test_ta_parses_camel_case_aliases():
 def test_ta_parses_snake_case():
     ta = TeachingAssistantContext(system_prompt="You are a tutor.", target_audience="Beginner")
     assert ta.system_prompt == "You are a tutor."
+
+
+# --- GuardrailConfig ---
+
+
+def test_guardrail_config_parses_camel_case():
+    config = GuardrailConfig.model_validate({
+        "preset": "strict",
+        "blockCode": False,
+        "blockPseudocode": True,
+        "maxInputTokens": 1000,
+        "maxOutputTokens": 500,
+        "customRules": "Be strict.",
+    })
+    assert config.preset == "strict"
+    assert config.block_code is False
+    assert config.block_pseudocode is True
+    assert config.max_input_tokens == 1000
+    assert config.max_output_tokens == 500
+    assert config.custom_rules == "Be strict."
+
+
+def test_guardrail_config_defaults_to_none():
+    config = GuardrailConfig()
+    assert config.preset == "medium"
+    assert config.block_code is None
+    assert config.block_pseudocode is None
+    assert config.max_input_tokens is None
+    assert config.max_output_tokens is None
+    assert config.custom_rules is None
+
+
+def test_guardrail_config_partial_override():
+    config = GuardrailConfig(
+        preset="loose",
+        max_input_tokens=2000,
+    )
+    assert config.preset == "loose"
+    assert config.max_input_tokens == 2000
+    assert config.block_code is None
+    assert config.max_output_tokens is None
+
+
+def test_teaching_assistant_context_with_guardrail_config():
+    ta = TeachingAssistantContext.model_validate({
+        "systemPrompt": "Be helpful.",
+        "targetAudience": "Advanced",
+        "guardrailConfig": {
+            "preset": "strict",
+            "maxInputTokens": 1500,
+        },
+    })
+    assert ta.system_prompt == "Be helpful."
+    assert ta.guardrail_config is not None
+    assert ta.guardrail_config.preset == "strict"
+    assert ta.guardrail_config.max_input_tokens == 1500
+
+
+def test_teaching_assistant_context_guardrail_config_optional():
+    ta = TeachingAssistantContext(
+        system_prompt="Be helpful.",
+    )
+    assert ta.guardrail_config is None
 
 
 # --- ChatRequest ---

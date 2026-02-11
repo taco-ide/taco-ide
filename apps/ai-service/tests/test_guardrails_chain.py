@@ -6,7 +6,12 @@ import pytest
 
 from src.guardrails.base import Guardrail, GuardrailAction, GuardrailContext, GuardrailResult
 from src.guardrails.chain import GuardrailChain
+from src.guardrails.code_detector import CodeDetectorGuardrail
+from src.guardrails.output_length import OutputLengthGuardrail
 from src.guardrails.presets import build_preset
+from src.guardrails.pseudocode_detector import PseudocodeDetectorGuardrail
+from src.guardrails.token_limit import TokenLimitGuardrail
+from src.models.chat import GuardrailConfig
 
 
 def make_ctx(system_prompt: str = "Base.", llm_response: str = "LLM says hi.") -> GuardrailContext:
@@ -148,3 +153,48 @@ class TestBuildPreset:
     def test_empty_preset_raises_value_error(self):
         with pytest.raises(ValueError):
             build_preset("")
+
+    def test_build_preset_with_token_limit_config(self):
+        config = GuardrailConfig(max_input_tokens=500)
+        chain = build_preset("medium", config=config)
+        # Should have TokenLimitGuardrail prepended to before_llm
+        assert any(isinstance(g, TokenLimitGuardrail) for g in chain.before_llm)
+
+    def test_build_preset_with_output_length_config(self):
+        config = GuardrailConfig(max_output_tokens=200)
+        chain = build_preset("medium", config=config)
+        # Should have OutputLengthGuardrail appended to after_llm
+        assert any(isinstance(g, OutputLengthGuardrail) for g in chain.after_llm)
+
+    def test_build_preset_config_override_block_code_false(self):
+        config = GuardrailConfig(block_code=False)
+        chain = build_preset("strict", config=config)
+        # Strict normally has CodeDetectorGuardrail, but config removes it
+        assert not any(isinstance(g, CodeDetectorGuardrail) for g in chain.after_llm)
+        # Should still have PseudocodeDetectorGuardrail from strict preset
+        assert any(isinstance(g, PseudocodeDetectorGuardrail) for g in chain.after_llm)
+
+    def test_build_preset_config_override_block_code_true(self):
+        config = GuardrailConfig(block_code=True)
+        chain = build_preset("loose", config=config)
+        # Loose has CodeDetectorGuardrail, config keeps it
+        assert any(isinstance(g, CodeDetectorGuardrail) for g in chain.after_llm)
+
+    def test_build_preset_config_override_block_pseudocode_false(self):
+        config = GuardrailConfig(block_pseudocode=False)
+        chain = build_preset("strict", config=config)
+        # Strict has PseudocodeDetectorGuardrail, config removes it
+        assert not any(isinstance(g, PseudocodeDetectorGuardrail) for g in chain.after_llm)
+
+    def test_build_preset_with_multiple_config_overrides(self):
+        config = GuardrailConfig(
+            max_input_tokens=300,
+            max_output_tokens=150,
+            block_code=False,
+        )
+        chain = build_preset("medium", config=config)
+        # Should have all custom guardrails
+        assert any(isinstance(g, TokenLimitGuardrail) for g in chain.before_llm)
+        assert any(isinstance(g, OutputLengthGuardrail) for g in chain.after_llm)
+        # CodeDetectorGuardrail should be removed
+        assert not any(isinstance(g, CodeDetectorGuardrail) for g in chain.after_llm)
