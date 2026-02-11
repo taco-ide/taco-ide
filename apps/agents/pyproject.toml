@@ -1,0 +1,19 @@
+[project]
+name = "taco-agents"
+version = "0.1.0"
+description = "AI agents for TACO-IDE educational platform"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk[extensions]",
+    "asyncpg",
+    "httpx",
+    "pydantic-settings",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-asyncio",
+]

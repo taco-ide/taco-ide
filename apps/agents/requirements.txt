@@ -1,0 +1,5 @@
+google-adk[extensions]
+asyncpg
+httpx
+pydantic-settings
+uvicorn

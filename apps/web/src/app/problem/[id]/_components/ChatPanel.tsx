@@ -18,6 +18,8 @@ import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { Button } from "@/components/ui/button";
 import { CopyIcon, CornerDownLeft, Mic, Paperclip } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useChatStore } from "@/store/useChatStore";
+import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 
 const ChatAiIcons = [
   {
@@ -26,12 +28,30 @@ const ChatAiIcons = [
   },
 ];
 
-function ChatPanel() {
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+interface ChatPanelProps {
+  workSessionId?: string;
+}
+
+function ChatPanel({ workSessionId }: ChatPanelProps) {
+  const messages = useChatStore((state) => state.messages);
+  const isStreaming = useChatStore((state) => state.isStreaming);
+  const sendMessage = useChatStore((state) => state.sendMessage);
+  const setWorkSessionId = useChatStore((state) => state.setWorkSessionId);
+  const loadHistory = useChatStore((state) => state.loadHistory);
+
+  const getCode = useCodeEditorStore((state) => state.getCode);
+  const output = useCodeEditorStore((state) => state.output);
+
   const [input, setInput] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (workSessionId) {
+      setWorkSessionId(workSessionId);
+      loadHistory(workSessionId);
+    }
+  }, [workSessionId, setWorkSessionId, loadHistory]);
 
   useEffect(() => {
     if (messagesRef.current) {
@@ -41,28 +61,19 @@ function ChatPanel() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isStreaming) return;
 
-    setIsGenerating(true);
-    const newMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, newMessage]);
+    const currentCode = getCode();
+    const currentInput = input;
     setInput("");
 
-    // Simular resposta do assistente
-    setTimeout(() => {
-      const assistantMessage = {
-        role: "assistant",
-        content: "Esta é uma resposta simulada do assistente.",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsGenerating(false);
-    }, 1000);
+    await sendMessage(currentInput, currentCode, output);
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (isGenerating || !input) return;
+      if (isStreaming || !input) return;
       onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
@@ -130,7 +141,7 @@ function ChatPanel() {
                     {message.role === "assistant" &&
                       messages.length - 1 === index && (
                         <div className="flex items-center mt-1.5 gap-1">
-                          {!isGenerating && (
+                          {!isStreaming && (
                             <>
                               {ChatAiIcons.map((icon, iconIndex) => {
                                 const Icon = icon.icon;
@@ -154,12 +165,14 @@ function ChatPanel() {
                 </ChatBubble>
               ))}
 
-              {isGenerating && (
-                <ChatBubble variant="received">
-                  <ChatBubbleAvatar src="" fallback="🤖" />
-                  <ChatBubbleMessage isLoading />
-                </ChatBubble>
-              )}
+              {isStreaming &&
+                messages.length > 0 &&
+                messages[messages.length - 1]?.role !== "assistant" && (
+                  <ChatBubble variant="received">
+                    <ChatBubbleAvatar src="" fallback="🤖" />
+                    <ChatBubbleMessage isLoading />
+                  </ChatBubble>
+                )}
             </ChatMessageList>
           </div>
 
@@ -188,7 +201,7 @@ function ChatPanel() {
                 </Button>
 
                 <Button
-                  disabled={!input || isGenerating}
+                  disabled={!input || isStreaming}
                   type="submit"
                   size="sm"
                   className="ml-auto gap-1.5"
@@ -205,4 +218,4 @@ function ChatPanel() {
   );
 }
 
-export default ChatPanel; 
+export default ChatPanel;

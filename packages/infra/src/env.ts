@@ -19,6 +19,9 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().email().default("noreply@taco-ide.com"),
 
+  // Agent service
+  AGENT_SERVICE_URL: z.string().url().default("http://localhost:8888"),
+
   // Cloudflare Turnstile (optional)
   CLOUDFLARE_TURNSTILE_SECRET: z.string().optional(),
 });

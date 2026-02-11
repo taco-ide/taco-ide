@@ -5,3 +5,16 @@ services:
       - ../../../apps/api/.env.development
     ports:
       - "5490:5432"
+
+  agents:
+    build:
+      context: ../../../apps/agents
+      dockerfile: Dockerfile
+    env_file:
+      - ../../../apps/agents/.env
+    ports:
+      - "8888:8888"
+    depends_on:
+      - database_taco_ide
+    profiles:
+      - agents
