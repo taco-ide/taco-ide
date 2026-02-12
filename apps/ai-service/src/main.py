@@ -16,7 +16,12 @@ from .routers import chat
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     print(f"AI Service starting on {settings.host}:{settings.port}")
-    print(f"LLM Provider: {'OpenAI' if settings.openai_api_key else 'None'}")
+    if settings.openai_api_key:
+        # Show last 4 chars for verification
+        api_key_suffix = settings.openai_api_key[-4:]
+        print(f"LLM Provider: OpenAI (API key ends in: {api_key_suffix})")
+    else:
+        print("LLM Provider: None (no API key set)")
     print(f"LLM Model: {settings.llm_model}")
     print(f"LLM Base URL: {settings.llm_base_url}")
     print(f"LLM Max Tokens: {settings.llm_max_tokens}")

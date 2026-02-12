@@ -2,8 +2,9 @@
 Chat request/response models.
 """
 
+from typing import Any, Literal
+
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any
 
 
 class GuardrailConfig(BaseModel):
@@ -44,32 +45,100 @@ class TeachingAssistantContext(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    """A single message in chat history."""
+    """A single message in chat history.
 
-    role: str
-    content: str
+    Each message must have a role (either 'user' or 'assistant') and content.
+    """
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
+            "examples": [
+                {"role": "user", "content": "What is a function?"},
+                {"role": "assistant", "content": "A function is a reusable block of code..."}
+            ]
+        }
+    )
+
+    role: Literal["user", "assistant"] = Field(
+        ...,
+        description="Message role - must be either 'user' (for student messages) or 'assistant' (for AI responses)"
+    )
+    content: str = Field(
+        ...,
+        description="The actual message content",
+        min_length=1
+    )
 
 
 class ChatRequest(BaseModel):
-    """Request model for AI chat endpoint."""
+    """Request model for AI chat endpoint.
 
-    model_config = ConfigDict(populate_by_name=True)
+    This endpoint generates AI-powered hints for students working on coding exercises.
+    """
 
-    code: str = Field(..., description="Student's current code")
-    language: str = Field(..., description="Programming language")
-    message: str = Field(..., description="Student's question or message")
-    exercise: ExerciseContext = Field(..., description="Exercise context")
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra={
+            "examples": [{
+                "code": "def add(a, b):\n    pass",
+                "language": "python",
+                "message": "How do I add two numbers?",
+                "exercise": {
+                    "title": "Add Two Numbers",
+                    "description": "Write a function that adds two numbers"
+                },
+                "teachingAssistant": {
+                    "systemPrompt": "You are a helpful Python tutor for beginners."
+                },
+                "knowledgeBase": [],
+                "chatHistory": [
+                    {"role": "user", "content": "What is a function?"},
+                    {"role": "assistant", "content": "A function is a reusable block of code that performs a specific task."}
+                ]
+            }]
+        }
+    )
+
+    code: str = Field(
+        ...,
+        description="Student's current code",
+        examples=["def add(a, b):\n    pass"]
+    )
+    language: str = Field(
+        ...,
+        description="Programming language (e.g., 'python', 'javascript', 'java')",
+        examples=["python", "javascript"]
+    )
+    message: str = Field(
+        ...,
+        description="Student's question or message to the AI assistant",
+        min_length=1,
+        examples=["How do I add two numbers?", "What's wrong with my code?"]
+    )
+    exercise: ExerciseContext = Field(
+        ...,
+        description="Exercise context including title and description"
+    )
     teaching_assistant: TeachingAssistantContext = Field(
-        ..., alias="teachingAssistant", description="TA configuration"
+        ...,
+        alias="teachingAssistant",
+        description="Teaching assistant configuration with system prompt and guardrails"
     )
     knowledge_base: list[str] = Field(
-        default_factory=list, alias="knowledgeBase", description="Knowledge base entries"
+        default_factory=list,
+        alias="knowledgeBase",
+        description="Optional knowledge base entries to provide additional context to the AI"
     )
     chat_history: list[ChatMessage] = Field(
-        default_factory=list, alias="chatHistory", description="Previous conversation"
+        default_factory=list,
+        alias="chatHistory",
+        description="Previous conversation messages. Each message must have 'role' ('user' or 'assistant') and 'content' fields."
     )
-    guardrail_preset: str = Field(
-        default="medium", alias="guardrailPreset", description="Guardrail preset: loose, medium, or strict"
+    guardrail_preset: Literal["loose", "medium", "strict"] = Field(
+        default="medium",
+        alias="guardrailPreset",
+        description="Guardrail preset level: 'loose' (permissive), 'medium' (balanced), or 'strict' (restrictive)"
     )
 
 

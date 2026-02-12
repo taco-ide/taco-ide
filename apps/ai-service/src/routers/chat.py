@@ -3,6 +3,7 @@ Chat router for AI-powered code hints.
 """
 
 from fastapi import APIRouter, HTTPException, status
+from openai import APIError
 
 from ..guardrails import GuardrailContext, build_preset
 from ..models.chat import ChatRequest, ChatResponse
@@ -58,7 +59,22 @@ async def chat(request: ChatRequest) -> ChatResponse:
             )
 
         # Call LLM with modified system prompt
-        hint = await llm_service.generate(ctx.system_prompt, messages)
+        try:
+            hint = await llm_service.generate(ctx.system_prompt, messages)
+        except ValueError as e:
+            # Message validation errors - return 422 with clear explanation
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(e),
+            ) from e
+        except APIError as e:
+            # LLM API errors - log and return 502
+            print(f"LLM API error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="LLM service error. Please try again later.",
+            ) from e
+
         ctx.llm_response = hint
 
         # Run after-LLM guardrails
@@ -84,7 +100,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error generating hint: {e}")
+        print(f"Unexpected error generating hint: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate hint. Please try again.",

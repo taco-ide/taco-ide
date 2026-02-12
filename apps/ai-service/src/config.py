@@ -1,15 +1,36 @@
 """
 Environment configuration using Pydantic Settings.
+
+Priority order (highest to lowest):
+1. .env file in apps/ai-service/
+2. System environment variables
 """
 
+from pathlib import Path
+
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Get the ai-service root directory (parent of src/)
+AI_SERVICE_ROOT = Path(__file__).parent.parent
+ENV_FILE = AI_SERVICE_ROOT / ".env"
+
+# Load .env file FIRST with override=True to prioritize .env over system env vars
+if ENV_FILE.exists():
+    load_dotenv(ENV_FILE, override=True)
+    print(f"✓ Loaded environment from: {ENV_FILE}")
+else:
+    print(f"⚠ No .env file found at: {ENV_FILE}")
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
+    """Application settings loaded from environment variables.
+
+    Note: Values are loaded from .env file which takes precedence over
+    system environment variables due to load_dotenv(override=True).
+    """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
         case_sensitive=False,
         extra="ignore",
     )
