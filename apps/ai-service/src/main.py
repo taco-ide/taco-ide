@@ -5,7 +5,6 @@ AI Service - FastAPI application for LLM-powered code hints.
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .models.health import HealthResponse
@@ -17,9 +16,7 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown events."""
     print(f"AI Service starting on {settings.host}:{settings.port}")
     if settings.openai_api_key:
-        # Show last 4 chars for verification
-        api_key_suffix = settings.openai_api_key[-4:]
-        print(f"LLM Provider: OpenAI (API key ends in: {api_key_suffix})")
+        print("LLM Provider: OpenAI (API key configured)")
     else:
         print("LLM Provider: None (no API key set)")
     print(f"LLM Model: {settings.llm_model}")
@@ -35,14 +32,6 @@ app = FastAPI(
     description="LLM-powered code hints and analysis for educational programming platform",
     version="0.2.0",
     lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
 )
 
 app.include_router(chat.router)

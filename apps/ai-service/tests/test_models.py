@@ -18,21 +18,47 @@ from src.models.chat import (
 def test_exercise_parses_camel_case_aliases():
     ex = ExerciseContext.model_validate({
         "title": "Test",
-        "supportMaterials": {"hint": "use loops"},
-        "possibleSolutions": ["x = 1"],
+        "supportMaterials": [
+            {
+                "title": "Loop Hint",
+                "content": "use loops",
+                "type": "text"
+            }
+        ],
+        "possibleSolutions": [
+            {
+                "code": "x = 1",
+                "language": "python",
+            }
+        ],
     })
     assert ex.title == "Test"
-    assert ex.support_materials == {"hint": "use loops"}
-    assert ex.possible_solutions == ["x = 1"]
+    assert len(ex.support_materials) == 1
+    assert ex.support_materials[0].title == "Loop Hint"
+    assert len(ex.possible_solutions) == 1
+    assert ex.possible_solutions[0].code == "x = 1"
 
 
 def test_exercise_parses_snake_case_field_names():
+    from src.models.chat import SupportMaterial, Solution
     ex = ExerciseContext(
         title="Test",
-        support_materials={"hint": "use loops"},
-        possible_solutions=["x = 1"],
+        support_materials=[
+            SupportMaterial(
+                title="Loop Hint",
+                content="use loops",
+                type="text"
+            )
+        ],
+        possible_solutions=[
+            Solution(
+                code="x = 1",
+                language="python",
+            )
+        ],
     )
-    assert ex.support_materials == {"hint": "use loops"}
+    assert len(ex.support_materials) == 1
+    assert ex.support_materials[0].title == "Loop Hint"
 
 
 def test_exercise_defaults_to_none():

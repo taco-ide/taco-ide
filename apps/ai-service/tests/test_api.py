@@ -156,7 +156,7 @@ async def test_chat_with_guardrail_config_token_limit_blocks_oversized_request(a
     payload = {
         **VALID_CHAT_PAYLOAD,
         "code": "x" * 5000,
-        "message": "y" * 5000,
+        "message": "y" * 500,  # Keep under 1000 char limit but code is large
         "teachingAssistant": {
             "systemPrompt": "You are helpful.",
             "guardrailConfig": {

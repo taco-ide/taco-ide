@@ -2,7 +2,7 @@
 Chat request/response models.
 """
 
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,6 +23,30 @@ class GuardrailConfig(BaseModel):
     custom_rules: str | None = Field(default=None, alias="customRules")
 
 
+class SupportMaterial(BaseModel):
+    """Support material for an exercise."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    title: str = Field(..., max_length=200, description="Material title")
+    content: str = Field(..., max_length=5000, description="Material content")
+    type: Literal["text", "link", "code_example"] = Field(
+        ..., description="Type of material"
+    )
+
+
+class Solution(BaseModel):
+    """Possible solution for an exercise."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    code: str = Field(..., max_length=10000, description="Solution code")
+    explanation: str | None = Field(
+        default=None, max_length=2000, description="Explanation"
+    )
+    language: str = Field(..., max_length=50, description="Programming language")
+
+
 class ExerciseContext(BaseModel):
     """Exercise data sent by the backend."""
 
@@ -30,8 +54,18 @@ class ExerciseContext(BaseModel):
 
     title: str
     description: str | None = None
-    support_materials: Any = Field(default=None, alias="supportMaterials")
-    possible_solutions: Any = Field(default=None, alias="possibleSolutions")
+    support_materials: list[SupportMaterial] | None = Field(
+        default=None,
+        alias="supportMaterials",
+        max_length=10,
+        description="Support materials for the exercise",
+    )
+    possible_solutions: list[Solution] | None = Field(
+        default=None,
+        alias="possibleSolutions",
+        max_length=5,
+        description="Possible solutions for the exercise",
+    )
 
 
 class TeachingAssistantContext(BaseModel):
@@ -103,6 +137,7 @@ class ChatRequest(BaseModel):
     code: str = Field(
         ...,
         description="Student's current code",
+        max_length=10000,
         examples=["def add(a, b):\n    pass"]
     )
     language: str = Field(
@@ -114,6 +149,7 @@ class ChatRequest(BaseModel):
         ...,
         description="Student's question or message to the AI assistant",
         min_length=1,
+        max_length=1000,
         examples=["How do I add two numbers?", "What's wrong with my code?"]
     )
     exercise: ExerciseContext = Field(

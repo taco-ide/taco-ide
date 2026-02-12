@@ -8,6 +8,7 @@ import {
   varchar,
   primaryKey,
   uniqueIndex,
+  sql,
 } from "drizzle-orm/pg-core";
 import { user, organization } from "./auth";
 
@@ -98,8 +99,16 @@ export const challenge = pgTable("challenge", {
   }),
   title: text("title").notNull(),
   description: text("description"),
-  supportMaterials: jsonb("support_materials"),
-  possibleSolutions: jsonb("possible_solutions"),
+  supportMaterials: jsonb("support_materials").$type<Array<{
+    title: string;
+    content: string;
+    type: "text" | "link" | "code_example";
+  }>>().default(sql`'[]'::jsonb`),
+  possibleSolutions: jsonb("possible_solutions").$type<Array<{
+    code: string;
+    explanation?: string;
+    language: string;
+  }>>().default(sql`'[]'::jsonb`),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),

@@ -153,7 +153,12 @@ export async function chatRoute(app: FastifyTypedInstance) {
           },
         });
       } catch (error) {
-        console.error("AI service error:", error);
+        request.log.error({
+          err: error,
+          userId,
+          workSessionId,
+          challengeId: session?.challengeId,
+        }, "AI service error");
         return reply.status(500).send({
           success: false,
           message: "Failed to get AI response. Please try again.",

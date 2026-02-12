@@ -2,6 +2,8 @@
 Chat router for AI-powered code hints.
 """
 
+import logging
+
 from fastapi import APIRouter, HTTPException, status
 from openai import APIError
 
@@ -9,6 +11,8 @@ from ..guardrails import GuardrailContext, build_preset
 from ..models.chat import ChatRequest, ChatResponse
 from ..prompts import build_messages, build_system_prompt
 from ..services.llm import llm_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -100,7 +104,15 @@ async def chat(request: ChatRequest) -> ChatResponse:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Unexpected error generating hint: {e}")
+        logger.error(
+            "LLM generation failed",
+            extra={
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "language": request.language,
+            },
+            exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate hint. Please try again.",
