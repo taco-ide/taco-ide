@@ -85,6 +85,13 @@ apps/ai-service/
 └── .env                     # Local environment (not in git)
 ```
 
+## Directory-Specific Documentation
+
+This service has detailed documentation for specific directories:
+
+- **Source Code**: `src/CLAUDE.md` - Detailed source code structure, architecture layers, and patterns
+- **Test Suite**: `tests/CLAUDE.md` - Testing conventions, fixtures, and test patterns
+
 ## Quick Start
 
 ### Local Development (without Docker)
@@ -378,13 +385,6 @@ docker run -p 8000:8000 --env-file .env taco-ai-service
 - Ensure field names match aliases (accept both snake_case and camelCase)
 - Check ConfigDict has `populate_by_name=True`
 - Verify Field definitions have proper aliases
-
-## Directory-Specific Documentation
-
-This service has detailed documentation for specific directories:
-
-- **Source Code**: `src/CLAUDE.md` - Detailed source code structure, architecture layers, and patterns
-- **Test Suite**: `tests/CLAUDE.md` - Testing conventions, fixtures, and test patterns
 
 ## Related Documentation
 

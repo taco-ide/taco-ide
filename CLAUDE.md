@@ -227,6 +227,8 @@ This repository uses directory-specific CLAUDE.md files throughout:
   - `apps/web/src/data/CLAUDE.md` - Static data
 
 - **AI Service**: `apps/ai-service/CLAUDE.md` - Python AI service guide
+  - `apps/ai-service/src/CLAUDE.md` - Source code structure
+  - `apps/ai-service/tests/CLAUDE.md` - Testing conventions
   - `apps/ai-service/README.md` - Quick start guide
 
 ### Package Documentation
