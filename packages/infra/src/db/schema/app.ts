@@ -90,6 +90,8 @@ export const teachingAssistant = pgTable(
 
 // ==================== CHALLENGES ====================
 
+export const challengeDifficultyEnum = ["easy", "medium", "hard"] as const;
+
 export const challenge = pgTable("challenge", {
   id: text("id").primaryKey(),
   classroomId: text("classroom_id").references(() => classroom.id, {
@@ -97,8 +99,13 @@ export const challenge = pgTable("challenge", {
   }),
   title: text("title").notNull(),
   description: text("description"),
+  difficulty: varchar("difficulty", { length: 20 }),
+  tags: jsonb("tags").$type<string[]>(),
   supportMaterials: jsonb("support_materials"),
   possibleSolutions: jsonb("possible_solutions"),
+  createdByUserId: text("created_by_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -145,6 +152,10 @@ export const workSession = pgTable("work_session", {
   endedAt: timestamp("ended_at"),
 });
 
+// ==================== INTERACTION TYPES ====================
+
+export const interactionTypeEnum = ["chat", "code_run"] as const;
+
 // ==================== USER INTERACTIONS ON CHALLENGES ====================
 
 export const userInteractionOnChallenge = pgTable(
@@ -157,8 +168,11 @@ export const userInteractionOnChallenge = pgTable(
     challengeId: text("challenge_id")
       .notNull()
       .references(() => challenge.id),
-    userPrompt: text("user_prompt").notNull(),
-    modelResponse: text("model_response").notNull(),
+    interactionType: varchar("interaction_type", { length: 20 })
+      .notNull()
+      .default("chat"),
+    userPrompt: text("user_prompt").notNull().default(""),
+    modelResponse: text("model_response").notNull().default(""),
     code: text("code"),
     stdin: text("stdin"),
     stdout: text("stdout"),

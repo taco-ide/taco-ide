@@ -5,43 +5,33 @@ import RunButton from "./RunButton";
 import HeaderProfileBtn from "./HeaderProfileBtn";
 import Image from "next/image";
 
-async function Header() {
-
+function Header() {
   return (
-    <div className="relative z-10">
-      <div
-        className="flex items-center lg:justify-between justify-center 
-        bg-[#0a0a0f]/80 backdrop-blur-xl p-6 mb-4 rounded-lg"
-      >
-        <div className="hidden lg:flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3 group relative">
-            <div className="">
-              <Image
-                src="/header-logo.png"
-                alt="TACO-IDE Logo"
-                width={100}
-                height={100}
-                priority
-                className="transform hover:scale-110 transition-transform duration-300"
-              />
-            </div>
+    <header className="shrink-0">
+      <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-800/60 bg-zinc-900/30">
+        <div className="hidden lg:flex items-center">
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/header-logo.png"
+              alt="TACO-IDE Logo"
+              width={32}
+              height={32}
+              priority
+              className="opacity-90 group-hover:opacity-100 transition-opacity"
+            />
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <ThemeSelector />
-            <LanguageSelector hasAccess={true} />
-          </div>
-
+        <div className="flex items-center gap-3">
+          <ThemeSelector />
+          <LanguageSelector hasAccess={true} />
           <RunButton />
-
-          <div className="pl-3 border-l border-gray-800">
+          <div className="pl-3 ml-1 border-l border-zinc-700/50">
             <HeaderProfileBtn />
           </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
 export default Header;

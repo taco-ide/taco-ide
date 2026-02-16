@@ -1,12 +1,11 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+import { CopyIcon, CornerDownLeft } from "lucide-react";
+import { useState } from "react";
+import { useRemarkSync } from "react-remark";
+import { useProblem } from "@/contexts/ProblemContext";
+import { useCodeEditorStore } from "@/store/useCodeEditorStore";
+import { Button } from "@/components/ui/button";
 import {
   ChatBubble,
   ChatBubbleAction,
@@ -15,48 +14,62 @@ import {
 } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
-import { Button } from "@/components/ui/button";
-import { CopyIcon, CornerDownLeft, Mic, Paperclip } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
 
-const ChatAiIcons = [
-  {
-    icon: CopyIcon,
-    label: "Copy",
-  },
-];
+const ChatAiIcons = [{ icon: CopyIcon, label: "Copy" }];
+
+function AssistantMessageContent({ content }: { content: string }) {
+  const trimmed = (content || "").trim() || "(Aguardando resposta...)";
+  const md = useRemarkSync(trimmed);
+  return (
+    <div className="prose prose-sm prose-invert max-w-none prose-p:text-zinc-300 prose-p:my-1 prose-headings:text-zinc-100 prose-headings:my-2 prose-li:my-0.5 prose-li:text-zinc-300 prose-code:text-amber-400 prose-code:bg-zinc-700/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-600/50 prose-pre:text-zinc-300 prose-pre:text-xs prose-pre:my-2">
+      {md}
+    </div>
+  );
+}
 
 function ChatPanel() {
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+  const { workSession, sendChatMessage } = useProblem();
+  const { getCode, getInput, output, error } = useCodeEditorStore();
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const messagesRef = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [chatError, setChatError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  const messages: Array<{ role: string; content: string }> = [];
+  if (workSession?.interactions) {
+    for (const i of workSession.interactions) {
+      if (i.interactionType === "chat") {
+        if (i.userPrompt) messages.push({ role: "user", content: i.userPrompt });
+        messages.push({
+          role: "assistant",
+          content: i.modelResponse || "(Aguardando resposta...)",
+        });
+      }
     }
-  }, [messages]);
+  }
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     setIsGenerating(true);
-    const newMessage = { role: "user", content: input };
-    setMessages((prev) => [...prev, newMessage]);
+    setChatError(null);
+    const userMessage = input.trim();
     setInput("");
 
-    // Simular resposta do assistente
-    setTimeout(() => {
-      const assistantMessage = {
-        role: "assistant",
-        content: "Esta é uma resposta simulada do assistente.",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      await sendChatMessage({
+        message: userMessage,
+        code: getCode(),
+        stdin: getInput(),
+        stdout: error || output || undefined,
+      });
+    } catch (err) {
+      setChatError(
+        err instanceof Error ? err.message : "Erro ao enviar mensagem"
+      );
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -70,139 +83,110 @@ function ChatPanel() {
   const handleActionClick = async (action: string, messageIndex: number) => {
     if (action === "Copy") {
       const message = messages[messageIndex];
-      if (message && message.role === "assistant") {
+      if (message?.role === "assistant") {
         navigator.clipboard.writeText(message.content);
       }
     }
   };
 
   return (
-    <Card className="bg-[#1a1f2e] text-white flex flex-col h-full">
-      <CardHeader className="flex-none">
-        <CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
-              <MessageSquare className="w-4 h-4 text-blue-400" />
+    <div className="h-full flex flex-col min-h-0">
+      {/* Área de mensagens com scroll - ChatMessageList gerencia o scroll internamente */}
+      <div className="flex-1 min-h-0 flex flex-col">
+        <ChatMessageList className="flex-1 min-h-0 border-0 p-3">
+          {chatError && (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-400/90 mb-3">
+              {chatError}
             </div>
-            <span className="text-sm font-medium text-gray-300">Chat</span>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex-1 p-0 h-full">
-        <div className="h-full w-full flex flex-col">
-          <div className="flex-1 overflow-y-auto" ref={messagesRef}>
-            <ChatMessageList>
-              {messages.length === 0 && (
-                <div className="w-full bg-[#1e1e2e] shadow-sm border border-[#313244] rounded-lg p-8 flex flex-col gap-2">
-                  <h1 className="font-bold text-gray-300">Bem-vindo ao Chat!</h1>
-                  <p className="text-gray-400 text-sm">
-                    Use o chat para fazer perguntas sobre o problema ou código.
-                  </p>
-                </div>
-              )}
+          )}
+          {messages.length === 0 && (
+            <div className="rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-6 flex flex-col gap-2">
+              <h3 className="font-medium text-zinc-300 text-sm">
+                Bem-vindo ao Chat
+              </h3>
+              <p className="text-zinc-500 text-xs">
+                Faça perguntas sobre o problema ou código. As mensagens são
+                salvas no histórico.
+              </p>
+            </div>
+          )}
 
-              {messages.map((message, index) => (
-                <ChatBubble
-                  key={index}
-                  variant={message.role === "user" ? "sent" : "received"}
-                >
-                  <ChatBubbleAvatar
-                    src=""
-                    fallback={message.role === "user" ? "👨🏽" : "🤖"}
-                  />
-                  <ChatBubbleMessage>
-                    {message.content
-                      .split("```")
-                      .map((part: string, index: number) => {
-                        if (index % 2 === 0) {
-                          return (
-                            part
-                          );
-                        } else {
-                          return (
-                            <pre className="whitespace-pre-wrap pt-2" key={index}>
-                              part
-                            </pre>
-                          );
-                        }
-                      })}
-
-                    {message.role === "assistant" &&
-                      messages.length - 1 === index && (
-                        <div className="flex items-center mt-1.5 gap-1">
-                          {!isGenerating && (
-                            <>
-                              {ChatAiIcons.map((icon, iconIndex) => {
-                                const Icon = icon.icon;
-                                return (
-                                  <ChatBubbleAction
-                                    variant="outline"
-                                    className="size-5"
-                                    key={iconIndex}
-                                    icon={<Icon className="size-3" />}
-                                    onClick={() =>
-                                      handleActionClick(icon.label, index)
-                                    }
-                                  />
-                                );
-                              })}
-                            </>
-                          )}
-                        </div>
-                      )}
-                  </ChatBubbleMessage>
-                </ChatBubble>
-              ))}
-
-              {isGenerating && (
-                <ChatBubble variant="received">
-                  <ChatBubbleAvatar src="" fallback="🤖" />
-                  <ChatBubbleMessage isLoading />
-                </ChatBubble>
-              )}
-            </ChatMessageList>
-          </div>
-
-          <div className="p-4 border-t border-[#313244]">
-            <form
-              ref={formRef}
-              onSubmit={onSubmit}
-              className="relative rounded-lg border border-[#313244] bg-[#1e1e2e] focus-within:ring-1 focus-within:ring-blue-500"
+          {messages.map((message, index) => (
+            <ChatBubble
+              key={index}
+              variant={message.role === "user" ? "sent" : "received"}
             >
-              <ChatInput
-                value={input}
-                onKeyDown={onKeyDown}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Digite sua mensagem aqui..."
-                className="rounded-lg bg-transparent border-0 shadow-none focus-visible:ring-0 text-gray-300"
+              <ChatBubbleAvatar
+                src=""
+                fallback={message.role === "user" ? "👤" : "🤖"}
               />
-              <div className="flex items-center p-3 pt-0">
-                <Button variant="ghost" size="icon">
-                  <Paperclip className="size-4" />
-                  <span className="sr-only">Anexar arquivo</span>
-                </Button>
+              <ChatBubbleMessage>
+                {message.role === "assistant" ? (
+                  <AssistantMessageContent content={message.content} />
+                ) : (
+                  <span className="whitespace-pre-wrap">{message.content}</span>
+                )}
+                {message.role === "assistant" &&
+                  messages.length - 1 === index && (
+                    <div className="flex items-center mt-1.5 gap-1">
+                      {!isGenerating &&
+                        ChatAiIcons.map((icon, iconIndex) => {
+                          const Icon = icon.icon;
+                          return (
+                            <ChatBubbleAction
+                              variant="outline"
+                              className="size-5"
+                              key={iconIndex}
+                              icon={<Icon className="size-3" />}
+                              onClick={() =>
+                                handleActionClick(icon.label, index)
+                              }
+                            />
+                          );
+                        })}
+                    </div>
+                  )}
+              </ChatBubbleMessage>
+            </ChatBubble>
+          ))}
 
-                <Button variant="ghost" size="icon">
-                  <Mic className="size-4" />
-                  <span className="sr-only">Usar microfone</span>
-                </Button>
+          {isGenerating && (
+            <ChatBubble variant="received">
+              <ChatBubbleAvatar src="" fallback="🤖" />
+              <ChatBubbleMessage isLoading />
+            </ChatBubble>
+          )}
+        </ChatMessageList>
+      </div>
 
-                <Button
-                  disabled={!input || isGenerating}
-                  type="submit"
-                  size="sm"
-                  className="ml-auto gap-1.5"
-                >
-                  Enviar
-                  <CornerDownLeft className="size-3.5" />
-                </Button>
-              </div>
-            </form>
+      {/* Input fixo no rodapé */}
+      <div className="shrink-0 p-3 pt-0 border-t border-zinc-800/60">
+        <form
+          onSubmit={onSubmit}
+          className="rounded-lg border border-zinc-700/50 bg-zinc-800/40 focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500/40 transition-all"
+        >
+          <ChatInput
+            value={input}
+            onKeyDown={onKeyDown}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            className="rounded-lg bg-transparent border-0 shadow-none focus-visible:ring-0 text-zinc-300 placeholder:text-zinc-600 min-h-[44px] py-3"
+          />
+          <div className="flex items-center px-2 pb-2">
+            <Button
+              disabled={!input.trim() || isGenerating}
+              type="submit"
+              size="sm"
+              className="ml-auto gap-1.5 bg-amber-500/90 hover:bg-amber-500 text-zinc-900 text-xs"
+            >
+              Enviar
+              <CornerDownLeft className="size-3.5" />
+            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </form>
+      </div>
+    </div>
   );
 }
 
-export default ChatPanel; 
+export default ChatPanel;

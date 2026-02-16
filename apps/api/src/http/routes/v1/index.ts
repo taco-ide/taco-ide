@@ -2,8 +2,16 @@ import { FastifyTypedInstance } from "../../types";
 import { authRoutes, apiAuthRoutes } from "./auth/index";
 import { statusRoutes } from "./status/index";
 import { usersRoutes } from "./users/index";
+import { challengesRoutes } from "./challenges/index";
+import { workSessionsRoutes } from "./work-sessions/index";
 
-const routes = [authRoutes, statusRoutes, usersRoutes] as const;
+const routes = [
+  authRoutes,
+  statusRoutes,
+  usersRoutes,
+  challengesRoutes,
+  workSessionsRoutes,
+] as const;
 
 export async function registerRoutes(app: FastifyTypedInstance) {
   // Register /api/auth/* routes for Better Auth client compatibility
