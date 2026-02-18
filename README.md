@@ -10,7 +10,8 @@ This is a Turborepo monorepo with the following structure:
 taco-ide/
 ├── apps/
 │   ├── api/          # Fastify backend API
-│   └── web/          # Next.js frontend
+│   ├── web/          # Next.js frontend
+│   └── agents/       # Python ADK AI agents (student tutor + teacher assistant)
 ├── packages/
 │   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
 │   ├── types/        # Shared TypeScript types
@@ -36,6 +37,12 @@ taco-ide/
 - **Zustand** - State management
 - **React Query** - Server state management
 
+### AI Agents (`apps/agents`)
+- **Google ADK** - Agent Development Kit with LiteLLM
+- **FastAPI** - Python async HTTP framework
+- **asyncpg** - Direct PostgreSQL access for agent tools
+- **Piston API** - Sandboxed code execution
+
 ### Infrastructure (`packages/infra`)
 - **Drizzle ORM** - Type-safe PostgreSQL ORM
 - **Better Auth** - Email/password authentication
@@ -47,6 +54,7 @@ taco-ide/
 ### Prerequisites
 
 - Node.js 18+
+- Python 3.12+
 - Docker & Docker Compose
 - npm 11+
 
@@ -57,8 +65,14 @@ taco-ide/
 git clone https://github.com/your-org/taco-ide.git
 cd taco-ide
 
-# Install dependencies
+# Install Node dependencies
 npm install
+
+# Set up Python agents
+cd apps/agents
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cd ../..
 ```
 
 ### Environment Setup
@@ -90,7 +104,25 @@ FRONTEND_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:3333
 ```
 
-> **Note:** The `.env.development` and `.env.local` files are gitignored. Make sure to create them before running the application.
+**3. Agents Environment (`apps/agents/.env`):**
+
+```bash
+# Database (must match apps/api/.env.development DATABASE_URL)
+DATABASE_URL=
+
+# LLM provider (OpenAI-compatible endpoint)
+LLM_API_BASE=http://localhost:8000/v1
+LLM_MODEL_NAME=my-model
+LLM_API_KEY=your-key
+
+# Agent service
+AGENT_PORT=8888
+
+# Code execution API
+CODE_EXEC_API_URL=https://emkc.org/api/v2/piston/execute
+```
+
+> **Note:** The `.env.development`, `.env.local`, and `.env` files are gitignored. Make sure to create them before running the application.
 
 ### Database Setup
 
@@ -121,12 +153,16 @@ cd apps/api && npm run dev
 
 # Web frontend (port 3000)
 cd apps/web && npm run dev
+
+# AI agents (port 8888)
+cd apps/agents && npm run dev
 ```
 
 Access the application:
 - **Frontend**: http://localhost:3000
 - **API**: http://localhost:3333
 - **API Docs**: http://localhost:3333/docs
+- **Agents Health**: http://localhost:8888/health
 
 ### API Documentation
 
@@ -195,6 +231,13 @@ This generates:
 | `npm run dev` | Start Next.js dev server |
 | `npm run build` | Build for production |
 | `npm run start` | Run production build |
+
+### apps/agents
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start with hot reload (uvicorn) |
+| `npm run start` | Run production server |
+| `npm run lint` | Lint with ruff |
 
 ## Project Documentation
 

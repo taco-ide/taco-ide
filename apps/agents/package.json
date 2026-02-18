@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "uvicorn main:app --reload --port 8888",
+    "dev": ".venv/bin/uvicorn main:app --reload --port 8888",
     "build": "echo 'Python app - no JS build step'",
-    "lint": "ruff check .",
-    "start": "uvicorn main:app --host 0.0.0.0 --port 8888"
+    "lint": ".venv/bin/ruff check .",
+    "start": ".venv/bin/uvicorn main:app --host 0.0.0.0 --port 8888"
   }
 }
