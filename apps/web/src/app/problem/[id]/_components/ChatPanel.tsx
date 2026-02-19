@@ -49,7 +49,7 @@ function ChatPanel() {
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isGenerating) return;
 
     setIsGenerating(true);
     setChatError(null);
