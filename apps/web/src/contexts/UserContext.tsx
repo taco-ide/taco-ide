@@ -15,8 +15,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  image: string | null;
   emailVerified: boolean;
   isActive: boolean;
+  activeOrganizationId: string | null;
+  role: string | null;
 }
 
 // Context interface
