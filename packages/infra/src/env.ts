@@ -24,6 +24,9 @@ const envSchema = z.object({
 
   // OpenRouter (LLM)
   OPENROUTER_API_KEY: z.string().optional(),
+
+  // Server
+  PORT: z.coerce.number().default(3333),
 });
 
 const parsed = envSchema.safeParse(process.env);
