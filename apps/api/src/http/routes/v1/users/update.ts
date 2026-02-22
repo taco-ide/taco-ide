@@ -26,6 +26,7 @@ const UserDataSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   activeOrganizationId: z.string().nullable(),
+  activeOrganizationName: z.string().nullable(),
   role: z.string().nullable(),
 });
 
@@ -105,6 +106,7 @@ export async function updateUserRoute(app: FastifyTypedInstance) {
           createdAt: updated[0].createdAt.toISOString(),
           updatedAt: updated[0].updatedAt.toISOString(),
           activeOrganizationId: currentUser.activeOrganizationId,
+          activeOrganizationName: currentUser.activeOrganizationName,
           role: currentUser.role,
         },
       });

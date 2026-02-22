@@ -148,7 +148,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between">
               <span className="text-slate-400">Organizacao ativa</span>
               <span className="text-slate-300 text-sm">
-                {user.activeOrganizationId ?? "Nenhuma"}
+                {user.activeOrganizationName ?? "Nenhuma"}
               </span>
             </div>
           </CardContent>

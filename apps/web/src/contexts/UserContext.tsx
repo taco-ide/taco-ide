@@ -19,6 +19,7 @@ export interface User {
   emailVerified: boolean;
   isActive: boolean;
   activeOrganizationId: string | null;
+  activeOrganizationName: string | null;
   role: string | null;
 }
 

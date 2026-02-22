@@ -2,7 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { auth, isValidRole } from "@repo/infra/auth";
 import type { RoleName } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
-import { user, member } from "@repo/infra/db/schema";
+import { user, member, organization } from "@repo/infra/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function authMiddleware(
@@ -53,14 +53,16 @@ export async function authMiddleware(
       });
     }
 
-    // Resolve role from active organization
+    // Resolve role and org name from active organization
     const activeOrgId = session.session.activeOrganizationId ?? null;
     let role: RoleName | null = null;
+    let activeOrgName: string | null = null;
 
     if (activeOrgId) {
       const memberData = await db
-        .select({ role: member.role })
+        .select({ role: member.role, orgName: organization.name })
         .from(member)
+        .innerJoin(organization, eq(organization.id, member.organizationId))
         .where(
           and(
             eq(member.userId, session.user.id),
@@ -69,8 +71,11 @@ export async function authMiddleware(
         )
         .limit(1);
 
-      if (memberData[0] && isValidRole(memberData[0].role)) {
-        role = memberData[0].role;
+      if (memberData[0]) {
+        if (isValidRole(memberData[0].role)) {
+          role = memberData[0].role;
+        }
+        activeOrgName = memberData[0].orgName;
       }
     }
 
@@ -85,6 +90,7 @@ export async function authMiddleware(
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
       activeOrganizationId: activeOrgId,
+      activeOrganizationName: activeOrgName,
       role,
     };
   } catch (error) {

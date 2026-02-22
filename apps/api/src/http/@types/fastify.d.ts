@@ -12,6 +12,7 @@ interface AuthUser {
   createdAt: Date;
   updatedAt: Date;
   activeOrganizationId: string | null;
+  activeOrganizationName: string | null;
   role: RoleName | null;
 }
 
