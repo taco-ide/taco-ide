@@ -8,10 +8,13 @@ const UserDataSchema = z.object({
   id: z.string(),
   email: z.string(),
   name: z.string(),
+  image: z.string().nullable(),
   emailVerified: z.boolean(),
   isActive: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
+  activeOrganizationId: z.string().nullable(),
+  role: z.string().nullable(),
 });
 
 const MeResponseSchema = ResponseSchema200.extend({
@@ -50,10 +53,13 @@ export async function meRoute(app: FastifyTypedInstance) {
           id: user.id,
           email: user.email,
           name: user.name,
+          image: user.image,
           emailVerified: user.emailVerified,
           isActive: user.isActive,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
+          activeOrganizationId: user.activeOrganizationId,
+          role: user.role,
         },
       });
     }
