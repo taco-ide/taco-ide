@@ -1,8 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { auth } from "@repo/infra/auth";
+import { auth, isValidRole } from "@repo/infra/auth";
+import type { RoleName } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
-import { user } from "@repo/infra/db/schema";
-import { eq } from "drizzle-orm";
+import { user, member } from "@repo/infra/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function authMiddleware(
   request: FastifyRequest,
@@ -35,6 +36,7 @@ export async function authMiddleware(
         id: user.id,
         email: user.email,
         name: user.name,
+        image: user.image,
         emailVerified: user.emailVerified,
         isActive: user.isActive,
         createdAt: user.createdAt,
@@ -51,15 +53,39 @@ export async function authMiddleware(
       });
     }
 
+    // Resolve role from active organization
+    const activeOrgId = session.session.activeOrganizationId ?? null;
+    let role: RoleName | null = null;
+
+    if (activeOrgId) {
+      const memberData = await db
+        .select({ role: member.role })
+        .from(member)
+        .where(
+          and(
+            eq(member.userId, session.user.id),
+            eq(member.organizationId, activeOrgId)
+          )
+        )
+        .limit(1);
+
+      if (memberData[0] && isValidRole(memberData[0].role)) {
+        role = memberData[0].role;
+      }
+    }
+
     // Attach user to request
     request.user = {
       id: userData[0].id,
       email: userData[0].email,
       name: userData[0].name,
+      image: userData[0].image,
       emailVerified: userData[0].emailVerified,
       isActive: userData[0].isActive,
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
+      activeOrganizationId: activeOrgId,
+      role,
     };
   } catch (error) {
     console.error("Auth middleware error:", error);
