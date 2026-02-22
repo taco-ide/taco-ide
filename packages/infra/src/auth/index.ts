@@ -15,6 +15,19 @@ import {
 
 // Re-export permissions for consumers
 export { ac, studentRole, teacherRole, coordinatorRole, adminRole } from "./permissions";
+export {
+  hasMinimumRole,
+  roleHasPermission,
+  isValidRole,
+  getAllRoles,
+} from "./permissions";
+export type {
+  RoleName,
+  Resource,
+  ActionFor,
+  Action,
+  Permission,
+} from "./permissions";
 
 // ==================== AUTH INSTANCE ====================
 

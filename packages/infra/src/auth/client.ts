@@ -35,3 +35,18 @@ export const {
   resetPassword,
   requestPasswordReset,
 } = authClient;
+
+// Re-export RBAC helpers and types for frontend usage
+export {
+  hasMinimumRole,
+  roleHasPermission,
+  isValidRole,
+  getAllRoles,
+} from "./permissions";
+export type {
+  RoleName,
+  Resource,
+  ActionFor,
+  Action,
+  Permission,
+} from "./permissions";
