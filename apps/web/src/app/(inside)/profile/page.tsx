@@ -4,7 +4,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/UserContext";
+import { usePutV1UsersMe } from "@/kubb/hooks/usersHooks/usePutV1UsersMe";
+import { getV1UsersMeQueryKey } from "@/kubb/hooks/usersHooks/useGetV1UsersMe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,12 +32,27 @@ const roleLabelMap: Record<string, string> = {
 };
 
 export default function ProfilePage() {
-  const { user, isLoading: isUserLoading, fetchUser } = useUser();
-  const [isSaving, setIsSaving] = useState(false);
+  const { user, isLoading: isUserLoading } = useUser();
+  const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  const mutation = usePutV1UsersMe({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getV1UsersMeQueryKey() });
+        setFeedback({ type: "success", message: "Perfil atualizado com sucesso" });
+      },
+      onError: (err) => {
+        setFeedback({
+          type: "error",
+          message: err.message ?? "Erro ao atualizar perfil",
+        });
+      },
+    },
+  });
 
   const {
     register,
@@ -48,38 +66,14 @@ export default function ProfilePage() {
     },
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
-    setIsSaving(true);
+  const onSubmit = (data: ProfileFormData) => {
     setFeedback(null);
-
-    try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
-      const response = await fetch(`${apiUrl}/v1/users/me`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          image: data.image || null,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao atualizar perfil");
-      }
-
-      await fetchUser();
-      setFeedback({ type: "success", message: "Perfil atualizado com sucesso" });
-    } catch (err) {
-      setFeedback({
-        type: "error",
-        message: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    mutation.mutate({
+      data: {
+        name: data.name,
+        image: data.image || undefined,
+      },
+    });
   };
 
   if (isUserLoading) {
@@ -225,10 +219,10 @@ export default function ProfilePage() {
               <div className="flex justify-end">
                 <Button
                   type="submit"
-                  disabled={isSaving || !isDirty}
+                  disabled={mutation.isPending || !isDirty}
                   className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium"
                 >
-                  {isSaving ? (
+                  {mutation.isPending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
                     <Save className="w-4 h-4 mr-2" />

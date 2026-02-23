@@ -5,10 +5,16 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth";
+import {
+  useGetV1UsersMe,
+  getV1UsersMeQueryKey,
+} from "@/kubb/hooks/usersHooks/useGetV1UsersMe";
 
 // User interface
 export interface User {
@@ -57,86 +63,57 @@ export const useUser = () => useContext(UserContext);
 // Context provider
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  // Function to fetch user data from API
-  const fetchUser = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Session check to enable the query only when authenticated
+  const [hasSession, setHasSession] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
+  useEffect(() => {
+    authClient.getSession().then((s) => {
+      setHasSession(!!s.data?.user);
+      setSessionChecked(true);
+    });
+  }, []);
+
+  const {
+    data,
+    isPending,
+    error: queryError,
+    refetch,
+  } = useGetV1UsersMe({
+    query: {
+      enabled: sessionChecked && hasSession,
+    },
+  });
+
+  // Map React Query state to the existing interface
+  const user: User | null = data?.data ?? null;
+  const isLoading = !sessionChecked || (hasSession && isPending);
+  const error = queryError ? queryError.message ?? "Erro desconhecido" : null;
+
+  const fetchUser = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const clearUser = useCallback(() => {
+    queryClient.removeQueries({ queryKey: getV1UsersMeQueryKey() });
+  }, [queryClient]);
+
+  const logout = useCallback(async () => {
     try {
-      // Use Better Auth session
-      const session = await authClient.getSession();
-
-      if (!session.data?.user) {
-        setUser(null);
-        return;
-      }
-
-      // Get additional user data from our API
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
-      const response = await fetch(`${apiUrl}/v1/users/me`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          setUser(null);
-          return;
-        }
-
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao buscar dados do usuário");
-      }
-
-      const data = await response.json();
-      setUser(data.data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-      console.error("Erro ao buscar usuário:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Function to clear user data (logout)
-  const clearUser = () => {
-    setUser(null);
-  };
-
-  // Function to logout
-  const logout = async () => {
-    try {
-      setIsLoading(true);
-
-      // Use Better Auth signOut
       await authClient.signOut();
-
-      // Clear user data in state
       clearUser();
-
-      // Redirect to login page
       router.push("/auth/login");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
       console.error("Erro ao fazer logout:", err);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [clearUser, router]);
 
-  // Function to get user's first name
-  const getFirstName = (): string => {
+  const getFirstName = useCallback((): string => {
     if (!user || !user.name) return "Usuário";
     return extractFirstName(user.name);
-  };
-
-  // Fetch user on component mount
-  useEffect(() => {
-    fetchUser();
-  }, []);
+  }, [user]);
 
   return (
     <UserContext.Provider
