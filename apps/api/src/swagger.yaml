@@ -175,6 +175,7 @@ paths:
         - ai
       description: Get AI-powered code hints and suggestions
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -202,7 +203,6 @@ paths:
                 - language
                 - message
               additionalProperties: false
-        required: true
       responses:
         '200':
           description: Default Response
@@ -226,6 +226,9 @@ paths:
                         type: array
                         items:
                           type: string
+                      guardrailBlocked:
+                        type: boolean
+                        default: false
                     required:
                       - response
                       - suggestions
