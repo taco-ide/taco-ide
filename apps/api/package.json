@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e .env.development -e .env.local -- tsx watch src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsup",
     "start": "node dist/index.js",
-    "kubb": "dotenv -e .env.development -- kubb generate",
+    "kubb": "dotenv -e ../../.env -- kubb generate",
     "kubb:clean": "tsx cleanKubb.ts",
     "lint": "eslint . --ext .ts",
     "typecheck": "tsc --noEmit"

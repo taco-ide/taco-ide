@@ -15,11 +15,11 @@
     "services:up": "docker compose -p taco_ide -f ./docker/compose.yaml up -d",
     "services:stop": "docker compose -p taco_ide -f ./docker/compose.yaml stop",
     "services:down": "docker compose -p taco_ide -f ./docker/compose.yaml down -v",
-    "db:generate": "dotenv -e ../../apps/api/.env.development -e ../../apps/web/.env.local -- npx drizzle-kit generate --config ./drizzle.config.ts",
-    "db:push": "dotenv -e ../../apps/api/.env.development -e ../../apps/web/.env.local -- npx drizzle-kit push --config ./drizzle.config.ts",
-    "db:migrate": "dotenv -e ../../apps/api/.env.development -e ../../apps/web/.env.local -- npx drizzle-kit migrate --config ./drizzle.config.ts && npm run build",
-    "db:studio": "dotenv -e ../../apps/api/.env.development -e ../../apps/web/.env.local -- npx drizzle-kit studio --config ./drizzle.config.ts",
-    "db:seed": "dotenv -e ../../apps/api/.env.development -e ../../apps/web/.env.local -- npx tsx src/db/seed.ts",
+    "db:generate": "dotenv -e ../../.env -- npx drizzle-kit generate --config ./drizzle.config.ts",
+    "db:push": "dotenv -e ../../.env -- npx drizzle-kit push --config ./drizzle.config.ts",
+    "db:migrate": "dotenv -e ../../.env -- npx drizzle-kit migrate --config ./drizzle.config.ts && npm run build",
+    "db:studio": "dotenv -e ../../.env -- npx drizzle-kit studio --config ./drizzle.config.ts",
+    "db:seed": "dotenv -e ../../.env -- npx tsx src/db/seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

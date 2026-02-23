@@ -58,7 +58,7 @@ npm run db:studio
 
 ### Environment Variables
 
-Create `.env.development` in `apps/api/` and `.env.local` in `apps/web/`:
+Copy `.env.example` to `.env` in the project root:
 
 ```env
 # Database
