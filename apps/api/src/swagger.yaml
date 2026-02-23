@@ -106,6 +106,9 @@ paths:
                         type: string
                       name:
                         type: string
+                      image:
+                        type: string
+                        nullable: true
                       emailVerified:
                         type: boolean
                       isActive:
@@ -114,14 +117,27 @@ paths:
                         type: string
                       updatedAt:
                         type: string
+                      activeOrganizationId:
+                        type: string
+                        nullable: true
+                      activeOrganizationName:
+                        type: string
+                        nullable: true
+                      role:
+                        type: string
+                        nullable: true
                     required:
                       - id
                       - email
                       - name
+                      - image
                       - emailVerified
                       - isActive
                       - createdAt
                       - updatedAt
+                      - activeOrganizationId
+                      - activeOrganizationName
+                      - role
                     additionalProperties: false
                   pagination:
                     type: object
@@ -143,6 +159,153 @@ paths:
                 required:
                   - success
                   - data
+                additionalProperties: false
+        '401':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  message:
+                    type: string
+                  errors:
+                    type: object
+                    additionalProperties:
+                      anyOf:
+                        - type: array
+                          items:
+                            type: string
+                        - type: string
+                required:
+                  - success
+                  - message
+                additionalProperties: false
+    put:
+      summary: Update current user profile
+      tags:
+        - users
+      description: Updates the profile of the currently authenticated user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                image:
+                  type: string
+                  format: uri
+                  nullable: true
+              additionalProperties: false
+      responses:
+        '200':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      image:
+                        type: string
+                        nullable: true
+                      emailVerified:
+                        type: boolean
+                      isActive:
+                        type: boolean
+                      createdAt:
+                        type: string
+                      updatedAt:
+                        type: string
+                      activeOrganizationId:
+                        type: string
+                        nullable: true
+                      activeOrganizationName:
+                        type: string
+                        nullable: true
+                      role:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - email
+                      - name
+                      - image
+                      - emailVerified
+                      - isActive
+                      - createdAt
+                      - updatedAt
+                      - activeOrganizationId
+                      - activeOrganizationName
+                      - role
+                    additionalProperties: false
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: number
+                      page:
+                        type: number
+                      perPage:
+                        type: number
+                      totalPages:
+                        type: number
+                    required:
+                      - total
+                      - page
+                      - perPage
+                      - totalPages
+                    additionalProperties: false
+                required:
+                  - success
+                  - data
+                additionalProperties: false
+        '400':
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                      - false
+                  message:
+                    type: string
+                  errors:
+                    type: object
+                    additionalProperties:
+                      anyOf:
+                        - type: array
+                          items:
+                            type: string
+                        - type: string
+                required:
+                  - success
+                  - message
                 additionalProperties: false
         '401':
           description: Default Response

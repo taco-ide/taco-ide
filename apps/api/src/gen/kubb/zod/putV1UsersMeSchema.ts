@@ -8,7 +8,7 @@ import { z } from "zod";
 /**
  * @description Default Response
  */
-export const getV1UsersMe200Schema = z.object({
+export const putV1UsersMe200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
@@ -35,7 +35,7 @@ export const getV1UsersMe200Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1UsersMe401Schema = z.object({
+export const putV1UsersMe400Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -43,4 +43,20 @@ export const getV1UsersMe401Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const getV1UsersMeQueryResponseSchema = z.lazy(() => getV1UsersMe200Schema)
+/**
+ * @description Default Response
+ */
+export const putV1UsersMe401Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+export const putV1UsersMeMutationRequestSchema = z.object({
+    "name": z.string().min(2).max(100).optional(),
+"image": z.string().url().nullable().nullish()
+    })
+
+export const putV1UsersMeMutationResponseSchema = z.lazy(() => putV1UsersMe200Schema)

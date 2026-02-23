@@ -4,20 +4,20 @@
 */
 
 
-export const getV1UsersMe200SuccessEnum = {
+export const putV1UsersMe200SuccessEnum = {
     "true": true
 } as const;
 
-export type GetV1UsersMe200SuccessEnum = (typeof getV1UsersMe200SuccessEnum)[keyof typeof getV1UsersMe200SuccessEnum];
+export type PutV1UsersMe200SuccessEnum = (typeof putV1UsersMe200SuccessEnum)[keyof typeof putV1UsersMe200SuccessEnum];
 
 /**
  * @description Default Response
 */
-export type GetV1UsersMe200 = {
+export type PutV1UsersMe200 = {
     /**
      * @type boolean
     */
-    success: GetV1UsersMe200SuccessEnum;
+    success: PutV1UsersMe200SuccessEnum;
     /**
      * @type string | undefined
     */
@@ -94,20 +94,20 @@ export type GetV1UsersMe200 = {
     };
 };
 
-export const getV1UsersMe401SuccessEnum = {
+export const putV1UsersMe400SuccessEnum = {
     "false": false
 } as const;
 
-export type GetV1UsersMe401SuccessEnum = (typeof getV1UsersMe401SuccessEnum)[keyof typeof getV1UsersMe401SuccessEnum];
+export type PutV1UsersMe400SuccessEnum = (typeof putV1UsersMe400SuccessEnum)[keyof typeof putV1UsersMe400SuccessEnum];
 
 /**
  * @description Default Response
 */
-export type GetV1UsersMe401 = {
+export type PutV1UsersMe400 = {
     /**
      * @type boolean
     */
-    success: GetV1UsersMe401SuccessEnum;
+    success: PutV1UsersMe400SuccessEnum;
     /**
      * @type string
     */
@@ -120,9 +120,49 @@ export type GetV1UsersMe401 = {
     };
 };
 
-export type GetV1UsersMeQueryResponse = GetV1UsersMe200;
+export const putV1UsersMe401SuccessEnum = {
+    "false": false
+} as const;
 
-export type GetV1UsersMeQuery = {
-    Response: GetV1UsersMe200;
-    Errors: GetV1UsersMe401;
+export type PutV1UsersMe401SuccessEnum = (typeof putV1UsersMe401SuccessEnum)[keyof typeof putV1UsersMe401SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PutV1UsersMe401 = {
+    /**
+     * @type boolean
+    */
+    success: PutV1UsersMe401SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
+export type PutV1UsersMeMutationRequest = {
+    /**
+     * @minLength 2
+     * @maxLength 100
+     * @type string | undefined
+    */
+    name?: string;
+    /**
+     * @type string, uri
+    */
+    image?: string | null;
+};
+
+export type PutV1UsersMeMutationResponse = PutV1UsersMe200;
+
+export type PutV1UsersMeMutation = {
+    Response: PutV1UsersMe200;
+    Request: PutV1UsersMeMutationRequest;
+    Errors: PutV1UsersMe400 | PutV1UsersMe401;
 };
