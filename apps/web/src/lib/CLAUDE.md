@@ -36,31 +36,21 @@ Better Auth handles all authentication:
 - Password reset
 
 ### apiClient.ts
-Custom fetch wrapper for API calls to the Fastify backend:
+Kubb-compatible fetch wrapper for API calls to the Fastify backend:
 
 ```typescript
-import { apiClient } from "@/lib/apiClient"
+import { client } from "@/lib/apiClient"
 
-// GET request
-const response = await apiClient.get<UserData>("/v1/users/me")
-
-// POST request
-const response = await apiClient.post<CreateResult>("/v1/resource", {
-  data: { ... }
-})
-
-// PUT request
-await apiClient.put("/v1/resource/123", { data: { ... } })
-
-// DELETE request
-await apiClient.delete("/v1/resource/123")
+// Kubb-compatible interface: RequestConfig<T> => { data: T }
+// Used by generated Kubb hooks automatically
 ```
 
 Features:
 - Automatic base URL (`NEXT_PUBLIC_API_URL`)
-- Error handling
-- TypeScript generic types for responses
+- Kubb-compatible `RequestConfig<T>` interface
+- Error handling with `ApiError` class
 - Credentials included (cookies)
+- Supports GET, POST, PUT, PATCH, DELETE
 
 ### schemas.ts
 Zod validation schemas for forms:

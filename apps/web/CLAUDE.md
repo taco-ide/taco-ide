@@ -6,12 +6,15 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
+- **Frontend**: Next.js 16 (App Router), React 18, TypeScript
 - **Styling**: Tailwind CSS, Radix UI components
-- **State Management**: Zustand
+- **State Management**: Zustand 5
+- **Data Fetching**: TanStack React Query 5
 - **Authentication**: Better Auth (via `@repo/infra`)
-- **API Client**: Custom fetch wrapper for Fastify backend
+- **API Client**: Kubb-compatible fetch wrapper for Fastify backend
 - **Code Editor**: Monaco Editor
+- **Forms**: React Hook Form + Zod validation
+- **Animations**: Framer Motion
 
 ## Architecture
 
@@ -30,10 +33,10 @@ packages/types/    <- Shared TypeScript types
 # From monorepo root
 npm install
 
-# Start infrastructure (PostgreSQL)
-cd packages/infra && npm run docker:up
+# Start infrastructure (PostgreSQL + AI service)
+cd packages/infra && npm run services:up
 
-# Apply database migrations
+# Apply database schema
 cd packages/infra && npm run db:push
 
 # Seed the database

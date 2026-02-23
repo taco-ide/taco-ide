@@ -69,15 +69,26 @@ apps/ai-service/
 │   ├── main.py              # FastAPI app entry point
 │   ├── config.py            # Environment configuration
 │   ├── models/
-│   │   ├── chat.py          # ChatRequest, ChatResponse
-│   │   └── exercise.py      # Exercise model
+│   │   ├── chat.py          # ChatRequest, ChatResponse, ChatMessage
+│   │   └── health.py        # Health check response model
 │   ├── services/
-│   │   ├── backend_api.py   # HTTP client to call backend
 │   │   └── llm.py           # OpenAI LLM integration
 │   ├── routers/
 │   │   └── chat.py          # POST /chat endpoint
-│   └── middleware/
-│       └── auth.py          # Internal secret validation
+│   ├── prompts/
+│   │   └── builder.py       # System prompt construction
+│   ├── guardrails/
+│   │   ├── base.py          # Guardrail ABC and types
+│   │   ├── chain.py         # GuardrailChain (Chain of Responsibility)
+│   │   ├── presets.py       # Preset configurations
+│   │   ├── code_detector.py # Code detection guardrail
+│   │   ├── pseudocode_detector.py # Pseudocode detection
+│   │   ├── prompt_injection.py    # Prompt injection detection
+│   │   ├── prompt_rules.py        # Prompt rules guardrail
+│   │   ├── output_length.py       # Output length validation
+│   │   └── token_limit.py         # Token limit guardrail
+│   └── middleware/           # FastAPI middleware (currently empty)
+├── tests/                   # Test suite
 ├── pyproject.toml           # uv dependencies
 ├── uv.lock                  # Locked dependencies
 ├── Dockerfile               # Container build

@@ -10,20 +10,23 @@ Contains information about project collaborators displayed on the home page.
 
 #### Structure
 ```json
-[
-  {
-    "id": 1,
-    "name": "Collaborator Name",
-    "role": "Role/Title",
-    "image": "/path/to/image.jpg",
-    "github": "https://github.com/username",
-    "linkedin": "https://linkedin.com/in/username"
-  }
-]
+{
+  "collaborators": [
+    {
+      "login": "github-username",
+      "name": "Full Name",
+      "avatar_url": "https://avatars.githubusercontent.com/...",
+      "html_url": "https://github.com/username",
+      "bio": "Bio string or null"
+    }
+  ]
+}
 ```
 
+Contains 12 collaborators with GitHub profile information.
+
 #### Usage
-Fetched via `/api/v1/collaborators` endpoint and displayed in the Collaborators carousel on the home page.
+Imported directly in the Collaborators component on the home page.
 
 ## API Endpoint
 

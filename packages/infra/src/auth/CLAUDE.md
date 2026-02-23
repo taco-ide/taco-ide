@@ -10,6 +10,7 @@ Server-side Better Auth instance configured with:
 - Email verification
 - Password reset functionality
 - Resend email provider
+- **Organization plugin** with role-based access control
 
 ```typescript
 import { auth } from "@repo/infra/auth"
@@ -33,6 +34,17 @@ await authClient.requestPasswordReset({ email })
 await authClient.resetPassword({ newPassword })
 ```
 
+### permissions.ts
+Access control and role definitions using `createAccessControl` from Better Auth:
+
+**Roles**:
+- `student` - No resource permissions
+- `teacher` - Create/update classrooms, challenges, teaching assistants; create members/invitations
+- `coordinator` - All teacher permissions + update organization, full CRUD on members/invitations/classrooms/challenges/TAs
+- `admin` - Full permissions on all resources
+
+**Resources**: organization, member, invitation, classroom, challenge, teachingAssistant
+
 ### email.ts
 Custom email templates for Better Auth:
 - Email verification
@@ -43,15 +55,16 @@ Uses Resend API for email delivery.
 ## Better Auth Configuration
 
 ### Plugins Enabled
-- `emailOTPClient()` - Email OTP verification
-- `emailOTP()` - Server-side OTP handling
+- `emailOTPClient()` / `emailOTP()` - Email OTP verification
+- `organization()` - Organization management with roles (student, teacher, coordinator, admin)
+  - Role aliases: owner = admin, member = student
+  - Allows organization creation by users
+  - Creator automatically gets "admin" role
 
 ### Database Adapter
 Uses Drizzle adapter with PostgreSQL tables:
-- `user`
-- `session`
-- `account`
-- `verification`
+- `user`, `session`, `account`, `verification` (core auth)
+- `organization`, `member`, `invitation` (organization plugin)
 
 ### Authentication Flow
 
@@ -199,4 +212,4 @@ Custom email templates in `email.ts`:
 - Email sending requires Resend API key
 - Better Auth URL must match your API base URL
 - Session cookies are cross-domain compatible (for API + Web setup)
-- User roles are managed separately in application logic
+- User roles are managed via the Organization plugin (member table has role field)

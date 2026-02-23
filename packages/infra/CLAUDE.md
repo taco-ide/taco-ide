@@ -22,10 +22,14 @@ import { env } from "@repo/infra/env"  // Validated environment variables
 ```
 packages/infra/
 ├── src/
-│   ├── auth/         # Better Auth configuration
+│   ├── auth/         # Better Auth configuration + Organization plugin
+│   │   ├── index.ts  # Server-side auth with Organization plugin
+│   │   ├── client.ts # Client-side auth
+│   │   ├── email.ts  # Email templates
+│   │   └── permissions.ts # Access control roles and permissions
 │   ├── db/           # Drizzle ORM setup and schema
 │   └── env.ts        # Environment variable validation
-├── docker/           # Docker Compose for PostgreSQL
+├── docker/           # Docker Compose for PostgreSQL + AI service
 ├── drizzle.config.ts # Drizzle Kit configuration
 └── package.json
 ```
@@ -34,9 +38,12 @@ packages/infra/
 
 | Command | Description |
 |---------|-------------|
-| `npm run services:up` | Start PostgreSQL container |
-| `npm run services:stop` | Stop PostgreSQL container |
-| `npm run services:down` | Remove container and volumes |
+| `npm run services:up` | Start PostgreSQL + AI service containers |
+| `npm run services:stop` | Stop all service containers |
+| `npm run services:down` | Stop and remove containers/volumes |
+| `npm run services:logs` | View logs from all services |
+| `npm run ai:logs` | View AI service logs only |
+| `npm run ai:restart` | Restart AI service container |
 | `npm run db:generate` | Generate migration from schema changes |
 | `npm run db:migrate` | Apply migrations to database |
 | `npm run db:push` | Push schema directly (no migrations) |
@@ -124,6 +131,44 @@ PostgreSQL runs in a Docker container configured in `docker/compose.yaml`:
 - **Database**: taco_dev
 - **User**: postgres
 - **Password**: postgres
+
+## Organization & Access Control
+
+Better Auth Organization plugin is enabled with four roles:
+
+| Role | Permissions |
+|------|-------------|
+| **student** | No resource permissions |
+| **teacher** | Create/update classrooms, challenges, teaching assistants; create members/invitations |
+| **coordinator** | All teacher permissions + update organization, full CRUD on members/invitations |
+| **admin** | Full permissions on all resources including delete |
+
+Resources managed: organization, member, invitation, classroom, challenge, teachingAssistant
+
+## Database Tables
+
+### Auth Tables (auth.ts)
+- `user` - Users with id, name, email, emailVerified, isActive, timestamps
+- `session` - Sessions with token, userId, activeOrganizationId, expiry
+- `account` - Auth accounts (email/password, OAuth)
+- `verification` - Email verification codes
+- `organization` - Organizations with name, slug, logo
+- `member` - Organization membership with role
+- `invitation` - Organization invitations with status
+
+### App Tables (app.ts)
+- `classroom` - Classrooms within organizations
+- `userClassroom` - User-classroom enrollment (M2M)
+- `model` - LLM model configurations
+- `teachingAssistant` - AI teaching assistant configs
+- `challenge` - Programming challenges with support materials
+- `challengeTeachingAssistant` - Challenge-TA mapping (M2M)
+- `workSession` - User work sessions on challenges
+- `userInteractionOnChallenge` - Chat interactions within work sessions
+- `challengeSolution` - User solutions to challenges
+- `knowledgeBase` - Knowledge base entries per organization/classroom/challenge
+- `conversationReplay` - Replay sessions for analysis
+- `replayInteraction` - Individual replay interactions
 
 ## Important Notes
 

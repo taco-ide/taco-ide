@@ -49,24 +49,24 @@ Authentication flow pages:
 ### `problem/[id]`
 Code editor interface for solving problems:
 - Monaco Editor integration
-- Multiple language support
+- 10 programming languages (JS, TS, Python, Java, Go, Rust, C++, C#, Ruby, Swift)
+- 5 editor themes (VS Dark, VS Light, GitHub Dark, Monokai, Solarized Dark)
 - Input/Output panels
 - AI Chat panel
+- Problem description panel
+- Resizable panel layout
 
-## API Routes
-
-Located under `api/v1/`:
-
-| Route | Methods | Description |
-|-------|---------|-------------|
-| `/auth/signup` | POST | User registration |
-| `/auth/login` | POST | User authentication |
-| `/auth/logout` | POST | Session termination |
-| `/auth/verify` | POST | Email verification |
-| `/auth/send-code` | POST | Resend verification code |
-| `/auth/reset-password` | POST | Password reset |
-| `/user` | GET | Get current user info |
-| `/collaborators` | GET | Get collaborators list |
+**Problem page components** (`[id]/_components/`):
+- `EditorPanel.tsx` - Monaco code editor
+- `OutputPanel.tsx` - Code execution output
+- `InputPanel.tsx` - Standard input
+- `ChatPanel.tsx` - AI assistant chat
+- `ProblemDescription.tsx` - Exercise description
+- `Header.tsx` - Page header with controls
+- `LanguageSelector.tsx` - Language dropdown
+- `ThemeSelector.tsx` - Theme dropdown
+- `RunButton.tsx` - Code execution button
+- `HeaderProfileBtn.tsx` - User profile button
 
 ## Conventions
 

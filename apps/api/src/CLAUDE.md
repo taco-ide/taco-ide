@@ -10,14 +10,16 @@ src/
 ├── swagger.yaml      # Auto-generated OpenAPI spec
 ├── gen/              # Generated code (Kubb)
 │   └── kubb/
+│       ├── index.ts  # Type exports
 │       └── zod/      # Generated Zod schemas
+├── lib/              # Utility libraries
+│   └── ai-client.ts  # AI service HTTP client (AIServiceClient)
 ├── http/             # HTTP layer
 │   ├── server.ts     # Fastify server configuration
 │   ├── types.ts      # TypeScript types for Fastify
 │   ├── @types/       # Type definitions
-│   ├── middlewares/  # Middleware functions
+│   ├── middlewares/   # Middleware functions
 │   └── routes/       # Route handlers
-└── ...
 ```
 
 ## Key Files
@@ -60,13 +62,23 @@ Generates:
    - React Query hooks for frontend
    - Zod validation schemas
 
+## lib/ - Utility Libraries
+
+### ai-client.ts
+HTTP client for communicating with the Python AI service:
+- `AIServiceClient` class (exported as `aiClient` singleton)
+- `sendChatRequest(data)` - Sends chat context to AI service
+- Uses `env.AI_SERVICE_URL` as base URL
+
 ## Environment Variables
 
 Validated via `@repo/infra/env`:
 - `DATABASE_URL` - PostgreSQL connection
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `BETTER_AUTH_URL` - Auth base URL
-- `RESEND_API_KEY` - Email service key
+- `AI_SERVICE_URL` - Python AI service URL
+- `FRONTEND_URL` - Frontend URL for CORS
+- `INTERNAL_API_SECRET` - Internal API authentication secret
 
 ## Development Workflow
 

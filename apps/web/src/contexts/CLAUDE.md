@@ -11,8 +11,11 @@ Manages the current authenticated user state across the application.
 #### Interface
 ```typescript
 interface User {
-  name?: string;
-  role: string;
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  isActive: boolean;
 }
 
 interface UserContextType {
@@ -28,9 +31,10 @@ interface UserContextType {
 
 #### Features
 - Auto-fetches user data on mount
-- Calls `/api/v1/user` endpoint
+- Calls `/v1/users/me` endpoint via Better Auth session
 - Handles 401 (unauthenticated) gracefully
-- Provides logout functionality with redirect
+- Provides logout functionality with redirect to `/auth/login`
+- `getFirstName()` extracts first name, defaults to "Usuário"
 
 ## Usage
 
@@ -69,7 +73,7 @@ function MyComponent() {
 ## Logout Flow
 
 1. Sets loading state
-2. Calls `POST /api/v1/auth/logout`
+2. Calls `authClient.signOut()` (Better Auth)
 3. Clears user state
 4. Redirects to `/auth/login`
 
@@ -77,4 +81,4 @@ function MyComponent() {
 
 - User data is fetched client-side after hydration
 - The middleware handles redirects for unauthenticated users
-- Role information is available for role-based UI rendering
+- User roles are managed via Better Auth Organization plugin (not on User directly)

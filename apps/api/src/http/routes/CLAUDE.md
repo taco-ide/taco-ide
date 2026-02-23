@@ -10,9 +10,12 @@ routes/
 │   └── types.ts     # Common response types
 └── v1/              # API version 1
     ├── index.ts     # Route registration
-    ├── auth/        # Authentication routes
+    ├── auth/        # Authentication routes (Better Auth)
     ├── users/       # User management routes
-    └── status/      # Health check routes
+    ├── status/      # Health check routes
+    └── ai/          # AI-powered features
+        ├── index.ts # Module registration
+        └── chat.ts  # POST /v1/ai/chat
 ```
 
 ## _responses/
@@ -52,30 +55,24 @@ app.post("/endpoint", {
 Main API routes.
 
 ### index.ts
-Registers all v1 route modules:
+Registers all v1 route modules and auth routes at two prefixes:
 
 ```typescript
-import { authRoutes } from "./auth"
-import { usersRoutes } from "./users"
-import { statusRoutes } from "./status"
+// Auth routes registered at both prefixes
+await app.register(apiAuthRoutes, { prefix: "/api" });  // /api/auth/*
+await app.register(authRoutes, { prefix: "/v1" });      // /v1/auth/*
 
-const routes = [
-  authRoutes,
-  usersRoutes,
-  statusRoutes,
-]
-
-export async function v1Routes(app: FastifyTypedInstance) {
-  for (const route of routes) {
-    await app.register(route)
-  }
+// Application routes
+const routes = [usersRoutes, statusRoutes, aiRoutes];
+for (const route of routes) {
+  await app.register(route);
 }
 ```
 
 ### Route Modules
 
 Each module has:
-- `index.ts` - Module route registration
+- `index.ts` - Module route registration with prefix
 - Individual route files for each endpoint
 
 ## auth/
@@ -107,15 +104,12 @@ POST /v1/auth/verify-email      - Verify email
 User management endpoints.
 
 ### Available Routes
-- `GET /v1/users/me` - Get current user info
-- (Add more user routes as needed)
+- `GET /v1/users/me` - Get current user info (requires auth)
 
-Example structure:
 ```
 users/
 ├── index.ts    # Registers all user routes
-├── me.ts       # GET /me endpoint
-└── update.ts   # PUT /me endpoint (future)
+└── me.ts       # GET /me endpoint
 ```
 
 ## status/
@@ -123,9 +117,29 @@ users/
 Health check and monitoring routes.
 
 ### Available Routes
-- `GET /v1/status` - API health check
+- `GET /v1/status` - API health check (public, no auth required)
 
-Returns server status and version info.
+## ai/
+
+AI-powered features (chat with AI teaching assistant).
+
+### Available Routes
+- `POST /v1/ai/chat` - Send message for AI-generated hints (requires auth)
+
+**Request body**:
+- `workSessionId` - Active work session ID
+- `code` - Student's current code
+- `language` - Programming language
+- `message` - Student's message (min 1 char)
+- `guardrailPreset` - "loose" | "medium" | "strict" (default: "medium")
+
+**Flow**: Fetches work session, challenge, TA config, knowledge base, and chat history from DB, then calls the Python AI service via `aiClient`.
+
+```
+ai/
+├── index.ts    # Module registration with /ai prefix
+└── chat.ts     # POST /chat endpoint
+```
 
 ## Adding a New Module
 

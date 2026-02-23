@@ -12,10 +12,13 @@ components/
 │   ├── card.tsx
 │   ├── form.tsx
 │   ├── chat/         # Chat-related components
+│   │   ├── chat-bubble.tsx
+│   │   ├── chat-input.tsx
+│   │   ├── chat-message-list.tsx
+│   │   ├── expandable-chat.tsx
+│   │   ├── message-loading.tsx
+│   │   └── hooks/
 │   └── ...
-├── composed/         # Composed/complex components
-│   ├── alert-component.tsx
-│   └── confirmation-button.tsx
 ├── login-form.tsx    # Auth form components
 ├── signup-form.tsx
 ├── reset-password-form.tsx
@@ -54,12 +57,6 @@ Base UI components following shadcn/ui patterns:
 - `chat-message-list` - Message list container
 - `expandable-chat` - Expandable chat panel
 - `message-loading` - Loading indicator
-
-## Composed Components (`composed/`)
-
-Higher-level components combining multiple UI primitives:
-- `alert-component` - Pre-configured alert with common patterns
-- `confirmation-button` - Button with confirmation dialog
 
 ## Auth Form Components
 
@@ -103,5 +100,5 @@ import { zodResolver } from "@hookform/resolvers/zod"
 ## Adding New Components
 
 1. For base UI: Add to `ui/` following shadcn/ui patterns
-2. For composed: Add to `composed/` combining existing primitives
-3. Export from component file directly (no barrel exports)
+2. Export from component file directly (no barrel exports)
+3. Route-specific components go in `app/<route>/_components/`

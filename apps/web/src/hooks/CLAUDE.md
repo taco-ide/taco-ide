@@ -6,13 +6,19 @@ This directory contains custom React hooks.
 
 ### useAuth.ts
 
-Hook for client-side authentication operations.
+Hook for client-side authentication operations using Better Auth.
 
 ```typescript
 function useAuth() {
-  const login: (email: string, password: string) => Promise<void>
-  const logout: () => Promise<void>
-  const isAuthenticated: boolean
+  login: (data: LoginFormData) => Promise<boolean>
+  signup: (data: SignupFormData) => Promise<boolean>
+  logout: () => Promise<boolean>
+  requestPasswordReset: (email: string) => Promise<boolean>
+  resetPassword: (code: string, password: string, confirmPassword: string) => Promise<boolean>
+  verify: (data: { code?: string }) => Promise<boolean>
+  resendVerificationEmail: (email: string) => Promise<boolean>
+  isLoading: boolean
+  error: string | null
 }
 ```
 

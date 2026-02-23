@@ -20,6 +20,17 @@ cd apps/api
 npm run kubb
 ```
 
+### Generated Type Files
+
+| File | Types |
+|------|-------|
+| `GetV1Status.ts` | Status endpoint types |
+| `GetV1UsersMe.ts` | User profile types |
+| `PostV1AiChat.ts` | AI chat endpoint types |
+| `GetV1InternalExercisesId.ts` | Exercise retrieval types |
+| `GetV1InternalSubmissionsExerciseidRecent.ts` | Submission history types |
+| `index.ts` | Central export file |
+
 ### What Gets Generated
 
 Kubb reads the API's Swagger/OpenAPI spec and generates:
@@ -31,14 +42,7 @@ Kubb reads the API's Swagger/OpenAPI spec and generates:
 
 ```typescript
 // In apps/web or apps/api
-import type { UserResponse, CreateExerciseRequest } from "@repo/types/kubb"
-
-const user: UserResponse = {
-  id: "123",
-  name: "John Doe",
-  email: "john@example.com",
-  // ... fully typed
-}
+import type { GetV1UsersMe200, PostV1AiChat200 } from "@repo/types/kubb"
 ```
 
 ## Generation Workflow

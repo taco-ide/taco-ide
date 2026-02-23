@@ -24,7 +24,7 @@ taco-ide/
 ## Core Technology Stack
 
 - **Backend**: Fastify 5, Zod validation, Swagger/OpenAPI, Better Auth
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, Radix UI, Zustand, React Query
+- **Frontend**: Next.js 16 (App Router), Tailwind CSS, Radix UI, Zustand 5, React Query 5
 - **AI Service**: Python 3.11+, FastAPI, OpenAI GPT, Pydantic, httpx
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth (email/password, password reset)

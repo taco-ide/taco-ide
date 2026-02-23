@@ -158,7 +158,7 @@ Organize routes with tags:
 - `auth` - Authentication endpoints
 - `users` - User management
 - `status` - Health checks
-- (Add more as needed)
+- `ai` - AI-powered features
 
 Tags appear as sections in Swagger UI.
 
@@ -170,14 +170,29 @@ The entire HTTP layer is type-safe:
 3. Request/response bodies are fully typed
 4. No type casting needed
 
+## Global Auth Middleware
+
+A global `onRequest` hook in `server.ts` applies authentication to all routes except public ones:
+
+```typescript
+const publicRoutes = ["/v1/auth/", "/api/auth/", "/v1/status", "/docs"];
+```
+
+Non-public routes automatically require a valid session. The auth middleware:
+- Converts Fastify headers to Web API Headers
+- Validates session using `auth.api.getSession()`
+- Fetches user data from database and checks if active
+- Attaches user object to `request.user`
+- Returns 401 if invalid/expired session or user is inactive
+
 ## CORS Configuration
 
-Configured in `server.ts` for local development:
-- Origin: `http://localhost:3000` (Next.js frontend)
+Configured in `server.ts`:
+- Origin: `env.FRONTEND_URL` (typically `http://localhost:3000`)
 - Credentials: `true` (allow cookies)
-- Methods: `GET, POST, PUT, DELETE, PATCH, OPTIONS`
-
-Update for production deployment.
+- Methods: `GET, PUT, POST, PATCH, DELETE, OPTIONS`
+- Allowed Headers: `Content-Type, Authorization, X-Requested-With, X-Internal-Secret, Accept, Cookie`
+- Exposed Headers: `Set-Cookie`
 
 ## Important Notes
 
@@ -186,4 +201,4 @@ Update for production deployment.
 - Use shared response schemas from `_responses/`
 - Tag routes for Swagger organization
 - Middleware runs before route handlers
-- Better Auth routes are registered at `/v1/auth/*`
+- Better Auth routes are registered at both `/v1/auth/*` and `/api/auth/*`

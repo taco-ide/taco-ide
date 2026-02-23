@@ -15,22 +15,24 @@ src/
 ├── config.py             # Environment settings (pydantic-settings)
 ├── models/               # Pydantic schemas for request/response
 │   ├── chat.py          # ChatRequest, ChatResponse, ChatMessage
-│   └── exercise.py      # Exercise, TeachingAssistant models
+│   └── health.py        # Health check response model
 ├── routers/              # FastAPI route handlers (HTTP layer)
 │   └── chat.py          # POST /chat endpoint
 ├── services/             # Business logic and external integrations
-│   ├── llm.py           # OpenAI LLM service
-│   └── backend_api.py   # Backend API HTTP client (if needed)
+│   └── llm.py           # OpenAI LLM service
 ├── prompts/              # Prompt construction logic
 │   └── builder.py       # System prompt building
-├── guardrails/           # Input/output safety checks
+├── guardrails/           # Input/output safety checks (10 guardrails)
 │   ├── base.py          # Base Guardrail ABC and types
 │   ├── chain.py         # GuardrailChain (Chain of Responsibility)
 │   ├── presets.py       # Preset guardrail configurations
-│   ├── rules.py         # Individual guardrail implementations
-│   └── detectors.py     # Detection utilities (token counting, etc.)
-└── middleware/           # FastAPI middleware
-    └── auth.py          # Internal API secret validation
+│   ├── code_detector.py # Code detection guardrail
+│   ├── pseudocode_detector.py  # Pseudocode detection guardrail
+│   ├── prompt_injection.py     # Prompt injection detection
+│   ├── prompt_rules.py         # Prompt rules guardrail
+│   ├── output_length.py        # Output length validation
+│   └── token_limit.py          # Token limit guardrail
+└── middleware/           # FastAPI middleware (currently empty)
 ```
 
 ## Architecture Layers
@@ -169,9 +171,9 @@ routers/ → services/ → models/
 
 ### 2. New Guardrail
 
-1. Create class in `guardrails/rules.py` extending `Guardrail`
-2. Implement `name` property and `execute()` method
-3. Add to preset in `guardrails/presets.py`
+1. Create new file in `guardrails/` (one guardrail per file)
+2. Implement class extending `Guardrail` with `name` property and `execute()` method
+3. Register in `guardrails/presets.py`
 4. Write tests in `tests/test_guardrails_<name>.py`
 
 ### 3. New LLM Provider
