@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1UsersMeQueryResponse, GetV1UsersMe401 } from "../../../../../../packages/types/kubb/GetV1UsersMe.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1UsersMeQueryResponse, GetV1UsersMe401 } from "../../../../../../packages/types/kubb/GetV1UsersMe.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1UsersMeSuspenseQueryKey = () => [{ url: '/v1/users/me' }] as const

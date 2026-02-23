@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -20,19 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
-
-type Challenge = {
-  id: string;
-  title: string;
-  description: string | null;
-  difficulty: string | null;
-  tags: string[];
-  author: string | null;
-  classroomTitle: string | null;
-  createdAt: string;
-};
+import { useGetV1Challenges } from "@/kubb/hooks";
 
 const ClassesDatabase = [
   { id: 1, name: "CS-201", description: "Advanced Algorithms", instructor: "Prof. Dr. John Doe" },
@@ -44,41 +32,28 @@ const problemsPerPage = 10;
 export default function ExplorePage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [pagination, setPagination] = useState({
+
+  const {
+    data,
+    isLoading,
+    error,
+  } = useGetV1Challenges(
+    {
+      scope: "all",
+      page: currentPage,
+      perPage: problemsPerPage,
+    },
+    {}
+  );
+
+  const challenges = data?.data ?? [];
+  const pagination = data?.pagination ?? {
     total: 0,
     page: 1,
-    perPage: 20,
+    perPage: problemsPerPage,
     totalPages: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        setIsLoading(true);
-        const params = new URLSearchParams({
-          scope: "all",
-          page: String(currentPage),
-          perPage: String(problemsPerPage),
-        });
-        const res = await fetch(`${API_URL}/v1/challenges?${params}`, {
-          credentials: "include",
-        });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.message || "Erro ao carregar problemas");
-        setChallenges(json.data ?? []);
-        setPagination(json.pagination ?? { total: 0, page: 1, perPage: 10, totalPages: 0 });
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro desconhecido");
-        setChallenges([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchChallenges();
-  }, [currentPage]);
+  };
+  const pagesTotal = pagination.totalPages || 1;
 
   const handleProblemClick = (id: string) => {
     router.push(`/problem/${id}`);
@@ -98,7 +73,6 @@ export default function ExplorePage() {
   };
 
   const lastProblems = challenges.slice(0, 4);
-  const pagesTotal = pagination.totalPages || 1;
 
   return (
     <div className="container mx-auto px-4 py-8 bg-slate-900">
@@ -108,7 +82,7 @@ export default function ExplorePage() {
         </div>
       ) : error ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
-          {error}
+          {error instanceof Error ? error.message : "Erro ao carregar problemas"}
         </div>
       ) : (
         <>
