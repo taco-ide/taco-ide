@@ -79,8 +79,8 @@ apps/api/
 
 ## API Documentation
 
-- **Swagger UI**: http://localhost:3333/docs
-- **OpenAPI JSON**: http://localhost:3333/docs/json
+- **Swagger UI**: http://localhost:3344/docs
+- **OpenAPI JSON**: http://localhost:3344/docs/json
 - **OpenAPI YAML**: `src/swagger.yaml` (auto-generated)
 
 ## Authentication
@@ -170,7 +170,7 @@ Environment variables are validated by `@repo/infra/env`. Required:
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3333
+BETTER_AUTH_URL=http://localhost:3344
 ```
 
 ## Directory Documentation

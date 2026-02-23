@@ -10,7 +10,7 @@ import {
 
 // Create auth client for frontend usage
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344",
   plugins: [
     organizationClient({
       ac,

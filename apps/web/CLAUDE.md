@@ -88,7 +88,7 @@ Authentication is handled by Better Auth via the Fastify backend:
 
 ```env
 # API URL
-NEXT_PUBLIC_API_URL=http://localhost:3333
+NEXT_PUBLIC_API_URL=http://localhost:3344
 ```
 
 ## Common Patterns

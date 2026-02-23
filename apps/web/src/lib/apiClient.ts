@@ -1,5 +1,5 @@
 // API client for Fastify backend - Compatible with Kubb generated hooks
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344";
 
 // Types required by Kubb generated hooks
 export type RequestConfig<TData = unknown> = {

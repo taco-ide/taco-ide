@@ -11,7 +11,7 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 ```
 taco-ide/
 ├── apps/
-│   ├── api/          # Fastify backend API (port 3333)
+│   ├── api/          # Fastify backend API (port 3344)
 │   └── web/          # Next.js frontend (port 3000)
 ├── packages/
 │   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
@@ -66,10 +66,10 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 
 # Better Auth
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3333
+BETTER_AUTH_URL=http://localhost:3344
 
 # Frontend (apps/web/.env.local)
-NEXT_PUBLIC_API_URL=http://localhost:3333
+NEXT_PUBLIC_API_URL=http://localhost:3344
 ```
 
 ### Running the Application
@@ -79,7 +79,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3333
 npm run dev
 
 # Or start individually:
-cd apps/api && npm run dev    # API on :3333
+cd apps/api && npm run dev    # API on :3344
 cd apps/web && npm run dev    # Web on :3000
 ```
 
@@ -158,8 +158,8 @@ When API routes change:
 ## API Documentation
 
 When API is running:
-- Swagger UI: http://localhost:3333/docs
-- OpenAPI JSON: http://localhost:3333/docs/json
+- Swagger UI: http://localhost:3344/docs
+- OpenAPI JSON: http://localhost:3344/docs/json
 - OpenAPI YAML: `apps/api/src/swagger.yaml` (auto-generated)
 
 ## MCP Server Configuration

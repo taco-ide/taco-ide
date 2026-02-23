@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344";
 
 export type Challenge = {
   id: string;
