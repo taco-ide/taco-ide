@@ -13,7 +13,8 @@ export const postV1AiChat200Schema = z.object({
 "message": z.string().optional(),
 "data": z.object({
     "response": z.string(),
-"suggestions": z.array(z.string())
+"suggestions": z.array(z.string()),
+"guardrailBlocked": z.boolean().default(false)
     }),
 "pagination": z.object({
     "total": z.number(),

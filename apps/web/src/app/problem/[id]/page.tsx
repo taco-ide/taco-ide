@@ -6,9 +6,12 @@ import ProblemDescription from "./_components/ProblemDescription";
 import InputPanel from "./_components/InputPanel";
 import ChatPanel from "./_components/ChatPanel";
 
-export default function ProblemPage() {
-  // Future: we will get the id from the url
-  // const { id } = useParams();
+type ProblemPageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function ProblemPage({ params }: ProblemPageProps) {
+  const { id } = await params;
   return (
     <div className="h-screen w-screen p-4 gap-4 bg-slate-900 text-white flex flex-col overflow-hidden">
       <Header />
@@ -33,7 +36,7 @@ export default function ProblemPage() {
                 <InputPanel />
               </TabsContent>
               <TabsContent value="chat" className="h-full">
-                <ChatPanel />
+                <ChatPanel challengeId={id} />
               </TabsContent>
             </div>
           </Tabs>

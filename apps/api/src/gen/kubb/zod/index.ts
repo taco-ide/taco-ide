@@ -1,3 +1,4 @@
 export { getV1Status200Schema, getV1StatusQueryResponseSchema } from "./getV1StatusSchema.ts";
 export { getV1UsersMe200Schema, getV1UsersMe401Schema, getV1UsersMeQueryResponseSchema } from "./getV1UsersMeSchema.ts";
 export { postV1AiChat200Schema, postV1AiChat400Schema, postV1AiChat401Schema, postV1AiChat404Schema, postV1AiChat500Schema, postV1AiChatMutationRequestSchema, postV1AiChatMutationResponseSchema } from "./postV1AiChatSchema.ts";
+export { postV1WorkSessionsStart200Schema, postV1WorkSessionsStart401Schema, postV1WorkSessionsStart404Schema, postV1WorkSessionsStart500Schema, postV1WorkSessionsStartMutationRequestSchema, postV1WorkSessionsStartMutationResponseSchema } from "./postV1WorkSessionsStartSchema.ts";

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { CopyIcon, CornerDownLeft, Mic, Paperclip } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { usePostV1AiChat } from "@/kubb/hooks/aiHooks/usePostV1AiChat";
+import { usePostV1WorkSessionsStart } from "@/kubb/hooks/work-sessionsHooks/usePostV1WorkSessionsStart";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 
 const ChatAiIcons = [
@@ -28,9 +29,10 @@ const ChatAiIcons = [
   },
 ];
 
-function ChatPanel() {
+function ChatPanel({ challengeId }: { challengeId: string }) {
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [input, setInput] = useState("");
+  const [workSessionId, setWorkSessionId] = useState<string | null>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -40,6 +42,7 @@ function ChatPanel() {
 
   // AI chat mutation
   const chatMutation = usePostV1AiChat();
+  const startSessionMutation = usePostV1WorkSessionsStart();
 
   useEffect(() => {
     if (messagesRef.current) {
@@ -56,13 +59,19 @@ function ChatPanel() {
     setInput("");
 
     try {
-      // TODO: Get actual workSessionId from context or params when available
-      const workSessionId = "ws-placeholder";
-      const currentCode = getCode();
+      let sessionId = workSessionId;
+      if (!sessionId) {
+        const sessionResult = await startSessionMutation.mutateAsync({
+          data: { challengeId },
+        });
+        sessionId = sessionResult.data.workSessionId;
+        setWorkSessionId(sessionId);
+      }
 
+      const currentCode = getCode();
       const result = await chatMutation.mutateAsync({
         data: {
-          workSessionId,
+          workSessionId: sessionId,
           code: currentCode,
           language,
           message: input,

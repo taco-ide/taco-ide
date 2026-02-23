@@ -34,6 +34,11 @@ export type PostV1AiChat200 = {
          * @type array
         */
         suggestions: string[];
+        /**
+         * @default false
+         * @type boolean | undefined
+        */
+        guardrailBlocked?: boolean;
     };
     /**
      * @type object | undefined

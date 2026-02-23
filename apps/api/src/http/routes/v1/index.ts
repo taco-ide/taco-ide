@@ -3,12 +3,14 @@ import { authRoutes, apiAuthRoutes } from "./auth/index";
 import { statusRoutes } from "./status/index";
 import { usersRoutes } from "./users/index";
 import { aiRoutes } from "./ai/index";
+import { workSessionsRoutes } from "./work-sessions/index";
 
 const routes = [
   authRoutes,
   statusRoutes,
   usersRoutes,
   aiRoutes,
+  workSessionsRoutes,
 ] as const;
 
 export async function registerRoutes(app: FastifyTypedInstance) {
