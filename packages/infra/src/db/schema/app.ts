@@ -8,8 +8,8 @@ import {
   varchar,
   primaryKey,
   uniqueIndex,
-  sql,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user, organization } from "./auth";
 
 // ==================== CLASSROOMS ====================
