@@ -192,7 +192,6 @@ BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3333
 AI_SERVICE_URL=http://localhost:8000
 FRONTEND_URL=http://localhost:3000
-INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
 ```
 
 ## Directory Documentation

@@ -359,7 +359,6 @@ uv run pyright src/
 
 ### Production Checklist
 - [ ] Set production `OPENAI_API_KEY`
-- [ ] Use secure `INTERNAL_API_SECRET` (32+ characters)
 - [ ] Configure proper logging (structured JSON logs)
 - [ ] Set up health check monitoring
 - [ ] Configure resource limits (CPU, memory)

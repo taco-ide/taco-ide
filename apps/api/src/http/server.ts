@@ -42,7 +42,6 @@ app.register(fastifyCors, {
     "Content-Type",
     "Authorization",
     "X-Requested-With",
-    "X-Internal-Secret",
     "Accept",
     "Cookie",
   ],

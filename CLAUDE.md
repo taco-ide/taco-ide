@@ -68,14 +68,11 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3333
 AI_SERVICE_URL=http://localhost:8000
-INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
 
 # apps/web/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:3333
 
 # apps/ai-service/.env
-BACKEND_API_URL=http://localhost:3333
-INTERNAL_API_SECRET=your-internal-secret-at-least-32-characters
 OPENAI_API_KEY=sk-your-openai-api-key
 ```
 

@@ -78,7 +78,6 @@ Validated via `@repo/infra/env`:
 - `BETTER_AUTH_URL` - Auth base URL
 - `AI_SERVICE_URL` - Python AI service URL
 - `FRONTEND_URL` - Frontend URL for CORS
-- `INTERNAL_API_SECRET` - Internal API authentication secret
 
 ## Development Workflow
 
