@@ -4,12 +4,25 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useState,
   type ReactNode,
 } from "react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useGetV1ChallengesId,
+  useGetV1ChallengesIdSolution,
+  useGetV1WorkSessionsByChallenge,
+  useGetV1WorkSessionsId,
+  usePostV1WorkSessions,
+  usePutV1ChallengesIdSolution,
+  usePostV1WorkSessionsIdInteractions,
+  usePostV1WorkSessionsIdChat,
+  getV1WorkSessionsByChallengeQueryKey,
+  getV1WorkSessionsIdQueryKey,
+  getV1WorkSessionsIdQueryOptions,
+  getV1ChallengesIdSolutionQueryKey,
+} from "@/kubb/hooks";
+import { ApiError } from "@/lib/apiClient";
 
 export type Challenge = {
   id: string;
@@ -75,6 +88,10 @@ type ProblemContextValue = {
 
 const ProblemContext = createContext<ProblemContextValue | null>(null);
 
+function is404(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
+}
+
 export function ProblemProvider({
   challengeId,
   children,
@@ -82,99 +99,156 @@ export function ProblemProvider({
   challengeId: string;
   children: ReactNode;
 }) {
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [workSession, setWorkSession] = useState<WorkSession | null>(null);
-  const [solution, setSolution] = useState<Solution | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [createdSessionId, setCreatedSessionId] = useState<string | null>(null);
 
-  const fetchWithCreds = useCallback(
-    async (url: string, options?: RequestInit) => {
-      const res = await fetch(`${API_URL}${url}`, {
-        ...options,
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          ...options?.headers,
-        },
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Erro na requisição");
-      return json;
-    },
-    []
+  const challengeQuery = useGetV1ChallengesId(challengeId, {
+    query: { enabled: !!challengeId },
+  });
+
+  const solutionQuery = useGetV1ChallengesIdSolution(challengeId, {
+    query: { enabled: !!challengeId, retry: false },
+  });
+
+  const byChallengeQuery = useGetV1WorkSessionsByChallenge(
+    { challengeId },
+    {
+      query: {
+        enabled: !!challengeId,
+        retry: (_, error) => !is404(error),
+      },
+    }
   );
 
-  const loadData = useCallback(async () => {
-    if (!challengeId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const [chRes, sessionRes, solutionRes] = await Promise.allSettled([
-        fetchWithCreds(`/v1/challenges/${challengeId}`),
-        fetchWithCreds(`/v1/work-sessions/by-challenge?challengeId=${challengeId}`),
-        fetchWithCreds(`/v1/challenges/${challengeId}/solution`),
-      ]);
+  const sessionId =
+    byChallengeQuery.data?.data?.id ?? createdSessionId;
 
-      if (chRes.status === "fulfilled") {
-        setChallenge(chRes.value.data);
-      } else {
-        setError(chRes.reason?.message || "Problema não encontrado");
-        return;
+  const fullSessionQuery = useGetV1WorkSessionsId(sessionId ?? "", {
+    query: { enabled: !!sessionId },
+  });
+
+  const createSessionMutation = usePostV1WorkSessions({
+    mutation: {
+      onSuccess: (response) => {
+        setCreatedSessionId(response.data.id);
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsByChallengeQueryKey({ challengeId }),
+        });
+      },
+    },
+  });
+
+  const putSolutionMutation = usePutV1ChallengesIdSolution({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: getV1ChallengesIdSolutionQueryKey(challengeId),
+        });
+      },
+    },
+  });
+
+  const addInteractionMutation = usePostV1WorkSessionsIdInteractions({
+    mutation: {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsIdQueryKey(variables.id),
+        });
+      },
+    },
+  });
+
+  const chatMutation = usePostV1WorkSessionsIdChat({
+    mutation: {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsIdQueryKey(variables.id),
+        });
+      },
+    },
+  });
+
+  const rawChallenge = challengeQuery.data?.data ?? null;
+  const challenge: Challenge | null = rawChallenge
+    ? {
+        ...rawChallenge,
+        tags: rawChallenge.tags ?? [],
+        supportMaterials: rawChallenge.supportMaterials ?? null,
       }
+    : null;
 
-      if (sessionRes.status === "fulfilled") {
-        const session = sessionRes.value.data;
-        const fullSession = await fetchWithCreds(`/v1/work-sessions/${session.id}`);
-        setWorkSession(fullSession.data);
-      } else {
-        setWorkSession(null);
+  const rawSolution = solutionQuery.isError && is404(solutionQuery.error)
+    ? null
+    : (solutionQuery.data?.data ?? null);
+  const solution: Solution | null = rawSolution
+    ? {
+        ...rawSolution,
+        chatHistory: rawSolution.chatHistory ?? null,
       }
+    : null;
 
-      if (solutionRes.status === "fulfilled") {
-        setSolution(solutionRes.value.data);
-      } else {
-        setSolution(null);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [challengeId, fetchWithCreds]);
+  const workSession = fullSessionQuery.data?.data ?? null;
 
-  const ensureWorkSession = useCallback(async () => {
+  const isLoading =
+    challengeQuery.isLoading ||
+    (!!sessionId && fullSessionQuery.isLoading);
+
+  const error =
+    challengeQuery.error && !is404(challengeQuery.error)
+      ? (challengeQuery.error instanceof Error
+          ? challengeQuery.error.message
+          : "Problema não encontrado")
+      : null;
+
+  const ensureWorkSession = useCallback(async (): Promise<WorkSession | null> => {
     if (workSession) return workSession;
     if (!challenge?.teachingAssistants?.length) return null;
     const defaultTa =
       challenge.teachingAssistants.find((t) => t.isDefault) ??
       challenge.teachingAssistants[0];
-    const res = await fetchWithCreds("/v1/work-sessions", {
-      method: "POST",
-      body: JSON.stringify({
-        challengeId,
-        teachingAssistantId: defaultTa.id,
-      }),
-    });
-    const fullSession = await fetchWithCreds(`/v1/work-sessions/${res.data.id}`);
-    setWorkSession(fullSession.data);
-    return fullSession.data;
-  }, [challenge, workSession, challengeId, fetchWithCreds]);
+    try {
+      const response = await createSessionMutation.mutateAsync({
+        data: {
+          challengeId,
+          teachingAssistantId: defaultTa.id,
+        },
+      });
+      const newSessionId = response.data.id;
+      setCreatedSessionId(newSessionId);
+      const fullSession = await queryClient.fetchQuery(
+        getV1WorkSessionsIdQueryOptions(newSessionId)
+      );
+      return fullSession.data;
+    } catch {
+      return null;
+    }
+  }, [challenge, workSession, challengeId, createSessionMutation, queryClient]);
+
+  const refetch = useCallback(async () => {
+    await Promise.all([
+      challengeQuery.refetch(),
+      solutionQuery.refetch(),
+      byChallengeQuery.refetch(),
+      ...(sessionId ? [fullSessionQuery.refetch()] : []),
+    ]);
+  }, [
+    challengeQuery,
+    solutionQuery,
+    byChallengeQuery,
+    fullSessionQuery,
+    sessionId,
+  ]);
 
   const saveSolution = useCallback(
     async (data: { code?: string; stdin?: string; stdout?: string }) => {
       if (!challengeId) return;
       try {
-        const res = await fetchWithCreds(`/v1/challenges/${challengeId}/solution`, {
-          method: "PUT",
-          body: JSON.stringify(data),
-        });
-        setSolution(res.data);
+        await putSolutionMutation.mutateAsync({ id: challengeId, data });
       } catch (err) {
         console.error("Erro ao salvar solução:", err);
       }
     },
-    [challengeId, fetchWithCreds]
+    [challengeId, putSolutionMutation]
   );
 
   const addInteraction = useCallback(
@@ -189,30 +263,22 @@ export function ProblemProvider({
       const session = await ensureWorkSession();
       if (!session) return;
       try {
-        const res = await fetchWithCreds(`/v1/work-sessions/${session.id}/interactions`, {
-          method: "POST",
-          body: JSON.stringify({
+        await addInteractionMutation.mutateAsync({
+          id: session.id,
+          data: {
             interactionType: data.interactionType,
             userPrompt: data.userPrompt ?? "",
             modelResponse: data.modelResponse ?? "",
             code: data.code,
             stdin: data.stdin,
             stdout: data.stdout,
-          }),
+          },
         });
-        setWorkSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                interactions: [...prev.interactions, res.data],
-              }
-            : null
-        );
       } catch (err) {
         console.error("Erro ao salvar interação:", err);
       }
     },
-    [ensureWorkSession, fetchWithCreds]
+    [ensureWorkSession, addInteractionMutation]
   );
 
   const sendChatMessage = useCallback(
@@ -224,43 +290,19 @@ export function ProblemProvider({
     }) => {
       const session = await ensureWorkSession();
       if (!session) throw new Error("Sessão de trabalho não disponível");
-      const res = await fetchWithCreds(`/v1/work-sessions/${session.id}/chat`, {
-        method: "POST",
-        body: JSON.stringify({
+      const result = await chatMutation.mutateAsync({
+        id: session.id,
+        data: {
           message: params.message,
           code: params.code,
           stdin: params.stdin,
           stdout: params.stdout,
-        }),
+        },
       });
-      setWorkSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              interactions: [
-                ...prev.interactions,
-                {
-                  id: res.data.interactionId,
-                  interactionType: "chat",
-                  userPrompt: params.message,
-                  modelResponse: res.data.modelResponse,
-                  code: null,
-                  stdin: null,
-                  stdout: null,
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-            }
-          : null
-      );
-      return { modelResponse: res.data.modelResponse };
+      return { modelResponse: result.data.modelResponse };
     },
-    [ensureWorkSession, fetchWithCreds]
+    [ensureWorkSession, chatMutation]
   );
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const value: ProblemContextValue = {
     challengeId,
@@ -269,7 +311,7 @@ export function ProblemProvider({
     solution,
     isLoading,
     error,
-    refetch: loadData,
+    refetch,
     saveSolution,
     addInteraction,
     sendChatMessage,

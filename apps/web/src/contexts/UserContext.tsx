@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth";
 import {
   useGetV1UsersMe,
   getV1UsersMeQueryKey,
-} from "@/kubb/hooks/usersHooks/useGetV1UsersMe";
+} from "@/kubb/hooks";
 
 // User interface
 export interface User {
@@ -65,42 +58,44 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // Session check to enable the query only when authenticated
-  const [hasSession, setHasSession] = useState(false);
-  const [sessionChecked, setSessionChecked] = useState(false);
-
-  useEffect(() => {
-    authClient.getSession().then((s) => {
-      setHasSession(!!s.data?.user);
-      setSessionChecked(true);
-    });
-  }, []);
-
   const {
     data,
-    isPending,
+    isLoading,
     error: queryError,
     refetch,
+    isError,
   } = useGetV1UsersMe({
     query: {
-      enabled: sessionChecked && hasSession,
+      retry: (failureCount, error) => {
+        const err = error as { status?: number } | undefined;
+        if (err && typeof err === "object" && typeof err.status === "number") {
+          return err.status !== 401;
+        }
+        return failureCount < 3;
+      },
     },
   });
 
-  // Map React Query state to the existing interface
-  const user: User | null = data?.data ?? null;
-  const isLoading = !sessionChecked || (hasSession && isPending);
-  const error = queryError ? queryError.message ?? "Erro desconhecido" : null;
+  const is401 =
+    isError &&
+    queryError &&
+    typeof queryError === "object" &&
+    "status" in queryError &&
+    (queryError as { status?: number }).status === 401;
+  const user: User | null = is401 ? null : (data?.data ?? null);
+  const error = queryError && !is401
+    ? (queryError instanceof Error ? queryError.message : "Erro desconhecido")
+    : null;
 
-  const fetchUser = useCallback(async () => {
+  const fetchUser = async () => {
     await refetch();
-  }, [refetch]);
+  };
 
-  const clearUser = useCallback(() => {
+  const clearUser = () => {
     queryClient.removeQueries({ queryKey: getV1UsersMeQueryKey() });
-  }, [queryClient]);
+  };
 
-  const logout = useCallback(async () => {
+  const logout = async () => {
     try {
       await authClient.signOut();
       clearUser();
@@ -108,12 +103,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("Erro ao fazer logout:", err);
     }
-  }, [clearUser, router]);
+  };
 
-  const getFirstName = useCallback((): string => {
+  const getFirstName = (): string => {
     if (!user || !user.name) return "Usuário";
     return extractFirstName(user.name);
-  }, [user]);
+  };
 
   return (
     <UserContext.Provider

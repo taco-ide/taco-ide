@@ -75,9 +75,9 @@ async function apiClient<TData = unknown, TError = unknown, TRequest = unknown>(
     );
   }
 
-  // Kubb expects { data: T } format, but our API returns the data directly
-  // If the response already has a 'data' field, return as is, otherwise wrap it
-  return responseData as { data: TData };
+  // Kubb generated hooks use res.data - our API returns { success, data?, pagination? }
+  // Wrap the full response so res.data = full API response (keeps data + pagination)
+  return { data: responseData } as { data: TData };
 }
 
 export default apiClient;
