@@ -2,6 +2,6 @@ services:
   database_taco_ide:
     image: "postgres:16.0-alpine3.18"
     env_file:
-      - ../../../apps/api/.env.development
+      - ../../../.env
     ports:
       - "5490:5432"
