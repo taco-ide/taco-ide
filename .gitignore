@@ -30,6 +30,10 @@ coverage
 out/
 build
 dist
+*.tsbuildinfo
+
+# Generated
+apps/api/src/swagger.yaml
 
 
 # Debug
