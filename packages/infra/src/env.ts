@@ -21,6 +21,9 @@ const envSchema = z.object({
 
   // Cloudflare Turnstile (optional)
   CLOUDFLARE_TURNSTILE_SECRET: z.string().optional(),
+
+  // OpenRouter (LLM)
+  OPENROUTER_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

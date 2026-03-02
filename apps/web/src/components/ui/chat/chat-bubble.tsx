@@ -76,8 +76,8 @@ const chatBubbleMessageVariants = cva("p-4", {
   variants: {
     variant: {
       received:
-        "bg-secondary text-secondary-foreground rounded-r-lg rounded-tl-lg",
-      sent: "bg-primary text-primary-foreground rounded-l-lg rounded-tr-lg",
+        "bg-zinc-800/90 text-zinc-200 border border-zinc-700/50 rounded-r-lg rounded-tl-lg",
+      sent: "bg-amber-500/20 text-zinc-200 border border-amber-500/30 rounded-l-lg rounded-tr-lg",
     },
     layout: {
       default: "",
@@ -113,9 +113,9 @@ const ChatBubbleMessage = React.forwardRef<
       {...props}
     >
       {isLoading ? (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 text-zinc-400">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Thinking...</span>
+          <span className="text-sm">Pensando...</span>
         </div>
       ) : (
         children

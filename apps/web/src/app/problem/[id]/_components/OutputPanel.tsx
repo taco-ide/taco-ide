@@ -1,17 +1,15 @@
 "use client";
 
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
-import { AlertTriangle, CheckCircle, Clock, Copy, Terminal } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Copy,
+  Terminal,
+} from "lucide-react";
 import { useState } from "react";
 import RunningCodeSkeleton from "./RunningCodeSkeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 function OutputPanel() {
   const { output, error, isRunning } = useCodeEditorStore();
@@ -23,153 +21,70 @@ function OutputPanel() {
     if (!hasContent) return;
     await navigator.clipboard.writeText(error || output);
     setIsCopied(true);
-
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   return (
-
-    <Card className="bg-[#1a1f2e] text-white flex flex-col h-full">
-      <CardHeader>
-        <CardTitle>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
-                <Terminal className="w-4 h-4 text-blue-400" />
+    <div className="h-full flex flex-col min-h-0">
+      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
+        <span className="text-xs font-medium text-zinc-400 flex items-center gap-2">
+          <Terminal className="size-3.5" />
+          Output
+        </span>
+        {hasContent && (
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1.5 px-2 py-1 text-xs text-zinc-500 hover:text-zinc-400 rounded transition-colors"
+          >
+            {isCopied ? (
+              <>
+                <CheckCircle className="size-3.5" />
+                Copiado!
+              </>
+            ) : (
+              <>
+                <Copy className="size-3.5" />
+                Copiar
+              </>
+            )}
+          </button>
+        )}
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="p-4">
+          <div className="rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-4 font-mono text-sm min-h-[120px]">
+            {isRunning ? (
+              <RunningCodeSkeleton />
+            ) : error ? (
+              <div className="flex items-start gap-3 text-rose-400/90">
+                <AlertTriangle className="size-5 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-medium">Erro de execução</div>
+                  <pre className="whitespace-pre-wrap text-rose-400/80 text-xs">
+                    {error}
+                  </pre>
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-300">Output</span>
-            </div>
-
-            {hasContent && (
-              <button
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-[#1e1e2e] 
-               rounded-lg ring-1 ring-gray-800/50 hover:ring-gray-700/50 transition-all"
-              >
-                {isCopied ? (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" />
-                    Copy
-                  </>
-                )}
-              </button>
+            ) : output ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-emerald-400/90 mb-2">
+                  <CheckCircle className="size-5" />
+                  <span className="font-medium text-sm">Execução concluída</span>
+                </div>
+                <pre className="whitespace-pre-wrap text-zinc-400 text-xs">
+                  {output}
+                </pre>
+              </div>
+            ) : (
+              <div className="h-full min-h-[80px] flex flex-col items-center justify-center text-zinc-500">
+                <Clock className="size-8 mb-2 opacity-60" />
+                <p className="text-xs">Execute o código para ver o output</p>
+              </div>
             )}
           </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="w-full h-[60vh]">
-          <div className="relative h-full">
-            <div
-              className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
-           rounded-xl p-4 h-full overflow-auto font-mono text-sm"
-            >
-              {isRunning ? (
-                <RunningCodeSkeleton />
-              ) : error ? (
-                <div className="flex items-start gap-3 text-red-400">
-                  <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-1" />
-                  <div className="space-y-1">
-                    <div className="font-medium">Execution Error</div>
-                    <pre className="whitespace-pre-wrap text-red-400/80">{error}</pre>
-                  </div>
-                </div>
-              ) : output ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-emerald-400 mb-3">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Execution Successful</span>
-                  </div>
-                  <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gray-800/50 ring-1 ring-gray-700/50 mb-4">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <p className="text-center">Run your code to see the output here...</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-
-      </CardContent>
-    </Card>
-
-    // <div className="flex-1 relative bg-[#181825] rounded-xl p-4 ring-1 ring-gray-800/50 h-full">
-    //   {/* Header */}
-    //   <div className="flex items-center justify-between mb-3">
-    //     <div className="flex items-center gap-2">
-    //       <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
-    //         <Terminal className="w-4 h-4 text-blue-400" />
-    //       </div>
-    //       <span className="text-sm font-medium text-gray-300">Output</span>
-    //     </div>
-
-    //     {hasContent && (
-    //       <button
-    //         onClick={handleCopy}
-    //         className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-300 bg-[#1e1e2e] 
-    //         rounded-lg ring-1 ring-gray-800/50 hover:ring-gray-700/50 transition-all"
-    //       >
-    //         {isCopied ? (
-    //           <>
-    //             <CheckCircle className="w-3.5 h-3.5" />
-    //             Copied!
-    //           </>
-    //         ) : (
-    //           <>
-    //             <Copy className="w-3.5 h-3.5" />
-    //             Copy
-    //           </>
-    //         )}
-    //       </button>
-    //     )}
-    //   </div>
-
-    //   {/* Output Area */}
-    //   <ScrollArea className="h-full">
-    //     <div className="relative">
-    //       <div
-    //         className="relative bg-[#1e1e2e]/50 backdrop-blur-sm border border-[#313244] 
-    //       rounded-xl p-4 h-full overflow-auto font-mono text-sm"
-    //       >
-    //         {isRunning ? (
-    //           <RunningCodeSkeleton />
-    //         ) : error ? (
-    //           <div className="flex items-start gap-3 text-red-400">
-    //             <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-1" />
-    //             <div className="space-y-1">
-    //               <div className="font-medium">Execution Error</div>
-    //               <pre className="whitespace-pre-wrap text-red-400/80">{error}</pre>
-    //             </div>
-    //           </div>
-    //         ) : output ? (
-    //           <div className="space-y-2">
-    //             <div className="flex items-center gap-2 text-emerald-400 mb-3">
-    //               <CheckCircle className="w-5 h-5" />
-    //               <span className="font-medium">Execution Successful</span>
-    //             </div>
-    //             <pre className="whitespace-pre-wrap text-gray-300">{output}</pre>
-    //           </div>
-    //         ) : (
-    //           <div className="h-full flex flex-col items-center justify-center text-gray-500">
-    //             <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gray-800/50 ring-1 ring-gray-700/50 mb-4">
-    //               <Clock className="w-6 h-6" />
-    //             </div>
-    //             <p className="text-center">Run your code to see the output here...</p>
-    //           </div>
-    //         )}
-    //       </div>
-    //     </div>
-    //   </ScrollArea>
-    // </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

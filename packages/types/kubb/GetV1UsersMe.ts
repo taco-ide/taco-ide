@@ -49,10 +49,6 @@ export type GetV1UsersMe200 = {
         /**
          * @type string
         */
-        role: string | null;
-        /**
-         * @type string
-        */
         createdAt: string;
         /**
          * @type string

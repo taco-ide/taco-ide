@@ -17,7 +17,6 @@ export const getV1UsersMe200Schema = z.object({
 "name": z.string(),
 "emailVerified": z.boolean(),
 "isActive": z.boolean(),
-"role": z.string().nullable(),
 "createdAt": z.string(),
 "updatedAt": z.string()
     }),
