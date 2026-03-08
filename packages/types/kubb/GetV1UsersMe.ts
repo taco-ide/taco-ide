@@ -39,6 +39,10 @@ export type GetV1UsersMe200 = {
         */
         name: string;
         /**
+         * @type string
+        */
+        image: string | null;
+        /**
          * @type boolean
         */
         emailVerified: boolean;
@@ -54,6 +58,18 @@ export type GetV1UsersMe200 = {
          * @type string
         */
         updatedAt: string;
+        /**
+         * @type string
+        */
+        activeOrganizationId: string | null;
+        /**
+         * @type string
+        */
+        activeOrganizationName: string | null;
+        /**
+         * @type string
+        */
+        role: string | null;
     };
     /**
      * @type object | undefined

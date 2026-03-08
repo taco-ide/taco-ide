@@ -10,7 +10,7 @@ import {
 
 // Create auth client for frontend usage
 export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344",
   plugins: [
     organizationClient({
       ac,
@@ -35,3 +35,18 @@ export const {
   resetPassword,
   requestPasswordReset,
 } = authClient;
+
+// Re-export RBAC helpers and types for frontend usage
+export {
+  hasMinimumRole,
+  roleHasPermission,
+  isValidRole,
+  getAllRoles,
+} from "./permissions";
+export type {
+  RoleName,
+  Resource,
+  ActionFor,
+  Action,
+  Permission,
+} from "./permissions";

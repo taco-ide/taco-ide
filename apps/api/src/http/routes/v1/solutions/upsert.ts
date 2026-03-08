@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { eq, and, isNull } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -83,81 +83,55 @@ export async function upsertSolutionRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const [existing] = await db
-        .select()
-        .from(challengeSolution)
-        .where(
-          and(
-            eq(challengeSolution.userId, usr.id),
-            eq(challengeSolution.challengeId, challengeId)
-          )
-        )
-        .limit(1);
-
       const now = new Date();
-      const updateData: Record<string, unknown> = { updatedAt: now };
-      if (code !== undefined) updateData.code = code;
-      if (stdin !== undefined) updateData.stdin = stdin;
-      if (stdout !== undefined) updateData.stdout = stdout;
-      if (chatHistory !== undefined) updateData.chatHistory = chatHistory;
+      const newId = randomUUID();
 
-      if (existing) {
-        const [updated] = await db
-          .update(challengeSolution)
-          .set(updateData as typeof challengeSolution.$inferInsert)
-          .where(eq(challengeSolution.id, existing.id))
-          .returning();
+      const updateSet: Record<string, unknown> = { updatedAt: now };
+      if (code !== undefined) updateSet.code = code;
+      if (stdin !== undefined) updateSet.stdin = stdin;
+      if (stdout !== undefined) updateSet.stdout = stdout;
+      if (chatHistory !== undefined) updateSet.chatHistory = chatHistory;
 
-        if (!updated) {
-          return reply.status(500).send({
-            success: false as const,
-            message: "Failed to update solution",
-          });
-        }
-
-        return reply.status(200).send({
-          success: true as const,
-          data: {
-            id: updated.id,
-            code: updated.code,
-            stdin: updated.stdin,
-            stdout: updated.stdout,
-            chatHistory: updated.chatHistory,
-            updatedAt: updated.updatedAt.toISOString(),
-          },
-        });
-      }
-
-      const [created] = await db
+      const [result] = await db
         .insert(challengeSolution)
         .values({
-          id: randomUUID(),
+          id: newId,
           userId: usr.id,
           challengeId,
           code: code ?? null,
           stdin: stdin ?? null,
           stdout: stdout ?? null,
           chatHistory: chatHistory ?? null,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: [challengeSolution.userId, challengeSolution.challengeId],
+          set: updateSet as typeof challengeSolution.$inferInsert,
         })
         .returning();
 
-      if (!created) {
+      if (!result) {
         return reply.status(500).send({
           success: false as const,
-          message: "Failed to create solution",
+          message: "Failed to upsert solution",
         });
       }
 
-      return reply.status(201).send({
+      const isCreated = result.id === newId;
+      const status = isCreated ? 201 : 200;
+
+      const data = {
+        id: result.id,
+        code: result.code,
+        stdin: result.stdin,
+        stdout: result.stdout,
+        chatHistory: result.chatHistory,
+        updatedAt: result.updatedAt.toISOString(),
+      };
+
+      return reply.status(status).send({
         success: true as const,
-        data: {
-          id: created.id,
-          code: created.code,
-          stdin: created.stdin,
-          stdout: created.stdout,
-          chatHistory: created.chatHistory,
-          updatedAt: created.updatedAt.toISOString(),
-        },
+        data,
       });
     }
   );

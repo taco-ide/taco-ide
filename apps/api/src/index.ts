@@ -1,6 +1,7 @@
 import app from "./http/server";
+import { env } from "@repo/infra/env";
 
-const port = process.env.PORT ? Number(process.env.PORT) : 3333;
+const port = env.PORT;
 
 const startServer = () => {
   app

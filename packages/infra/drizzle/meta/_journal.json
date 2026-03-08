@@ -8,6 +8,13 @@
       "when": 1770160958941,
       "tag": "0000_first_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771893118014,
+      "tag": "0001_fluffy_texas_twister",
+      "breakpoints": true
     }
   ]
 }

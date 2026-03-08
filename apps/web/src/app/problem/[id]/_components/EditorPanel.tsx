@@ -15,21 +15,18 @@ function EditorPanel() {
     useCodeEditorStore();
   const { solution, saveSolution } = useProblem();
   const mounted = useMounted();
-  const hasLoadedSolution = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const savedCode = localStorage.getItem(`editor-code-${language}`);
-    const newCode = savedCode || LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(newCode);
-  }, [language, editor]);
-
-  useEffect(() => {
-    if (solution?.code && editor && !hasLoadedSolution.current) {
+    if (!editor) return;
+    // Prioridade: server solution > localStorage > default
+    if (solution?.code) {
       editor.setValue(solution.code);
-      hasLoadedSolution.current = true;
+      return;
     }
-  }, [solution?.code, editor]);
+    const savedCode = localStorage.getItem(`editor-code-${language}`);
+    editor.setValue(savedCode || LANGUAGE_CONFIG[language].defaultCode);
+  }, [language, editor, solution?.code]);
 
   useEffect(() => {
     if (solution?.stdin) setInput(solution.stdin);
@@ -44,7 +41,6 @@ function EditorPanel() {
     const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
     if (editor) editor.setValue(defaultCode);
     localStorage.removeItem(`editor-code-${language}`);
-    hasLoadedSolution.current = false;
   };
 
   const debouncedSave = useRef<ReturnType<typeof setTimeout> | null>(null);

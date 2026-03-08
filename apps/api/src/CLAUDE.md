@@ -26,7 +26,7 @@ src/
 Application entry point that:
 1. Loads environment variables
 2. Creates Fastify server
-3. Starts listening on port 3333
+3. Starts listening on port 3344
 
 ### swagger.yaml
 Auto-generated OpenAPI specification:
@@ -78,7 +78,7 @@ Validated via `@repo/infra/env`:
 5. Use generated React Query hooks in frontend
 
 ### Testing Routes
-- Use Swagger UI at http://localhost:3333/docs
+- Use Swagger UI at http://localhost:3344/docs
 - Or use curl/Postman with the API directly
 
 ## TypeScript Configuration
@@ -90,7 +90,7 @@ The API uses strict TypeScript:
 
 ## Port Configuration
 
-Default port: **3333**
+Default port: **3344**
 
 Configure in `src/index.ts` or via environment variable.
 

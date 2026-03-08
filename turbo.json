@@ -1,6 +1,8 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "ui": "tui",
+  "ui": "stream",
+  "envMode": "loose",
+  "globalDependencies": [".env"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -41,7 +43,11 @@
     },
     "kubb": {
       "cache": false,
-      "outputs": ["src/gen/**", "../../packages/types/kubb/**", "../../apps/web/src/kubb/**"]
+      "outputs": [
+        "src/gen/**",
+        "../../packages/types/kubb/**",
+        "../../apps/web/src/kubb/**"
+      ]
     }
   }
 }

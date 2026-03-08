@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1WorkSessionsByChallengeQueryKey = (params: GetV1WorkSessionsByChallengeQueryParams) => [{ url: '/v1/work-sessions/by-challenge' }, ...(params ? [params] : [])] as const

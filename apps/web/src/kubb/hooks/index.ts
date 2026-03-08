@@ -9,6 +9,7 @@ export type { GetV1StatusQueryKey } from "./statusHooks/useGetV1Status.ts";
 export type { GetV1StatusSuspenseQueryKey } from "./statusHooks/useGetV1StatusSuspense.ts";
 export type { GetV1UsersMeQueryKey } from "./usersHooks/useGetV1UsersMe.ts";
 export type { GetV1UsersMeSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeSuspense.ts";
+export type { PutV1UsersMeMutationKey } from "./usersHooks/usePutV1UsersMe.ts";
 export type { GetV1WorkSessionsByChallengeQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsByChallenge.ts";
 export type { GetV1WorkSessionsByChallengeSuspenseQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsByChallengeSuspense.ts";
 export type { GetV1WorkSessionsIdQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsId.ts";
@@ -27,6 +28,7 @@ export { getV1StatusQueryKey, getV1Status, getV1StatusQueryOptions, useGetV1Stat
 export { getV1StatusSuspenseQueryKey, getV1StatusSuspense, getV1StatusSuspenseQueryOptions, useGetV1StatusSuspense } from "./statusHooks/useGetV1StatusSuspense.ts";
 export { getV1UsersMeQueryKey, getV1UsersMe, getV1UsersMeQueryOptions, useGetV1UsersMe } from "./usersHooks/useGetV1UsersMe.ts";
 export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspenseQueryOptions, useGetV1UsersMeSuspense } from "./usersHooks/useGetV1UsersMeSuspense.ts";
+export { putV1UsersMeMutationKey, putV1UsersMe, usePutV1UsersMe } from "./usersHooks/usePutV1UsersMe.ts";
 export { getV1WorkSessionsByChallengeQueryKey, getV1WorkSessionsByChallenge, getV1WorkSessionsByChallengeQueryOptions, useGetV1WorkSessionsByChallenge } from "./work-sessionsHooks/useGetV1WorkSessionsByChallenge.ts";
 export { getV1WorkSessionsByChallengeSuspenseQueryKey, getV1WorkSessionsByChallengeSuspense, getV1WorkSessionsByChallengeSuspenseQueryOptions, useGetV1WorkSessionsByChallengeSuspense } from "./work-sessionsHooks/useGetV1WorkSessionsByChallengeSuspense.ts";
 export { getV1WorkSessionsIdQueryKey, getV1WorkSessionsId, getV1WorkSessionsIdQueryOptions, useGetV1WorkSessionsId } from "./work-sessionsHooks/useGetV1WorkSessionsId.ts";

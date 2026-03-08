@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useGetV1Challenges } from "@/kubb/hooks";
 
+// TODO: Replace mock data with real data from GET /v1/classrooms endpoint when available
 const ClassesDatabase = [
   { id: 1, name: "CS-201", description: "Advanced Algorithms", instructor: "Prof. Dr. John Doe" },
   { id: 2, name: "CS-305", description: "Computational Theory", instructor: "Prof. Dr. Jane Smith" },

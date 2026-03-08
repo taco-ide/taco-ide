@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
 import { useState, useRef, useEffect } from "react";
+import { PermissionGuard } from "@/components/guards/PermissionGuard";
 
 const Navbar = () => {
   const { user, getFirstName, logout } = useUser();
@@ -46,6 +47,22 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 mr-4">
+            <Link
+              href="/explore"
+              className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+            >
+              Explorar
+            </Link>
+            <PermissionGuard resource="challenge" action="create">
+              <Link
+                href="/create"
+                className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+              >
+                Criar
+              </Link>
+            </PermissionGuard>
+          </nav>
           {user ? (
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>
               <div className="text-white">

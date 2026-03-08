@@ -1,21 +1,25 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  ReactNode,
-} from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth";
-import { useGetV1UsersMe } from "@/kubb/hooks";
+import {
+  useGetV1UsersMe,
+  getV1UsersMeQueryKey,
+} from "@/kubb/hooks";
 
 // User interface
 export interface User {
   id: string;
   name: string;
   email: string;
+  image: string | null;
   emailVerified: boolean;
   isActive: boolean;
+  activeOrganizationId: string | null;
+  activeOrganizationName: string | null;
+  role: string | null;
 }
 
 // Context interface
@@ -52,6 +56,7 @@ export const useUser = () => useContext(UserContext);
 // Context provider
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -77,8 +82,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     typeof queryError === "object" &&
     "status" in queryError &&
     (queryError as { status?: number }).status === 401;
-  const user = is401 ? null : (data?.data ?? null);
-  const error = queryError
+  const user: User | null = is401 ? null : (data?.data ?? null);
+  const error = queryError && !is401
     ? (queryError instanceof Error ? queryError.message : "Erro desconhecido")
     : null;
 
@@ -87,13 +92,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearUser = () => {
-    // No-op: user state comes from the query
+    queryClient.removeQueries({ queryKey: getV1UsersMeQueryKey() });
   };
 
   const logout = async () => {
     try {
       await authClient.signOut();
-      await refetch();
+      clearUser();
       router.push("/auth/login");
     } catch (err) {
       console.error("Erro ao fazer logout:", err);

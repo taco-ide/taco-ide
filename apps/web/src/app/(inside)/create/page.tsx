@@ -17,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { useRemark } from "react-remark";
 import { Text } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Save } from "lucide-react";
+import { X, Save, ShieldAlert } from "lucide-react";
+import { RoleGuard } from "@/components/guards/RoleGuard";
 
 const personalityTypes = [
     { id: "assertive", name: "Assertive", description: "Direct and objective in responses" },
@@ -27,6 +28,18 @@ const personalityTypes = [
 ];
 
 const difficultyLevels = ["Easy", "Medium", "Hard"];
+
+function AccessDenied() {
+    return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="text-center space-y-4">
+                <ShieldAlert className="w-16 h-16 text-yellow-500 mx-auto" />
+                <h2 className="text-2xl font-bold text-white">Acesso Restrito</h2>
+                <p className="text-slate-400">Apenas professores e coordenadores podem criar problemas.</p>
+            </div>
+        </div>
+    );
+}
 
 export default function CreatePage() {
     const [tags, setTags] = useState<string[]>([]);
@@ -46,6 +59,7 @@ export default function CreatePage() {
     const [reactContent, setMarkdownSource] = useRemark();
 
     return (
+        <RoleGuard minimumRole="teacher" fallback={<AccessDenied />}>
         <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-12 text-center">
@@ -213,5 +227,6 @@ export default function CreatePage() {
                 </div>
             </div>
         </div>
+        </RoleGuard>
     );
 }

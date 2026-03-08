@@ -8,6 +8,7 @@ node_modules
 # Local env files
 **/.env
 **/.env.local
+**/.env.development
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
@@ -29,6 +30,10 @@ coverage
 out/
 build
 dist
+*.tsbuildinfo
+
+# Generated
+apps/api/src/swagger.yaml
 
 
 # Debug

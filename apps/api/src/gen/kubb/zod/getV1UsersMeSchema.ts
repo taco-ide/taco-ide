@@ -15,10 +15,14 @@ export const getV1UsersMe200Schema = z.object({
     "id": z.string(),
 "email": z.string(),
 "name": z.string(),
+"image": z.string().nullable(),
 "emailVerified": z.boolean(),
 "isActive": z.boolean(),
 "createdAt": z.string(),
-"updatedAt": z.string()
+"updatedAt": z.string(),
+"activeOrganizationId": z.string().nullable(),
+"activeOrganizationName": z.string().nullable(),
+"role": z.string().nullable()
     }),
 "pagination": z.object({
     "total": z.number(),

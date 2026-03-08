@@ -79,31 +79,13 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
       if (scope === "public") {
         conditions.push(isNull(challenge.classroomId));
       } else if (scope === "mine") {
-        const userOrgs = await db
-          .select({ organizationId: member.organizationId })
-          .from(member)
-          .where(eq(member.userId, usr.id));
-        const orgIds = userOrgs.map((o) => o.organizationId);
-        if (orgIds.length === 0) {
-          return reply.status(200).send({
-            success: true as const,
-            data: [],
-            pagination: { total: 0, page, perPage, totalPages: 0 },
-          });
-        }
-        const classroomIds = await db
+        const userClassroomIds = db
           .select({ id: classroom.id })
           .from(classroom)
-          .where(inArray(classroom.organizationId, orgIds));
-        const cIds = classroomIds.map((c) => c.id);
-        if (cIds.length === 0) {
-          return reply.status(200).send({
-            success: true as const,
-            data: [],
-            pagination: { total: 0, page, perPage, totalPages: 0 },
-          });
-        }
-        conditions.push(inArray(challenge.classroomId, cIds));
+          .innerJoin(member, eq(classroom.organizationId, member.organizationId))
+          .where(eq(member.userId, usr.id));
+
+        conditions.push(inArray(challenge.classroomId, userClassroomIds));
       }
 
       if (difficulty) {
