@@ -1,11 +1,21 @@
 import { db } from "./index";
 import {
+  user,
+  account,
+  organization,
+  member,
+  classroom,
   model,
   teachingAssistant,
   challenge,
   challengeTeachingAssistant,
 } from "./schema";
 
+const SEED_USER_ID = "00000000-0000-0000-0000-000000000099";
+const SEED_ACCOUNT_ID = "00000000-0000-0000-0000-000000000098";
+const SEED_ORG_ID = "00000000-0000-0000-0000-000000000090";
+const SEED_MEMBER_ID = "00000000-0000-0000-0000-000000000091";
+const SEED_CLASSROOM_ID = "00000000-0000-0000-0000-000000000080";
 const SEED_MODEL_ID = "00000000-0000-0000-0000-000000000001";
 const SEED_TA_ID = "00000000-0000-0000-0000-000000000002";
 const SEED_CHALLENGE_IDS = [
@@ -20,6 +30,58 @@ const SEED_CHALLENGE_IDS = [
 async function seed() {
   console.log("Seeding database...");
 
+  // ==================== SEED USER ====================
+  try {
+    await db.insert(user).values({
+      id: SEED_USER_ID,
+      name: "Seed Teacher",
+      email: "teacher@taco-ide.dev",
+      emailVerified: true,
+      isActive: true,
+    });
+    await db.insert(account).values({
+      id: SEED_ACCOUNT_ID,
+      accountId: SEED_USER_ID,
+      providerId: "credential",
+      userId: SEED_USER_ID,
+      // bcrypt hash for "password123"
+      password:
+        "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012",
+    });
+  } catch {
+    // User may already exist
+  }
+
+  // ==================== SEED ORGANIZATION + MEMBER ====================
+  try {
+    await db.insert(organization).values({
+      id: SEED_ORG_ID,
+      name: "TACO University",
+      slug: "taco-university",
+    });
+    await db.insert(member).values({
+      id: SEED_MEMBER_ID,
+      userId: SEED_USER_ID,
+      organizationId: SEED_ORG_ID,
+      role: "teacher",
+    });
+  } catch {
+    // Organization may already exist
+  }
+
+  // ==================== SEED CLASSROOM ====================
+  try {
+    await db.insert(classroom).values({
+      id: SEED_CLASSROOM_ID,
+      organizationId: SEED_ORG_ID,
+      title: "Introduction to Algorithms",
+      description: "A beginner-friendly algorithms course",
+    });
+  } catch {
+    // Classroom may already exist
+  }
+
+  // ==================== SEED MODEL ====================
   try {
     await db.insert(model).values({
       id: SEED_MODEL_ID,
@@ -103,6 +165,8 @@ async function seed() {
     try {
       await db.insert(challenge).values({
         id: c.id,
+        classroomId: SEED_CLASSROOM_ID,
+        createdByUserId: SEED_USER_ID,
         title: c.title,
         description: c.description,
         difficulty: c.difficulty,
@@ -118,7 +182,7 @@ async function seed() {
     }
   }
 
-  console.log("Seed completed - challenges, model and TA created");
+  console.log("Seed completed - user, org, classroom, challenges, model and TA created");
   process.exit(0);
 }
 

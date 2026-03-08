@@ -25,6 +25,13 @@ const envSchema = z.object({
   // OpenRouter (LLM)
   OPENROUTER_API_KEY: z.string().optional(),
 
+  // Embedding
+  EMBEDDING_PROVIDER: z.enum(["openai", "azure"]).optional(),
+  EMBEDDING_API_URL: z.string().url().optional(),
+  EMBEDDING_API_KEY: z.string().optional(),
+  EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
+  EMBEDDING_DIMENSIONS: z.coerce.number().default(1536),
+
   // Server
   PORT: z.coerce.number().default(3344),
 });

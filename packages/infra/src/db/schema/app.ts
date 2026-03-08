@@ -8,8 +8,30 @@ import {
   varchar,
   primaryKey,
   uniqueIndex,
+  customType,
 } from "drizzle-orm/pg-core";
 import { user, organization } from "./auth";
+
+// ==================== CUSTOM TYPES ====================
+
+const vector = customType<{
+  data: number[];
+  driverData: string;
+  config: { dimensions: number };
+}>({
+  dataType(config) {
+    return `vector(${config?.dimensions ?? 1536})`;
+  },
+  fromDriver(value) {
+    return value
+      .slice(1, -1)
+      .split(",")
+      .map(Number);
+  },
+  toDriver(value) {
+    return `[${value.join(",")}]`;
+  },
+});
 
 // ==================== CLASSROOMS ====================
 
@@ -215,9 +237,10 @@ export const knowledgeBase = pgTable("knowledge_base", {
   classroomId: text("classroom_id").references(() => classroom.id),
   challengeId: text("challenge_id").references(() => challenge.id),
   content: text("content").notNull(),
-  // embedding column omitted - requires pgvector extension
+  embedding: vector("embedding", { dimensions: 1536 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 // ==================== CONVERSATION REPLAYS (TA A/B Testing) ====================

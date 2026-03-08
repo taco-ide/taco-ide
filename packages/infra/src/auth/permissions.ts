@@ -8,6 +8,7 @@ const statement = {
   classroom: ["create", "update", "delete"],
   challenge: ["create", "update", "delete"],
   teachingAssistant: ["create", "update", "delete"],
+  knowledgeBase: ["create", "update", "delete"],
 } as const;
 
 export const ac = createAccessControl(statement);
@@ -19,6 +20,7 @@ export const studentRole = ac.newRole({
   classroom: [],
   challenge: [],
   teachingAssistant: [],
+  knowledgeBase: [],
 });
 
 export const teacherRole = ac.newRole({
@@ -27,6 +29,7 @@ export const teacherRole = ac.newRole({
   teachingAssistant: ["create", "update"],
   member: ["create"],
   invitation: ["create"],
+  knowledgeBase: ["create", "update", "delete"],
 });
 
 export const coordinatorRole = ac.newRole({
@@ -36,6 +39,7 @@ export const coordinatorRole = ac.newRole({
   classroom: ["create", "update", "delete"],
   challenge: ["create", "update", "delete"],
   teachingAssistant: ["create", "update", "delete"],
+  knowledgeBase: ["create", "update", "delete"],
 });
 
 export const adminRole = ac.newRole({
@@ -45,6 +49,7 @@ export const adminRole = ac.newRole({
   classroom: ["create", "update", "delete"],
   challenge: ["create", "update", "delete"],
   teachingAssistant: ["create", "update", "delete"],
+  knowledgeBase: ["create", "update", "delete"],
 });
 
 // ==================== RBAC Types ====================
