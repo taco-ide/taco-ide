@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Carousel,
@@ -18,9 +19,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-import { useGetV1Challenges } from "@/kubb/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, Loader2, Pencil, Trash2 } from "lucide-react";
+import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey } from "@/kubb/hooks";
+import { PermissionGuard } from "@/components/guards/PermissionGuard";
 
 // TODO: Replace mock data with real data from GET /v1/classrooms endpoint when available
 const ClassesDatabase = [
@@ -32,6 +46,7 @@ const problemsPerPage = 10;
 
 export default function ExplorePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
 
   const {
@@ -47,6 +62,14 @@ export default function ExplorePage() {
     {}
   );
 
+  const deleteMutation = useDeleteV1ChallengesId({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
+      },
+    },
+  });
+
   const challenges = data?.data ?? [];
   const pagination = data?.pagination ?? {
     total: 0,
@@ -58,6 +81,15 @@ export default function ExplorePage() {
 
   const handleProblemClick = (id: string) => {
     router.push(`/problem/${id}`);
+  };
+
+  const handleEdit = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    router.push(`/create/${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate({ id });
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -90,7 +122,7 @@ export default function ExplorePage() {
           {lastProblems.length > 0 && (
             <section className="space-y-6">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Últimos Problemas
+                Ultimos Problemas
               </h1>
               <Carousel opts={{ align: "start" }} className="w-full">
                 <CarouselContent>
@@ -180,11 +212,14 @@ export default function ExplorePage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-slate-800/80 border-slate-700">
-                        <TableHead className="text-slate-200 font-semibold">Título</TableHead>
-                        <TableHead className="text-slate-200 font-semibold">Descrição</TableHead>
+                        <TableHead className="text-slate-200 font-semibold">Titulo</TableHead>
+                        <TableHead className="text-slate-200 font-semibold">Descricao</TableHead>
                         <TableHead className="text-slate-200 font-semibold w-32">Dificuldade</TableHead>
                         <TableHead className="text-slate-200 font-semibold">Tags</TableHead>
                         <TableHead className="text-slate-200 font-semibold text-right">Autor</TableHead>
+                        <PermissionGuard resource="challenge" action="update">
+                          <TableHead className="text-slate-200 font-semibold text-center w-24">Acoes</TableHead>
+                        </PermissionGuard>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -226,6 +261,57 @@ export default function ExplorePage() {
                           <TableCell className="text-right text-slate-300">
                             {problem.author ?? "-"}
                           </TableCell>
+                          <PermissionGuard resource="challenge" action="update">
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <PermissionGuard resource="challenge" action="update">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={(e) => handleEdit(e, problem.id)}
+                                    className="text-slate-400 hover:text-yellow-400 hover:bg-slate-700 h-8 w-8 p-0"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                </PermissionGuard>
+                                <PermissionGuard resource="challenge" action="delete">
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-slate-400 hover:text-red-400 hover:bg-slate-700 h-8 w-8 p-0"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent className="bg-slate-800 border-slate-700">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle className="text-white">
+                                          Excluir problema
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription className="text-slate-400">
+                                          Tem certeza que deseja excluir &quot;{problem.title}&quot;? Esta acao nao pode ser desfeita.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">
+                                          Cancelar
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDelete(problem.id)}
+                                          className="bg-red-600 hover:bg-red-700 text-white"
+                                        >
+                                          Excluir
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </PermissionGuard>
+                              </div>
+                            </TableCell>
+                          </PermissionGuard>
                         </TableRow>
                       ))}
                     </TableBody>
