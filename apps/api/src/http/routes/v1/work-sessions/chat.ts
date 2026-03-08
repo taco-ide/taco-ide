@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -144,7 +144,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           description: challenge.description,
         })
         .from(challenge)
-        .where(eq(challenge.id, session.challengeId))
+        .where(and(eq(challenge.id, session.challengeId), isNull(challenge.deletedAt)))
         .limit(1);
 
       const [solution] = await db
