@@ -13,7 +13,7 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url(),
 
   // Frontend URL for redirects
-  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+  FRONTEND_URL: z.string().url().default("http://localhost:4001"),
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
@@ -33,7 +33,7 @@ const envSchema = z.object({
   EMBEDDING_DIMENSIONS: z.coerce.number().default(1536),
 
   // Server
-  PORT: z.coerce.number().default(3344),
+  PORT: z.coerce.number().default(4000),
 });
 
 const parsed = envSchema.safeParse(process.env);
