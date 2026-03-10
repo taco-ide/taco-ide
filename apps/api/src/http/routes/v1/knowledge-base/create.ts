@@ -119,7 +119,7 @@ export async function createKnowledgeBaseRoute(app: FastifyTypedInstance) {
         success: true as const,
         data: {
           id: entry.id,
-          challengeId: entry.challengeId!,
+          challengeId: entry.challengeId ?? challengeId,
           content: entry.content,
           createdAt: entry.createdAt.toISOString(),
         },

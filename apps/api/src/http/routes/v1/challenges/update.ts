@@ -134,7 +134,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         }
       }
 
-      const updateSet: Record<string, unknown> = {
+      const updateSet: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
       };
 
@@ -148,7 +148,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
 
       const [updated] = await db
         .update(challenge)
-        .set(updateSet as typeof challenge.$inferInsert)
+        .set(updateSet)
         .where(eq(challenge.id, id))
         .returning();
 

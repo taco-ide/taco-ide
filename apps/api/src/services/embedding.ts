@@ -4,7 +4,9 @@ type EmbeddingProvider = "openai" | "azure";
 
 function detectProvider(url: string): EmbeddingProvider {
   if (env.EMBEDDING_PROVIDER) return env.EMBEDDING_PROVIDER;
-  return url.includes(".openai.azure.com") ? "azure" : "openai";
+  return url.includes(".openai.azure.com") || url.includes(".cognitiveservices.azure.com")
+    ? "azure"
+    : "openai";
 }
 
 function buildHeaders(
