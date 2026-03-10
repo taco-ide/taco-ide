@@ -19,7 +19,9 @@
     "db:push": "dotenv -e ../../.env -- npx drizzle-kit push --config ./drizzle.config.ts",
     "db:migrate": "dotenv -e ../../.env -- npx drizzle-kit migrate --config ./drizzle.config.ts && npm run build",
     "db:studio": "dotenv -e ../../.env -- npx drizzle-kit studio --config ./drizzle.config.ts",
-    "db:seed": "dotenv -e ../../.env -- npx tsx src/db/seed.ts",
+    "db:seed": "dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
+    "db:seed:dev": "dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
+    "db:seed:prod": "dotenv -e ../../.env -- npx tsx src/db/seed.prod.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

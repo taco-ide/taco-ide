@@ -10,6 +10,12 @@ import {
   challenge,
   challengeTeachingAssistant,
 } from "./schema";
+import { hashPassword } from "better-auth/crypto";
+
+// ==================== DEV SEED ====================
+// Creates test user, org, classroom, challenges, model, and TA.
+// Login: teacher@taco-ide.dev / password123
+// DO NOT run in production.
 
 const SEED_USER_ID = "00000000-0000-0000-0000-000000000099";
 const SEED_ACCOUNT_ID = "00000000-0000-0000-0000-000000000098";
@@ -28,7 +34,7 @@ const SEED_CHALLENGE_IDS = [
 ];
 
 async function seed() {
-  console.log("Seeding database...");
+  console.log("[dev] Seeding database...");
 
   // ==================== SEED USER ====================
   try {
@@ -39,14 +45,13 @@ async function seed() {
       emailVerified: true,
       isActive: true,
     });
+    const hashedPassword = await hashPassword("password123");
     await db.insert(account).values({
       id: SEED_ACCOUNT_ID,
       accountId: SEED_USER_ID,
       providerId: "credential",
       userId: SEED_USER_ID,
-      // bcrypt hash for "password123"
-      password:
-        "$2a$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012",
+      password: hashedPassword,
     });
   } catch {
     // User may already exist
@@ -81,7 +86,7 @@ async function seed() {
     // Classroom may already exist
   }
 
-  // ==================== SEED MODEL ====================
+  // ==================== SEED MODEL + TA ====================
   try {
     await db.insert(model).values({
       id: SEED_MODEL_ID,
@@ -109,13 +114,8 @@ async function seed() {
     // TA may already exist
   }
 
-  const challenges: Array<{
-    id: string;
-    title: string;
-    description: string;
-    difficulty: string;
-    tags: string[];
-  }> = [
+  // ==================== SEED CHALLENGES ====================
+  const challenges = [
     {
       id: SEED_CHALLENGE_IDS[0]!,
       title: "Sorting Problem",
@@ -182,7 +182,8 @@ async function seed() {
     }
   }
 
-  console.log("Seed completed - user, org, classroom, challenges, model and TA created");
+  console.log("[dev] Seed completed - user, org, classroom, challenges, model and TA created");
+  console.log("[dev] Login: teacher@taco-ide.dev / password123");
   process.exit(0);
 }
 
