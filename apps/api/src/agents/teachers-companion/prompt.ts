@@ -1,9 +1,9 @@
-interface TeacherPromptContext {
+interface TeachersCompanionPromptContext {
   classroomName: string;
   classroomDescription: string;
 }
 
-export function buildTeacherPrompt(context: TeacherPromptContext): string {
+export function buildTeachersCompanionPrompt(context: TeachersCompanionPromptContext): string {
   return `\
 You are an AI assistant for programming teachers. Your role is to help \
 teachers create exercises, evaluate student submissions, and manage their \

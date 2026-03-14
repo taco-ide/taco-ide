@@ -5,7 +5,7 @@ import { runCode, getChallengeInfo, searchKnowledgeBase } from "./tools";
 
 const checkpointer = new MemorySaver();
 
-export const studentAgent = createReactAgent({
+export const teachingAssistantAgent = createReactAgent({
   llm,
   tools: [runCode, getChallengeInfo, searchKnowledgeBase],
   checkpointSaver: checkpointer,

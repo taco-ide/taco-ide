@@ -15,8 +15,8 @@ import {
 } from "@repo/infra/db/schema";
 import { eq } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { studentAgent } from "../../../../agents/student/agent";
-import { buildStudentPrompt } from "../../../../agents/student/prompt";
+import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
+import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 
 // ==================== SCHEMAS ====================
 
@@ -35,9 +35,9 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
     {
       schema: {
         tags: ["chat"],
-        summary: "Send a message to the student tutor agent (SSE)",
+        summary: "Send a message to the teaching assistant agent (SSE)",
         description:
-          "Invokes the LangGraph student agent in-process and streams the response as SSE events. " +
+          "Invokes the LangGraph teaching assistant agent in-process and streams the response as SSE events. " +
           "Persists the interaction to the database on completion.",
         body: StudentMessageBodySchema,
         response: {
@@ -103,7 +103,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       }
 
       // Build system prompt
-      const systemPrompt = buildStudentPrompt({
+      const systemPrompt = buildTeachingAssistantPrompt({
         systemPrompt: ta[0]?.systemPrompt ?? "",
         targetAudience: ta[0]?.targetAudience ?? "",
         challengeTitle: ch[0]?.title ?? "",
@@ -131,7 +131,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       let fullResponse = "";
 
       try {
-        const stream = studentAgent.streamEvents(
+        const stream = teachingAssistantAgent.streamEvents(
           {
             messages: [
               new SystemMessage(systemPrompt),

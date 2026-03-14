@@ -11,7 +11,7 @@ import {
 
 const checkpointer = new MemorySaver();
 
-export const teacherAgent = createReactAgent({
+export const teachersCompanionAgent = createReactAgent({
   llm,
   tools: [
     createChallengeDraft,

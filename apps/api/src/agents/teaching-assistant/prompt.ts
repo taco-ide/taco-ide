@@ -1,4 +1,4 @@
-interface StudentPromptContext {
+interface TeachingAssistantPromptContext {
   systemPrompt: string;
   targetAudience: string;
   challengeTitle: string;
@@ -8,7 +8,7 @@ interface StudentPromptContext {
   stdout: string;
 }
 
-export function buildStudentPrompt(context: StudentPromptContext): string {
+export function buildTeachingAssistantPrompt(context: TeachingAssistantPromptContext): string {
   return `\
 You are a pedagogical tutor for programming education. Your role is to help \
 students learn Python by guiding them through challenges using the Socratic method.

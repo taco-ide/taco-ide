@@ -9,8 +9,8 @@ import { db } from "@repo/infra/db";
 import { classroom, member } from "@repo/infra/db/schema";
 import { eq, and } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { teacherAgent } from "../../../../agents/teacher/agent";
-import { buildTeacherPrompt } from "../../../../agents/teacher/prompt";
+import { teachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
+import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 
 // ==================== SCHEMAS ====================
 
@@ -27,9 +27,9 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
     {
       schema: {
         tags: ["chat"],
-        summary: "Send a message to the teacher assistant agent (SSE)",
+        summary: "Send a message to the teacher's companion agent (SSE)",
         description:
-          "Invokes the LangGraph teacher agent in-process and streams the response as SSE events. " +
+          "Invokes the LangGraph teacher's companion agent in-process and streams the response as SSE events. " +
           "Teacher chat is ephemeral for MVP (no DB persistence).",
         body: TeacherMessageBodySchema,
         response: {
@@ -82,7 +82,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
       }
 
       // Build system prompt
-      const systemPrompt = buildTeacherPrompt({
+      const systemPrompt = buildTeachersCompanionPrompt({
         classroomName: cr[0].title,
         classroomDescription: cr[0].description ?? "",
       });
@@ -103,7 +103,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
       });
 
       try {
-        const stream = teacherAgent.streamEvents(
+        const stream = teachersCompanionAgent.streamEvents(
           {
             messages: [
               new SystemMessage(systemPrompt),
