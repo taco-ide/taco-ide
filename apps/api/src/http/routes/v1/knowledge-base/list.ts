@@ -4,6 +4,7 @@ import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
@@ -52,6 +53,7 @@ export async function listKnowledgeBaseRoute(app: FastifyTypedInstance) {
         response: {
           200: ListKnowledgeBaseResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -68,7 +70,10 @@ export async function listKnowledgeBaseRoute(app: FastifyTypedInstance) {
       const challengeId = request.params.id;
 
       const ch = await db
-        .select({ id: challenge.id })
+        .select({
+          id: challenge.id,
+          createdByUserId: challenge.createdByUserId,
+        })
         .from(challenge)
         .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
         .limit(1);
@@ -77,6 +82,16 @@ export async function listKnowledgeBaseRoute(app: FastifyTypedInstance) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
+        });
+      }
+
+      if (
+        usr.role === "teacher" &&
+        ch[0].createdByUserId !== usr.id
+      ) {
+        return reply.status(403).send({
+          success: false as const,
+          message: "You can only manage knowledge base entries for your own challenges",
         });
       }
 

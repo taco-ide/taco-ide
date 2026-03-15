@@ -53,7 +53,10 @@ export async function deleteKnowledgeBaseRoute(app: FastifyTypedInstance) {
       const { id: challengeId, kbId } = request.params;
 
       const ch = await db
-        .select({ id: challenge.id })
+        .select({
+          id: challenge.id,
+          createdByUserId: challenge.createdByUserId,
+        })
         .from(challenge)
         .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
         .limit(1);
@@ -62,6 +65,16 @@ export async function deleteKnowledgeBaseRoute(app: FastifyTypedInstance) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
+        });
+      }
+
+      if (
+        usr.role === "teacher" &&
+        ch[0].createdByUserId !== usr.id
+      ) {
+        return reply.status(403).send({
+          success: false as const,
+          message: "You can only manage knowledge base entries for your own challenges",
         });
       }
 

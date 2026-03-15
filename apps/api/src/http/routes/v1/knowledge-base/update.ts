@@ -69,7 +69,10 @@ export async function updateKnowledgeBaseRoute(app: FastifyTypedInstance) {
       const { id: challengeId, kbId } = request.params;
 
       const ch = await db
-        .select({ id: challenge.id })
+        .select({
+          id: challenge.id,
+          createdByUserId: challenge.createdByUserId,
+        })
         .from(challenge)
         .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
         .limit(1);
@@ -78,6 +81,16 @@ export async function updateKnowledgeBaseRoute(app: FastifyTypedInstance) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
+        });
+      }
+
+      if (
+        usr.role === "teacher" &&
+        ch[0].createdByUserId !== usr.id
+      ) {
+        return reply.status(403).send({
+          success: false as const,
+          message: "You can only manage knowledge base entries for your own challenges",
         });
       }
 
@@ -125,7 +138,12 @@ export async function updateKnowledgeBaseRoute(app: FastifyTypedInstance) {
               .where(eq(knowledgeBase.id, kbId));
           }
         })
-        .catch((err) => request.server.log.error(err));
+        .catch((err) =>
+          request.server.log.warn(
+            { err, knowledgeBaseEntryId: kbId, context: 'embedding_generation' },
+            'Failed to generate embedding for knowledge base entry'
+          )
+        );
 
       return reply.status(200).send({
         success: true as const,
