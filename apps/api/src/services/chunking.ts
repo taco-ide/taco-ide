@@ -9,7 +9,9 @@ export function chunkText(
   overlap = 800
 ): Chunk[] {
   const trimmed = text.trim();
-  if (!trimmed) return [];
+  if (!trimmed) {
+    throw new Error("Document has no readable content");
+  }
   if (trimmed.length <= chunkSize) return [{ content: trimmed, index: 0 }];
 
   const chunks: Chunk[] = [];

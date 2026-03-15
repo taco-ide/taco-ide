@@ -22,7 +22,7 @@ const DocumentItemSchema = z.object({
   mimeType: z.string(),
   fileSize: z.number(),
   chunkCount: z.number(),
-  status: z.string(),
+  status: z.enum(["processing", "ready", "error"]),
   errorMessage: z.string().nullable(),
   createdAt: z.string(),
 });
@@ -139,7 +139,7 @@ export async function listDocumentsRoute(app: FastifyTypedInstance) {
           fileSize: d.fileSize,
           chunkCount: d.chunkCount,
           status: d.status,
-          errorMessage: d.errorMessage,
+          errorMessage: d.status === "error" ? "Document processing failed" : null,
           createdAt: d.createdAt.toISOString(),
         })),
         pagination: { total, page, perPage, totalPages },

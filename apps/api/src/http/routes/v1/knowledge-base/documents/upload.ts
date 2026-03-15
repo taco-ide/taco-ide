@@ -7,6 +7,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema413,
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
@@ -29,7 +30,7 @@ const DocumentSchema = z.object({
   mimeType: z.string(),
   fileSize: z.number(),
   chunkCount: z.number(),
-  status: z.string(),
+  status: z.enum(["processing", "ready", "error"]),
   createdAt: z.string(),
 });
 
@@ -57,21 +58,28 @@ async function processDocument(
     const { text } = await parseDocument(buffer, mimeType);
     const chunks = chunkText(text);
 
-    for (const chunk of chunks) {
-      const entryId = randomUUID();
+    const chunkEntryIds: Array<{ entryId: string; content: string }> = [];
 
-      await db.insert(knowledgeBase).values({
-        id: entryId,
-        challengeId: doc.challengeId,
-        organizationId: doc.organizationId,
-        classroomId: doc.classroomId,
-        documentId: doc.id,
-        chunkIndex: chunk.index,
-        content: chunk.content,
-      });
+    await db.transaction(async (tx) => {
+      for (const chunk of chunks) {
+        const entryId = randomUUID();
+        chunkEntryIds.push({ entryId, content: chunk.content });
 
-      // Fire-and-forget: generate embedding for each chunk
-      generateEmbedding(chunk.content)
+        await tx.insert(knowledgeBase).values({
+          id: entryId,
+          challengeId: doc.challengeId,
+          organizationId: doc.organizationId,
+          classroomId: doc.classroomId,
+          documentId: doc.id,
+          chunkIndex: chunk.index,
+          content: chunk.content,
+        });
+      }
+    });
+
+    // Fire-and-forget: generate embeddings outside the transaction
+    for (const { entryId, content } of chunkEntryIds) {
+      generateEmbedding(content)
         .then(async (embedding) => {
           if (embedding) {
             await db
@@ -124,6 +132,7 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          413: ResponseSchema413,
         },
       },
     },
@@ -180,7 +189,23 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
       }
 
       const buffer = await file.toBuffer();
+
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      if (buffer.length > MAX_FILE_SIZE) {
+        return reply.status(413).send({
+          success: false as const,
+          message: "File exceeds maximum size of 10MB",
+        });
+      }
+
       const organizationId = usr.activeOrganizationId;
+      if (!organizationId) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "User must have an active organization",
+        });
+      }
+
       const classroomId = ch[0].classroomId;
       const docId = randomUUID();
 
@@ -206,26 +231,44 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
       }
 
       // Save file to disk
-      await saveFile(buffer, organizationId ?? "default", docId, file.filename);
+      await saveFile(buffer, organizationId, docId, file.filename);
 
       // Fire-and-forget: process document (parse, chunk, embed)
-      processDocument(
-        request.server,
-        {
-          id: docRecord.id,
-          challengeId: docRecord.challengeId ?? challengeId,
-          organizationId: docRecord.organizationId,
-          classroomId: docRecord.classroomId,
-        },
-        buffer,
-        mimeType
-      ).catch(
-        (err) =>
-          request.server.log.warn(
-            { err, documentId: docRecord.id },
-            "Document processing failed"
-          )
+      const PROCESSING_TIMEOUT = 60_000; // 60s
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Document processing timeout (60s)")),
+          PROCESSING_TIMEOUT
+        )
       );
+
+      Promise.race([
+        processDocument(
+          request.server,
+          {
+            id: docRecord.id,
+            challengeId: docRecord.challengeId ?? challengeId,
+            organizationId: docRecord.organizationId,
+            classroomId: docRecord.classroomId,
+          },
+          buffer,
+          mimeType
+        ),
+        timeoutPromise,
+      ]).catch(async (err) => {
+        request.server.log.warn(
+          { err, documentId: docRecord.id },
+          "Document processing failed"
+        );
+        await db
+          .update(knowledgeBaseDocument)
+          .set({
+            status: "error",
+            errorMessage: err instanceof Error ? err.message : "Unknown error",
+            updatedAt: new Date(),
+          })
+          .where(eq(knowledgeBaseDocument.id, docRecord.id));
+      });
 
       return reply.status(202).send({
         success: true as const,

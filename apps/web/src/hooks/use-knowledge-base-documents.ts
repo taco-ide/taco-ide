@@ -39,6 +39,7 @@ export function useKnowledgeBaseDocuments(challengeId: string) {
       const json: ListDocumentsResponse = await res.json();
       return json.data;
     },
+    retry: 3,
     refetchInterval: (query) => {
       const docs = query.state.data;
       if (docs?.some((d) => d.status === "processing")) return 3000;
