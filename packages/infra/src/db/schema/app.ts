@@ -8,6 +8,7 @@ import {
   varchar,
   primaryKey,
   uniqueIndex,
+  index,
   customType,
 } from "drizzle-orm/pg-core";
 import { user, organization } from "./auth";
@@ -231,17 +232,24 @@ export const challengeSolution = pgTable(
 
 // ==================== KNOWLEDGE BASE (RAG Context) ====================
 
-export const knowledgeBase = pgTable("knowledge_base", {
-  id: text("id").primaryKey(),
-  organizationId: text("organization_id").references(() => organization.id),
-  classroomId: text("classroom_id").references(() => classroom.id),
-  challengeId: text("challenge_id").references(() => challenge.id),
-  content: text("content").notNull(),
-  embedding: vector("embedding", { dimensions: 1536 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
+export const knowledgeBase = pgTable(
+  "knowledge_base",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id").references(() => organization.id),
+    classroomId: text("classroom_id").references(() => classroom.id),
+    challengeId: text("challenge_id").references(() => challenge.id),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    index("kb_embedding_idx")
+      .using("hnsw", table.embedding.op("vector_cosine_ops")),
+  ]
+);
 
 // ==================== CONVERSATION REPLAYS (TA A/B Testing) ====================
 

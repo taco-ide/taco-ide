@@ -22,6 +22,13 @@
       "when": 1772996802139,
       "tag": "0002_familiar_lila_cheney",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773599886539,
+      "tag": "0003_silky_paladin",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+CREATE INDEX "kb_embedding_idx" ON "knowledge_base" USING hnsw ("embedding" vector_cosine_ops);
