@@ -122,7 +122,14 @@ export async function deleteDocumentRoute(app: FastifyTypedInstance) {
         .where(eq(knowledgeBase.documentId, docId));
 
       // Delete physical file (best-effort)
-      const orgId = existing[0].organizationId ?? "default";
+      const orgId = existing[0].organizationId;
+      if (!orgId) {
+        request.server.log.warn(
+          { documentId: docId },
+          "Document has no organizationId, skipping file deletion"
+        );
+        return reply.status(204).send({ success: true as const });
+      }
       const ext = extname(existing[0].filename);
       const filePath = join(
         process.cwd(),
