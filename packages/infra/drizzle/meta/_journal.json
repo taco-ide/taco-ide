@@ -29,6 +29,13 @@
       "when": 1773599886539,
       "tag": "0003_silky_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773603569196,
+      "tag": "0004_cool_beyonder",
+      "breakpoints": true
     }
   ]
 }

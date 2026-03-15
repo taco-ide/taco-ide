@@ -230,6 +230,24 @@ export const challengeSolution = pgTable(
   ]
 );
 
+// ==================== KNOWLEDGE BASE DOCUMENTS ====================
+
+export const knowledgeBaseDocument = pgTable("knowledge_base_document", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").references(() => organization.id),
+  classroomId: text("classroom_id").references(() => classroom.id),
+  challengeId: text("challenge_id").references(() => challenge.id),
+  filename: text("filename").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  chunkCount: integer("chunk_count").notNull().default(0),
+  status: varchar("status", { length: 20 }).notNull().default("processing"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
 // ==================== KNOWLEDGE BASE (RAG Context) ====================
 
 export const knowledgeBase = pgTable(
@@ -239,6 +257,11 @@ export const knowledgeBase = pgTable(
     organizationId: text("organization_id").references(() => organization.id),
     classroomId: text("classroom_id").references(() => classroom.id),
     challengeId: text("challenge_id").references(() => challenge.id),
+    documentId: text("document_id").references(
+      () => knowledgeBaseDocument.id,
+      { onDelete: "cascade" }
+    ),
+    chunkIndex: integer("chunk_index"),
     content: text("content").notNull(),
     embedding: vector("embedding", { dimensions: 1536 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -308,5 +331,8 @@ export type UserInteractionOnChallenge =
   typeof userInteractionOnChallenge.$inferSelect;
 export type ChallengeSolution = typeof challengeSolution.$inferSelect;
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type NewKnowledgeBase = typeof knowledgeBase.$inferInsert;
+export type KnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferSelect;
+export type NewKnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferInsert;
 export type ConversationReplay = typeof conversationReplay.$inferSelect;
 export type ReplayInteraction = typeof replayInteraction.$inferSelect;
