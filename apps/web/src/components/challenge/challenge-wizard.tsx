@@ -18,13 +18,11 @@ import { challengeFormSchema, type ChallengeFormData } from "@/components/challe
 import { WizardStepper } from "@/components/challenge/wizard-stepper";
 import { StepBasicInfo } from "@/components/challenge/steps/step-basic-info";
 import { StepDescription } from "@/components/challenge/steps/step-description";
-import { StepAssistantConfig } from "@/components/challenge/steps/step-assistant-config";
 import { StepKnowledgeBase } from "@/components/challenge/steps/step-knowledge-base";
 
 const WIZARD_STEPS = [
     { label: "Informacoes Basicas" },
     { label: "Enunciado" },
-    { label: "Configuracoes" },
     { label: "Knowledge Base" },
 ];
 
@@ -60,7 +58,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             onSuccess: (res) => {
                 queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                 setResolvedChallengeId(res.data.id);
-                setCurrentStep(3);
+                setCurrentStep(2);
             },
             onError: (err) => {
                 setFeedback({
@@ -78,7 +76,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesIdQueryKey(challengeId) });
                 }
-                setCurrentStep(3);
+                setCurrentStep(2);
             },
             onError: (err) => {
                 setFeedback({
@@ -99,7 +97,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             if (!valid) return;
         }
 
-        if (currentStep === 2) {
+        if (currentStep === 1) {
             const formData = methods.getValues();
             const payload = {
                 title: formData.title,
@@ -163,8 +161,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                             <StepBasicInfo tags={tags} setTags={setTags} />
                         )}
                         {currentStep === 1 && <StepDescription />}
-                        {currentStep === 2 && <StepAssistantConfig />}
-                        {currentStep === 3 && effectiveChallengeId && (
+                        {currentStep === 2 && effectiveChallengeId && (
                             <StepKnowledgeBase challengeId={effectiveChallengeId} />
                         )}
                     </div>
