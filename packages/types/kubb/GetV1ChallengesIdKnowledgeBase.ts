@@ -115,6 +115,32 @@ export type GetV1ChallengesIdKnowledgeBase401 = {
     };
 };
 
+export const getV1ChallengesIdKnowledgeBase403SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1ChallengesIdKnowledgeBase403SuccessEnum = (typeof getV1ChallengesIdKnowledgeBase403SuccessEnum)[keyof typeof getV1ChallengesIdKnowledgeBase403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1ChallengesIdKnowledgeBase403 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1ChallengesIdKnowledgeBase403SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const getV1ChallengesIdKnowledgeBase404SuccessEnum = {
     "false": false
 } as const;
@@ -147,5 +173,5 @@ export type GetV1ChallengesIdKnowledgeBaseQuery = {
     Response: GetV1ChallengesIdKnowledgeBase200;
     PathParams: GetV1ChallengesIdKnowledgeBasePathParams;
     QueryParams: GetV1ChallengesIdKnowledgeBaseQueryParams;
-    Errors: GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase404;
+    Errors: GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase403 | GetV1ChallengesIdKnowledgeBase404;
 };

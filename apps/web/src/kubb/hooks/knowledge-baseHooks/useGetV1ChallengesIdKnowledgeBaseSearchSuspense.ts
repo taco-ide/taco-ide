@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, GetV1ChallengesIdKnowledgeBaseSearchPathParams, GetV1ChallengesIdKnowledgeBaseSearchQueryParams, GetV1ChallengesIdKnowledgeBaseSearch401, GetV1ChallengesIdKnowledgeBaseSearch404, GetV1ChallengesIdKnowledgeBaseSearch503 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdKnowledgeBaseSearch.ts";
+import type { GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, GetV1ChallengesIdKnowledgeBaseSearchPathParams, GetV1ChallengesIdKnowledgeBaseSearchQueryParams, GetV1ChallengesIdKnowledgeBaseSearch401, GetV1ChallengesIdKnowledgeBaseSearch403, GetV1ChallengesIdKnowledgeBaseSearch404, GetV1ChallengesIdKnowledgeBaseSearch503 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdKnowledgeBaseSearch.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
@@ -21,13 +21,13 @@ export type GetV1ChallengesIdKnowledgeBaseSearchSuspenseQueryKey = ReturnType<ty
 export async function getV1ChallengesIdKnowledgeBaseSearchSuspense(id: GetV1ChallengesIdKnowledgeBaseSearchPathParams["id"], params: GetV1ChallengesIdKnowledgeBaseSearchQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, unknown>({ method : "GET", url : `/v1/challenges/${id}/knowledge-base/search`, params, ... requestConfig })  
+  const res = await request<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch403 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, unknown>({ method : "GET", url : `/v1/challenges/${id}/knowledge-base/search`, params, ... requestConfig })  
   return res.data
 }
 
 export function getV1ChallengesIdKnowledgeBaseSearchSuspenseQueryOptions(id: GetV1ChallengesIdKnowledgeBaseSearchPathParams["id"], params: GetV1ChallengesIdKnowledgeBaseSearchQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ChallengesIdKnowledgeBaseSearchSuspenseQueryKey(id, params)
-  return queryOptions<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch403 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, typeof queryKey>({
    enabled: !!(id&& params),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ChallengesIdKnowledgeBaseSearchSuspenseQueryOptions(id: Get
  */
 export function useGetV1ChallengesIdKnowledgeBaseSearchSuspense<TData = GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, TQueryKey extends QueryKey = GetV1ChallengesIdKnowledgeBaseSearchSuspenseQueryKey>(id: GetV1ChallengesIdKnowledgeBaseSearchPathParams["id"], params: GetV1ChallengesIdKnowledgeBaseSearchQueryParams, options: 
 {
-  query?: Partial<UseSuspenseQueryOptions<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, TData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<UseSuspenseQueryOptions<GetV1ChallengesIdKnowledgeBaseSearchQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch403 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>, TData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ChallengesIdKnowledgeBaseSearchSuspense<TData = GetV1Cha
    ...getV1ChallengesIdKnowledgeBaseSearchSuspenseQueryOptions(id, params, config),
    queryKey,
    ...queryOptions
-  } as unknown as UseSuspenseQueryOptions, queryClient) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>> & { queryKey: TQueryKey }
+  } as unknown as UseSuspenseQueryOptions, queryClient) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBaseSearch401 | GetV1ChallengesIdKnowledgeBaseSearch403 | GetV1ChallengesIdKnowledgeBaseSearch404 | GetV1ChallengesIdKnowledgeBaseSearch503>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

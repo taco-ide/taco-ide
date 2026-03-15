@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesIdKnowledgeBaseQueryResponse, GetV1ChallengesIdKnowledgeBasePathParams, GetV1ChallengesIdKnowledgeBaseQueryParams, GetV1ChallengesIdKnowledgeBase401, GetV1ChallengesIdKnowledgeBase404 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdKnowledgeBase.ts";
+import type { GetV1ChallengesIdKnowledgeBaseQueryResponse, GetV1ChallengesIdKnowledgeBasePathParams, GetV1ChallengesIdKnowledgeBaseQueryParams, GetV1ChallengesIdKnowledgeBase401, GetV1ChallengesIdKnowledgeBase403, GetV1ChallengesIdKnowledgeBase404 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdKnowledgeBase.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
 import { queryOptions, useQuery } from "@tanstack/react-query";
@@ -21,13 +21,13 @@ export type GetV1ChallengesIdKnowledgeBaseQueryKey = ReturnType<typeof getV1Chal
 export async function getV1ChallengesIdKnowledgeBase(id: GetV1ChallengesIdKnowledgeBasePathParams["id"], params?: GetV1ChallengesIdKnowledgeBaseQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase404>, unknown>({ method : "GET", url : `/v1/challenges/${id}/knowledge-base/`, params, ... requestConfig })  
+  const res = await request<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase403 | GetV1ChallengesIdKnowledgeBase404>, unknown>({ method : "GET", url : `/v1/challenges/${id}/knowledge-base/`, params, ... requestConfig })  
   return res.data
 }
 
 export function getV1ChallengesIdKnowledgeBaseQueryOptions(id: GetV1ChallengesIdKnowledgeBasePathParams["id"], params?: GetV1ChallengesIdKnowledgeBaseQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ChallengesIdKnowledgeBaseQueryKey(id, params)
-  return queryOptions<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase404>, GetV1ChallengesIdKnowledgeBaseQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase403 | GetV1ChallengesIdKnowledgeBase404>, GetV1ChallengesIdKnowledgeBaseQueryResponse, typeof queryKey>({
    enabled: !!(id),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ChallengesIdKnowledgeBaseQueryOptions(id: GetV1ChallengesId
  */
 export function useGetV1ChallengesIdKnowledgeBase<TData = GetV1ChallengesIdKnowledgeBaseQueryResponse, TQueryData = GetV1ChallengesIdKnowledgeBaseQueryResponse, TQueryKey extends QueryKey = GetV1ChallengesIdKnowledgeBaseQueryKey>(id: GetV1ChallengesIdKnowledgeBasePathParams["id"], params?: GetV1ChallengesIdKnowledgeBaseQueryParams, options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1ChallengesIdKnowledgeBaseQueryResponse, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase403 | GetV1ChallengesIdKnowledgeBase404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ChallengesIdKnowledgeBase<TData = GetV1ChallengesIdKnowl
    ...getV1ChallengesIdKnowledgeBaseQueryOptions(id, params, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdKnowledgeBase401 | GetV1ChallengesIdKnowledgeBase403 | GetV1ChallengesIdKnowledgeBase404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

@@ -5,25 +5,28 @@
 
 import { z } from "zod";
 
-export const getV1ChallengesIdKnowledgeBaseSearchPathParamsSchema = z.object({
+export const getV1ChallengesIdKnowledgeBaseDocumentsPathParamsSchema = z.object({
     "id": z.string().uuid()
     })
 
-export const getV1ChallengesIdKnowledgeBaseSearchQueryParamsSchema = z.object({
-    "q": z.string().min(1),
-"limit": z.coerce.number().min(1).max(50).default(10)
+export const getV1ChallengesIdKnowledgeBaseDocumentsQueryParamsSchema = z.object({
+    "page": z.coerce.number().min(1).default(1),
+"perPage": z.coerce.number().min(1).max(100).default(20)
     })
 
 /**
  * @description Default Response
  */
-export const getV1ChallengesIdKnowledgeBaseSearch200Schema = z.object({
+export const getV1ChallengesIdKnowledgeBaseDocuments200Schema = z.object({
     "success": z.literal(true),
-"message": z.string().optional(),
 "data": z.array(z.object({
     "id": z.string(),
-"content": z.string(),
-"similarity": z.number(),
+"filename": z.string(),
+"mimeType": z.string(),
+"fileSize": z.number(),
+"chunkCount": z.number(),
+"status": z.string(),
+"errorMessage": z.string().nullable(),
 "createdAt": z.string()
     })),
 "pagination": z.object({
@@ -31,13 +34,13 @@ export const getV1ChallengesIdKnowledgeBaseSearch200Schema = z.object({
 "page": z.number(),
 "perPage": z.number(),
 "totalPages": z.number()
-    }).optional()
+    })
     })
 
 /**
  * @description Default Response
  */
-export const getV1ChallengesIdKnowledgeBaseSearch401Schema = z.object({
+export const getV1ChallengesIdKnowledgeBaseDocuments401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -48,7 +51,7 @@ export const getV1ChallengesIdKnowledgeBaseSearch401Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1ChallengesIdKnowledgeBaseSearch403Schema = z.object({
+export const getV1ChallengesIdKnowledgeBaseDocuments403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -59,7 +62,7 @@ export const getV1ChallengesIdKnowledgeBaseSearch403Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1ChallengesIdKnowledgeBaseSearch404Schema = z.object({
+export const getV1ChallengesIdKnowledgeBaseDocuments404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -67,15 +70,4 @@ export const getV1ChallengesIdKnowledgeBaseSearch404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-/**
- * @description Default Response
- */
-export const getV1ChallengesIdKnowledgeBaseSearch503Schema = z.object({
-    "success": z.literal(false),
-"message": z.string(),
-"errors": z.object({
-    
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
-    })
-
-export const getV1ChallengesIdKnowledgeBaseSearchQueryResponseSchema = z.lazy(() => getV1ChallengesIdKnowledgeBaseSearch200Schema)
+export const getV1ChallengesIdKnowledgeBaseDocumentsQueryResponseSchema = z.lazy(() => getV1ChallengesIdKnowledgeBaseDocuments200Schema)
