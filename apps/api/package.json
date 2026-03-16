@@ -22,7 +22,7 @@
     "fastify": "^5.2.1",
     "fastify-type-provider-zod": "^4.0.2",
     "js-yaml": "^4.1.0",
-    "pdf-parse": "^2.4.5",
+    "pdf-parse": "^1.1.4",
     "swagger-themes": "^1.4.3",
     "zod": "^3.24.2"
   },
@@ -35,7 +35,6 @@
     "@kubb/plugin-zod": "^3.7.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.17.17",
-    "@types/pdf-parse": "^1.1.5",
     "dotenv-cli": "^11.0.0",
     "tsup": "^8.4.0",
     "tsx": "^4.19.0",

@@ -1,4 +1,4 @@
-import { PDFParse } from "pdf-parse";
+import pdfParse from "pdf-parse";
 
 const SUPPORTED_MIME_TYPES = [
   "application/pdf",
@@ -26,13 +26,10 @@ export async function parseDocument(
 
   switch (mimeType) {
     case "application/pdf": {
-      const pdf = new PDFParse({ data: new Uint8Array(buffer) });
-      const textResult = await pdf.getText();
-      const info = await pdf.getInfo();
-      await pdf.destroy();
+      const result = await pdfParse(buffer);
       return {
-        text: textResult.text,
-        pageCount: info.total,
+        text: result.text,
+        pageCount: result.numpages,
       };
     }
     case "text/plain":
