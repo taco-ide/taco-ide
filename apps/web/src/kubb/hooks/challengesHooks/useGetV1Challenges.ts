@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesQueryKey = (params?: GetV1ChallengesQueryParams) => [{ url: '/v1/challenges/' }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1ChallengesQueryKey = (params?: GetV1ChallengesQueryParams) => 
 export type GetV1ChallengesQueryKey = ReturnType<typeof getV1ChallengesQueryKey>
 
 /**
- * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
+ * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
  * @summary List challenges
  * {@link /v1/challenges/}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesQueryOptions(params?: GetV1ChallengesQueryParams,
 }
 
 /**
- * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
+ * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
  * @summary List challenges
  * {@link /v1/challenges/}
  */

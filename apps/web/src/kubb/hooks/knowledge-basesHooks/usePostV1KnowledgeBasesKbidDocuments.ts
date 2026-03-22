@@ -14,7 +14,7 @@ export const postV1KnowledgeBasesKbidDocumentsMutationKey = () => [{ url: '/v1/k
 export type PostV1KnowledgeBasesKbidDocumentsMutationKey = ReturnType<typeof postV1KnowledgeBasesKbidDocumentsMutationKey>
 
 /**
- * @description Upload a document (PDF, TXT, MD) to be parsed and added to the knowledge base
+ * @description Upload a document to be parsed and added to the knowledge base. Supports any format convertible by Pandoc.
  * @summary Upload document to knowledge base
  * {@link /v1/knowledge-bases/:kbId/documents/}
  */
@@ -26,7 +26,7 @@ export async function postV1KnowledgeBasesKbidDocuments(kbId: PostV1KnowledgeBas
 }
 
 /**
- * @description Upload a document (PDF, TXT, MD) to be parsed and added to the knowledge base
+ * @description Upload a document to be parsed and added to the knowledge base. Supports any format convertible by Pandoc.
  * @summary Upload document to knowledge base
  * {@link /v1/knowledge-bases/:kbId/documents/}
  */
