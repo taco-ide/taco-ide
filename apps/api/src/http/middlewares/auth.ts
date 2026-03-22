@@ -54,9 +54,22 @@ export async function authMiddleware(
     }
 
     // Resolve role and org name from active organization
-    const activeOrgId = session.session.activeOrganizationId ?? null;
+    let activeOrgId = session.session.activeOrganizationId ?? null;
     let role: RoleName | null = null;
     let activeOrgName: string | null = null;
+
+    // If no active org, auto-resolve from user's first membership
+    if (!activeOrgId) {
+      const firstMembership = await db
+        .select({ orgId: member.organizationId })
+        .from(member)
+        .where(eq(member.userId, session.user.id))
+        .limit(1);
+
+      if (firstMembership[0]) {
+        activeOrgId = firstMembership[0].orgId;
+      }
+    }
 
     if (activeOrgId) {
       const memberData = await db
