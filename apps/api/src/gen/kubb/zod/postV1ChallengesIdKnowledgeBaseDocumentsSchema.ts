@@ -21,9 +21,20 @@ export const postV1ChallengesIdKnowledgeBaseDocuments202Schema = z.object({
 "mimeType": z.string(),
 "fileSize": z.number(),
 "chunkCount": z.number(),
-"status": z.string(),
+"status": z.enum(["processing", "ready", "error"]),
 "createdAt": z.string()
     })
+    })
+
+/**
+ * @description Default Response
+ */
+export const postV1ChallengesIdKnowledgeBaseDocuments400Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
 /**
@@ -52,6 +63,17 @@ export const postV1ChallengesIdKnowledgeBaseDocuments403Schema = z.object({
  * @description Default Response
  */
 export const postV1ChallengesIdKnowledgeBaseDocuments404Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const postV1ChallengesIdKnowledgeBaseDocuments413Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({

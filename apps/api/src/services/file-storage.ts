@@ -6,11 +6,12 @@ const UPLOADS_DIR = join(process.cwd(), "uploads", "documents");
 export async function saveFile(
   buffer: Buffer,
   organizationId: string,
+  knowledgeBaseId: string,
   documentId: string,
   originalFilename: string
 ): Promise<string> {
   const ext = extname(originalFilename);
-  const dir = join(UPLOADS_DIR, organizationId);
+  const dir = join(UPLOADS_DIR, organizationId, knowledgeBaseId);
   await mkdir(dir, { recursive: true });
 
   const filePath = join(dir, `${documentId}${ext}`);

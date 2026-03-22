@@ -36,6 +36,20 @@
       "when": 1773603569196,
       "tag": "0004_cool_beyonder",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1774219211814,
+      "tag": "0005_flowery_mister_fear",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1774220595359,
+      "tag": "0006_redundant_sabretooth",
+      "breakpoints": true
     }
   ]
 }

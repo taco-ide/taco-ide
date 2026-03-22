@@ -8,10 +8,10 @@ import { KbDocumentUploadZone } from "./kb-document-upload-zone";
 import { KbDocumentList } from "./kb-document-list";
 
 interface KbDocumentsProps {
-  challengeId: string;
+  knowledgeBaseId: string;
 }
 
-export function KbDocuments({ challengeId }: KbDocumentsProps) {
+export function KbDocuments({ knowledgeBaseId }: KbDocumentsProps) {
   const {
     documents,
     isLoading,
@@ -19,7 +19,7 @@ export function KbDocuments({ challengeId }: KbDocumentsProps) {
     isUploading,
     deleteDocument,
     isDeleting,
-  } = useKnowledgeBaseDocuments(challengeId);
+  } = useKnowledgeBaseDocuments(knowledgeBaseId);
 
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";

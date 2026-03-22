@@ -17,6 +17,14 @@ export const postV1ChallengesIdKnowledgeBaseDocuments202SuccessEnum = {
 
 export type PostV1ChallengesIdKnowledgeBaseDocuments202SuccessEnum = (typeof postV1ChallengesIdKnowledgeBaseDocuments202SuccessEnum)[keyof typeof postV1ChallengesIdKnowledgeBaseDocuments202SuccessEnum];
 
+export const dataStatusEnum = {
+    "processing": "processing",
+    "ready": "ready",
+    "error": "error"
+} as const;
+
+export type DataStatusEnum = (typeof dataStatusEnum)[keyof typeof dataStatusEnum];
+
 /**
  * @description Default Response
 */
@@ -56,11 +64,37 @@ export type PostV1ChallengesIdKnowledgeBaseDocuments202 = {
         /**
          * @type string
         */
-        status: string;
+        status: DataStatusEnum;
         /**
          * @type string
         */
         createdAt: string;
+    };
+};
+
+export const postV1ChallengesIdKnowledgeBaseDocuments400SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChallengesIdKnowledgeBaseDocuments400SuccessEnum = (typeof postV1ChallengesIdKnowledgeBaseDocuments400SuccessEnum)[keyof typeof postV1ChallengesIdKnowledgeBaseDocuments400SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChallengesIdKnowledgeBaseDocuments400 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChallengesIdKnowledgeBaseDocuments400SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
     };
 };
 
@@ -142,10 +176,36 @@ export type PostV1ChallengesIdKnowledgeBaseDocuments404 = {
     };
 };
 
+export const postV1ChallengesIdKnowledgeBaseDocuments413SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChallengesIdKnowledgeBaseDocuments413SuccessEnum = (typeof postV1ChallengesIdKnowledgeBaseDocuments413SuccessEnum)[keyof typeof postV1ChallengesIdKnowledgeBaseDocuments413SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChallengesIdKnowledgeBaseDocuments413 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChallengesIdKnowledgeBaseDocuments413SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export type PostV1ChallengesIdKnowledgeBaseDocumentsMutationResponse = PostV1ChallengesIdKnowledgeBaseDocuments202;
 
 export type PostV1ChallengesIdKnowledgeBaseDocumentsMutation = {
     Response: PostV1ChallengesIdKnowledgeBaseDocuments202;
     PathParams: PostV1ChallengesIdKnowledgeBaseDocumentsPathParams;
-    Errors: PostV1ChallengesIdKnowledgeBaseDocuments401 | PostV1ChallengesIdKnowledgeBaseDocuments403 | PostV1ChallengesIdKnowledgeBaseDocuments404;
+    Errors: PostV1ChallengesIdKnowledgeBaseDocuments400 | PostV1ChallengesIdKnowledgeBaseDocuments401 | PostV1ChallengesIdKnowledgeBaseDocuments403 | PostV1ChallengesIdKnowledgeBaseDocuments404 | PostV1ChallengesIdKnowledgeBaseDocuments413;
 };

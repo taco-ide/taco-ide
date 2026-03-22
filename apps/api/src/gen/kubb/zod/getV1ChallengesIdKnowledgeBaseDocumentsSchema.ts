@@ -25,7 +25,7 @@ export const getV1ChallengesIdKnowledgeBaseDocuments200Schema = z.object({
 "mimeType": z.string(),
 "fileSize": z.number(),
 "chunkCount": z.number(),
-"status": z.string(),
+"status": z.enum(["processing", "ready", "error"]),
 "errorMessage": z.string().nullable(),
 "createdAt": z.string()
     })),

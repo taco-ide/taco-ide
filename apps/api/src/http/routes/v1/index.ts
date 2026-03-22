@@ -4,6 +4,7 @@ import { statusRoutes } from "./status/index";
 import { usersRoutes } from "./users/index";
 import { challengesRoutes } from "./challenges/index";
 import { workSessionsRoutes } from "./work-sessions/index";
+import { knowledgeBasesRoutes } from "./knowledge-bases";
 
 const routes = [
   authRoutes,
@@ -11,6 +12,7 @@ const routes = [
   usersRoutes,
   challengesRoutes,
   workSessionsRoutes,
+  knowledgeBasesRoutes,
 ] as const;
 
 export async function registerRoutes(app: FastifyTypedInstance) {

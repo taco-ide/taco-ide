@@ -1,40 +1,42 @@
-import pdfParse from "pdf-parse";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { writeFile, readFile, unlink } from "node:fs/promises";
+import { join } from "node:path";
+import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
 
-const SUPPORTED_MIME_TYPES = [
-  "application/pdf",
-  "text/plain",
-  "text/markdown",
-] as const;
+const execFileAsync = promisify(execFile);
 
-type SupportedMimeType = (typeof SUPPORTED_MIME_TYPES)[number];
-
-export function isSupportedMimeType(
-  mimeType: string
-): mimeType is SupportedMimeType {
-  return SUPPORTED_MIME_TYPES.includes(mimeType as SupportedMimeType);
-}
+const PANDOC_TIMEOUT = 30_000;
 
 export async function parseDocument(
   buffer: Buffer,
-  mimeType: string
-): Promise<{ text: string; pageCount: number }> {
-  if (!isSupportedMimeType(mimeType)) {
-    throw new Error(
-      `Unsupported MIME type: ${mimeType}. Supported: ${SUPPORTED_MIME_TYPES.join(", ")}`
-    );
-  }
+  mimeType: string,
+  filename: string
+): Promise<{ text: string }> {
+  const id = randomUUID();
+  const tempInput = join(tmpdir(), `pandoc-${id}-${filename}`);
+  const tempOutput = join(tmpdir(), `pandoc-${id}-output.txt`);
 
-  switch (mimeType) {
-    case "application/pdf": {
-      const result = await pdfParse(buffer);
-      return {
-        text: result.text,
-        pageCount: result.numpages,
-      };
-    }
-    case "text/plain":
-    case "text/markdown": {
-      return { text: buffer.toString("utf-8"), pageCount: 1 };
-    }
+  try {
+    await writeFile(tempInput, buffer);
+
+    await execFileAsync("pandoc", [tempInput, "-t", "plain", "-o", tempOutput], {
+      timeout: PANDOC_TIMEOUT,
+    });
+
+    const text = await readFile(tempOutput, "utf-8");
+
+    return { text };
+  } catch (err) {
+    const stderr =
+      err instanceof Error && "stderr" in err
+        ? (err as { stderr: string }).stderr
+        : String(err);
+
+    throw new Error(`Pandoc conversion failed: ${stderr}`);
+  } finally {
+    await unlink(tempInput).catch(() => {});
+    await unlink(tempOutput).catch(() => {});
   }
 }

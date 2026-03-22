@@ -22,23 +22,25 @@ interface ListDocumentsResponse {
 }
 
 const kbDocumentsKeys = {
-  all: (challengeId: string) => ["kb-documents", challengeId] as const,
+  all: (knowledgeBaseId: string) =>
+    ["kb-documents", knowledgeBaseId] as const,
 };
 
-export function useKnowledgeBaseDocuments(challengeId: string) {
+export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
   const queryClient = useQueryClient();
 
   const listQuery = useQuery({
-    queryKey: kbDocumentsKeys.all(challengeId),
+    queryKey: kbDocumentsKeys.all(knowledgeBaseId),
     queryFn: async (): Promise<KbDocument[]> => {
       const res = await fetch(
-        `${API_BASE_URL}/v1/challenges/${challengeId}/knowledge-base/documents`,
+        `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents`,
         { credentials: "include" },
       );
       if (!res.ok) throw new Error("Failed to fetch documents");
       const json: ListDocumentsResponse = await res.json();
       return json.data;
     },
+    enabled: !!knowledgeBaseId,
     retry: 3,
     refetchInterval: (query) => {
       const docs = query.state.data;
@@ -53,7 +55,7 @@ export function useKnowledgeBaseDocuments(challengeId: string) {
       formData.append("file", file);
 
       const res = await fetch(
-        `${API_BASE_URL}/v1/challenges/${challengeId}/knowledge-base/documents`,
+        `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents/upload`,
         {
           method: "POST",
           body: formData,
@@ -70,7 +72,7 @@ export function useKnowledgeBaseDocuments(challengeId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: kbDocumentsKeys.all(challengeId),
+        queryKey: kbDocumentsKeys.all(knowledgeBaseId),
       });
     },
   });
@@ -78,7 +80,7 @@ export function useKnowledgeBaseDocuments(challengeId: string) {
   const deleteMutation = useMutation({
     mutationFn: async (docId: string) => {
       const res = await fetch(
-        `${API_BASE_URL}/v1/challenges/${challengeId}/knowledge-base/documents/${docId}`,
+        `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents/${docId}`,
         {
           method: "DELETE",
           credentials: "include",
@@ -89,7 +91,7 @@ export function useKnowledgeBaseDocuments(challengeId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: kbDocumentsKeys.all(challengeId),
+        queryKey: kbDocumentsKeys.all(knowledgeBaseId),
       });
     },
   });

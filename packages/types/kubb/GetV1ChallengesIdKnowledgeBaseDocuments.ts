@@ -33,6 +33,14 @@ export const getV1ChallengesIdKnowledgeBaseDocuments200SuccessEnum = {
 
 export type GetV1ChallengesIdKnowledgeBaseDocuments200SuccessEnum = (typeof getV1ChallengesIdKnowledgeBaseDocuments200SuccessEnum)[keyof typeof getV1ChallengesIdKnowledgeBaseDocuments200SuccessEnum];
 
+export const dataStatusEnum2 = {
+    "processing": "processing",
+    "ready": "ready",
+    "error": "error"
+} as const;
+
+export type DataStatusEnum2 = (typeof dataStatusEnum2)[keyof typeof dataStatusEnum2];
+
 /**
  * @description Default Response
 */
@@ -68,7 +76,7 @@ export type GetV1ChallengesIdKnowledgeBaseDocuments200 = {
         /**
          * @type string
         */
-        status: string;
+        status: DataStatusEnum2;
         /**
          * @type string
         */
