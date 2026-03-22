@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/contexts/UserContext";
+import { useGetV1Classrooms } from "@/kubb/hooks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -41,9 +43,20 @@ function AccessDenied() {
     );
 }
 
+const CLASSROOM_NONE_VALUE = "__none__";
+
 export default function CreatePage() {
+    const { user } = useUser();
+    const isCoordinator = user?.role === "coordinator" || user?.role === "admin";
+    const { data: classroomsData } = useGetV1Classrooms(
+        { scope: isCoordinator ? "org" : "mine", page: 1, perPage: 100 },
+        { query: { enabled: !!user } }
+    );
+    const classrooms = classroomsData?.data ?? [];
+
     const [tags, setTags] = useState<string[]>([]);
     const [currentTag, setCurrentTag] = useState("");
+    const [classroomId, setClassroomId] = useState<string | null>(null);
 
     const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && currentTag.trim() !== '') {
@@ -85,6 +98,43 @@ export default function CreatePage() {
                                     placeholder="Ex: Implement the quick sort algorithm in your preferred language"
                                     className="bg-slate-900 border-slate-700 text-slate-200"
                                 />
+                            </div>
+
+                            <div>
+                                <Label className="text-slate-200">Turma (opcional)</Label>
+                                <Select
+                                    value={classroomId ?? CLASSROOM_NONE_VALUE}
+                                    onValueChange={(v) =>
+                                        setClassroomId(v === CLASSROOM_NONE_VALUE ? null : v)
+                                    }
+                                >
+                                    <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-200">
+                                        <SelectValue placeholder="Nenhuma turma" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-700">
+                                        <SelectItem
+                                            value={CLASSROOM_NONE_VALUE}
+                                            className="text-slate-200 focus:bg-slate-700"
+                                        >
+                                            Nenhuma turma
+                                        </SelectItem>
+                                        {classrooms.map((c) => (
+                                            <SelectItem
+                                                key={c.id}
+                                                value={c.id}
+                                                className="text-slate-200 focus:bg-slate-700"
+                                            >
+                                                {c.title}
+                                                {c.organizationName && ` (${c.organizationName})`}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    {isCoordinator
+                                        ? "Coordenador: pode atribuir a qualquer turma da organização."
+                                        : "Professor: apenas turmas em que participa."}
+                                </p>
                             </div>
 
                             <div>

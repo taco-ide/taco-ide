@@ -27,6 +27,10 @@ export type GetV1ChallengesQueryParams = {
     */
     scope?: GetV1ChallengesQueryParamsScopeEnum;
     /**
+     * @type string | undefined, uuid
+    */
+    classroomId?: string;
+    /**
      * @type string | undefined
     */
     difficulty?: GetV1ChallengesQueryParamsDifficultyEnum;
