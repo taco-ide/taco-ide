@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditorPanel from "./_components/EditorPanel";
@@ -18,12 +19,19 @@ import { FileText, Terminal, MessageCircle } from "lucide-react";
 
 function ProblemPageContent() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string | undefined;
+
+  useEffect(() => {
+    if (!id) {
+      router.replace("/explore");
+    }
+  }, [id, router]);
 
   if (!id) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10] text-zinc-400">
-        <p>ID do problema não encontrado.</p>
+      <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10]">
+        <Loader2 className="h-10 w-10 animate-spin text-amber-500/90" />
       </div>
     );
   }

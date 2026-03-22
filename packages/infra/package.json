@@ -22,6 +22,8 @@
     "db:seed": "dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
     "db:seed:dev": "dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
     "db:seed:prod": "dotenv -e ../../.env -- npx tsx src/db/seed.prod.ts",
+    "db:reset": "dotenv -e ../../.env -- npx tsx src/db/reset-db.ts && dotenv -e ../../.env -- npx drizzle-kit migrate --config ./drizzle.config.ts && dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
+    "db:reset:push": "dotenv -e ../../.env -- npx tsx src/db/reset-db.ts && dotenv -e ../../.env -- npx drizzle-kit push --config ./drizzle.config.ts --force && dotenv -e ../../.env -- npx tsx src/db/seed.dev.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -3,62 +3,51 @@ import { eq, and, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
+  ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, classroom } from "@repo/infra/db/schema";
+import { challenge, classroom, member } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const UpdateChallengeParamsSchema = z.object({
+const ChallengeParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
 const UpdateChallengeBodySchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-  classroomId: z.string().uuid().nullable().optional(),
-  tags: z.array(z.string()).optional(),
-  supportMaterials: z.unknown().optional(),
-  possibleSolutions: z.unknown().optional(),
-});
-
-const ChallengeUpdatedSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string().nullable(),
-  difficulty: z.string().nullable(),
-  tags: z.array(z.string()).nullable(),
-  classroomId: z.string().nullable(),
-  updatedAt: z.string(),
+  classroomId: z.string().uuid().nullable(),
 });
 
 const UpdateChallengeResponseSchema = ResponseSchema200.extend({
-  data: ChallengeUpdatedSchema,
+  data: z.object({
+    id: z.string(),
+    classroomId: z.string().nullable(),
+    message: z.string(),
+  }),
 });
 
 // ==================== ROUTE ====================
 
 export async function updateChallengeRoute(app: FastifyTypedInstance) {
-  app.put<{
-    Params: z.infer<typeof UpdateChallengeParamsSchema>;
+  app.patch<{
+    Params: z.infer<typeof ChallengeParamsSchema>;
     Body: z.infer<typeof UpdateChallengeBodySchema>;
   }>(
     "/:id",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges"],
-        summary: "Update challenge",
-        description: "Update an existing challenge",
-        params: UpdateChallengeParamsSchema,
+        summary: "Update challenge (assign to classroom)",
+        description:
+          "Assign a challenge to a classroom or remove assignment. Teacher: only classrooms they lead. Coordinator: any classroom in org.",
+        params: ChallengeParamsSchema,
         body: UpdateChallengeBodySchema,
         response: {
           200: UpdateChallengeResponseSchema,
+          400: ResponseSchema400,
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
@@ -74,15 +63,16 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const { id } = request.params;
+      const { id: challengeId } = request.params;
+      const { classroomId } = request.body;
 
       const existing = await db
         .select({
           id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
+          classroomId: challenge.classroomId,
         })
         .from(challenge)
-        .where(and(eq(challenge.id, id), isNull(challenge.deletedAt)))
+        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
         .limit(1);
 
       if (!existing[0]) {
@@ -92,65 +82,116 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      if (
-        usr.role === "teacher" &&
-        existing[0].createdByUserId !== usr.id
-      ) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only update your own challenges",
-        });
-      }
-
-      const {
-        title,
-        description,
-        difficulty,
-        classroomId,
-        tags,
-        supportMaterials,
-        possibleSolutions,
-      } = request.body;
-
-      if (classroomId !== undefined && classroomId !== null) {
-        const cl = await db
-          .select({ id: classroom.id, organizationId: classroom.organizationId })
+      if (classroomId) {
+        const cls = await db
+          .select({
+            id: classroom.id,
+            organizationId: classroom.organizationId,
+            teacherUserId: classroom.teacherUserId,
+          })
           .from(classroom)
-          .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
+          .where(
+            and(eq(classroom.id, classroomId), isNull(classroom.deletedAt))
+          )
           .limit(1);
 
-        if (!cl[0]) {
+        if (!cls[0]) {
           return reply.status(404).send({
             success: false as const,
             message: "Classroom not found",
           });
         }
 
-        if (cl[0].organizationId !== usr.activeOrganizationId) {
+        if (existing[0].classroomId) {
+          return reply.status(400).send({
+            success: false as const,
+            message:
+              "Challenge is already assigned to a classroom. Remove assignment first.",
+          });
+        }
+
+        const membership = await db
+          .select({ role: member.role })
+          .from(member)
+          .where(
+            and(
+              eq(member.userId, usr.id),
+              eq(member.organizationId, cls[0].organizationId)
+            )
+          )
+          .limit(1);
+
+        if (!membership[0]) {
           return reply.status(403).send({
             success: false as const,
-            message: "Classroom does not belong to your active organization",
+            message: "You must be a member of the classroom's organization",
           });
+        }
+
+        const isCoordinatorPlus = ["coordinator", "admin"].includes(
+          membership[0].role
+        );
+        const isLeadTeacher = cls[0].teacherUserId === usr.id;
+        if (!isCoordinatorPlus && !isLeadTeacher) {
+          return reply.status(403).send({
+            success: false as const,
+            message:
+              "Only coordinator or the assigned teacher can assign challenges to this classroom",
+          });
+        }
+      } else {
+        if (!existing[0].classroomId) {
+          return reply.status(400).send({
+            success: false as const,
+            message: "Challenge is not assigned to any classroom",
+          });
+        }
+
+        const cls = await db
+          .select({
+            organizationId: classroom.organizationId,
+            teacherUserId: classroom.teacherUserId,
+          })
+          .from(classroom)
+          .where(eq(classroom.id, existing[0].classroomId!))
+          .limit(1);
+
+        if (cls[0]) {
+          const membership = await db
+            .select({ role: member.role })
+            .from(member)
+            .where(
+              and(
+                eq(member.userId, usr.id),
+                eq(member.organizationId, cls[0].organizationId)
+              )
+            )
+            .limit(1);
+
+          if (membership[0]) {
+            const isCoordinatorPlus = ["coordinator", "admin"].includes(
+              membership[0].role
+            );
+            const isLeadTeacher = cls[0].teacherUserId === usr.id;
+            if (!isCoordinatorPlus && !isLeadTeacher) {
+              return reply.status(403).send({
+                success: false as const,
+                message:
+                  "Only coordinator or the assigned teacher can remove challenges from this classroom",
+              });
+            }
+          }
         }
       }
 
-      const updateSet: Partial<typeof challenge.$inferInsert> = {
-        updatedAt: new Date(),
-      };
-
-      if (title !== undefined) updateSet.title = title;
-      if (description !== undefined) updateSet.description = description;
-      if (difficulty !== undefined) updateSet.difficulty = difficulty;
-      if (classroomId !== undefined) updateSet.classroomId = classroomId;
-      if (tags !== undefined) updateSet.tags = tags;
-      if (supportMaterials !== undefined) updateSet.supportMaterials = supportMaterials;
-      if (possibleSolutions !== undefined) updateSet.possibleSolutions = possibleSolutions;
-
       const [updated] = await db
         .update(challenge)
-        .set(updateSet)
-        .where(eq(challenge.id, id))
-        .returning();
+        .set({
+          classroomId,
+          updatedAt: new Date(),
+        })
+        .where(eq(challenge.id, challengeId))
+        .returning({ id: challenge.id, classroomId: challenge.classroomId });
 
       if (!updated) {
         return reply.status(500).send({
@@ -163,12 +204,10 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         success: true as const,
         data: {
           id: updated.id,
-          title: updated.title,
-          description: updated.description,
-          difficulty: updated.difficulty,
-          tags: updated.tags ?? null,
-          classroomId: updated.classroomId,
-          updatedAt: updated.updatedAt.toISOString(),
+          classroomId: updated.classroomId ?? null,
+          message: classroomId
+            ? "Challenge assigned to classroom"
+            : "Challenge unassigned from classroom",
         },
       });
     }

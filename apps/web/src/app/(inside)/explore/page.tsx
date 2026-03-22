@@ -31,23 +31,23 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Loader2, Pencil, Trash2 } from "lucide-react";
-import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey } from "@/kubb/hooks";
+import { ArrowLeft, ArrowRight, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey, useGetV1Classrooms } from "@/kubb/hooks";
+import { useUser } from "@/contexts/UserContext";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
-
-// TODO: Replace mock data with real data from GET /v1/classrooms endpoint when available
-const ClassesDatabase = [
-  { id: 1, name: "CS-201", description: "Advanced Algorithms", instructor: "Prof. Dr. John Doe" },
-  { id: 2, name: "CS-305", description: "Computational Theory", instructor: "Prof. Dr. Jane Smith" },
-];
 
 const problemsPerPage = 10;
 
 export default function ExplorePage() {
   const router = useRouter();
+  const { user } = useUser();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+
+  const isCoordinatorPlus =
+    user?.role === "coordinator" || user?.role === "admin";
 
   const {
     data,
@@ -69,6 +69,15 @@ export default function ExplorePage() {
       },
     },
   });
+
+  const {
+    data: classroomsData,
+    isLoading: classroomsLoading,
+    error: classroomsError,
+  } = useGetV1Classrooms(
+    { scope: "all", page: 1, perPage: 8 },
+    {}
+  );
 
   const challenges = data?.data ?? [];
   const pagination = data?.pagination ?? {
@@ -106,9 +115,20 @@ export default function ExplorePage() {
   };
 
   const lastProblems = challenges.slice(0, 4);
+  const classrooms = classroomsData?.data ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8 bg-slate-900">
+      {isCoordinatorPlus && user?.activeOrganizationId && (
+        <div className="mb-8 flex justify-end">
+          <Button asChild>
+            <Link href="/classrooms/create" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Criar turma
+            </Link>
+          </Button>
+        </div>
+      )}
       {isLoading && challenges.length === 0 ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
@@ -176,25 +196,47 @@ export default function ExplorePage() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
               Turmas em Destaque
             </h1>
-            <Carousel opts={{ align: "start" }} className="w-full">
-              <CarouselContent>
-                {ClassesDatabase.map((course) => (
-                  <CarouselItem key={course.id} className="md:basis-1/2 lg:basis-1/4">
-                    <Card className="p-4 h-full bg-slate-800 border-slate-700 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer">
-                      <div className="flex flex-col gap-3">
-                        <h3 className="font-semibold text-lg text-white">{course.name}</h3>
-                        <p className="text-sm text-slate-400">{course.description}</p>
-                        <div className="flex items-center gap-2 mt-auto pt-3 border-t border-slate-700">
-                          <span className="text-xs text-slate-400">{course.instructor}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="bg-slate-800 hover:bg-slate-700 border-slate-700" />
-              <CarouselNext className="bg-slate-800 hover:bg-slate-700 border-slate-700" />
-            </Carousel>
+            {classroomsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-yellow-500" />
+              </div>
+            ) : classroomsError ? (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+                {classroomsError instanceof Error
+                  ? classroomsError.message
+                  : "Erro ao carregar turmas"}
+              </div>
+            ) : classrooms.length === 0 ? (
+              <p className="text-slate-400 py-8 text-center">
+                Nenhuma turma em destaque no momento.
+              </p>
+            ) : (
+              <Carousel opts={{ align: "start" }} className="w-full">
+                <CarouselContent>
+                  {classrooms.map((course) => (
+                    <CarouselItem key={course.id} className="md:basis-1/2 lg:basis-1/4">
+                      <Link href={`/classrooms/${course.id}`}>
+                        <Card className="p-4 h-full bg-slate-800 border-slate-700 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer">
+                          <div className="flex flex-col gap-3">
+                            <h3 className="font-semibold text-lg text-white">{course.title}</h3>
+                            <p className="text-sm text-slate-400">
+                              {course.description ?? ""}
+                            </p>
+                            <div className="flex items-center gap-2 mt-auto pt-3 border-t border-slate-700">
+                              <span className="text-xs text-slate-400">
+                                {course.organizationName ?? "-"}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="bg-slate-800 hover:bg-slate-700 border-slate-700" />
+                <CarouselNext className="bg-slate-800 hover:bg-slate-700 border-slate-700" />
+              </Carousel>
+            )}
           </section>
 
           <section className="mt-16 space-y-6">

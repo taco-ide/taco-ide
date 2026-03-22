@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth";
@@ -86,6 +92,48 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const error = queryError && !is401
     ? (queryError instanceof Error ? queryError.message : "Erro desconhecido")
     : null;
+
+  /** Better Auth deixa `activeOrganizationId` null até `organization.setActive`; o seed só cria `member`. */
+  const autoActiveOrgAttempted = useRef(false);
+
+  useEffect(() => {
+    if (is401 || !user) {
+      autoActiveOrgAttempted.current = false;
+    }
+  }, [is401, user]);
+
+  useEffect(() => {
+    if (isLoading || is401 || !user?.id || user.activeOrganizationId) return;
+    if (autoActiveOrgAttempted.current) return;
+    autoActiveOrgAttempted.current = true;
+
+    void (async () => {
+      try {
+        const { data: orgs, error: listError } =
+          await authClient.organization.list();
+        if (listError || !orgs?.length) return;
+
+        const first = orgs[0];
+        if (!first?.id) return;
+
+        const { error: setError } = await authClient.organization.setActive({
+          organizationId: first.id,
+        });
+        if (!setError) {
+          await refetch();
+        }
+      } catch (e) {
+        console.warn("Não foi possível definir organização ativa:", e);
+        autoActiveOrgAttempted.current = false;
+      }
+    })();
+  }, [
+    isLoading,
+    is401,
+    user?.id,
+    user?.activeOrganizationId,
+    refetch,
+  ]);
 
   const fetchUser = async () => {
     await refetch();

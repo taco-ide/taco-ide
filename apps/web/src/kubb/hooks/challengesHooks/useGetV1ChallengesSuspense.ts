@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesSuspenseQueryKey = (params?: GetV1ChallengesQueryParams) => [{ url: '/v1/challenges/' }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1ChallengesSuspenseQueryKey = (params?: GetV1ChallengesQueryPar
 export type GetV1ChallengesSuspenseQueryKey = ReturnType<typeof getV1ChallengesSuspenseQueryKey>
 
 /**
- * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
+ * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
  * @summary List challenges
  * {@link /v1/challenges/}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesSuspenseQueryOptions(params?: GetV1ChallengesQuer
 }
 
 /**
- * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
+ * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
  * @summary List challenges
  * {@link /v1/challenges/}
  */

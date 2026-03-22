@@ -16,6 +16,8 @@ function AccessDenied() {
     );
 }
 
+const CLASSROOM_NONE_VALUE = "__none__";
+
 export default function CreatePage() {
     return (
         <RoleGuard minimumRole="teacher" fallback={<AccessDenied />}>

@@ -14,6 +14,7 @@ import {
 
 const ListChallengesQuerySchema = z.object({
   scope: z.enum(["mine", "public", "all"]).default("all"),
+  classroomId: z.string().uuid().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   tags: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
@@ -53,7 +54,7 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
         tags: ["challenges"],
         summary: "List challenges",
         description:
-          "List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.",
+          "List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.",
         querystring: ListChallengesQuerySchema,
         response: {
           200: ListChallengesResponseSchema,
@@ -70,13 +71,15 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const { scope, difficulty, tags, page, perPage } = request.query;
+      const { scope, classroomId, difficulty, tags, page, perPage } = request.query;
       const tagsArray = tags ? tags.split(",").map((t) => t.trim()) : undefined;
       const offset = (page - 1) * perPage;
 
       const conditions = [isNull(challenge.deletedAt)];
 
-      if (scope === "public") {
+      if (classroomId) {
+        conditions.push(eq(challenge.classroomId, classroomId));
+      } else if (scope === "public") {
         conditions.push(isNull(challenge.classroomId));
       } else if (scope === "mine") {
         const userClassroomIds = db

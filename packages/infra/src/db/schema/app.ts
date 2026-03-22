@@ -41,6 +41,9 @@ export const classroom = pgTable("classroom", {
   organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
+  teacherUserId: text("teacher_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   description: text("description"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

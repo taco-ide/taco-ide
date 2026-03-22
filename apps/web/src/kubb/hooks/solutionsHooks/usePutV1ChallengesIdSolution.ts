@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1ChallengesIdSolutionMutationRequest, PutV1ChallengesIdSolutionMutationResponse, PutV1ChallengesIdSolutionPathParams, PutV1ChallengesIdSolution401, PutV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/PutV1ChallengesIdSolution.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PutV1ChallengesIdSolutionMutationRequest, PutV1ChallengesIdSolutionMutationResponse, PutV1ChallengesIdSolutionPathParams, PutV1ChallengesIdSolution401, PutV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/PutV1ChallengesIdSolution.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1ChallengesIdSolutionMutationKey = () => [{ url: '/v1/challenges/:id/solution/' }] as const
