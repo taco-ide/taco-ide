@@ -34,6 +34,7 @@ import apiClient from "@/lib/apiClient";
 
 interface KnowledgeBaseSectionProps {
   challengeId: string;
+  classroomId?: string;
 }
 
 interface ChallengeResponse {
@@ -71,9 +72,11 @@ function useChallengeClassroomId(challengeId: string) {
 
 export function KnowledgeBaseSection({
   challengeId,
+  classroomId: classroomIdProp,
 }: KnowledgeBaseSectionProps) {
   const queryClient = useQueryClient();
 
+  // Use prop if provided, otherwise fetch from API
   const { data: challengeInfo, isLoading: isLoadingChallenge } =
     useChallengeClassroomId(challengeId);
 
@@ -93,7 +96,7 @@ export function KnowledgeBaseSection({
     },
   });
 
-  const isLoading = isLoadingChallenge || isLoadingKbs;
+  const isLoading = isLoadingKbs || (!classroomIdProp && isLoadingChallenge);
 
   if (isLoading) {
     return (
@@ -105,7 +108,7 @@ export function KnowledgeBaseSection({
     );
   }
 
-  const classroomId = challengeInfo?.classroomId ?? null;
+  const classroomId = classroomIdProp ?? challengeInfo?.classroomId ?? null;
 
   // No classroom linked
   if (!classroomId) {

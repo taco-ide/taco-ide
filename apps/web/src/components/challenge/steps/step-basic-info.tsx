@@ -26,7 +26,6 @@ import {
 import { useUser } from "@/contexts/UserContext";
 
 const CREATE_NEW_VALUE = "__create_new__";
-const NO_CLASSROOM_VALUE = "__none__";
 
 interface StepBasicInfoProps {
     tags: string[];
@@ -68,11 +67,6 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
     const handleSelectChange = (value: string, fieldOnChange: (...event: unknown[]) => void) => {
         if (value === CREATE_NEW_VALUE) {
             setIsCreating(true);
-            return;
-        }
-
-        if (value === NO_CLASSROOM_VALUE) {
-            fieldOnChange(undefined);
             return;
         }
 
@@ -155,9 +149,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                 </div>
 
                 <div>
-                    <Label className="text-slate-200">
-                        Turma <span className="text-slate-400 font-normal">(opcional)</span>
-                    </Label>
+                    <Label className="text-slate-200">Turma</Label>
                     {isCreating ? (
                         <div className="flex items-center gap-2">
                             <Input
@@ -238,16 +230,13 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                                 Criar nova turma
                                             </span>
                                         </SelectItem>
-                                        <SelectItem
-                                            value={NO_CLASSROOM_VALUE}
-                                            className="text-slate-400 focus:bg-slate-700"
-                                        >
-                                            Sem turma
-                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                             )}
                         />
+                    )}
+                    {errors.classroomId && (
+                        <p className="text-red-400 text-sm mt-1">{errors.classroomId.message}</p>
                     )}
                     {createClassroomMutation.isError && (
                         <p className="text-red-400 text-sm mt-1">

@@ -4,8 +4,9 @@ import { KnowledgeBaseSection } from "@/components/challenge/knowledge-base-sect
 
 interface StepKnowledgeBaseProps {
     challengeId: string;
+    classroomId?: string;
 }
 
-export function StepKnowledgeBase({ challengeId }: StepKnowledgeBaseProps) {
-    return <KnowledgeBaseSection challengeId={challengeId} />;
+export function StepKnowledgeBase({ challengeId, classroomId }: StepKnowledgeBaseProps) {
+    return <KnowledgeBaseSection challengeId={challengeId} classroomId={classroomId} />;
 }

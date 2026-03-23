@@ -6,7 +6,7 @@ export const challengeFormSchema = z.object({
     difficulty: z.enum(["easy", "medium", "hard"], {
         required_error: "Selecione a dificuldade",
     }),
-    classroomId: z.string().optional(),
+    classroomId: z.string().min(1, "Selecione uma turma"),
     tags: z.array(z.string()).optional(),
 });
 

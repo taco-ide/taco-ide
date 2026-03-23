@@ -64,6 +64,7 @@ export default function EditChallengePage() {
                     title: challenge.title,
                     description: challenge.description ?? "",
                     difficulty: (challenge.difficulty as "easy" | "medium" | "hard") ?? "easy",
+                    classroomId: (challenge as Record<string, unknown>).classroomId as string ?? "",
                     tags: challenge.tags ?? [],
                 }}
                 initialTags={challenge.tags ?? []}

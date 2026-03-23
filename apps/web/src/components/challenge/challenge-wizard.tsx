@@ -93,7 +93,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         setFeedback(null);
 
         if (currentStep === 0) {
-            const valid = await methods.trigger(["title", "difficulty"]);
+            const valid = await methods.trigger(["title", "difficulty", "classroomId"]);
             if (!valid) return;
         }
 
@@ -166,7 +166,10 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                         )}
                         {currentStep === 1 && <StepDescription />}
                         {currentStep === 2 && effectiveChallengeId && (
-                            <StepKnowledgeBase challengeId={effectiveChallengeId} />
+                            <StepKnowledgeBase
+                                challengeId={effectiveChallengeId}
+                                classroomId={methods.getValues("classroomId")}
+                            />
                         )}
                     </div>
                 </FormProvider>
