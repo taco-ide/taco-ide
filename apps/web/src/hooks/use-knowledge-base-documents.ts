@@ -55,7 +55,7 @@ export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
       formData.append("file", file);
 
       const res = await fetch(
-        `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents/upload`,
+        `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents/`,
         {
           method: "POST",
           body: formData,
