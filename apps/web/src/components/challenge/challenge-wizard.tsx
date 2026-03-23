@@ -103,13 +103,17 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 title: formData.title,
                 description: formData.description,
                 difficulty: formData.difficulty,
+                classroomId: formData.classroomId || undefined,
                 tags: tags.length > 0 ? tags : undefined,
             };
 
             if (mode === "create") {
                 createMutation.mutate({ data: payload });
             } else if (challengeId) {
-                updateMutation.mutate({ id: challengeId, data: payload });
+                updateMutation.mutate({
+                    id: challengeId,
+                    data: { classroomId: formData.classroomId ?? null },
+                });
             }
             return;
         }
