@@ -64,18 +64,34 @@ npm run db:migrate
 
 ## Environment Variables
 
-Required environment variables (validated by `src/env.ts`):
+All environment variables are loaded from a single root `.env` file (loaded via `dotenv-cli` before Turbo, so all apps inherit them). Create `.env` at the monorepo root:
 
 ```env
+# Database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
+
+# Auth
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3344
-RESEND_API_KEY=re_xxxxxxxxxxxxx  # For email sending
+FRONTEND_URL=http://localhost:3000
+
+# Email (optional)
+RESEND_API_KEY=re_xxxxxxxxxxxxx
+
+# LLM (LangGraph.js agents)
+LLM_API_KEY=your-azure-openai-key
+LLM_API_BASE=https://your-resource.openai.azure.com/openai/v1/
+LLM_MODEL_NAME=gpt-5.2-chat
+CODE_EXEC_API_URL=https://emkc.org/api/v2/piston/execute
+
+# Server
+PORT=3344
 ```
 
-Environment files are loaded from:
-- `apps/api/.env.development`
-- `apps/web/.env.local`
+For the frontend, also create `apps/web/.env.local`:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3344
+```
 
 ## Usage in Applications
 
@@ -125,6 +141,16 @@ PostgreSQL runs in a Docker container configured in `docker/compose.yaml`:
 - **User**: postgres
 - **Password**: postgres
 
+## RBAC
+
+Role-based access control is defined in `src/auth/permissions.ts`. Available roles (in hierarchy order):
+- `student` - No management permissions
+- `teacher` - Can manage classrooms, challenges, teaching assistants
+- `coordinator` - Can manage members and invitations in addition to teacher permissions
+- `admin` - Full organization control
+
+Import RBAC helpers from `@repo/infra/auth/client` in the frontend or `@repo/infra/auth` on the server.
+
 ## Important Notes
 
 - This is a shared package - changes affect both apps
@@ -132,6 +158,7 @@ PostgreSQL runs in a Docker container configured in `docker/compose.yaml`:
 - Schema changes require either `db:push` or `db:generate` + `db:migrate`
 - Better Auth tables are defined in `src/db/schema/auth.ts`
 - Application tables are defined in `src/db/schema/app.ts`
+- Environment is loaded from root `.env` — do NOT create per-app env files for shared variables
 
 ## Related Documentation
 

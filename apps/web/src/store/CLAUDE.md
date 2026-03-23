@@ -91,4 +91,34 @@ Languages are configured in `src/app/problem/[id]/_constants/index.ts`:
 
 - Code is stored per-language to preserve work when switching
 - Uses Piston API (external) for code execution
-- TODO: Replace with own API for production
+
+---
+
+### useChatStore.ts
+
+Zustand store for the AI chat panel. Handles SSE streaming from the teaching assistant agent.
+
+#### State Shape
+```typescript
+interface ChatState {
+  messages: ChatMessage[];   // { role: "user" | "assistant", content: string }
+  isStreaming: boolean;      // SSE stream in progress
+  workSessionId: string | null;
+  error: string | null;
+}
+```
+
+#### Actions
+```typescript
+setWorkSessionId(id)              // Set active work session
+sendMessage(message, code?, stdout?) // Send message and stream response
+loadHistory(workSessionId)        // Load chat history from API
+clearChat()                       // Clear all messages
+```
+
+#### Usage
+```typescript
+import { useChatStore } from "@/store/useChatStore"
+
+const { messages, isStreaming, sendMessage, setWorkSessionId } = useChatStore()
+```

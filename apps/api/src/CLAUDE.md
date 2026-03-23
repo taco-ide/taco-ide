@@ -8,6 +8,16 @@ This is the main source directory for the Fastify backend API.
 src/
 ├── index.ts          # Application entry point
 ├── swagger.yaml      # Auto-generated OpenAPI spec
+├── agents/           # LangGraph.js AI agents (in-process)
+│   ├── llm.ts        # Shared LLM config (Azure OpenAI via LangChain)
+│   ├── teaching-assistant/ # Student-facing ReAct agent
+│   │   ├── agent.ts  # Agent definition
+│   │   ├── prompt.ts # System prompt builder
+│   │   └── tools.ts  # Agent tools
+│   └── teachers-companion/ # Teacher-facing ReAct agent
+│       ├── agent.ts
+│       ├── prompt.ts
+│       └── tools.ts
 ├── gen/              # Generated code (Kubb)
 │   └── kubb/
 │       └── zod/      # Generated Zod schemas
@@ -17,7 +27,7 @@ src/
 │   ├── @types/       # Type definitions
 │   ├── middlewares/  # Middleware functions
 │   └── routes/       # Route handlers
-└── ...
+└── lib/              # Shared utilities
 ```
 
 ## Key Files
@@ -62,11 +72,17 @@ Generates:
 
 ## Environment Variables
 
-Validated via `@repo/infra/env`:
+Validated via `@repo/infra/env`. All loaded from root `.env`:
 - `DATABASE_URL` - PostgreSQL connection
 - `BETTER_AUTH_SECRET` - Auth secret key
 - `BETTER_AUTH_URL` - Auth base URL
-- `RESEND_API_KEY` - Email service key
+- `FRONTEND_URL` - Frontend URL for redirects
+- `RESEND_API_KEY` - Email service key (optional)
+- `LLM_API_KEY` - LLM provider API key (required)
+- `LLM_API_BASE` - LLM provider base URL (default: Azure OpenAI)
+- `LLM_MODEL_NAME` - LLM model name
+- `CODE_EXEC_API_URL` - Piston code execution API URL
+- `PORT` - Server port (default: 3344)
 
 ## Development Workflow
 
@@ -90,9 +106,7 @@ The API uses strict TypeScript:
 
 ## Port Configuration
 
-Default port: **3344**
-
-Configure in `src/index.ts` or via environment variable.
+Default port: **3344** (configurable via `PORT` env var).
 
 ## Important Notes
 

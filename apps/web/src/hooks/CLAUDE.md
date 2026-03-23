@@ -16,6 +16,31 @@ function useAuth() {
 }
 ```
 
+### usePermission.ts
+
+RBAC hooks that read the current user's role from `UserContext`.
+
+```typescript
+// Get current user's role
+function useRole(): RoleName | null
+
+// Check minimum role hierarchy
+function useHasMinimumRole(minimumRole: RoleName): boolean
+
+// Check specific resource permission
+function useHasPermission<R extends Resource>(resource: R, action: ActionFor<R>): boolean
+```
+
+Usage:
+```tsx
+import { useHasPermission, useHasMinimumRole } from "@/hooks/usePermission"
+
+const canCreateChallenge = useHasPermission("challenge", "create")
+const isAtLeastTeacher = useHasMinimumRole("teacher")
+```
+
+Types imported from `@repo/infra/auth/client`: `RoleName`, `Resource`, `ActionFor`.
+
 ### useMounted.tsx
 
 Hook to detect if the component has mounted (client-side).

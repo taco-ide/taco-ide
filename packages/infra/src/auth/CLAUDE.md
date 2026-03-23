@@ -4,6 +4,24 @@ This directory contains Better Auth setup for email/password authentication with
 
 ## Files
 
+### permissions.ts
+RBAC definitions using Better Auth's access control:
+
+```typescript
+import {
+  ac, studentRole, teacherRole, coordinatorRole, adminRole,
+  hasMinimumRole, roleHasPermission, isValidRole, getAllRoles,
+} from "@repo/infra/auth/client"
+```
+
+Resources: `organization`, `member`, `invitation`, `classroom`, `challenge`, `teachingAssistant`
+
+Roles (hierarchy: student < teacher < coordinator < admin):
+- **student** — no permissions
+- **teacher** — create/update classrooms, challenges, teaching assistants; invite members
+- **coordinator** — teacher permissions + manage/delete members, cancel invitations
+- **admin** — full organization control
+
 ### index.ts
 Server-side Better Auth instance configured with:
 - Email/password authentication
@@ -199,4 +217,4 @@ Custom email templates in `email.ts`:
 - Email sending requires Resend API key
 - Better Auth URL must match your API base URL
 - Session cookies are cross-domain compatible (for API + Web setup)
-- User roles are managed separately in application logic
+- User roles are defined in `permissions.ts` and loaded from the `member` table in auth middleware

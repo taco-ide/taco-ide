@@ -10,8 +10,9 @@ app/
 │   ├── page.tsx      # Landing page
 │   └── _components/  # Home-specific components
 ├── (inside)/         # Authenticated area route group
-│   ├── create/       # Create exercises page
+│   ├── create/       # Create exercises page (teacher+ only)
 │   ├── explore/      # Explore exercises page
+│   ├── profile/      # User profile page
 │   └── _components/  # Shared inside components
 ├── auth/             # Authentication pages
 │   ├── login/        # Login page
@@ -39,7 +40,8 @@ Public landing page with marketing content:
 Authenticated user area:
 - Requires valid session token
 - Has its own layout with navbar/footer
-- Contains exercise creation and exploration
+- Contains exercise creation, exploration, and user profile
+- Create page guarded by `teacher` role (uses `RoleGuard`)
 
 ### `auth`
 Authentication flow pages:

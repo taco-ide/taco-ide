@@ -48,6 +48,10 @@ apps/api/
 ├── src/
 │   ├── index.ts              # Entry point
 │   ├── swagger.yaml          # Generated OpenAPI spec
+│   ├── agents/               # LangGraph.js AI agents (in-process)
+│   │   ├── llm.ts            # Shared LLM config (Azure OpenAI)
+│   │   ├── teaching-assistant/ # Student-facing ReAct agent
+│   │   └── teachers-companion/ # Teacher-facing ReAct agent
 │   ├── gen/kubb/             # Generated code (by Kubb)
 │   └── http/
 │       ├── server.ts         # Fastify configuration
@@ -60,7 +64,11 @@ apps/api/
 │           ├── _responses/   # Shared response schemas
 │           └── v1/           # API v1 routes
 │               ├── auth/     # Better Auth routes
-│               ├── users/    # User routes
+│               ├── users/    # User routes (GET/PUT /me)
+│               ├── challenges/   # Challenge CRUD
+│               ├── solutions/    # Solution management
+│               ├── work-sessions/ # Work session management
+│               ├── chat/     # AI chat (SSE streaming)
 │               └── status/   # Health check
 ├── kubb.config.ts            # Kubb code generation config
 ├── package.json
@@ -163,14 +171,39 @@ const routes = [..., exampleRoutes];
 npm run kubb
 ```
 
+## AI Agents
+
+LangGraph.js ReAct agents run in-process inside the API:
+
+- **Teaching Assistant** (`agents/teaching-assistant/`) — Student-facing Socratic tutor with tools: `runCode`, `getChallengeInfo`, `searchKnowledgeBase`
+- **Teacher's Companion** (`agents/teachers-companion/`) — Teacher-facing helper with tools: `createChallengeDraft`, `listSubmissions`, `evaluateSubmission`, `suggestTestCases`, `getClassroomInfo`
+
+Both agents use `MemorySaver` checkpointing for per-thread conversation history.
+
+### Chat SSE Routes
+
+| Route | Description |
+|-------|-------------|
+| `POST /v1/chat/student/message` | Stream response from teaching assistant (SSE) |
+| `GET  /v1/chat/student/history` | Get student chat history |
+| `POST /v1/chat/teacher/message` | Stream response from teacher's companion (SSE) |
+| `GET  /v1/chat/teacher/history` | Get teacher chat history |
+
 ## Environment Variables
 
-Environment variables are validated by `@repo/infra/env`. Required:
+Environment variables are validated by `@repo/infra/env`. All loaded from root `.env`:
 
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3344
+FRONTEND_URL=http://localhost:3000
+
+# LLM (LangGraph.js agents - Azure OpenAI by default)
+LLM_API_KEY=your-azure-openai-key
+LLM_API_BASE=https://your-resource.openai.azure.com/openai/v1/
+LLM_MODEL_NAME=gpt-5.2-chat
+CODE_EXEC_API_URL=https://emkc.org/api/v2/piston/execute
 ```
 
 ## Directory Documentation

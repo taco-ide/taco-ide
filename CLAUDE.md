@@ -12,9 +12,10 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 taco-ide/
 ├── apps/
 │   ├── api/          # Fastify backend API (port 3344)
+│   │   └── src/agents/ # LangGraph.js AI agents (in-process)
 │   └── web/          # Next.js frontend (port 3000)
 ├── packages/
-│   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
+│   ├── infra/        # Shared infrastructure (DB, Auth, RBAC, Docker)
 │   ├── types/        # Generated TypeScript types (Kubb)
 │   ├── eslint-config/
 │   └── typescript-config/
@@ -24,8 +25,9 @@ taco-ide/
 
 - **Backend**: Fastify 5, Zod validation, Swagger/OpenAPI, Better Auth
 - **Frontend**: Next.js 14 (App Router), Tailwind CSS, Radix UI, Zustand, React Query
+- **AI Agents**: LangGraph.js (in-process ReAct agents) with Azure OpenAI via LangChain
 - **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Better Auth (email/password, password reset)
+- **Authentication**: Better Auth (email/password, password reset, RBAC)
 - **Code Generation**: Kubb (generates types, React Query hooks, Zod schemas from OpenAPI)
 - **Monorepo**: Turborepo with npm workspaces
 
@@ -58,7 +60,7 @@ npm run db:studio
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` in the project root:
+Copy `.env.example` to `.env` in the project root (loaded automatically by Turbo before all apps):
 
 ```env
 # Database
@@ -67,8 +69,16 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 # Better Auth
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
 BETTER_AUTH_URL=http://localhost:3344
+FRONTEND_URL=http://localhost:3000
 
-# Frontend (apps/web/.env.local)
+# LLM (LangGraph.js agents - Azure OpenAI by default)
+LLM_API_KEY=your-api-key
+LLM_API_BASE=https://your-resource.openai.azure.com/openai/v1/
+LLM_MODEL_NAME=gpt-5.2-chat
+```
+
+Also create `apps/web/.env.local`:
+```env
 NEXT_PUBLIC_API_URL=http://localhost:3344
 ```
 
@@ -154,6 +164,10 @@ When API routes change:
 - Auth routes automatically available at `/v1/auth/*`
 - Session management via cookies
 - Frontend uses `@repo/infra/auth/client` for auth operations
+- RBAC defined in `packages/infra/src/auth/permissions.ts` (roles: student, teacher, coordinator, admin)
+- User role loaded from `member` table in auth middleware; available as `request.user.role`
+- Frontend guards: `RoleGuard`, `PermissionGuard` in `apps/web/src/components/guards/`
+- Frontend hooks: `useRole`, `useHasMinimumRole`, `useHasPermission` in `apps/web/src/hooks/usePermission.ts`
 
 ## API Documentation
 

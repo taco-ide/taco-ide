@@ -11,7 +11,11 @@ routes/
 └── v1/              # API version 1
     ├── index.ts     # Route registration
     ├── auth/        # Authentication routes
-    ├── users/       # User management routes
+    ├── users/       # User management routes (GET/PUT /me)
+    ├── challenges/  # Challenge CRUD
+    ├── solutions/   # Solution management
+    ├── work-sessions/ # Work session management
+    ├── chat/        # AI chat SSE endpoints
     └── status/      # Health check routes
 ```
 
@@ -57,11 +61,19 @@ Registers all v1 route modules:
 ```typescript
 import { authRoutes } from "./auth"
 import { usersRoutes } from "./users"
+import { challengesRoutes } from "./challenges"
+import { solutionsRoutes } from "./solutions"
+import { workSessionsRoutes } from "./work-sessions"
+import { chatRoutes } from "./chat"
 import { statusRoutes } from "./status"
 
 const routes = [
   authRoutes,
   usersRoutes,
+  challengesRoutes,
+  solutionsRoutes,
+  workSessionsRoutes,
+  chatRoutes,
   statusRoutes,
 ]
 
@@ -107,16 +119,45 @@ POST /v1/auth/verify-email      - Verify email
 User management endpoints.
 
 ### Available Routes
-- `GET /v1/users/me` - Get current user info
-- (Add more user routes as needed)
+- `GET /v1/users/me` - Get current user info (includes `role`, `activeOrganizationId`)
+- `PUT /v1/users/me` - Update current user profile
 
-Example structure:
-```
-users/
-├── index.ts    # Registers all user routes
-├── me.ts       # GET /me endpoint
-└── update.ts   # PUT /me endpoint (future)
-```
+## challenges/
+
+Challenge (exercise) management.
+
+### Available Routes
+- `GET /v1/challenges` - List challenges
+- `GET /v1/challenges/:id` - Get challenge by ID
+
+## solutions/
+
+Solution management per challenge.
+
+### Available Routes
+- `GET /v1/challenges/:id/solution` - Get solution for a challenge
+- `PUT /v1/challenges/:id/solution` - Update solution
+
+## work-sessions/
+
+Work session tracking.
+
+### Available Routes
+- `POST /v1/work-sessions` - Create a work session
+- `GET /v1/work-sessions/:id` - Get work session by ID
+- `GET /v1/work-sessions/by-challenge` - List work sessions by challenge
+- `POST /v1/work-sessions/:id/chat` - Send chat message in session
+- `POST /v1/work-sessions/:id/interactions` - Record interaction
+
+## chat/
+
+AI chat endpoints using SSE (Server-Sent Events) for streaming responses.
+
+### Available Routes
+- `POST /v1/chat/student/message` - Stream teaching assistant response (SSE)
+- `GET  /v1/chat/student/history` - Get student chat history
+- `POST /v1/chat/teacher/message` - Stream teacher's companion response (SSE)
+- `GET  /v1/chat/teacher/history` - Get teacher chat history
 
 ## status/
 

@@ -157,8 +157,11 @@ export async function myRoute(app: FastifyTypedInstance) {
 Organize routes with tags:
 - `auth` - Authentication endpoints
 - `users` - User management
+- `challenges` - Challenge/exercise management
+- `solutions` - Solution management
+- `work-sessions` - Work session management
+- `chat` - AI chat (SSE streaming)
 - `status` - Health checks
-- (Add more as needed)
 
 Tags appear as sections in Swagger UI.
 

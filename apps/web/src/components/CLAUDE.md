@@ -16,6 +16,9 @@ components/
 ├── composed/         # Composed/complex components
 │   ├── alert-component.tsx
 │   └── confirmation-button.tsx
+├── guards/           # RBAC guard components
+│   ├── PermissionGuard.tsx
+│   └── RoleGuard.tsx
 ├── login-form.tsx    # Auth form components
 ├── signup-form.tsx
 ├── reset-password-form.tsx
@@ -100,8 +103,33 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 ```
 
+## Guard Components (`guards/`)
+
+RBAC components for conditional rendering based on user role/permissions:
+
+### PermissionGuard
+```tsx
+import { PermissionGuard } from "@/components/guards/PermissionGuard"
+
+<PermissionGuard resource="challenge" action="create">
+  <CreateButton />
+</PermissionGuard>
+```
+
+### RoleGuard
+```tsx
+import { RoleGuard } from "@/components/guards/RoleGuard"
+
+<RoleGuard minimumRole="teacher">
+  <TeacherOnlyContent />
+</RoleGuard>
+```
+
+Both guards render `null` when the user lacks the required permission/role.
+
 ## Adding New Components
 
 1. For base UI: Add to `ui/` following shadcn/ui patterns
 2. For composed: Add to `composed/` combining existing primitives
-3. Export from component file directly (no barrel exports)
+3. For access control: Add to `guards/`
+4. Export from component file directly (no barrel exports)
