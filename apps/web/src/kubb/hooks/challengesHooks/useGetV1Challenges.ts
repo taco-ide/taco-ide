@@ -14,7 +14,7 @@ export const getV1ChallengesQueryKey = (params?: GetV1ChallengesQueryParams) => 
 export type GetV1ChallengesQueryKey = ReturnType<typeof getV1ChallengesQueryKey>
 
 /**
- * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
+ * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
  * @summary List challenges
  * {@link /v1/challenges/}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesQueryOptions(params?: GetV1ChallengesQueryParams,
 }
 
 /**
- * @description List challenges. scope=mine: from user's associations; scope=public: no association; scope=all: both.
+ * @description List challenges. scope=mine: from user's classrooms; scope=public: unassigned (no classroom); scope=all: both. classroomId: filter by specific classroom.
  * @summary List challenges
  * {@link /v1/challenges/}
  */

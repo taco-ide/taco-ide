@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1OrganizationsIdMembersSuspenseQueryKey = (id: GetV1OrganizationsIdMembersPathParams["id"]) => [{ url: '/v1/organizations/:id/members', params: {id:id} }] as const

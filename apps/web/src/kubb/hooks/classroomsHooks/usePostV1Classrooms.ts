@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1ClassroomsMutationRequest, PostV1ClassroomsMutationResponse, PostV1Classrooms400, PostV1Classrooms401, PostV1Classrooms403 } from "../../../../../../packages/types/kubb/PostV1Classrooms.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1ClassroomsMutationRequest, PostV1ClassroomsMutationResponse, PostV1Classrooms400, PostV1Classrooms401, PostV1Classrooms403 } from "../../../../../../packages/types/kubb/PostV1Classrooms.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ClassroomsMutationKey = () => [{ url: '/v1/classrooms/' }] as const

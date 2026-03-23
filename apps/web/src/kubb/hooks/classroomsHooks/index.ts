@@ -1,7 +1,18 @@
+export type { DeleteV1ClassroomsIdMutationKey } from "./useDeleteV1ClassroomsId.ts";
 export type { GetV1ClassroomsQueryKey } from "./useGetV1Classrooms.ts";
-export {
-  getV1ClassroomsQueryKey,
-  getV1Classrooms,
-  getV1ClassroomsQueryOptions,
-  useGetV1Classrooms,
-} from "./useGetV1Classrooms.ts";
+export type { GetV1ClassroomsIdQueryKey } from "./useGetV1ClassroomsId.ts";
+export type { GetV1ClassroomsIdSuspenseQueryKey } from "./useGetV1ClassroomsIdSuspense.ts";
+export type { GetV1ClassroomsSuspenseQueryKey } from "./useGetV1ClassroomsSuspense.ts";
+export type { PostV1ClassroomsMutationKey } from "./usePostV1Classrooms.ts";
+export type { PostV1ClassroomsIdEnrollMutationKey } from "./usePostV1ClassroomsIdEnroll.ts";
+export type { PostV1ClassroomsIdUnenrollMutationKey } from "./usePostV1ClassroomsIdUnenroll.ts";
+export type { PutV1ClassroomsIdMutationKey } from "./usePutV1ClassroomsId.ts";
+export { deleteV1ClassroomsIdMutationKey, deleteV1ClassroomsId, useDeleteV1ClassroomsId } from "./useDeleteV1ClassroomsId.ts";
+export { getV1ClassroomsQueryKey, getV1Classrooms, getV1ClassroomsQueryOptions, useGetV1Classrooms } from "./useGetV1Classrooms.ts";
+export { getV1ClassroomsIdQueryKey, getV1ClassroomsId, getV1ClassroomsIdQueryOptions, useGetV1ClassroomsId } from "./useGetV1ClassroomsId.ts";
+export { getV1ClassroomsIdSuspenseQueryKey, getV1ClassroomsIdSuspense, getV1ClassroomsIdSuspenseQueryOptions, useGetV1ClassroomsIdSuspense } from "./useGetV1ClassroomsIdSuspense.ts";
+export { getV1ClassroomsSuspenseQueryKey, getV1ClassroomsSuspense, getV1ClassroomsSuspenseQueryOptions, useGetV1ClassroomsSuspense } from "./useGetV1ClassroomsSuspense.ts";
+export { postV1ClassroomsMutationKey, postV1Classrooms, usePostV1Classrooms } from "./usePostV1Classrooms.ts";
+export { postV1ClassroomsIdEnrollMutationKey, postV1ClassroomsIdEnroll, usePostV1ClassroomsIdEnroll } from "./usePostV1ClassroomsIdEnroll.ts";
+export { postV1ClassroomsIdUnenrollMutationKey, postV1ClassroomsIdUnenroll, usePostV1ClassroomsIdUnenroll } from "./usePostV1ClassroomsIdUnenroll.ts";
+export { putV1ClassroomsIdMutationKey, putV1ClassroomsId, usePutV1ClassroomsId } from "./usePutV1ClassroomsId.ts";
