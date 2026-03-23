@@ -167,6 +167,15 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           }
         }
 
+        // If the agent returned nothing (e.g. guardrail triggered), send a fallback
+        if (!fullResponse) {
+          fullResponse =
+            "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
+          reply.raw.write(
+            `data: ${JSON.stringify({ type: "text", content: fullResponse })}\n\n`
+          );
+        }
+
         // Send done event
         const doneData = JSON.stringify({
           type: "done",

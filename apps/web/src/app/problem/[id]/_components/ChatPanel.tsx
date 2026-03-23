@@ -33,6 +33,7 @@ function ChatPanel() {
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [optimisticUserMessage, setOptimisticUserMessage] = useState<string | null>(null);
 
   const messages: Array<{ role: string; content: string }> = [];
   if (workSession?.interactions) {
@@ -46,15 +47,18 @@ function ChatPanel() {
       }
     }
   }
+  if (optimisticUserMessage) {
+    messages.push({ role: "user", content: optimisticUserMessage });
+  }
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const submitMessage = async () => {
     if (!input.trim() || isGenerating) return;
 
     setIsGenerating(true);
     setChatError(null);
     const userMessage = input.trim();
     setInput("");
+    setOptimisticUserMessage(userMessage);
 
     try {
       await sendChatMessage({
@@ -69,14 +73,19 @@ function ChatPanel() {
       );
     } finally {
       setIsGenerating(false);
+      setOptimisticUserMessage(null);
     }
+  };
+
+  const onSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    submitMessage();
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (isGenerating || !input) return;
-      onSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
+      submitMessage();
     }
   };
 

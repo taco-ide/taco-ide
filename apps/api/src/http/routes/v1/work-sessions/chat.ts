@@ -209,10 +209,14 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
-        modelResponse =
+        const rawResponse =
           typeof lastMsg?.content === "string"
             ? lastMsg.content
             : JSON.stringify(lastMsg?.content ?? "");
+        // If the agent returned nothing (e.g. guardrail triggered), use a fallback
+        modelResponse =
+          rawResponse.trim() ||
+          "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
       } catch (err) {
         console.error("LangGraph agent error:", err);
         return reply.status(503).send({
