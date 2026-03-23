@@ -25,6 +25,18 @@ const envSchema = z.object({
   // OpenRouter (LLM)
   OPENROUTER_API_KEY: z.string().optional(),
 
+  // LLM (AI Agents - LangGraph.js)
+  LLM_API_BASE: z
+    .string()
+    .url()
+    .default("https://taco-ide-resource.openai.azure.com/openai/v1/"),
+  LLM_MODEL_NAME: z.string().default("gpt-5.2-chat"),
+  LLM_API_KEY: z.string(),
+  CODE_EXEC_API_URL: z
+    .string()
+    .url()
+    .default("https://emkc.org/api/v2/piston/execute"),
+
   // Server
   PORT: z.coerce.number().default(3344),
 });

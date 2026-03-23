@@ -27,6 +27,7 @@ taco-ide/
 - **Zod** - Schema validation with type inference
 - **Swagger/OpenAPI** - Auto-generated API documentation
 - **Better Auth** - Authentication system
+- **LangGraph.js** - AI agents (student tutor, teacher assistant)
 - **Kubb** - Code generation for types and React Query hooks
 
 ### Frontend (`apps/web`)
@@ -77,6 +78,12 @@ BETTER_AUTH_URL=http://localhost:3333
 
 # Frontend URL (for redirects)
 FRONTEND_URL=http://localhost:3000
+
+# LLM (AI Agents)
+LLM_API_BASE=https://taco-ide-resource.openai.azure.com/openai/v1/
+LLM_MODEL_NAME=gpt-5.2-chat
+CODE_EXEC_API_URL=https://emkc.org/api/v2/piston/execute
+# LLM_API_KEY goes in apps/api/.env.local (secret, gitignored)
 
 # Email (optional - only if using Resend)
 # RESEND_API_KEY=your-resend-api-key
