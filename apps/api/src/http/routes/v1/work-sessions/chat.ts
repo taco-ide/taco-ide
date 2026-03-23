@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -17,9 +17,11 @@ import {
   challenge,
   userInteractionOnChallenge,
   challengeSolution,
+  model,
 } from "@repo/infra/db/schema";
-import { env } from "@repo/infra/env";
-import { createChatCompletion } from "../../../../lib/openrouter";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
+import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 
 // ==================== SCHEMAS ====================
 
@@ -54,7 +56,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         tags: ["work-sessions"],
         summary: "Send chat message and get TA response",
         description:
-          "Sends a user message to the Teaching Assistant via OpenRouter, saves the interaction, and returns the AI response",
+          "Sends a user message to the Teaching Assistant agent, saves the interaction, and returns the AI response",
         params: ChatParamsSchema,
         body: ChatBodySchema,
         response: {
@@ -73,15 +75,6 @@ export async function chatRoute(app: FastifyTypedInstance) {
         return reply.status(401).send({
           success: false as const,
           message: "Not authenticated",
-        });
-      }
-
-      const apiKey = env.OPENROUTER_API_KEY;
-      if (!apiKey) {
-        return reply.status(503).send({
-          success: false as const,
-          message:
-            "OpenRouter API key not configured. Set OPENROUTER_API_KEY in environment.",
         });
       }
 
@@ -126,6 +119,8 @@ export async function chatRoute(app: FastifyTypedInstance) {
         .select({
           id: teachingAssistant.id,
           systemPrompt: teachingAssistant.systemPrompt,
+          targetAudience: teachingAssistant.targetAudience,
+          modelId: teachingAssistant.modelId,
         })
         .from(teachingAssistant)
         .where(eq(teachingAssistant.id, session.teachingAssistantId))
@@ -138,10 +133,23 @@ export async function chatRoute(app: FastifyTypedInstance) {
         });
       }
 
+      let modelParams: Record<string, unknown> = {};
+      if (ta.modelId) {
+        const [m] = await db
+          .select()
+          .from(model)
+          .where(eq(model.id, ta.modelId))
+          .limit(1);
+        if (m) {
+          modelParams = (m.modelParameters as Record<string, unknown>) ?? {};
+        }
+      }
+
       const [ch] = await db
         .select({
           title: challenge.title,
           description: challenge.description,
+          supportMaterials: challenge.supportMaterials,
         })
         .from(challenge)
         .where(eq(challenge.id, session.challengeId))
@@ -162,75 +170,51 @@ export async function chatRoute(app: FastifyTypedInstance) {
         )
         .limit(1);
 
-      const challengeContext = ch
-        ? `Problema atual: ${ch.title}\n${ch.description || ""}`
-        : "";
-
       const code = bodyCode ?? solution?.code ?? null;
-      const stdin = bodyStdin ?? solution?.stdin ?? null;
       const stdout = bodyStdout ?? solution?.stdout ?? null;
 
-      let codeContext = "";
-      if (code || stdin || stdout) {
-        const parts: string[] = [];
-        if (code) {
-          parts.push(`Código atual do aluno:\n\`\`\`\n${code}\n\`\`\``);
-        }
-        if (stdin) {
-          parts.push(`Input (stdin) usado na última execução:\n\`\`\`\n${stdin}\n\`\`\``);
-        }
-        if (stdout) {
-          parts.push(`Output/erro (stdout) da última execução:\n\`\`\`\n${stdout}\n\`\`\``);
-        }
-        codeContext = `\n\nContexto do trabalho do aluno:\n${parts.join("\n\n")}`;
-      }
+      const systemPrompt = buildTeachingAssistantPrompt({
+        systemPrompt: ta.systemPrompt,
+        targetAudience: ta.targetAudience ?? "",
+        challengeTitle: ch?.title ?? "",
+        challengeDescription: ch?.description ?? "",
+        supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
+        currentCode: code ?? "",
+        stdout: stdout ?? "",
+      });
 
-      const systemContent = [
-        ta.systemPrompt,
-        challengeContext ? `\n\nContexto do problema:\n${challengeContext}` : "",
-        codeContext,
-      ].join("");
-
-      const chatInteractions = await db
-        .select({
-          userPrompt: userInteractionOnChallenge.userPrompt,
-          modelResponse: userInteractionOnChallenge.modelResponse,
-        })
-        .from(userInteractionOnChallenge)
-        .where(
-          and(
-            eq(userInteractionOnChallenge.workSessionId, workSessionId),
-            eq(userInteractionOnChallenge.interactionType, "chat")
-          )
-        )
-        .orderBy(asc(userInteractionOnChallenge.createdAt));
-
-      const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-        { role: "system", content: systemContent },
-      ];
-
-      for (const i of chatInteractions) {
-        if (i.userPrompt) {
-          messages.push({ role: "user", content: i.userPrompt });
-        }
-        if (i.modelResponse) {
-          messages.push({ role: "assistant", content: i.modelResponse });
-        }
-      }
-
-      messages.push({ role: "user", content: message });
+      const challengeContext = {
+        title: ch?.title ?? "",
+        description: ch?.description ?? "",
+        supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
+      };
 
       let modelResponse: string;
       try {
-        const result = await createChatCompletion({
-          apiKey,
-          messages,
-          maxTokens: 2048,
-          temperature: 0.7,
-        });
-        modelResponse = result.content;
+        const result = await teachingAssistantAgent.invoke(
+          {
+            messages: [
+              new SystemMessage(systemPrompt),
+              new HumanMessage(message),
+            ],
+          },
+          {
+            configurable: {
+              thread_id: workSessionId,
+              challengeContext,
+              ...modelParams,
+            },
+          },
+        );
+
+        // The agent returns a messages array; the last message is the AI reply.
+        const lastMsg = result.messages[result.messages.length - 1];
+        modelResponse =
+          typeof lastMsg?.content === "string"
+            ? lastMsg.content
+            : JSON.stringify(lastMsg?.content ?? "");
       } catch (err) {
-        console.error("OpenRouter error:", err);
+        console.error("LangGraph agent error:", err);
         return reply.status(503).send({
           success: false as const,
           message:
