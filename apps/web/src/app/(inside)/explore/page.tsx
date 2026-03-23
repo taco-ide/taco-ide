@@ -36,7 +36,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey } from "@/kubb/hooks";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/apiClient";
+import apiClient from "@/lib/apiClient";
 import { useUser } from "@/contexts/UserContext";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
 
