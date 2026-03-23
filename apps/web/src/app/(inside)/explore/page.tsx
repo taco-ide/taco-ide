@@ -34,7 +34,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
-import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey, useGetV1Classrooms } from "@/kubb/hooks";
+import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey } from "@/kubb/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/apiClient";
 import { useUser } from "@/contexts/UserContext";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
 
@@ -74,10 +76,13 @@ export default function ExplorePage() {
     data: classroomsData,
     isLoading: classroomsLoading,
     error: classroomsError,
-  } = useGetV1Classrooms(
-    { scope: "all", page: 1, perPage: 8 },
-    {}
-  );
+  } = useQuery({
+    queryKey: ["classrooms", "explore"],
+    queryFn: () =>
+      apiClient.get<{
+        data: Array<{ id: string; title: string; description?: string; organizationName?: string }>;
+      }>("/v1/classrooms?scope=all&page=1&perPage=8"),
+  });
 
   const challenges = data?.data ?? [];
   const pagination = data?.pagination ?? {
