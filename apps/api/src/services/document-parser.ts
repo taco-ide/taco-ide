@@ -9,9 +9,28 @@ const execFileAsync = promisify(execFile);
 
 const PANDOC_TIMEOUT = 30_000;
 
+const PDF_MIME = "application/pdf";
+
 export async function parseDocument(
   buffer: Buffer,
   mimeType: string,
+  filename: string
+): Promise<{ text: string }> {
+  if (mimeType === PDF_MIME) {
+    return parsePdf(buffer);
+  }
+
+  return parseWithPandoc(buffer, filename);
+}
+
+async function parsePdf(buffer: Buffer): Promise<{ text: string }> {
+  const pdfParse = (await import("pdf-parse")).default;
+  const result = await pdfParse(buffer);
+  return { text: result.text };
+}
+
+async function parseWithPandoc(
+  buffer: Buffer,
   filename: string
 ): Promise<{ text: string }> {
   const id = randomUUID();
@@ -21,9 +40,11 @@ export async function parseDocument(
   try {
     await writeFile(tempInput, buffer);
 
-    await execFileAsync("pandoc", [tempInput, "-t", "plain", "-o", tempOutput], {
-      timeout: PANDOC_TIMEOUT,
-    });
+    await execFileAsync(
+      "pandoc",
+      [tempInput, "-t", "plain", "-o", tempOutput],
+      { timeout: PANDOC_TIMEOUT }
+    );
 
     const text = await readFile(tempOutput, "utf-8");
 
