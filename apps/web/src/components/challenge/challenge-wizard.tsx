@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import {
     usePostV1Challenges,
-    usePutV1ChallengesId,
+    usePatchV1ChallengesId,
     getV1ChallengesQueryKey,
     getV1ChallengesIdQueryKey,
 } from "@/kubb/hooks";
@@ -69,7 +69,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         },
     });
 
-    const updateMutation = usePutV1ChallengesId({
+    const updateMutation = usePatchV1ChallengesId({
         mutation: {
             onSuccess: () => {
                 if (challengeId) {
