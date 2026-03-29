@@ -140,7 +140,8 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           });
         }
       } else {
-        if (!existing[0].classroomId) {
+        const currentClassroomId = existing[0].classroomId;
+        if (!currentClassroomId) {
           return reply.status(400).send({
             success: false as const,
             message: "Challenge is not assigned to any classroom",
@@ -153,7 +154,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
             teacherUserId: classroom.teacherUserId,
           })
           .from(classroom)
-          .where(eq(classroom.id, existing[0].classroomId!))
+          .where(eq(classroom.id, currentClassroomId))
           .limit(1);
 
         if (cls[0]) {
