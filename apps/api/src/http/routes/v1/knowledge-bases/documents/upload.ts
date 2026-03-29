@@ -87,9 +87,9 @@ async function processDocument(
     .set({ status: "chunking", updatedAt: new Date() })
     .where(eq(knowledgeBaseDocument.id, doc.id));
 
-  let chunks: Array<{ content: string; index: number }>;
+  let chunks: ReturnType<typeof chunkText>;
   try {
-    chunks = chunkText(text);
+    chunks = chunkText(text, 3200, 800, filename);
   } catch (err) {
     await db
       .update(knowledgeBaseDocument)
@@ -116,6 +116,7 @@ async function processDocument(
         documentId: doc.id,
         chunkIndex: chunk.index,
         content: chunk.content,
+        metadata: chunk.metadata ?? null,
       });
     }
   });

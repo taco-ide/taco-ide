@@ -42,7 +42,7 @@ async function parseWithPandoc(
 
     await execFileAsync(
       "pandoc",
-      [tempInput, "-t", "plain", "-o", tempOutput],
+      [tempInput, "-t", "commonmark", "-o", tempOutput],
       { timeout: PANDOC_TIMEOUT }
     );
 

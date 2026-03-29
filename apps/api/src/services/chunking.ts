@@ -1,18 +1,38 @@
 interface Chunk {
   content: string;
   index: number;
+  metadata: {
+    titleHierarchy: string[];
+    documentFilename?: string;
+  };
+}
+
+function getHierarchyAt(text: string, position: number): string[] {
+  const headerRegex = /^(#{1,6})\s+(.+)$/gm;
+  const active: (string | null)[] = [null, null, null, null, null, null];
+  let match: RegExpExecArray | null;
+
+  while ((match = headerRegex.exec(text)) !== null) {
+    if (match.index > position) break;
+    const level = match[1]!.length - 1;
+    active[level] = match[2]!.trim();
+    for (let i = level + 1; i < 6; i++) active[i] = null;
+  }
+
+  return active.filter((x): x is string => x !== null);
 }
 
 export function chunkText(
   text: string,
   chunkSize = 3200,
-  overlap = 800
+  overlap = 800,
+  filename?: string,
 ): Chunk[] {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new Error("Document has no readable content");
   }
-  if (trimmed.length <= chunkSize) return [{ content: trimmed, index: 0 }];
+  if (trimmed.length <= chunkSize) return [{ content: trimmed, index: 0, metadata: { titleHierarchy: getHierarchyAt(trimmed, 0), documentFilename: filename } }];
 
   const chunks: Chunk[] = [];
   let start = 0;
@@ -43,7 +63,7 @@ export function chunkText(
 
     const content = trimmed.slice(start, end).trim();
     if (content) {
-      chunks.push({ content, index });
+      chunks.push({ content, index, metadata: { titleHierarchy: getHierarchyAt(trimmed, start), documentFilename: filename } });
       index++;
     }
 

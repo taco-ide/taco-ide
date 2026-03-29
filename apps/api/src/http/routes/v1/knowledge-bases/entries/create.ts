@@ -109,6 +109,7 @@ export async function createEntryRoute(app: FastifyTypedInstance) {
           knowledgeBaseId: kbId,
           chunkIndex: null,
           content,
+          metadata: null,
         })
         .returning();
 
