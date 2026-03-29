@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1WorkSessionsIdChatMutationKey = () => [{ url: '/v1/work-sessions/:id/chat' }] as const

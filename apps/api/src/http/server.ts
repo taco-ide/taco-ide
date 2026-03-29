@@ -84,6 +84,8 @@ app.register(fastifySwagger, {
       { name: "auth", description: "Authentication endpoints" },
       { name: "users", description: "User management endpoints" },
       { name: "status", description: "Health check endpoints" },
+      { name: "classrooms", description: "Classroom management and enrollment endpoints" },
+      { name: "organizations", description: "Organization members and invitations" },
       { name: "chat", description: "Chat agent endpoints" },
     ],
   },

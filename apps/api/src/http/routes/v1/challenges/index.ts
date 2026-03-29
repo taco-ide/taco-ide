@@ -1,6 +1,7 @@
 import { FastifyTypedInstance } from "../../../types";
 import { listChallengesRoute } from "./list";
 import { getChallengeByIdRoute } from "./getById";
+import { updateChallengeRoute } from "./update";
 import { solutionsRoutes } from "../solutions";
 
 export async function challengesRoutes(app: FastifyTypedInstance) {
@@ -8,6 +9,7 @@ export async function challengesRoutes(app: FastifyTypedInstance) {
     async (fastify: FastifyTypedInstance) => {
       await listChallengesRoute(fastify);
       await getChallengeByIdRoute(fastify);
+      await updateChallengeRoute(fastify);
       await fastify.register(
         async (sf: FastifyTypedInstance) => {
           await solutionsRoutes(sf);
