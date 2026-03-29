@@ -9,7 +9,7 @@ import {
 } from "./permissions";
 
 // Create auth client for frontend usage
-export const authClient = createAuthClient({
+export const authClient: ReturnType<typeof createAuthClient> = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
   plugins: [
     organizationClient({
