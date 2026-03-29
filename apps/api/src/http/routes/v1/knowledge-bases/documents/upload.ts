@@ -113,6 +113,7 @@ async function processDocument(
 
       await tx.insert(knowledgeBaseChunk).values({
         id: chunkId,
+        knowledgeBaseId: doc.knowledgeBaseId,
         documentId: doc.id,
         chunkIndex: chunk.index,
         content: chunk.content,
@@ -153,7 +154,7 @@ async function processDocument(
   // Stage: ready
   await db
     .update(knowledgeBaseDocument)
-    .set({ status: "ready", updatedAt: new Date() })
+    .set({ status: "ready", errorStage: null, errorMessage: null, updatedAt: new Date() })
     .where(eq(knowledgeBaseDocument.id, doc.id));
 }
 
