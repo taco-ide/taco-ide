@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull, or, sql } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -9,8 +9,8 @@ import {
   ResponseSchema503,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { knowledgeBase, knowledgeBaseChunk } from "@repo/infra/db/schema";
-import { generateEmbedding } from "../../../../services/embedding";
+import { knowledgeBase } from "@repo/infra/db/schema";
+import { searchKnowledgeBase } from "../../../../services/knowledge-base-search";
 
 // ==================== SCHEMAS ====================
 
@@ -27,6 +27,12 @@ const SearchResultItemSchema = z.object({
   id: z.string(),
   content: z.string(),
   similarity: z.number(),
+  metadata: z
+    .object({
+      titleHierarchy: z.array(z.string()).optional(),
+      documentFilename: z.string().optional(),
+    })
+    .nullable(),
   chunkIndex: z.number().nullable(),
   documentId: z.string().nullable(),
   createdAt: z.string(),
@@ -97,48 +103,14 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
 
       const { q, limit } = request.query;
 
-      const queryEmbedding = await generateEmbedding(q);
+      const results = await searchKnowledgeBase({ kbId, query: q, limit });
 
-      if (!queryEmbedding) {
-        return reply.status(503).send({
-          success: false as const,
-          message: "Embedding service is unavailable",
+      if (results.length === 0) {
+        return reply.status(200).send({
+          success: true as const,
+          data: [],
         });
       }
-
-      const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
-
-      // Search chunks that belong to documents of this KB, or manual entries with knowledgeBaseId
-      const results = await db
-        .select({
-          id: knowledgeBaseChunk.id,
-          content: knowledgeBaseChunk.content,
-          similarity:
-            sql<number>`1 - (${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector)`,
-          chunkIndex: knowledgeBaseChunk.chunkIndex,
-          documentId: knowledgeBaseChunk.documentId,
-          createdAt: knowledgeBaseChunk.createdAt,
-        })
-        .from(knowledgeBaseChunk)
-        .where(
-          and(
-            isNull(knowledgeBaseChunk.deletedAt),
-            sql`${knowledgeBaseChunk.embedding} IS NOT NULL`,
-            or(
-              // Chunks from documents
-              sql`${knowledgeBaseChunk.documentId} IN (
-                SELECT id FROM knowledge_base_document
-                WHERE knowledge_base_id = ${kbId} AND deleted_at IS NULL
-              )`,
-              // Manual entries
-              eq(knowledgeBaseChunk.knowledgeBaseId, kbId)
-            )
-          )
-        )
-        .orderBy(
-          sql`${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector`
-        )
-        .limit(limit);
 
       return reply.status(200).send({
         success: true as const,
@@ -146,6 +118,7 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
           id: r.id,
           content: r.content,
           similarity: r.similarity,
+          metadata: r.metadata,
           chunkIndex: r.chunkIndex,
           documentId: r.documentId,
           createdAt: r.createdAt.toISOString(),
