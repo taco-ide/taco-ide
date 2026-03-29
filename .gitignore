@@ -15,6 +15,7 @@ node_modules
 
 # Editor config with credentials
 .cursor/mcp.json
+.plans/
 
 # Testing
 coverage
