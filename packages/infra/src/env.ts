@@ -32,6 +32,18 @@ const envSchema = z.object({
   EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
   EMBEDDING_DIMENSIONS: z.coerce.number().default(1536),
 
+  // LLM (AI Agents - LangGraph.js)
+  LLM_API_BASE: z
+    .string()
+    .url()
+    .default("https://taco-ide-resource.openai.azure.com/openai/v1/"),
+  LLM_MODEL_NAME: z.string().default("gpt-5.2-chat"),
+  LLM_API_KEY: z.string(),
+  CODE_EXEC_API_URL: z
+    .string()
+    .url()
+    .default("https://emkc.org/api/v2/piston/execute"),
+
   // Server
   PORT: z.coerce.number().default(4000),
 });

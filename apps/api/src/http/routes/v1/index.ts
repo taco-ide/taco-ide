@@ -7,6 +7,7 @@ import { workSessionsRoutes } from "./work-sessions/index";
 import { knowledgeBasesRoutes } from "./knowledge-bases";
 import { classroomsRoutes } from "./classrooms/index";
 import { organizationsRoutes } from "./organizations/index";
+import { chatRoutes } from "./chat/index";
 
 const routes = [
   authRoutes,
@@ -17,6 +18,7 @@ const routes = [
   organizationsRoutes,
   workSessionsRoutes,
   knowledgeBasesRoutes,
+  chatRoutes,
 ] as const;
 
 export async function registerRoutes(app: FastifyTypedInstance) {

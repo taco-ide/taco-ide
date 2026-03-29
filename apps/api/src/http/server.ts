@@ -94,6 +94,7 @@ app.register(fastifySwagger, {
       { name: "status", description: "Health check endpoints" },
       { name: "classrooms", description: "Classroom management and enrollment endpoints" },
       { name: "organizations", description: "Organization members and invitations" },
+      { name: "chat", description: "Chat agent endpoints" },
     ],
   },
   transform: jsonSchemaTransform,
