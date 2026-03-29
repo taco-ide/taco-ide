@@ -109,7 +109,7 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           email: data.email ?? email,
           role: data.role ?? role,
           status: data.status ?? "pending",
-          expiresAt: data.expiresAt instanceof Date ? data.expiresAt.toISOString() : String(data.expiresAt ?? ""),
+          expiresAt: data.expiresAt instanceof Date ? data.expiresAt.toISOString() : "",
         },
       });
     }

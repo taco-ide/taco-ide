@@ -86,7 +86,7 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
           .select({ id: classroom.id })
           .from(classroom)
           .innerJoin(member, eq(classroom.organizationId, member.organizationId))
-          .where(eq(member.userId, usr.id));
+          .where(and(eq(member.userId, usr.id), isNull(classroom.deletedAt)));
 
         conditions.push(inArray(challenge.classroomId, userClassroomIds));
       }

@@ -129,7 +129,7 @@ export async function getClassroomByIdRoute(app: FastifyTypedInstance) {
             userId: e.userId,
             name: e.name ?? "",
             email: e.email,
-            enrolledAt: (e.enrolledAt ?? new Date()).toISOString(),
+            enrolledAt: e.enrolledAt.toISOString(),
           })),
           createdAt: c.createdAt.toISOString(),
           updatedAt: c.updatedAt.toISOString(),

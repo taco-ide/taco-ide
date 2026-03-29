@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { eq, and, or, desc, isNull, sql, inArray } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
-import { ResponseSchema200, ResponseSchema401 } from "../../_responses/types";
+import { ResponseSchema200, ResponseSchema400, ResponseSchema401 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import {
   classroom,
@@ -52,6 +52,7 @@ export async function listClassroomsRoute(app: FastifyTypedInstance) {
         querystring: ListClassroomsQuerySchema,
         response: {
           200: ListClassroomsResponseSchema,
+          400: ResponseSchema400,
           401: ResponseSchema401,
         },
       },
@@ -86,7 +87,13 @@ export async function listClassroomsRoute(app: FastifyTypedInstance) {
             ? or(inArray(classroom.id, enrolledIds), eq(classroom.teacherUserId, usr.id))
             : eq(classroom.teacherUserId, usr.id);
         conditions.push(mineCondition!);
-      } else if (scope === "org" && usr.activeOrganizationId) {
+      } else if (scope === "org") {
+        if (!usr.activeOrganizationId) {
+          return reply.status(400).send({
+            success: false as const,
+            message: "scope=org requires an active organization",
+          });
+        }
         conditions.push(eq(classroom.organizationId, usr.activeOrganizationId));
       }
 
