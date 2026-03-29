@@ -289,6 +289,10 @@ export const knowledgeBaseChunk = pgTable(
     chunkIndex: integer("chunk_index"),
     content: text("content").notNull(),
     embedding: vector("embedding", { dimensions: 1536 }),
+    metadata: jsonb("metadata").$type<{
+      titleHierarchy?: string[];
+      documentFilename?: string;
+    }>(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     deletedAt: timestamp("deleted_at"),

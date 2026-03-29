@@ -50,6 +50,13 @@
       "when": 1774220595359,
       "tag": "0006_redundant_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1774818270955,
+      "tag": "0007_funny_adam_warlock",
+      "breakpoints": true
     }
   ]
 }
