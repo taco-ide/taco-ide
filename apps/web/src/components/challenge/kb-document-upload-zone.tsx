@@ -8,9 +8,16 @@ const ACCEPTED_MIME_TYPES = [
   "application/pdf",
   "text/plain",
   "text/markdown",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.oasis.opendocument.text",
+  "text/html",
+  "application/rtf",
 ];
 
-const ACCEPTED_EXTENSIONS = ".pdf,.txt,.md";
+const ACCEPTED_EXTENSIONS = ".pdf,.txt,.md,.docx,.doc,.pptx,.ppt,.odt,.html,.rtf";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -29,7 +36,7 @@ export function KbDocumentUploadZone({
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
-      return "Tipo de arquivo nao suportado. Aceitos: PDF, TXT, MD";
+      return "Tipo de arquivo nao suportado. Aceitos: PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF";
     }
     if (file.size > MAX_FILE_SIZE) {
       return "Arquivo excede o limite de 10MB";
@@ -100,7 +107,7 @@ export function KbDocumentUploadZone({
             : "Arraste um arquivo ou clique para selecionar"}
         </p>
         <p className="text-xs text-slate-500 mt-1">
-          PDF, TXT ou MD (max. 10MB)
+          PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF (max. 10MB)
         </p>
         <input
           ref={inputRef}
