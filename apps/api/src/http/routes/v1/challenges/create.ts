@@ -11,7 +11,12 @@ import {
 } from "../../_responses/types";
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, classroom } from "@repo/infra/db/schema";
+import {
+  challenge,
+  classroom,
+  teachingAssistant,
+  challengeTeachingAssistant,
+} from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -19,7 +24,7 @@ const CreateChallengeBodySchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  classroomId: z.string().uuid().optional(),
+  classroomId: z.string().uuid(),
   tags: z.array(z.string()).optional(),
   supportMaterials: z.unknown().optional(),
   possibleSolutions: z.unknown().optional(),
@@ -81,26 +86,26 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         possibleSolutions,
       } = request.body;
 
-      if (classroomId) {
-        const cl = await db
-          .select({ id: classroom.id, organizationId: classroom.organizationId })
-          .from(classroom)
-          .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
-          .limit(1);
+      const [cl] = await db
+        .select({ id: classroom.id, organizationId: classroom.organizationId })
+        .from(classroom)
+        .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
+        .limit(1);
 
-        if (!cl[0]) {
-          return reply.status(404).send({
-            success: false as const,
-            message: "Classroom not found",
-          });
-        }
+      if (!cl) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Classroom not found",
+        });
+      }
 
-        if (cl[0].organizationId !== usr.activeOrganizationId) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Classroom does not belong to your active organization",
-          });
-        }
+      const organizationId = cl.organizationId;
+
+      if (organizationId !== usr.activeOrganizationId) {
+        return reply.status(403).send({
+          success: false as const,
+          message: "Classroom does not belong to your active organization",
+        });
       }
 
       const id = randomUUID();
@@ -112,7 +117,7 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           title,
           description: description ?? null,
           difficulty,
-          classroomId: classroomId ?? null,
+          classroomId,
           tags: tags ?? null,
           supportMaterials: supportMaterials ?? null,
           possibleSolutions: possibleSolutions ?? null,
@@ -124,6 +129,26 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         return reply.status(500).send({
           success: false as const,
           message: "Failed to create challenge",
+        });
+      }
+
+      // Auto-link default Teaching Assistant from the same classroom
+      const [classroomTA] = await db
+        .select({ id: teachingAssistant.id })
+        .from(teachingAssistant)
+        .where(
+          and(
+            eq(teachingAssistant.createdByOrganizationId, organizationId),
+            eq(teachingAssistant.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (classroomTA) {
+        await db.insert(challengeTeachingAssistant).values({
+          challengeId: created.id,
+          teachingAssistantId: classroomTA.id,
+          isDefault: true,
         });
       }
 
