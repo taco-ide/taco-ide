@@ -129,6 +129,7 @@ async function processDocument(
     .where(eq(knowledgeBaseDocument.id, doc.id));
 
   try {
+    let embeddedCount = 0;
     for (const { chunkId, content } of chunkEntries) {
       const embedding = await generateEmbedding(content);
       if (embedding) {
@@ -136,7 +137,22 @@ async function processDocument(
           .update(knowledgeBaseChunk)
           .set({ embedding })
           .where(eq(knowledgeBaseChunk.id, chunkId));
+        embeddedCount++;
       }
+    }
+
+    if (embeddedCount === 0 && chunkEntries.length > 0) {
+      await db
+        .update(knowledgeBaseDocument)
+        .set({
+          status: "error",
+          errorStage: "embedding",
+          errorMessage:
+            "Embedding service unavailable. Check EMBEDDING_API_URL and EMBEDDING_API_KEY configuration.",
+          updatedAt: new Date(),
+        })
+        .where(eq(knowledgeBaseDocument.id, doc.id));
+      return;
     }
   } catch (err) {
     await db
