@@ -2,10 +2,14 @@
  * Seed de desenvolvimento: organizacao, turmas, usuarios (RBAC), desafios e TA.
  * Senha padrao para todas as contas de teste: Teste123!@
  *
- * Rode: cd packages/infra && npm run db:seed
+ * Rode: cd packages/infra && npm run db:seed:dev
  */
+if (process.env.NODE_ENV === "production") {
+  throw new Error("dev seed cannot run in production");
+}
+
 import { eq } from "drizzle-orm";
-import { db } from "./index";
+import { db } from "../index";
 import {
   user,
   account,
@@ -13,12 +17,11 @@ import {
   member,
   classroom,
   userClassroom,
-  model,
-  teachingAssistant,
   challenge,
   challengeTeachingAssistant,
-} from "./schema";
+} from "../schema";
 import { hashPassword } from "better-auth/crypto";
+import { seedBase, safeInsert, SEED_TA_ID } from "./base";
 
 // --- IDs fixos (reprodutiveis) ---
 const SEED_ORG_ID = "11111111-1111-1111-1111-111111111111";
@@ -36,9 +39,6 @@ const SEED_ACCOUNT_COORD = "44444444-4444-4444-4444-444444440003";
 const SEED_MEMBER_TEACHER = "55555555-5555-5555-5555-555555550001";
 const SEED_MEMBER_STUDENT = "55555555-5555-5555-5555-555555550002";
 const SEED_MEMBER_COORD = "55555555-5555-5555-5555-555555550003";
-
-const SEED_MODEL_ID = "00000000-0000-0000-0000-000000000001";
-const SEED_TA_ID = "00000000-0000-0000-0000-000000000002";
 
 /** Publicos (sem turma) -- aparecem em scope=public */
 const SEED_CHALLENGE_PUBLIC = [
@@ -60,52 +60,22 @@ const SEED_CHALLENGE_CLASS_B = [
 
 const DEV_PASSWORD = "Teste123!@";
 
-async function safeInsert<T>(label: string, fn: () => Promise<T>) {
-  try {
-    await fn();
-  } catch (e) {
-    console.warn(`  [skip] ${label}:`, e instanceof Error ? e.message : e);
-  }
-}
-
 async function seed() {
   console.log("Seeding database (org, RBAC users, classrooms, challenges)...\n");
+
+  // --- Base: model + TA ---
+  await seedBase({ organizationId: SEED_ORG_ID });
 
   // Better Auth usa scrypt (formato salt:hex), nao bcrypt
   const passwordHash = await hashPassword(DEV_PASSWORD);
 
-  // --- Model + TA (base para desafios) ---
-  await safeInsert("model", () =>
-    db.insert(model).values({
-      id: SEED_MODEL_ID,
-      version: "1.0",
-      name: "gpt-4o-mini",
-      description: "OpenAI GPT-4o Mini for coding assistance",
-    })
-  );
-
-  // --- Organizacao (antes do TA que referencia org) ---
+  // --- Organizacao ---
   await safeInsert("organization", () =>
     db.insert(organization).values({
       id: SEED_ORG_ID,
       name: "TACO Demo",
       slug: "taco-demo",
       metadata: JSON.stringify({ seeded: true }),
-    })
-  );
-
-  await safeInsert("teachingAssistant", () =>
-    db.insert(teachingAssistant).values({
-      id: SEED_TA_ID,
-      alias: "TACO Assistant",
-      version: 1,
-      modelId: SEED_MODEL_ID,
-      systemPrompt:
-        "You are a helpful programming tutor. Guide students to find solutions without giving away the answer directly. Use the Socratic method.",
-      description: "Default teaching assistant for TACO-IDE",
-      targetAudience: "beginner",
-      isActive: true,
-      createdByOrganizationId: SEED_ORG_ID,
     })
   );
 
