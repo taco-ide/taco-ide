@@ -1,6 +1,10 @@
 /**
- * Base seed: model + teaching assistant padrao.
- * Compartilhado entre dev e prod.
+ * Base seed: dados ESTRUTURAIS que existem em QUALQUER ambiente.
+ * - Model LLM padrao
+ * - Teaching Assistant padrao
+ *
+ * Idempotente via safeInsert (ignora conflitos).
+ * Pode ser rodado standalone: npm run db:seed
  */
 import { db } from "../index";
 import { model, teachingAssistant } from "../schema";
@@ -22,7 +26,7 @@ type SeedBaseOptions = {
 };
 
 export async function seedBase({ organizationId }: SeedBaseOptions = {}) {
-  console.log("[base] Seeding default model and teaching assistant...");
+  console.log("[base] Seeding structural data (model + teaching assistant)...");
 
   await safeInsert("model", () =>
     db.insert(model).values({
@@ -48,5 +52,22 @@ export async function seedBase({ organizationId }: SeedBaseOptions = {}) {
     })
   );
 
-  console.log("[base] Model and teaching assistant seeded.");
+  console.log("[base] Structural data seeded.");
+}
+
+// --- Standalone execution ---
+const isMain =
+  process.argv[1]?.endsWith("seeds/base.ts") ||
+  process.argv[1]?.endsWith("seeds/base");
+
+if (isMain) {
+  seedBase()
+    .then(() => {
+      console.log("[base] Done.");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Base seed failed:", error);
+      process.exit(1);
+    });
 }

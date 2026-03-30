@@ -1,6 +1,7 @@
 /**
- * Seed de desenvolvimento: organizacao, turmas, usuarios (RBAC), desafios e TA.
- * Senha padrao para todas as contas de teste: Teste123!@
+ * Seed de desenvolvimento: base + dados FAKE para dev.
+ * - Organizacao demo, usuarios teste (RBAC), turmas, challenges
+ * - Senha padrao para todas as contas: Teste123!@
  *
  * Rode: cd packages/infra && npm run db:seed:dev
  */
@@ -61,15 +62,15 @@ const SEED_CHALLENGE_CLASS_B = [
 const DEV_PASSWORD = "Teste123!@";
 
 async function seed() {
-  console.log("Seeding database (org, RBAC users, classrooms, challenges)...\n");
+  console.log("[dev] Seeding development data (org, users, classrooms, challenges)...\n");
 
-  // --- Base: model + TA ---
+  // --- 1. Base: dados estruturais (model + TA) ---
   await seedBase({ organizationId: SEED_ORG_ID });
 
   // Better Auth usa scrypt (formato salt:hex), nao bcrypt
   const passwordHash = await hashPassword(DEV_PASSWORD);
 
-  // --- Organizacao ---
+  // --- 2. Organizacao demo ---
   await safeInsert("organization", () =>
     db.insert(organization).values({
       id: SEED_ORG_ID,
@@ -79,7 +80,7 @@ async function seed() {
     })
   );
 
-  // --- Usuarios (email verificado em dev para login direto) ---
+  // --- 3. Usuarios teste (email verificado para login direto) ---
   await safeInsert("user teacher", () =>
     db.insert(user).values({
       id: SEED_USER_TEACHER,
@@ -110,7 +111,7 @@ async function seed() {
     })
   );
 
-  // --- Contas email/senha (Better Auth: provider credential, accountId = email) ---
+  // --- 4. Contas email/senha (Better Auth: provider credential) ---
   const credential = "credential";
   await safeInsert("account teacher", () =>
     db.insert(account).values({
@@ -154,7 +155,7 @@ async function seed() {
     }
   }
 
-  // --- Membros na org (RBAC: teacher / student / coordinator) ---
+  // --- 5. Membros na org (RBAC: teacher / student / coordinator) ---
   await safeInsert("member teacher", () =>
     db.insert(member).values({
       id: SEED_MEMBER_TEACHER,
@@ -182,7 +183,7 @@ async function seed() {
     })
   );
 
-  // --- Turmas ---
+  // --- 6. Turmas ---
   await safeInsert("classroom Algoritmos I", () =>
     db.insert(classroom).values({
       id: SEED_CLASSROOM_ALG,
@@ -201,7 +202,7 @@ async function seed() {
     })
   );
 
-  // --- Matricula do aluno nas duas turmas ---
+  // --- 7. Matricula do aluno nas duas turmas ---
   await safeInsert("userClassroom aluno -> Algoritmos", () =>
     db.insert(userClassroom).values({
       userId: SEED_USER_STUDENT,
@@ -216,6 +217,7 @@ async function seed() {
     })
   );
 
+  // --- 8. Challenges ---
   type ChDef = {
     id: string;
     title: string;
@@ -319,11 +321,11 @@ async function seed() {
   console.log(
     "Apos login, defina a org ativa no client Better Auth (organization.switch) se necessario.\n"
   );
-  console.log("Seed concluido.");
+  console.log("[dev] Seed concluido.");
   process.exit(0);
 }
 
 seed().catch((error) => {
-  console.error("Seed failed:", error);
+  console.error("Dev seed failed:", error);
   process.exit(1);
 });
