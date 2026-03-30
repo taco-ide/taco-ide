@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { KbDocument } from "@/hooks/use-knowledge-base-documents";
+import type { KbDocument, KbDocumentStatus } from "@/hooks/use-knowledge-base-documents";
 
 interface KbDocumentListProps {
   documents: KbDocument[];
@@ -28,27 +28,37 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function StatusBadge({ status }: { status: KbDocument["status"] }) {
-  switch (status) {
-    case "processing":
-      return (
-        <Badge className="border-transparent bg-yellow-500/20 text-yellow-400 animate-pulse">
-          Processando
-        </Badge>
-      );
-    case "ready":
-      return (
-        <Badge className="border-transparent bg-green-500/20 text-green-400">
-          Pronto
-        </Badge>
-      );
-    case "error":
-      return (
-        <Badge className="border-transparent bg-red-500/20 text-red-400">
-          Erro
-        </Badge>
-      );
+const STATUS_LABELS: Record<KbDocumentStatus, string> = {
+  uploading: "Enviando...",
+  converting: "Convertendo...",
+  chunking: "Processando...",
+  embedding: "Indexando...",
+  ready: "Pronto",
+  error: "Erro",
+};
+
+function StatusBadge({ status }: { status: KbDocumentStatus }) {
+  if (status === "ready") {
+    return (
+      <Badge className="border-transparent bg-green-500/20 text-green-400">
+        {STATUS_LABELS[status]}
+      </Badge>
+    );
   }
+
+  if (status === "error") {
+    return (
+      <Badge className="border-transparent bg-red-500/20 text-red-400">
+        {STATUS_LABELS[status]}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge className="border-transparent bg-yellow-500/20 text-yellow-400 animate-pulse">
+      {STATUS_LABELS[status]}
+    </Badge>
+  );
 }
 
 export function KbDocumentList({

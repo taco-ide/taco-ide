@@ -5,13 +5,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+export type KbDocumentStatus =
+  | "uploading"
+  | "converting"
+  | "chunking"
+  | "embedding"
+  | "ready"
+  | "error";
+
+const PENDING_STATUSES: KbDocumentStatus[] = [
+  "uploading",
+  "converting",
+  "chunking",
+  "embedding",
+];
+
 export interface KbDocument {
   id: string;
   filename: string;
   mimeType: string;
   fileSize: number;
   chunkCount: number;
-  status: "processing" | "ready" | "error";
+  status: KbDocumentStatus;
   errorMessage: string | null;
   createdAt: string;
 }
@@ -44,7 +59,7 @@ export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
     retry: 3,
     refetchInterval: (query) => {
       const docs = query.state.data;
-      if (docs?.some((d) => d.status === "processing")) return 3000;
+      if (docs?.some((d) => PENDING_STATUSES.includes(d.status))) return 3000;
       return false;
     },
   });
