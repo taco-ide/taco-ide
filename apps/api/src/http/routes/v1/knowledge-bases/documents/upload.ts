@@ -19,7 +19,7 @@ import {
 import { parseDocument } from "../../../../../services/document-parser";
 import { chunkText } from "../../../../../services/chunking";
 import { saveFile } from "../../../../../services/file-storage";
-import { generateEmbedding } from "../../../../../services/embedding";
+import { generateEmbeddings } from "../../../../../services/embedding";
 
 // ==================== SCHEMAS ====================
 
@@ -129,14 +129,17 @@ async function processDocument(
     .where(eq(knowledgeBaseDocument.id, doc.id));
 
   try {
+    const contents = chunkEntries.map((e) => e.content);
+    const embeddings = await generateEmbeddings(contents);
+
     let embeddedCount = 0;
-    for (const { chunkId, content } of chunkEntries) {
-      const embedding = await generateEmbedding(content);
+    for (let i = 0; i < chunkEntries.length; i++) {
+      const embedding = embeddings[i];
       if (embedding) {
         await db
           .update(knowledgeBaseChunk)
           .set({ embedding })
-          .where(eq(knowledgeBaseChunk.id, chunkId));
+          .where(eq(knowledgeBaseChunk.id, chunkEntries[i]!.chunkId));
         embeddedCount++;
       }
     }

@@ -25,33 +25,51 @@ function buildHeaders(
 export async function generateEmbedding(
   text: string
 ): Promise<number[] | null> {
-  if (!env.EMBEDDING_API_URL || !env.EMBEDDING_API_KEY) {
-    return null;
+  const results = await generateEmbeddings([text]);
+  return results[0] ?? null;
+}
+
+const BATCH_SIZE = 100;
+
+export async function generateEmbeddings(
+  texts: string[]
+): Promise<(number[] | null)[]> {
+  if (!env.EMBEDDING_API_URL || !env.EMBEDDING_API_KEY || texts.length === 0) {
+    return texts.map(() => null);
   }
 
   const provider = detectProvider(env.EMBEDDING_API_URL);
+  const results: (number[] | null)[] = new Array(texts.length).fill(null);
 
-  try {
-    const response = await fetch(env.EMBEDDING_API_URL, {
-      method: "POST",
-      headers: buildHeaders(provider, env.EMBEDDING_API_KEY),
-      body: JSON.stringify({
-        model: env.EMBEDDING_MODEL,
-        input: text,
-        dimensions: env.EMBEDDING_DIMENSIONS,
-      }),
-    });
+  for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batch = texts.slice(i, i + BATCH_SIZE);
 
-    if (!response.ok) {
-      return null;
+    try {
+      const response = await fetch(env.EMBEDDING_API_URL, {
+        method: "POST",
+        headers: buildHeaders(provider, env.EMBEDDING_API_KEY),
+        body: JSON.stringify({
+          model: env.EMBEDDING_MODEL,
+          input: batch,
+          dimensions: env.EMBEDDING_DIMENSIONS,
+        }),
+      });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const json = (await response.json()) as {
+        data: Array<{ index: number; embedding: number[] }>;
+      };
+
+      for (const item of json.data) {
+        results[i + item.index] = item.embedding;
+      }
+    } catch {
+      // batch failed, results remain null for these indices
     }
-
-    const json = (await response.json()) as {
-      data: Array<{ embedding: number[] }>;
-    };
-
-    return json.data[0]?.embedding ?? null;
-  } catch {
-    return null;
   }
+
+  return results;
 }

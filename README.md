@@ -64,40 +64,54 @@ npm install
 
 ### Environment Setup
 
-Create environment files for both applications:
+Copy `.env.example` to `.env` in the project root:
 
-**1. API Environment (`apps/api/.env.development`):**
+```bash
+cp .env.example .env
+```
+
+**Root `.env`:**
 
 ```bash
 # Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
+DATABASE_URL=postgresql://local_user:your-password@localhost:5490/local_db
+POSTGRES_USER=local_user
+POSTGRES_DB=local_db
+POSTGRES_PASSWORD=your-password
 
 # Better Auth (minimum 32 characters)
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3333
+BETTER_AUTH_URL=http://localhost:3344
 
-# Frontend URL (for redirects)
-FRONTEND_URL=http://localhost:3000
+# URLs
+FRONTEND_URL=http://localhost:4001
+NEXT_PUBLIC_API_URL=http://localhost:3344
+PORT=3344
 
-# LLM (AI Agents)
-LLM_API_BASE=https://taco-ide-resource.openai.azure.com/openai/v1/
-LLM_MODEL_NAME=gpt-5.2-chat
-CODE_EXEC_API_URL=https://emkc.org/api/v2/piston/execute
-# LLM_API_KEY goes in apps/api/.env.local (secret, gitignored)
+# Embeddings (Knowledge Base) - optional
+# Required for KB semantic search. Without these, KB entries are stored but not searchable.
+# Supports OpenAI and Azure OpenAI (auto-detected from URL).
+# EMBEDDING_API_URL=https://api.openai.com/v1/embeddings
+# EMBEDDING_API_KEY=sk-...
+# EMBEDDING_MODEL=text-embedding-3-small       # default
+# EMBEDDING_DIMENSIONS=1536                     # default
+# EMBEDDING_PROVIDER=openai                     # optional, auto-detected from URL
 
-# Email (optional - only if using Resend)
+# LLM (AI Agents) - optional
+# LLM_API_KEY=your-llm-api-key
+
+# Email (Resend) - optional
 # RESEND_API_KEY=your-resend-api-key
 # EMAIL_FROM=noreply@taco-ide.com
 ```
 
-**2. Web Environment (`apps/web/.env.local`):**
+**Web Environment (`apps/web/.env.local`):**
 
 ```bash
-# API URL
-NEXT_PUBLIC_API_URL=http://localhost:3333
+NEXT_PUBLIC_API_URL=http://localhost:3344
 ```
 
-> **Note:** The `.env.development` and `.env.local` files are gitignored. Make sure to create them before running the application.
+> **Note:** The `.env` and `.env.local` files are gitignored. Make sure to create them before running the application.
 
 ### Database Setup
 
@@ -123,23 +137,23 @@ npm run db:studio
 npm run dev
 
 # Or start individually:
-# API server (port 3333)
+# API server (port 3344)
 cd apps/api && npm run dev
 
-# Web frontend (port 3000)
+# Web frontend (port 4001)
 cd apps/web && npm run dev
 ```
 
 Access the application:
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:3333
-- **API Docs**: http://localhost:3333/docs
+- **Frontend**: http://localhost:4001
+- **API**: http://localhost:3344
+- **API Docs**: http://localhost:3344/docs
 
 ### API Documentation
 
 Once the API is running, access the Swagger documentation at:
-- **Swagger UI**: http://localhost:3333/docs
-- **OpenAPI JSON**: http://localhost:3333/docs/json
+- **Swagger UI**: http://localhost:3344/docs
+- **OpenAPI JSON**: http://localhost:3344/docs/json
 
 ## Development Workflow
 

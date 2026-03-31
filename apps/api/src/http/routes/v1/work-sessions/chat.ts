@@ -231,6 +231,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           {
             configurable: {
               thread_id: workSessionId,
+              challengeId: session.challengeId,
               challengeContext,
               ...modelParams,
             },

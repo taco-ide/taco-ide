@@ -67,10 +67,10 @@ export function chunkText(
       index++;
     }
 
-    // Next chunk starts with overlap
-    const nextStart = end - overlap;
-    // Guard: always advance at least 1 character to prevent infinite loop
-    start = nextStart <= start ? start + 1 : nextStart;
+    // Next chunk starts with overlap, but only if we're not at the end
+    const nextStart = end < trimmed.length ? end - overlap : end;
+    // Guard: if overlap would not advance, skip it entirely
+    start = nextStart <= start ? end : nextStart;
   }
 
   return chunks;

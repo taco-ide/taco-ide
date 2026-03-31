@@ -42,7 +42,7 @@ async function parseWithPandoc(
 
     await execFileAsync(
       "pandoc",
-      [tempInput, "-t", "commonmark", "-o", tempOutput],
+      [tempInput, "-t", "markdown+pipe_tables-raw_html-simple_tables-multiline_tables-grid_tables", "-o", tempOutput],
       { timeout: PANDOC_TIMEOUT }
     );
 

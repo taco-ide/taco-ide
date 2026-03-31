@@ -36,7 +36,7 @@ export async function searchKnowledgeBase({
   kbId,
   query,
   limit = 10,
-  similarityThreshold = 0,
+  similarityThreshold = 0.3,
 }: SearchKnowledgeBaseInput): Promise<KBSearchResult[]> {
   const queryEmbedding = await generateEmbedding(query);
 
@@ -90,7 +90,7 @@ export async function searchChallengeKnowledgeBases({
   challengeId,
   query,
   limit = 10,
-  similarityThreshold = 0,
+  similarityThreshold = 0.3,
 }: SearchChallengeKBInput): Promise<KBSearchResult[]> {
   const linkedKBs = await db
     .select({ knowledgeBaseId: challengeKnowledgeBase.knowledgeBaseId })
