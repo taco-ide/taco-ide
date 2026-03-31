@@ -19,43 +19,8 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1772996802139,
-      "tag": "0002_familiar_lila_cheney",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1773599886539,
-      "tag": "0003_silky_paladin",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1773603569196,
-      "tag": "0004_cool_beyonder",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1774219211814,
-      "tag": "0005_flowery_mister_fear",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1774220595359,
-      "tag": "0006_redundant_sabretooth",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1774818270955,
-      "tag": "0007_funny_adam_warlock",
+      "when": 1774915766210,
+      "tag": "0002_align_schema_after_kb_pgvector",
       "breakpoints": true
     }
   ]

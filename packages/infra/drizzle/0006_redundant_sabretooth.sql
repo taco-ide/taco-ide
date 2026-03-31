@@ -1,2 +1,0 @@
-ALTER TABLE "knowledge_base_chunk" ADD COLUMN "knowledge_base_id" text;--> statement-breakpoint
-ALTER TABLE "knowledge_base_chunk" ADD CONSTRAINT "knowledge_base_chunk_knowledge_base_id_knowledge_base_id_fk" FOREIGN KEY ("knowledge_base_id") REFERENCES "public"."knowledge_base"("id") ON DELETE cascade ON UPDATE no action;
