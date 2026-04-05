@@ -12,7 +12,9 @@ routes/
     ├── index.ts     # Route registration
     ├── auth/        # Authentication routes
     ├── users/       # User management routes
-    └── status/      # Health check routes
+    ├── status/      # Health check routes
+    ├── knowledge-bases/  # Knowledge Base CRUD, documents, entries, search
+    └── challenges/       # Challenge routes + challenge<->KB linking
 ```
 
 ## _responses/
@@ -126,6 +128,44 @@ Health check and monitoring routes.
 - `GET /v1/status` - API health check
 
 Returns server status and version info.
+
+## knowledge-bases/
+
+Knowledge Base CRUD and document management. KB is a container entity linked to a classroom.
+
+### Available Routes
+```
+POST   /v1/knowledge-bases/create          - Create KB (requires classroomId, createdByUserId set automatically)
+GET    /v1/knowledge-bases/list             - List KBs for organization
+GET    /v1/knowledge-bases/:id              - Get KB details
+PUT    /v1/knowledge-bases/:id/update       - Update KB
+DELETE /v1/knowledge-bases/:id/delete       - Delete KB
+POST   /v1/knowledge-bases/:id/documents/upload  - Upload document (multipart)
+GET    /v1/knowledge-bases/:id/documents/list     - List documents in KB
+DELETE /v1/knowledge-bases/:id/documents/:docId/delete - Delete document
+GET    /v1/knowledge-bases/:id/entries/list        - List chunks/entries
+POST   /v1/knowledge-bases/:id/search              - Semantic search via embeddings
+```
+
+### Document Processing Pipeline
+Documents go through staged processing: `uploading -> converting -> chunking -> embedding -> ready`
+On failure, status becomes `error` with `errorStage` indicating which stage failed.
+File storage: `uploads/documents/{orgId}/{kbId}/{docId}.ext`
+Text extraction uses **Pandoc** (not pdf-parse).
+
+## challenges/ (Knowledge Base linking)
+
+Challenge-to-KB association via M2M table `challengeKnowledgeBase`.
+
+### Available Routes
+```
+POST   /v1/challenges/:id/knowledge-bases/link     - Link KB to challenge
+DELETE /v1/challenges/:id/knowledge-bases/unlink    - Unlink KB from challenge
+GET    /v1/challenges/:id/knowledge-bases/list      - List KBs linked to challenge
+POST   /v1/challenges/:id/knowledge-bases/search    - Search across linked KBs
+```
+
+Note: Classroom is required to create a challenge (wizard enforces classroom selection).
 
 ## Adding a New Module
 

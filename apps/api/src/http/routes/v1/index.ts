@@ -4,6 +4,7 @@ import { statusRoutes } from "./status/index";
 import { usersRoutes } from "./users/index";
 import { challengesRoutes } from "./challenges/index";
 import { workSessionsRoutes } from "./work-sessions/index";
+import { knowledgeBasesRoutes } from "./knowledge-bases";
 import { classroomsRoutes } from "./classrooms/index";
 import { organizationsRoutes } from "./organizations/index";
 import { chatRoutes } from "./chat/index";
@@ -16,6 +17,7 @@ const routes = [
   classroomsRoutes,
   organizationsRoutes,
   workSessionsRoutes,
+  knowledgeBasesRoutes,
   chatRoutes,
 ] as const;
 

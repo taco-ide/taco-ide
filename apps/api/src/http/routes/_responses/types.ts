@@ -38,6 +38,7 @@ export const ResponseSchema401 = BaseErrorResponseSchema;
 export const ResponseSchema403 = BaseErrorResponseSchema;
 export const ResponseSchema404 = BaseErrorResponseSchema;
 export const ResponseSchema409 = BaseErrorResponseSchema;
+export const ResponseSchema413 = BaseErrorResponseSchema;
 export const ResponseSchema500 = BaseErrorResponseSchema;
 export const ResponseSchema503 = BaseErrorResponseSchema;
 

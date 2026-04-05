@@ -1,9 +1,7 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { env } from "@repo/infra/env";
-import { db } from "@repo/infra/db";
-import { knowledgeBase } from "@repo/infra/db/schema";
-import { ilike } from "drizzle-orm";
+import { searchChallengeKnowledgeBases } from "../../services/knowledge-base-search";
 
 export const runCode = tool(
   async ({ code, stdin }) => {
@@ -61,15 +59,25 @@ export const getChallengeInfo = tool(
 );
 
 export const searchKnowledgeBase = tool(
-  async ({ query }) => {
-    const rows = await db
-      .select({ id: knowledgeBase.id, content: knowledgeBase.content })
-      .from(knowledgeBase)
-      .where(ilike(knowledgeBase.content, `%${query}%`))
-      .limit(5);
+  async ({ query }, config) => {
+    const challengeId = config.configurable?.challengeId as string | undefined;
+    if (!challengeId) {
+      return JSON.stringify({ results: [] });
+    }
+
+    const results = await searchChallengeKnowledgeBases({
+      challengeId,
+      query,
+      limit: 5,
+    });
 
     return JSON.stringify({
-      results: rows.map((r) => ({ id: r.id, content: r.content })),
+      results: results.map((r) => ({
+        content: r.content,
+        similarity: r.similarity,
+        source: r.metadata?.documentFilename ?? "manual entry",
+        hierarchy: r.metadata?.titleHierarchy ?? [],
+      })),
     });
   },
   {

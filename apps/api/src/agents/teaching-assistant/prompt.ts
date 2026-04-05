@@ -4,6 +4,7 @@ interface TeachingAssistantPromptContext {
   challengeTitle: string;
   challengeDescription: string;
   supportMaterials: string;
+  kbContext?: string;
   currentCode: string;
   stdout: string;
 }
@@ -19,6 +20,7 @@ students learn Python by guiding them through challenges using the Socratic meth
 - Challenge Title: ${context.challengeTitle}
 - Challenge Description: ${context.challengeDescription}
 - Support Materials: ${context.supportMaterials}
+${context.kbContext ? `\n## Reference Material (Knowledge Base)\n\n${context.kbContext}\n` : ""}\
 - Student's Current Code: ${context.currentCode}
 - Last Execution Output: ${context.stdout}
 

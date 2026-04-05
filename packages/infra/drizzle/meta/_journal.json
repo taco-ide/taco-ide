@@ -15,6 +15,13 @@
       "when": 1771893118014,
       "tag": "0001_fluffy_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774915766210,
+      "tag": "0002_align_schema_after_kb_pgvector",
+      "breakpoints": true
     }
   ]
 }

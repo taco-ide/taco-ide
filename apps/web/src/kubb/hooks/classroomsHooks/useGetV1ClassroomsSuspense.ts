@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ClassroomsQueryResponse, GetV1ClassroomsQueryParams, GetV1Classrooms401 } from "../../../../../../packages/types/kubb/GetV1Classrooms.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ClassroomsQueryResponse, GetV1ClassroomsQueryParams, GetV1Classrooms401 } from "../../../../../../packages/types/kubb/GetV1Classrooms.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ClassroomsSuspenseQueryKey = (params?: GetV1ClassroomsQueryParams) => [{ url: '/v1/classrooms/' }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1ClassroomsSuspenseQueryKey = (params?: GetV1ClassroomsQueryPar
 export type GetV1ClassroomsSuspenseQueryKey = ReturnType<typeof getV1ClassroomsSuspenseQueryKey>
 
 /**
- * @description List classrooms. scope=mine: user's enrolled; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */
@@ -38,7 +38,7 @@ export function getV1ClassroomsSuspenseQueryOptions(params?: GetV1ClassroomsQuer
 }
 
 /**
- * @description List classrooms. scope=mine: user's enrolled; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -22,6 +22,7 @@ import {
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
+import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
 
 // ==================== SCHEMAS ====================
 
@@ -152,7 +153,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           supportMaterials: challenge.supportMaterials,
         })
         .from(challenge)
-        .where(eq(challenge.id, session.challengeId))
+        .where(and(eq(challenge.id, session.challengeId), isNull(challenge.deletedAt)))
         .limit(1);
 
       const [solution] = await db
@@ -173,12 +174,41 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const code = bodyCode ?? solution?.code ?? null;
       const stdout = bodyStdout ?? solution?.stdout ?? null;
 
+      // RAG: Search challenge knowledge bases for relevant context
+      let kbContext = "";
+      try {
+        const kbResults = await searchChallengeKnowledgeBases({
+          challengeId: session.challengeId,
+          query: message,
+          limit: 5,
+        });
+
+        if (kbResults.length > 0) {
+          const formattedChunks = kbResults.map((result) => {
+            const hierarchy = result.metadata?.titleHierarchy ?? [];
+            const source = result.metadata?.documentFilename ?? "manual entry";
+            const header =
+              hierarchy.length > 0
+                ? `[${hierarchy.join(" > ")}] (fonte: ${source})`
+                : `(fonte: ${source})`;
+            return `${header}\n${result.content}`;
+          });
+          kbContext = formattedChunks.join("\n\n---\n\n");
+        }
+      } catch (err) {
+        request.server.log.warn(
+          { err },
+          "KB search failed during chat, proceeding without RAG"
+        );
+      }
+
       const systemPrompt = buildTeachingAssistantPrompt({
         systemPrompt: ta.systemPrompt,
         targetAudience: ta.targetAudience ?? "",
         challengeTitle: ch?.title ?? "",
         challengeDescription: ch?.description ?? "",
         supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
+        kbContext: kbContext || undefined,
         currentCode: code ?? "",
         stdout: stdout ?? "",
       });
@@ -201,6 +231,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           {
             configurable: {
               thread_id: workSessionId,
+              challengeId: session.challengeId,
               challengeContext,
               ...modelParams,
             },

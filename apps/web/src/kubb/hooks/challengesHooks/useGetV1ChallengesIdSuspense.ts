@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ChallengesIdQueryResponse, GetV1ChallengesIdPathParams, GetV1ChallengesId401, GetV1ChallengesId404 } from "../../../../../../packages/types/kubb/GetV1ChallengesId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesIdQueryResponse, GetV1ChallengesIdPathParams, GetV1ChallengesId401, GetV1ChallengesId404 } from "../../../../../../packages/types/kubb/GetV1ChallengesId.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesIdSuspenseQueryKey = (id: GetV1ChallengesIdPathParams["id"]) => [{ url: '/v1/challenges/:id', params: {id:id} }] as const

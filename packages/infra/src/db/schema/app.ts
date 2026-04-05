@@ -8,8 +8,31 @@ import {
   varchar,
   primaryKey,
   uniqueIndex,
+  index,
+  customType,
 } from "drizzle-orm/pg-core";
 import { user, organization } from "./auth";
+
+// ==================== CUSTOM TYPES ====================
+
+const vector = customType<{
+  data: number[];
+  driverData: string;
+  config: { dimensions: number };
+}>({
+  dataType(config) {
+    return `vector(${config?.dimensions ?? 1536})`;
+  },
+  fromDriver(value) {
+    return value
+      .slice(1, -1)
+      .split(",")
+      .map(Number);
+  },
+  toDriver(value) {
+    return `[${value.join(",")}]`;
+  },
+});
 
 // ==================== CLASSROOMS ====================
 
@@ -210,18 +233,95 @@ export const challengeSolution = pgTable(
   ]
 );
 
-// ==================== KNOWLEDGE BASE (RAG Context) ====================
+// ==================== KNOWLEDGE BASE (Container) ====================
 
 export const knowledgeBase = pgTable("knowledge_base", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id").references(() => organization.id),
-  classroomId: text("classroom_id").references(() => classroom.id),
-  challengeId: text("challenge_id").references(() => challenge.id),
-  content: text("content").notNull(),
-  // embedding column omitted - requires pgvector extension
+  title: text("title").notNull(),
+  description: text("description"),
+  classroomId: text("classroom_id")
+    .notNull()
+    .references(() => classroom.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  createdByUserId: text("created_by_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
 });
+
+// ==================== KNOWLEDGE BASE DOCUMENTS ====================
+
+export const knowledgeBaseDocument = pgTable("knowledge_base_document", {
+  id: text("id").primaryKey(),
+  knowledgeBaseId: text("knowledge_base_id")
+    .notNull()
+    .references(() => knowledgeBase.id, { onDelete: "cascade" }),
+  filename: text("filename").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  chunkCount: integer("chunk_count").notNull().default(0),
+  status: varchar("status", { length: 20 }).notNull().default("uploading"),
+  errorMessage: text("error_message"),
+  errorStage: varchar("error_stage", { length: 20 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+// ==================== KNOWLEDGE BASE CHUNKS (RAG Context) ====================
+
+export const knowledgeBaseChunk = pgTable(
+  "knowledge_base_chunk",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id").references(
+      () => knowledgeBaseDocument.id,
+      { onDelete: "cascade" }
+    ),
+    knowledgeBaseId: text("knowledge_base_id").references(
+      () => knowledgeBase.id,
+      { onDelete: "cascade" }
+    ),
+    chunkIndex: integer("chunk_index"),
+    content: text("content").notNull(),
+    embedding: vector("embedding", { dimensions: 1536 }),
+    metadata: jsonb("metadata").$type<{
+      titleHierarchy?: string[];
+      documentFilename?: string;
+    }>(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (table) => [
+    index("kb_embedding_idx")
+      .using("hnsw", table.embedding.op("vector_cosine_ops")),
+  ]
+);
+
+// ==================== CHALLENGE <-> KNOWLEDGE BASE (M2M) ====================
+
+export const challengeKnowledgeBase = pgTable(
+  "challenge_knowledge_base",
+  {
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenge.id, { onDelete: "cascade" }),
+    knowledgeBaseId: text("knowledge_base_id")
+      .notNull()
+      .references(() => knowledgeBase.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.challengeId, table.knowledgeBaseId],
+    }),
+  ]
+);
 
 // ==================== CONVERSATION REPLAYS (TA A/B Testing) ====================
 
@@ -280,5 +380,11 @@ export type UserInteractionOnChallenge =
   typeof userInteractionOnChallenge.$inferSelect;
 export type ChallengeSolution = typeof challengeSolution.$inferSelect;
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type NewKnowledgeBase = typeof knowledgeBase.$inferInsert;
+export type KnowledgeBaseChunk = typeof knowledgeBaseChunk.$inferSelect;
+export type NewKnowledgeBaseChunk = typeof knowledgeBaseChunk.$inferInsert;
+export type KnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferSelect;
+export type NewKnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferInsert;
+export type ChallengeKnowledgeBase = typeof challengeKnowledgeBase.$inferSelect;
 export type ConversationReplay = typeof conversationReplay.$inferSelect;
 export type ReplayInteraction = typeof replayInteraction.$inferSelect;

@@ -13,7 +13,7 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url(),
 
   // Frontend URL for redirects
-  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+  FRONTEND_URL: z.string().url().default("http://localhost:4001"),
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
@@ -24,6 +24,13 @@ const envSchema = z.object({
 
   // OpenRouter (LLM)
   OPENROUTER_API_KEY: z.string().optional(),
+
+  // Embedding
+  EMBEDDING_PROVIDER: z.enum(["openai", "azure"]).optional(),
+  EMBEDDING_API_URL: z.string().url().optional(),
+  EMBEDDING_API_KEY: z.string().optional(),
+  EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
+  EMBEDDING_DIMENSIONS: z.coerce.number().default(1536),
 
   // LLM (AI Agents - LangGraph.js)
   LLM_API_BASE: z
@@ -38,7 +45,7 @@ const envSchema = z.object({
     .default("https://emkc.org/api/v2/piston/execute"),
 
   // Server
-  PORT: z.coerce.number().default(3344),
+  PORT: z.coerce.number().default(4000),
 });
 
 const parsed = envSchema.safeParse(process.env);

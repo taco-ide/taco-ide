@@ -41,7 +41,7 @@ export async function createChatCompletion(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
-      "HTTP-Referer": process.env.BETTER_AUTH_URL || "http://localhost:3344",
+      "HTTP-Referer": process.env.BETTER_AUTH_URL || "http://localhost:4000",
     },
     body: JSON.stringify({
       model,

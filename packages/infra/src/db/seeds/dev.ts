@@ -1,12 +1,16 @@
 /**
- * Seed de desenvolvimento: organização, turmas, usuários (RBAC), desafios e TA.
- * Senha padrão para todas as contas de teste: Teste123!@
+ * Seed de desenvolvimento: base + dados FAKE para dev.
+ * - Organizacao demo, usuarios teste (RBAC), turmas, challenges
+ * - Senha padrao para todas as contas: Teste123!@
  *
- * Rode: cd packages/infra && npm run db:seed
+ * Rode: cd packages/infra && npm run db:seed:dev
  */
-import { hashPassword } from "better-auth/crypto";
+if (process.env.NODE_ENV === "production") {
+  throw new Error("dev seed cannot run in production");
+}
+
 import { eq } from "drizzle-orm";
-import { db } from "./index";
+import { db } from "../index";
 import {
   user,
   account,
@@ -14,13 +18,13 @@ import {
   member,
   classroom,
   userClassroom,
-  model,
-  teachingAssistant,
   challenge,
   challengeTeachingAssistant,
-} from "./schema";
+} from "../schema";
+import { hashPassword } from "better-auth/crypto";
+import { seedBase, safeInsert, SEED_TA_ID } from "./base";
 
-// --- IDs fixos (reprodutíveis) ---
+// --- IDs fixos (reprodutiveis) ---
 const SEED_ORG_ID = "11111111-1111-1111-1111-111111111111";
 const SEED_CLASSROOM_ALG = "22222222-2222-2222-2222-222222222201";
 const SEED_CLASSROOM_ED = "22222222-2222-2222-2222-222222222202";
@@ -37,10 +41,7 @@ const SEED_MEMBER_TEACHER = "55555555-5555-5555-5555-555555550001";
 const SEED_MEMBER_STUDENT = "55555555-5555-5555-5555-555555550002";
 const SEED_MEMBER_COORD = "55555555-5555-5555-5555-555555550003";
 
-const SEED_MODEL_ID = "00000000-0000-0000-0000-000000000001";
-const SEED_TA_ID = "00000000-0000-0000-0000-000000000002";
-
-/** Públicos (sem turma) — aparecem em scope=public */
+/** Publicos (sem turma) -- aparecem em scope=public */
 const SEED_CHALLENGE_PUBLIC = [
   "00000000-0000-0000-0000-000000000011",
   "00000000-0000-0000-0000-000000000012",
@@ -60,31 +61,16 @@ const SEED_CHALLENGE_CLASS_B = [
 
 const DEV_PASSWORD = "Teste123!@";
 
-async function safeInsert<T>(label: string, fn: () => Promise<T>) {
-  try {
-    await fn();
-  } catch (e) {
-    console.warn(`  [skip] ${label}:`, e instanceof Error ? e.message : e);
-  }
-}
-
 async function seed() {
-  console.log("Seeding database (org, RBAC users, classrooms, challenges)...\n");
+  console.log("[dev] Seeding development data (org, users, classrooms, challenges)...\n");
 
-  // Better Auth usa scrypt (formato salt:hex), não bcrypt
+  // --- 1. Base: dados estruturais (model + TA) ---
+  await seedBase({ organizationId: SEED_ORG_ID });
+
+  // Better Auth usa scrypt (formato salt:hex), nao bcrypt
   const passwordHash = await hashPassword(DEV_PASSWORD);
 
-  // --- Model + TA (base para desafios) ---
-  await safeInsert("model", () =>
-    db.insert(model).values({
-      id: SEED_MODEL_ID,
-      version: "1.0",
-      name: "gpt-4o-mini",
-      description: "OpenAI GPT-4o Mini for coding assistance",
-    })
-  );
-
-  // --- Organização (antes do TA que referencia org) ---
+  // --- 2. Organizacao demo ---
   await safeInsert("organization", () =>
     db.insert(organization).values({
       id: SEED_ORG_ID,
@@ -94,22 +80,7 @@ async function seed() {
     })
   );
 
-  await safeInsert("teachingAssistant", () =>
-    db.insert(teachingAssistant).values({
-      id: SEED_TA_ID,
-      alias: "TACO Assistant",
-      version: 1,
-      modelId: SEED_MODEL_ID,
-      systemPrompt:
-        "You are a helpful programming tutor. Guide students to find solutions without giving away the answer directly. Use the Socratic method.",
-      description: "Default teaching assistant for TACO-IDE",
-      targetAudience: "beginner",
-      isActive: true,
-      createdByOrganizationId: SEED_ORG_ID,
-    })
-  );
-
-  // --- Usuários (email verificado em dev para login direto) ---
+  // --- 3. Usuarios teste (email verificado para login direto) ---
   await safeInsert("user teacher", () =>
     db.insert(user).values({
       id: SEED_USER_TEACHER,
@@ -140,7 +111,7 @@ async function seed() {
     })
   );
 
-  // --- Contas email/senha (Better Auth: provider credential, accountId = email) ---
+  // --- 4. Contas email/senha (Better Auth: provider credential) ---
   const credential = "credential";
   await safeInsert("account teacher", () =>
     db.insert(account).values({
@@ -184,7 +155,7 @@ async function seed() {
     }
   }
 
-  // --- Membros na org (RBAC: teacher / student / coordinator) ---
+  // --- 5. Membros na org (RBAC: teacher / student / coordinator) ---
   await safeInsert("member teacher", () =>
     db.insert(member).values({
       id: SEED_MEMBER_TEACHER,
@@ -212,13 +183,13 @@ async function seed() {
     })
   );
 
-  // --- Turmas ---
+  // --- 6. Turmas ---
   await safeInsert("classroom Algoritmos I", () =>
     db.insert(classroom).values({
       id: SEED_CLASSROOM_ALG,
       organizationId: SEED_ORG_ID,
       title: "Algoritmos I",
-      description: "Turma seed — ordenação, busca e noções de complexidade.",
+      description: "Turma seed -- ordenacao, busca e nocoes de complexidade.",
     })
   );
 
@@ -227,25 +198,26 @@ async function seed() {
       id: SEED_CLASSROOM_ED,
       organizationId: SEED_ORG_ID,
       title: "Estruturas de Dados",
-      description: "Turma seed — listas, pilhas, filas e grafos.",
+      description: "Turma seed -- listas, pilhas, filas e grafos.",
     })
   );
 
-  // --- Matrícula do aluno nas duas turmas ---
-  await safeInsert("userClassroom aluno → Algoritmos", () =>
+  // --- 7. Matricula do aluno nas duas turmas ---
+  await safeInsert("userClassroom aluno -> Algoritmos", () =>
     db.insert(userClassroom).values({
       userId: SEED_USER_STUDENT,
       classroomId: SEED_CLASSROOM_ALG,
     })
   );
 
-  await safeInsert("userClassroom aluno → ED", () =>
+  await safeInsert("userClassroom aluno -> ED", () =>
     db.insert(userClassroom).values({
       userId: SEED_USER_STUDENT,
       classroomId: SEED_CLASSROOM_ED,
     })
   );
 
+  // --- 8. Challenges ---
   type ChDef = {
     id: string;
     title: string;
@@ -258,7 +230,7 @@ async function seed() {
   const challenges: ChDef[] = [
     {
       id: SEED_CHALLENGE_PUBLIC[0]!,
-      title: "Ordenação simples",
+      title: "Ordenacao simples",
       description: "Ordene uma lista de inteiros com o algoritmo que preferir.",
       difficulty: "easy",
       tags: ["Sorting", "Algorithms"],
@@ -275,7 +247,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_A[0]!,
       title: "Binary Search",
-      description: "Implemente busca binária em array ordenado.",
+      description: "Implemente busca binaria em array ordenado.",
       difficulty: "medium",
       tags: ["Search", "Algorithms"],
       classroomId: SEED_CLASSROOM_ALG,
@@ -291,7 +263,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_A[2]!,
       title: "Traveling Salesman (intro)",
-      description: "Modelagem introdutória do TSP.",
+      description: "Modelagem introdutoria do TSP.",
       difficulty: "hard",
       tags: ["Graphs", "Optimization"],
       classroomId: SEED_CLASSROOM_ALG,
@@ -315,7 +287,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_B[2]!,
       title: "Knapsack 0/1",
-      description: "Problema da mochila com programação dinâmica.",
+      description: "Problema da mochila com programacao dinamica.",
       difficulty: "hard",
       tags: ["Dynamic Programming", "Optimization"],
       classroomId: SEED_CLASSROOM_ED,
@@ -345,15 +317,15 @@ async function seed() {
   console.log("  Professor (teacher):   professor@taco-demo.local");
   console.log("  Aluno (student):       aluno@taco-demo.local");
   console.log("  Coordenador:           coordenador@taco-demo.local");
-  console.log("\nOrganização: TACO Demo (slug: taco-demo)");
+  console.log("\nOrganizacao: TACO Demo (slug: taco-demo)");
   console.log(
-    "Após login, defina a org ativa no client Better Auth (organization.switch) se necessário.\n"
+    "Apos login, defina a org ativa no client Better Auth (organization.switch) se necessario.\n"
   );
-  console.log("Seed concluído.");
+  console.log("[dev] Seed concluido.");
   process.exit(0);
 }
 
 seed().catch((error) => {
-  console.error("Seed failed:", error);
+  console.error("Dev seed failed:", error);
   process.exit(1);
 });

@@ -35,6 +35,7 @@ taco-ide/
 - Node.js 18+
 - Docker & Docker Compose
 - npm 11+
+- Pandoc (`brew install pandoc`) - required for document processing in Knowledge Base
 
 ### Initial Setup
 
@@ -148,6 +149,18 @@ When API routes change:
 4. Register module in `apps/api/src/http/routes/v1/index.ts`
 5. Run `npm run kubb` to generate client code
 
+### Knowledge Base Architecture
+
+Knowledge Base is a **container entity** linked to a classroom (not directly to challenges):
+
+- `knowledgeBase` is the container, owned by a classroom and a user (`createdByUserId`)
+- `knowledgeBaseChunk` stores text chunks with pgvector embeddings for semantic search
+- `document` tracks uploaded files with staged processing: `uploading|converting|chunking|embedding|ready|error` (+ `errorStage`)
+- Challenges link to knowledge bases via M2M table `challengeKnowledgeBase`
+- File storage path: `uploads/documents/{orgId}/{kbId}/{docId}.ext`
+- Document processing uses **Pandoc** (not pdf-parse) for text extraction
+- Classroom is required to create a challenge (wizard enforces classroom selection)
+
 ### Authentication Flow
 
 - Better Auth handles all auth via `@repo/infra/auth`
@@ -187,6 +200,7 @@ Changes to `packages/infra` require rebuilding consuming apps.
 - Shared types: `packages/types/kubb/` (generated)
 - Auth config: `packages/infra/src/auth/`
 - Environment validation: `packages/infra/src/env.ts`
+- File uploads: `apps/api/uploads/documents/{orgId}/{kbId}/{docId}.ext`
 
 ## Documentation Structure
 

@@ -6,6 +6,7 @@ import {
   ZodTypeProvider,
 } from "fastify-type-provider-zod";
 import fastifyCookie from "@fastify/cookie";
+import fastifyMultipart from "@fastify/multipart";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
@@ -49,6 +50,13 @@ app.register(fastifyCors, {
 });
 
 app.register(fastifyCookie);
+
+app.register(fastifyMultipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+    files: 1,
+  },
+});
 
 // Global authentication hook
 app.addHook("onRequest", async (request, reply) => {

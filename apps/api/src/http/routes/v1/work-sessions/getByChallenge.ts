@@ -7,7 +7,7 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { workSession } from "@repo/infra/db/schema";
+import { workSession, challenge } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -60,6 +60,19 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
       }
 
       const { challengeId } = request.query;
+
+      const [ch] = await db
+        .select({ id: challenge.id })
+        .from(challenge)
+        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
+        .limit(1);
+
+      if (!ch) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Challenge not found",
+        });
+      }
 
       const [session] = await db
         .select()

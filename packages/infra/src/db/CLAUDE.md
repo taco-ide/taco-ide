@@ -29,7 +29,7 @@ Contains all database table definitions.
 schema/
 ├── index.ts    # Exports all schemas
 ├── auth.ts     # Better Auth tables (user, session, account, verification)
-└── app.ts      # Application tables (role)
+└── app.ts      # Application tables (role, knowledgeBase, document, knowledgeBaseChunk, challengeKnowledgeBase, etc.)
 ```
 
 ## Database Tables
@@ -78,6 +78,40 @@ Required by Better Auth:
 - `name` - Role name (unique)
 
 Seeded roles: "Teacher", "Student"
+
+### Knowledge Base Tables (app.ts)
+
+**knowledgeBase** (container entity, linked to classroom)
+- `id` - UUID primary key
+- `name` - Display name
+- `description` - Optional description
+- `classroomId` - Foreign key to classroom (required)
+- `organizationId` - Foreign key to organization
+- `createdByUserId` - Foreign key to user who created it
+- `createdAt`, `updatedAt` - Timestamps
+
+**document** (uploaded file with staged processing)
+- `id` - UUID primary key
+- `knowledgeBaseId` - Foreign key to knowledgeBase
+- `organizationId` - Foreign key to organization
+- `fileName`, `fileType`, `fileSize` - File metadata
+- `status` - Processing stage: `uploading|converting|chunking|embedding|ready|error`
+- `errorStage` - Which stage failed (null if no error)
+- `createdAt`, `updatedAt` - Timestamps
+
+**knowledgeBaseChunk** (text chunks with embeddings)
+- `id` - UUID primary key
+- `knowledgeBaseId` - Foreign key to knowledgeBase
+- `documentId` - Foreign key to document
+- `content` - Text content of the chunk
+- `embedding` - pgvector embedding for semantic search
+- `metadata` - JSONB metadata
+- `createdAt` - Timestamp
+
+**challengeKnowledgeBase** (M2M join table)
+- `challengeId` - Foreign key to challenge
+- `knowledgeBaseId` - Foreign key to knowledgeBase
+- Composite primary key on both columns
 
 ## Type Safety
 
@@ -148,6 +182,16 @@ userRelations: user -> role (one-to-one)
 
 // Role has many users
 roleRelations: role -> users (one-to-many)
+
+// Knowledge Base relations
+knowledgeBase -> classroom (many-to-one)
+knowledgeBase -> user via createdByUserId (many-to-one)
+knowledgeBase -> documents (one-to-many)
+knowledgeBase -> knowledgeBaseChunks (one-to-many)
+knowledgeBase -> challenges via challengeKnowledgeBase (many-to-many)
+
+// Challenge <-> Knowledge Base (M2M via challengeKnowledgeBase)
+challenge -> knowledgeBases via challengeKnowledgeBase (many-to-many)
 ```
 
 Query with relations:
