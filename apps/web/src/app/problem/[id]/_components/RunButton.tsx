@@ -7,7 +7,7 @@ import { Loader2, Play } from "lucide-react";
 
 function RunButton() {
   const { runCode, isRunning, getInput } = useCodeEditorStore();
-  const { addInteraction, saveSolution } = useProblem();
+  const { addInteraction, saveSolution, isSessionEnded } = useProblem();
 
   const handleRun = async () => {
     await runCode();
@@ -30,7 +30,7 @@ function RunButton() {
   return (
     <motion.button
       onClick={handleRun}
-      disabled={isRunning}
+      disabled={isRunning || isSessionEnded}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={`

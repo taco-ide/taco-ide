@@ -79,21 +79,7 @@ console.log('Sum of numbers:', math.sum());`,
     logoPath: "/python.png",
     pistonRuntime: { language: "python", version: "3.10.0" },
     monacoLanguage: "python",
-    defaultCode: `# Python Playground
-numbers = [1, 2, 3, 4, 5]
-
-# Map numbers to their squares
-squares = [n ** 2 for n in numbers]
-print(f"Original numbers: {numbers}")
-print(f"Squared numbers: {squares}")
-
-# Filter for even numbers
-even_numbers = [n for n in numbers if n % 2 == 0]
-print(f"Even numbers: {even_numbers}")
-
-# Calculate sum
-numbers_sum = sum(numbers)
-print(f"Sum of numbers: {numbers_sum}")`,
+    defaultCode: `#Write your solution here!`,
   },
   java: {
     id: "java",
@@ -335,6 +321,17 @@ let sum = numbers.reduce(0, +)
 print("Sum of numbers: \\(sum)")`,
   },
 };
+
+/** Soluções antigas (multi-linguagem / templates longos) — não usar como fonte no editor só Python. */
+export function isLegacyEditorTemplate(code: string | null | undefined): boolean {
+  if (!code?.trim()) return false;
+  const t = code.replace(/^\uFEFF/, "").trim();
+  // `includes`: API/localStorage podem ter BOM, newline inicial, ou texto gravado na chave errada.
+  if (t.includes("// JavaScript Playground")) return true;
+  if (t.includes("// TypeScript Playground")) return true;
+  if (t.includes("# Python Playground")) return true;
+  return false;
+}
 
 export const THEMES: Theme[] = [
   { id: "vs-dark", label: "VS Dark", color: "#1e1e1e" },

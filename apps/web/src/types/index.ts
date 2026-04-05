@@ -55,4 +55,6 @@ export interface CodeEditorState {
   setTheme: (theme: string) => void;
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
+  /** Clears per-language code cache, stdin, output; resets editor to default template. */
+  clearProblemSessionStorage: () => void;
 }

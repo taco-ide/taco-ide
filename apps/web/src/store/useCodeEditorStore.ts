@@ -1,13 +1,16 @@
 import { CodeEditorState } from "../types/index";
 import { create } from "zustand";
 import type { editor as MonacoEditor } from "monaco-editor";
-import { LANGUAGE_CONFIG } from "@/app/problem/[id]/_constants";
+import {
+  isLegacyEditorTemplate,
+  LANGUAGE_CONFIG,
+} from "@/app/problem/[id]/_constants";
 
 const getInitialState = () => {
   // if we're on the server, return default values
   if (typeof window === "undefined") {
     return {
-      language: "javascript",
+      language: "python",
       fontSize: 16,
       theme: "vs-dark",
       input: "",
@@ -15,7 +18,10 @@ const getInitialState = () => {
   }
 
   // if we're on the client, return values from local storage bc localStorage is a browser API.
-  const savedLanguage = localStorage.getItem("editor-language") || "javascript";
+  if (localStorage.getItem("editor-language") !== "python") {
+    localStorage.setItem("editor-language", "python");
+  }
+  const savedLanguage = "python";
   const savedTheme = localStorage.getItem("editor-theme") || "vs-dark";
   const savedFontSize = localStorage.getItem("editor-font-size") || 16;
   const savedInput = localStorage.getItem("editor-input") || "";
@@ -49,8 +55,12 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
 
     setEditor: (editor: MonacoEditor.IStandaloneCodeEditor) => {
-      // TODO: Save code based on the problem on the database
-      const savedCode = localStorage.getItem(`editor-code-${get().language}`);
+      // Editor do desafio é só Python — chave fixa (evita restos de `editor-language` antigo).
+      let savedCode = localStorage.getItem("editor-code-python");
+      if (savedCode && isLegacyEditorTemplate(savedCode)) {
+        localStorage.removeItem("editor-code-python");
+        savedCode = null;
+      }
       if (savedCode) editor.setValue(savedCode);
 
       set({ editor });
@@ -83,7 +93,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
 
     runCode: async () => {
-      const { language, getCode, getInput } = get();
+      const { getCode, getInput } = get();
       const code = getCode();
       const stdin = getInput();
 
@@ -95,7 +105,7 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       set({ isRunning: true, error: null, output: "" });
 
       try {
-        const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
+        const runtime = LANGUAGE_CONFIG.python.pistonRuntime;
         // TODO: update this to use our own API in the future
         const response = await fetch("https://emkc.org/api/v2/piston/execute", {
           method: "POST",
@@ -171,6 +181,22 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       } finally {
         set({ isRunning: false });
       }
+    },
+
+    clearProblemSessionStorage: () => {
+      if (typeof window === "undefined") return;
+      for (const key of Object.keys(LANGUAGE_CONFIG)) {
+        localStorage.removeItem(`editor-code-${key}`);
+      }
+      localStorage.setItem("editor-input", "");
+      const defaultCode = LANGUAGE_CONFIG.python.defaultCode;
+      get().editor?.setValue(defaultCode);
+      set({
+        input: "",
+        output: "",
+        error: null,
+        executionResult: null,
+      });
     },
   };
 });

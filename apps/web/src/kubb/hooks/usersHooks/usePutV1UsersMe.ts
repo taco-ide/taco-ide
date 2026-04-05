@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1UsersMeMutationRequest, PutV1UsersMeMutationResponse, PutV1UsersMe400, PutV1UsersMe401 } from "../../../../../../packages/types/kubb/PutV1UsersMe.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PutV1UsersMeMutationRequest, PutV1UsersMeMutationResponse, PutV1UsersMe400, PutV1UsersMe401 } from "../../../../../../packages/types/kubb/PutV1UsersMe.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1UsersMeMutationKey = () => [{ url: '/v1/users/me' }] as const

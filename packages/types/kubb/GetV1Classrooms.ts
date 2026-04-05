@@ -103,6 +103,32 @@ export type GetV1Classrooms200 = {
     };
 };
 
+export const getV1Classrooms400SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1Classrooms400SuccessEnum = (typeof getV1Classrooms400SuccessEnum)[keyof typeof getV1Classrooms400SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1Classrooms400 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1Classrooms400SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const getV1Classrooms401SuccessEnum = {
     "false": false
 } as const;
@@ -134,5 +160,5 @@ export type GetV1ClassroomsQueryResponse = GetV1Classrooms200;
 export type GetV1ClassroomsQuery = {
     Response: GetV1Classrooms200;
     QueryParams: GetV1ClassroomsQueryParams;
-    Errors: GetV1Classrooms401;
+    Errors: GetV1Classrooms400 | GetV1Classrooms401;
 };

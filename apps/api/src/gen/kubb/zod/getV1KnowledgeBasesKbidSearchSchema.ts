@@ -24,6 +24,10 @@ export const getV1KnowledgeBasesKbidSearch200Schema = z.object({
     "id": z.string(),
 "content": z.string(),
 "similarity": z.number(),
+"metadata": z.object({
+    "titleHierarchy": z.array(z.string()).optional(),
+"documentFilename": z.string().optional()
+    }).nullable(),
 "chunkIndex": z.number().nullable(),
 "documentId": z.string().nullable(),
 "createdAt": z.string()

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditorPanel from "./_components/EditorPanel";
@@ -43,9 +43,45 @@ function ProblemPageContent() {
   );
 }
 
+const PROBLEM_TAB_KEY = "problem-main-tab";
+type ProblemMainTab = "problem" | "io" | "chat";
+
 function ProblemPageInner() {
   const router = useRouter();
-  const { isLoading, error } = useProblem();
+  const { challengeId, isLoading, error } = useProblem();
+  const [mainTab, setMainTab] = useState<ProblemMainTab>(() => {
+    if (typeof window === "undefined" || !challengeId) return "problem";
+    try {
+      const raw = sessionStorage.getItem(`${PROBLEM_TAB_KEY}:${challengeId}`);
+      if (raw === "problem" || raw === "io" || raw === "chat") return raw;
+    } catch {
+      /* ignore */
+    }
+    return "problem";
+  });
+
+  useEffect(() => {
+    if (!challengeId) return;
+    try {
+      const raw = sessionStorage.getItem(`${PROBLEM_TAB_KEY}:${challengeId}`);
+      if (raw === "problem" || raw === "io" || raw === "chat") {
+        setMainTab(raw);
+      } else {
+        setMainTab("problem");
+      }
+    } catch {
+      setMainTab("problem");
+    }
+  }, [challengeId]);
+
+  useEffect(() => {
+    if (!challengeId) return;
+    try {
+      sessionStorage.setItem(`${PROBLEM_TAB_KEY}:${challengeId}`, mainTab);
+    } catch {
+      /* ignore */
+    }
+  }, [challengeId, mainTab]);
 
   if (error) {
     return (
@@ -78,7 +114,13 @@ function ProblemPageInner() {
           {/* Painel esquerdo: descrição, output, input, chat */}
           <ResizablePanel defaultSize={45} minSize={30} className="min-w-0">
             <div className="h-full flex flex-col min-h-0 rounded-lg border border-zinc-800/60 bg-zinc-900/40 overflow-hidden">
-              <Tabs defaultValue="problem" className="h-full flex flex-col min-h-0">
+              <Tabs
+                value={mainTab}
+                onValueChange={(v) =>
+                  setMainTab(v as ProblemMainTab)
+                }
+                className="h-full flex flex-col min-h-0"
+              >
                 <TabsList className="shrink-0 h-11 px-1 gap-0.5 bg-transparent border-b border-zinc-800/60 rounded-none">
                   <TabsTrigger
                     value="problem"

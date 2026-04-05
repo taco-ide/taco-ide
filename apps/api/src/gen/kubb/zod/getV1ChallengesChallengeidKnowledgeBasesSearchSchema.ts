@@ -24,6 +24,10 @@ export const getV1ChallengesChallengeidKnowledgeBasesSearch200Schema = z.object(
     "chunkId": z.string(),
 "content": z.string(),
 "similarity": z.number(),
+"metadata": z.object({
+    "titleHierarchy": z.array(z.string()).optional(),
+"documentFilename": z.string().optional()
+    }).nullable(),
 "knowledgeBaseId": z.string(),
 "knowledgeBaseTitle": z.string(),
 "documentId": z.string().nullable(),

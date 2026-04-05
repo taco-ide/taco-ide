@@ -1,5 +1,6 @@
 "use client";
 
+import { useProblem } from "@/contexts/ProblemContext";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import {
   AlertTriangle,
@@ -89,6 +90,7 @@ function OutputSection() {
 }
 
 function InputSection() {
+  const { isSessionEnded } = useProblem();
   const { input, setInput } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
 
@@ -129,7 +131,8 @@ function InputSection() {
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="h-full min-h-[80px] w-full rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all"
+          disabled={isSessionEnded}
+          className="h-full min-h-[80px] w-full rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="Digite o input aqui..."
         />
       </div>

@@ -12,6 +12,7 @@ import {
   workSession,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
+import { hasMinimumRole } from "@repo/infra/auth";
 
 // ==================== SCHEMAS ====================
 
@@ -88,7 +89,11 @@ export async function getWorkSessionByIdRoute(app: FastifyTypedInstance) {
         });
       }
 
-      if (session.userId !== usr.id) {
+      const isOwner = session.userId === usr.id;
+      const isStaff =
+        usr.role !== null && hasMinimumRole(usr.role, "teacher");
+
+      if (!isOwner && !isStaff) {
         return reply.status(403).send({
           success: false as const,
           message: "Not authorized to access this work session",

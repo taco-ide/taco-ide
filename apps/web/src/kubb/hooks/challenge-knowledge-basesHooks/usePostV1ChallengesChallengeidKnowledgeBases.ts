@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChallengesChallengeidKnowledgeBasesMutationRequest, PostV1ChallengesChallengeidKnowledgeBasesMutationResponse, PostV1ChallengesChallengeidKnowledgeBasesPathParams, PostV1ChallengesChallengeidKnowledgeBases400, PostV1ChallengesChallengeidKnowledgeBases401, PostV1ChallengesChallengeidKnowledgeBases403, PostV1ChallengesChallengeidKnowledgeBases404, PostV1ChallengesChallengeidKnowledgeBases409 } from "../../../../../../packages/types/kubb/PostV1ChallengesChallengeidKnowledgeBases.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1ChallengesChallengeidKnowledgeBasesMutationRequest, PostV1ChallengesChallengeidKnowledgeBasesMutationResponse, PostV1ChallengesChallengeidKnowledgeBasesPathParams, PostV1ChallengesChallengeidKnowledgeBases400, PostV1ChallengesChallengeidKnowledgeBases401, PostV1ChallengesChallengeidKnowledgeBases403, PostV1ChallengesChallengeidKnowledgeBases404, PostV1ChallengesChallengeidKnowledgeBases409 } from "../../../../../../packages/types/kubb/PostV1ChallengesChallengeidKnowledgeBases.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ChallengesChallengeidKnowledgeBasesMutationKey = () => [{ url: '/v1/challenges/:challengeId/knowledge-bases/' }] as const

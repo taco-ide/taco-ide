@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChallengesMutationRequest, PostV1ChallengesMutationResponse, PostV1Challenges400, PostV1Challenges401, PostV1Challenges403, PostV1Challenges404 } from "../../../../../../packages/types/kubb/PostV1Challenges.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1ChallengesMutationRequest, PostV1ChallengesMutationResponse, PostV1Challenges400, PostV1Challenges401, PostV1Challenges403, PostV1Challenges404 } from "../../../../../../packages/types/kubb/PostV1Challenges.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ChallengesMutationKey = () => [{ url: '/v1/challenges/' }] as const

@@ -1,5 +1,31 @@
 // API client for Fastify backend - Compatible with Kubb generated hooks
+import { authClient } from "@/lib/auth";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+/** Evita vários pedidos 401 a dispararem redirecionamentos em paralelo. */
+let sessionExpiredRedirectScheduled = false;
+
+/**
+ * Sessão inválida (cookie antigo, DB reset, etc.): termina sessão no cliente e vai ao login.
+ * Não corre em rotas /auth/* para não interferir com login explícito.
+ */
+function handleUnauthorizedSession(): void {
+  if (typeof window === "undefined") return;
+  if (sessionExpiredRedirectScheduled) return;
+  const path = window.location.pathname;
+  if (path.startsWith("/auth")) return;
+
+  sessionExpiredRedirectScheduled = true;
+  void (async () => {
+    try {
+      await authClient.signOut();
+    } catch {
+      // Cookie já inválido — seguimos para o login
+    }
+    window.location.assign("/auth/login?reason=session_expired");
+  })();
+}
 
 // Types required by Kubb generated hooks
 export type RequestConfig<TData = unknown> = {
@@ -68,6 +94,9 @@ async function apiClient<TData = unknown, TError = unknown, TRequest = unknown>(
   const responseData = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorizedSession();
+    }
     throw new ApiError(
       responseData.message || "An error occurred",
       response.status,

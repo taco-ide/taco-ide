@@ -61,6 +61,19 @@ export type GetV1KnowledgeBasesKbidSearch200 = {
         */
         similarity: number;
         /**
+         * @type object
+        */
+        metadata: {
+            /**
+             * @type array | undefined
+            */
+            titleHierarchy?: string[];
+            /**
+             * @type string | undefined
+            */
+            documentFilename?: string;
+        } | null;
+        /**
          * @type number
         */
         chunkIndex: number | null;

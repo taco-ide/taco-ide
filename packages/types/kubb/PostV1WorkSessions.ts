@@ -127,15 +127,42 @@ export type PostV1WorkSessions404 = {
     };
 };
 
+export const postV1WorkSessions409SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1WorkSessions409SuccessEnum = (typeof postV1WorkSessions409SuccessEnum)[keyof typeof postV1WorkSessions409SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1WorkSessions409 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1WorkSessions409SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export type PostV1WorkSessionsMutationRequest = {
     /**
      * @type string, uuid
     */
     challengeId: string;
     /**
-     * @type string, uuid
+     * @description Optional. When omitted, server uses challenge default TA.
+     * @type string | undefined, uuid
     */
-    teachingAssistantId: string;
+    teachingAssistantId?: string;
 };
 
 export type PostV1WorkSessionsMutationResponse = PostV1WorkSessions201;
@@ -143,5 +170,5 @@ export type PostV1WorkSessionsMutationResponse = PostV1WorkSessions201;
 export type PostV1WorkSessionsMutation = {
     Response: PostV1WorkSessions201;
     Request: PostV1WorkSessionsMutationRequest;
-    Errors: PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404;
+    Errors: PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404 | PostV1WorkSessions409;
 };

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1ClassroomsIdMutationRequest, PutV1ClassroomsIdMutationResponse, PutV1ClassroomsIdPathParams, PutV1ClassroomsId401, PutV1ClassroomsId403, PutV1ClassroomsId404 } from "../../../../../../packages/types/kubb/PutV1ClassroomsId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PutV1ClassroomsIdMutationRequest, PutV1ClassroomsIdMutationResponse, PutV1ClassroomsIdPathParams, PutV1ClassroomsId401, PutV1ClassroomsId403, PutV1ClassroomsId404 } from "../../../../../../packages/types/kubb/PutV1ClassroomsId.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1ClassroomsIdMutationKey = () => [{ url: '/v1/classrooms/:id/' }] as const

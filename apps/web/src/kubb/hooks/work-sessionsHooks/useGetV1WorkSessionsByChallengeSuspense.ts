@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1WorkSessionsByChallengeSuspenseQueryKey = (params: GetV1WorkSessionsByChallengeQueryParams) => [{ url: '/v1/work-sessions/by-challenge' }, ...(params ? [params] : [])] as const
@@ -14,8 +14,8 @@ export const getV1WorkSessionsByChallengeSuspenseQueryKey = (params: GetV1WorkSe
 export type GetV1WorkSessionsByChallengeSuspenseQueryKey = ReturnType<typeof getV1WorkSessionsByChallengeSuspenseQueryKey>
 
 /**
- * @description Returns the most recent active (not ended) work session for the user on a challenge
- * @summary Get active work session for challenge
+ * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */
 export async function getV1WorkSessionsByChallengeSuspense(params: GetV1WorkSessionsByChallengeQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
@@ -38,8 +38,8 @@ export function getV1WorkSessionsByChallengeSuspenseQueryOptions(params: GetV1Wo
 }
 
 /**
- * @description Returns the most recent active (not ended) work session for the user on a challenge
- * @summary Get active work session for challenge
+ * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */
 export function useGetV1WorkSessionsByChallengeSuspense<TData = GetV1WorkSessionsByChallengeQueryResponse, TQueryKey extends QueryKey = GetV1WorkSessionsByChallengeSuspenseQueryKey>(params: GetV1WorkSessionsByChallengeQueryParams, options: 

@@ -53,9 +53,20 @@ export const postV1WorkSessions404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const postV1WorkSessions409Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
 export const postV1WorkSessionsMutationRequestSchema = z.object({
     "challengeId": z.string().uuid(),
-"teachingAssistantId": z.string().uuid()
+"teachingAssistantId": z.string().uuid().describe("Optional. When omitted, server uses challenge default TA.").optional()
     })
 
 export const postV1WorkSessionsMutationResponseSchema = z.lazy(() => postV1WorkSessions201Schema)

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1KnowledgeBasesKbidSearchQueryResponse, GetV1KnowledgeBasesKbidSearchPathParams, GetV1KnowledgeBasesKbidSearchQueryParams, GetV1KnowledgeBasesKbidSearch401, GetV1KnowledgeBasesKbidSearch403, GetV1KnowledgeBasesKbidSearch404, GetV1KnowledgeBasesKbidSearch503 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidSearch.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1KnowledgeBasesKbidSearchQueryResponse, GetV1KnowledgeBasesKbidSearchPathParams, GetV1KnowledgeBasesKbidSearchQueryParams, GetV1KnowledgeBasesKbidSearch401, GetV1KnowledgeBasesKbidSearch403, GetV1KnowledgeBasesKbidSearch404, GetV1KnowledgeBasesKbidSearch503 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidSearch.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1KnowledgeBasesKbidSearchSuspenseQueryKey = (kbId: GetV1KnowledgeBasesKbidSearchPathParams["kbId"], params: GetV1KnowledgeBasesKbidSearchQueryParams) => [{ url: '/v1/knowledge-bases/:kbId/search', params: {kbId:kbId} }, ...(params ? [params] : [])] as const

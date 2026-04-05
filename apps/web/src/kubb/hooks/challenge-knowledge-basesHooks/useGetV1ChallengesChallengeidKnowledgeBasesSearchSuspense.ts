@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesChallengeidKnowledgeBasesSearchQueryResponse, GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams, GetV1ChallengesChallengeidKnowledgeBasesSearchQueryParams, GetV1ChallengesChallengeidKnowledgeBasesSearch401, GetV1ChallengesChallengeidKnowledgeBasesSearch403, GetV1ChallengesChallengeidKnowledgeBasesSearch404, GetV1ChallengesChallengeidKnowledgeBasesSearch503 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidKnowledgeBasesSearch.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChallengesChallengeidKnowledgeBasesSearchQueryResponse, GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams, GetV1ChallengesChallengeidKnowledgeBasesSearchQueryParams, GetV1ChallengesChallengeidKnowledgeBasesSearch401, GetV1ChallengesChallengeidKnowledgeBasesSearch403, GetV1ChallengesChallengeidKnowledgeBasesSearch404, GetV1ChallengesChallengeidKnowledgeBasesSearch503 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidKnowledgeBasesSearch.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesChallengeidKnowledgeBasesSearchSuspenseQueryKey = (challengeId: GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams["challengeId"], params: GetV1ChallengesChallengeidKnowledgeBasesSearchQueryParams) => [{ url: '/v1/challenges/:challengeId/knowledge-bases/search', params: {challengeId:challengeId} }, ...(params ? [params] : [])] as const
