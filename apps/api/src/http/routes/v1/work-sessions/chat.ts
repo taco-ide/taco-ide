@@ -300,6 +300,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
 
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
+
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
         const rawResponse =
