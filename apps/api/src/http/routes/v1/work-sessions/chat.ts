@@ -23,6 +23,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
+import { getLangfuseCallback } from "../../../../agents/langfuse";
 
 // ==================== SCHEMAS ====================
 
@@ -221,6 +222,9 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
       let modelResponse: string;
       try {
+        const langfuseCallback = getLangfuseCallback();
+        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+
         const result = await teachingAssistantAgent.invoke(
           {
             messages: [
@@ -235,8 +239,13 @@ export async function chatRoute(app: FastifyTypedInstance) {
               challengeContext,
               ...modelParams,
             },
+            callbacks,
           },
         );
+
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
 
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];

@@ -44,6 +44,15 @@ const envSchema = z.object({
     .url()
     .default("https://emkc.org/api/v2/piston/execute"),
 
+  // Langfuse observability (optional)
+  LANGFUSE_ENABLED: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
+  LANGFUSE_PUBLIC_KEY: z.string().optional(),
+  LANGFUSE_SECRET_KEY: z.string().optional(),
+  LANGFUSE_BASEURL: z.string().url().optional(),
+
   // Server
   PORT: z.coerce.number().default(4000),
 });
