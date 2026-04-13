@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock,
   Copy,
+  Loader2,
   Terminal,
   Keyboard,
 } from "lucide-react";
@@ -13,9 +14,10 @@ import { useState } from "react";
 import RunningCodeSkeleton from "./RunningCodeSkeleton";
 
 function OutputSection() {
-  const { output, error, isRunning } = useCodeEditorStore();
+  const { output, error, isRunning, pyodideStatus, language } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
   const hasContent = error || output;
+  const isPythonLoading = isRunning && language === 'python' && pyodideStatus === 'loading';
 
   const handleCopy = async () => {
     if (!hasContent) return;
@@ -54,7 +56,14 @@ function OutputSection() {
         <div className="p-3">
           <div className="rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm min-h-[80px]">
             {isRunning ? (
-              <RunningCodeSkeleton />
+              isPythonLoading ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[60px] text-zinc-500">
+                  <Loader2 className="size-5 mb-1 animate-spin opacity-60" />
+                  <p className="text-xs">Carregando runtime Python (apenas na primeira vez)...</p>
+                </div>
+              ) : (
+                <RunningCodeSkeleton />
+              )
             ) : error ? (
               <div className="flex items-start gap-3 text-rose-400/90">
                 <AlertTriangle className="size-5 shrink-0 mt-0.5" />

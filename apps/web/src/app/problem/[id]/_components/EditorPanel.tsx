@@ -11,7 +11,7 @@ import useMounted from "@/hooks/useMounted";
 import { useProblem } from "@/contexts/ProblemContext";
 
 function EditorPanel() {
-  const { language, theme, fontSize, editor, setFontSize, setEditor, setInput } =
+  const { language, theme, fontSize, editor, setFontSize, setEditor, setInput, preloadPyodide } =
     useCodeEditorStore();
   const { solution, saveSolution } = useProblem();
   const mounted = useMounted();
@@ -36,6 +36,12 @@ function EditorPanel() {
     const savedFontSize = localStorage.getItem("editor-font-size");
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
   }, [setFontSize]);
+
+  useEffect(() => {
+    if (language === 'python') {
+      preloadPyodide();
+    }
+  }, [language, preloadPyodide]);
 
   const handleRefresh = () => {
     const defaultCode = LANGUAGE_CONFIG[language].defaultCode;

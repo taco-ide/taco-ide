@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
 
 function RunButton() {
-  const { runCode, isRunning, getInput } = useCodeEditorStore();
+  const { runCode, isRunning, getInput, pyodideStatus, language } = useCodeEditorStore();
   const { addInteraction, saveSolution } = useProblem();
+
+  const isPythonLoading = isRunning && language === 'python' && pyodideStatus === 'loading';
 
   const handleRun = async () => {
     await runCode();
@@ -49,7 +51,9 @@ function RunButton() {
               <Loader2 className="w-4 h-4 animate-spin text-white/70" />
               <div className="absolute inset-0 blur animate-pulse" />
             </div>
-            <span className="text-sm font-medium text-white/90">Executing...</span>
+            <span className="text-sm font-medium text-white/90">
+              {isPythonLoading ? "Carregando Python..." : "Executando..."}
+            </span>
           </>
         ) : (
           <>
