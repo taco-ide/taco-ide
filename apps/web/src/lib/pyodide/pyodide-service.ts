@@ -54,6 +54,7 @@ export class PyodideService {
         } else if (event.data.type === 'error') {
           cleanup();
           this.setStatus('error');
+          this.initPromise = null;
           reject(new Error(event.data.error));
         }
       };
@@ -77,7 +78,7 @@ export class PyodideService {
     code: string,
     stdin: string,
     timeout = EXECUTION_TIMEOUT,
-  ): Promise<{ stdout: string; stderr: string }> {
+  ): Promise<{ stdout: string; stderr: string; hasException: boolean }> {
     await this.preload();
 
     return new Promise((resolve, reject) => {
@@ -98,7 +99,7 @@ export class PyodideService {
         if (data.type === 'result') {
           clearTimeout(timer);
           worker.removeEventListener('message', handler);
-          resolve({ stdout: data.stdout, stderr: data.stderr });
+          resolve({ stdout: data.stdout, stderr: data.stderr, hasException: data.hasException });
         } else if (data.type === 'error') {
           clearTimeout(timer);
           worker.removeEventListener('message', handler);

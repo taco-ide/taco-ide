@@ -50,7 +50,15 @@ sys.stdout = _stdout_capture
 sys.stderr = _stderr_capture
 `);
 
-      await instance.runPythonAsync(message.code);
+      let hasException = false;
+      try {
+        await instance.runPythonAsync(message.code);
+      } catch (err) {
+        hasException = true;
+        // Write the exception to stderr capture so it appears in output
+        const errMsg = err instanceof Error ? err.message : String(err);
+        await instance.runPythonAsync(`_stderr_capture.write(${JSON.stringify(errMsg)})`);
+      }
 
       const stdout = String(await instance.runPythonAsync('_stdout_capture.getvalue()'));
       const stderr = String(await instance.runPythonAsync('_stderr_capture.getvalue()'));
@@ -65,6 +73,7 @@ sys.stdin = sys.__stdin__
         type: 'result',
         stdout: truncateOutput(stdout),
         stderr: truncateOutput(stderr),
+        hasException,
       });
     } catch (err) {
       const stderr = err instanceof Error ? err.message : String(err);
@@ -85,7 +94,7 @@ except Exception:
         }
       }
 
-      self.postMessage({ type: 'result', stdout: '', stderr });
+      self.postMessage({ type: 'result', stdout: '', stderr, hasException: true });
     }
   }
 };

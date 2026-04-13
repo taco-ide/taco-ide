@@ -109,18 +109,20 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       try {
         if (language === "python") {
           const result = await pyodideService.execute(code, stdin);
-          const hasError = result.stderr.trim().length > 0;
 
-          if (hasError) {
+          if (result.hasException) {
+            const error = result.stderr || "Python execution error";
             set({
-              error: result.stderr,
-              executionResult: { code, output: "", error: result.stderr },
+              error,
+              executionResult: { code, output: "", error },
             });
           } else {
+            // Combine stdout + stderr (warnings) for full output
+            const output = result.stdout.trim();
             set({
-              output: result.stdout.trim(),
+              output,
               error: null,
-              executionResult: { code, output: result.stdout.trim(), error: null },
+              executionResult: { code, output, error: null },
             });
           }
         } else {
