@@ -2,26 +2,25 @@ import { CodeEditorState } from "../types/index";
 import { create } from "zustand";
 import type { editor as MonacoEditor } from "monaco-editor";
 import { LANGUAGE_CONFIG } from "@/app/problem/[id]/_constants";
+import { pyodideService } from "@/lib/pyodide";
 
 const getInitialState = () => {
   // if we're on the server, return default values
   if (typeof window === "undefined") {
     return {
-      language: "javascript",
+      language: "python",
       fontSize: 16,
       theme: "vs-dark",
       input: "",
     };
   }
 
-  // if we're on the client, return values from local storage bc localStorage is a browser API.
-  const savedLanguage = localStorage.getItem("editor-language") || "javascript";
   const savedTheme = localStorage.getItem("editor-theme") || "vs-dark";
   const savedFontSize = localStorage.getItem("editor-font-size") || 16;
   const savedInput = localStorage.getItem("editor-input") || "";
 
   return {
-    language: savedLanguage,
+    language: "python",
     theme: savedTheme,
     fontSize: Number(savedFontSize),
     input: savedInput,
@@ -38,8 +37,21 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     error: null,
     editor: null,
     executionResult: null,
+    pyodideStatus: "idle",
 
-    getCode: () => get().editor?.getValue() || "",
+    preloadPyodide: () => {
+      pyodideService.preload().catch(() => {});
+    },
+
+    getCode: () => {
+      const editorValue = get().editor?.getValue();
+      if (editorValue) return editorValue;
+      // Fallback: read from localStorage (saved on every keystroke by EditorPanel)
+      if (typeof window !== "undefined") {
+        return localStorage.getItem(`editor-code-${get().language}`) || "";
+      }
+      return "";
+    },
 
     getInput: () => get().input,
 
@@ -95,78 +107,81 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
       set({ isRunning: true, error: null, output: "" });
 
       try {
-        const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
-        // TODO: update this to use our own API in the future
-        const response = await fetch("https://emkc.org/api/v2/piston/execute", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            language: runtime.language,
-            version: runtime.version,
-            files: [{ content: code }],
-            stdin,
-          }),
-        });
+        if (language === "python") {
+          const result = await pyodideService.execute(code, stdin);
+          const hasError = result.stderr.trim().length > 0;
 
-        const data = await response.json();
-
-        console.log("data back from piston:", data);
-
-        // handle API-level erros
-        if (data.message) {
-          set({
-            error: data.message,
-            executionResult: { code, output: "", error: data.message },
-          });
-          return;
-        }
-
-        // handle compilation errors
-        if (data.compile && data.compile.code !== 0) {
-          const error = data.compile.stderr || data.compile.output;
-          set({
-            error,
-            executionResult: {
-              code,
-              output: "",
-              error,
+          if (hasError) {
+            set({
+              error: result.stderr,
+              executionResult: { code, output: "", error: result.stderr },
+            });
+          } else {
+            set({
+              output: result.stdout.trim(),
+              error: null,
+              executionResult: { code, output: result.stdout.trim(), error: null },
+            });
+          }
+        } else {
+          // Piston API for non-Python languages
+          const runtime = LANGUAGE_CONFIG[language].pistonRuntime;
+          const response = await fetch("https://emkc.org/api/v2/piston/execute", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+              language: runtime.language,
+              version: runtime.version,
+              files: [{ content: code }],
+              stdin,
+            }),
           });
-          return;
-        }
 
-        if (data.run && data.run.code !== 0) {
-          const error = data.run.stderr || data.run.output;
-          set({
-            error,
-            executionResult: {
-              code,
-              output: "",
+          const data = await response.json();
+
+          // handle API-level errors
+          if (data.message) {
+            set({
+              error: data.message,
+              executionResult: { code, output: "", error: data.message },
+            });
+            return;
+          }
+
+          // handle compilation errors
+          if (data.compile && data.compile.code !== 0) {
+            const error = data.compile.stderr || data.compile.output;
+            set({
               error,
-            },
-          });
-          return;
-        }
+              executionResult: { code, output: "", error },
+            });
+            return;
+          }
 
-        // if we get here, execution was successful
-        const output = data.run.output;
+          if (data.run && data.run.code !== 0) {
+            const error = data.run.stderr || data.run.output;
+            set({
+              error,
+              executionResult: { code, output: "", error },
+            });
+            return;
+          }
 
-        set({
-          output: output.trim(),
-          error: null,
-          executionResult: {
-            code,
+          const output = data.run.output;
+          set({
             output: output.trim(),
             error: null,
-          },
-        });
+            executionResult: { code, output: output.trim(), error: null },
+          });
+        }
       } catch (error) {
-        console.log("Error running code:", error);
+        const message =
+          error instanceof Error ? error.message : "Error running code";
         set({
-          error: "Error running code",
-          executionResult: { code, output: "", error: "Error running code" },
+          error: message,
+          executionResult: { code, output: "", error: message },
         });
       } finally {
         set({ isRunning: false });
@@ -174,6 +189,13 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
   };
 });
+
+// Subscribe to Pyodide status changes and sync to store
+if (typeof window !== "undefined") {
+  pyodideService.onStatusChange((status) => {
+    useCodeEditorStore.setState({ pyodideStatus: status });
+  });
+}
 
 export const getExecutionResult = () =>
   useCodeEditorStore.getState().executionResult;
