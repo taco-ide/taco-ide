@@ -13,9 +13,9 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "services:up": "docker compose -p taco_ide -f ./docker/compose.yaml up -d && docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml up -d",
-    "services:stop": "docker compose -p taco_ide -f ./docker/compose.yaml stop && docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml stop",
-    "services:down": "docker compose -p taco_ide -f ./docker/compose.yaml down -v && docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml down -v",
+    "services:up": "docker compose -p taco_ide -f ./docker/compose.yaml up -d",
+    "services:stop": "docker compose -p taco_ide -f ./docker/compose.yaml stop",
+    "services:down": "docker compose -p taco_ide -f ./docker/compose.yaml down -v",
     "db:generate": "dotenv -e ../../.env -- npx drizzle-kit generate --config ./drizzle.config.ts",
     "db:push": "dotenv -e ../../.env -- npx drizzle-kit push --config ./drizzle.config.ts",
     "db:migrate": "dotenv -e ../../.env -- npx drizzle-kit migrate --config ./drizzle.config.ts && npm run build",
@@ -25,12 +25,6 @@
     "db:seed:prod": "dotenv -e ../../.env -- npx tsx src/db/seeds/prod.ts",
     "db:reset": "dotenv -e ../../.env -- npx tsx src/db/reset-db.ts && dotenv -e ../../.env -- npx drizzle-kit migrate --config ./drizzle.config.ts && npm run db:seed:dev",
     "db:reset:push": "dotenv -e ../../.env -- npx tsx src/db/reset-db.ts && dotenv -e ../../.env -- npx drizzle-kit push --config ./drizzle.config.ts --force && npm run db:seed:dev",
-    "langfuse:up": "docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml up -d",
-    "langfuse:stop": "docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml stop",
-    "langfuse:down": "docker compose -p taco_ide_langfuse -f ./docker/compose.langfuse.yaml down -v",
-    "langfuse:prod:up": "docker compose -p langfuse_prod -f ./docker/compose.langfuse.prod.yaml up -d",
-    "langfuse:prod:stop": "docker compose -p langfuse_prod -f ./docker/compose.langfuse.prod.yaml stop",
-    "langfuse:prod:down": "docker compose -p langfuse_prod -f ./docker/compose.langfuse.prod.yaml down -v",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
