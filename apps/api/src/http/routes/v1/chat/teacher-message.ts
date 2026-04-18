@@ -118,6 +118,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         const llmInstance = createLlm();
         const agent = buildTeachersCompanionAgent(llmInstance);
 
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         // Use AbortController to enforce timeout

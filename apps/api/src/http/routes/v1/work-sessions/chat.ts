@@ -268,6 +268,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         const llmInstance = createLlm(modelParams);
         const agent = buildTeachingAssistantAgent(llmInstance);
 
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         // Use AbortController to enforce timeout
@@ -298,10 +299,6 @@ export async function chatRoute(app: FastifyTypedInstance) {
           );
         } finally {
           clearTimeout(timeout);
-        }
-
-        if (langfuseCallback) {
-          await langfuseCallback.flushAsync();
         }
 
         // The agent returns a messages array; the last message is the AI reply.
