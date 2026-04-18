@@ -1,20 +1,16 @@
 import { env } from "@repo/infra/env";
-
-// Import lazily to avoid hard-failing when the package is absent in some
-// build environments. However, since it will be a declared dependency,
-// a direct import is acceptable.
 import { CallbackHandler } from "langfuse-langchain";
 
-/**
- * Returns a Langfuse CallbackHandler when observability is enabled and all
- * required environment variables are present; otherwise returns null.
- *
- * Usage:
- *   const langfuseCallback = getLangfuseCallback();
- *   const callbacks = langfuseCallback ? [langfuseCallback] : [];
- *   agent.invoke({ messages }, { callbacks });
- */
-export function getLangfuseCallback(): CallbackHandler | null {
+export type LangfuseContext = {
+  userId?: string;
+  sessionId?: string;
+  tags?: string[];
+  metadata?: Record<string, string>;
+};
+
+export function getLangfuseCallback(
+  ctx: LangfuseContext = {},
+): CallbackHandler | null {
   if (
     !env.LANGFUSE_ENABLED ||
     !env.LANGFUSE_PUBLIC_KEY ||
@@ -34,8 +30,12 @@ export function getLangfuseCallback(): CallbackHandler | null {
   return new CallbackHandler({
     publicKey: env.LANGFUSE_PUBLIC_KEY,
     secretKey: env.LANGFUSE_SECRET_KEY,
-    baseUrl: env.LANGFUSE_BASEURL, // undefined = Langfuse Cloud default
-    flushAt: 1, // flush immediately in serverless-like handlers
-    flushInterval: 0, // no periodic flush delay
+    baseUrl: env.LANGFUSE_BASEURL,
+    flushAt: 1,
+    flushInterval: 0,
+    userId: ctx.userId,
+    sessionId: ctx.sessionId,
+    tags: ctx.tags,
+    metadata: ctx.metadata,
   });
 }

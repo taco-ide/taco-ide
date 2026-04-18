@@ -220,9 +220,15 @@ export async function chatRoute(app: FastifyTypedInstance) {
         supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
       };
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: usr.id,
+        sessionId: workSessionId,
+        tags: ["agent:ta"],
+        metadata: { challengeId: session.challengeId, workSessionId },
+      });
+
       let modelResponse: string;
       try {
-        const langfuseCallback = getLangfuseCallback();
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         const result = await teachingAssistantAgent.invoke(
@@ -243,10 +249,6 @@ export async function chatRoute(app: FastifyTypedInstance) {
           },
         );
 
-        if (langfuseCallback) {
-          await langfuseCallback.flushAsync();
-        }
-
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
         const rawResponse =
@@ -264,6 +266,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
           message:
             err instanceof Error ? err.message : "Failed to get AI response",
         });
+      } finally {
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
       }
 
       const now = new Date();

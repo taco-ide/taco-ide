@@ -103,8 +103,14 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         "X-Accel-Buffering": "no",
       });
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: user.id,
+        sessionId: `teacher-${classroomId}-${user.id}`,
+        tags: ["agent:tc"],
+        metadata: { classroomId },
+      });
+
       try {
-        const langfuseCallback = getLangfuseCallback();
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         const stream = teachersCompanionAgent.streamEvents(

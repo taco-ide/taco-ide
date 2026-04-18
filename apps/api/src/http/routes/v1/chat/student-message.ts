@@ -131,8 +131,17 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
       let fullResponse = "";
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: user.id,
+        sessionId: workSessionId,
+        tags: ["agent:ta"],
+        metadata: {
+          challengeId: ws[0].challengeId,
+          workSessionId,
+        },
+      });
+
       try {
-        const langfuseCallback = getLangfuseCallback();
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         const stream = teachingAssistantAgent.streamEvents(
