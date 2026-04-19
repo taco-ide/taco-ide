@@ -19,7 +19,7 @@ const EDITOR_LANG = "python" as const;
 const PYTHON_DEFAULT = LANGUAGE_CONFIG[EDITOR_LANG].defaultCode;
 
 function EditorPanel() {
-  const { theme, fontSize, editor, setFontSize, setEditor, setInput } =
+  const { theme, fontSize, editor, setFontSize, setEditor, setInput, preloadPyodide } =
     useCodeEditorStore();
   const { challengeId, solution, isSessionEnded } = useProblem();
   const mounted = useMounted();
@@ -47,6 +47,10 @@ function EditorPanel() {
     const savedFontSize = localStorage.getItem("editor-font-size");
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
   }, [setFontSize]);
+
+  useEffect(() => {
+    preloadPyodide();
+  }, [preloadPyodide]);
 
   const handleRefresh = () => {
     if (editor) editor.setValue(PYTHON_DEFAULT);
