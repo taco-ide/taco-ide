@@ -484,9 +484,10 @@ export function ProblemProvider({
             interactionType: data.interactionType,
             userPrompt: data.userPrompt ?? "",
             modelResponse: data.modelResponse ?? "",
-            code: data.code,
-            stdin: data.stdin,
-            stdout: data.stdout,
+            // JSON.stringify omite `undefined`; strings garantem que o campo chega à API.
+            code: data.code ?? "",
+            stdin: data.stdin ?? "",
+            stdout: data.stdout ?? "",
           },
         });
       } catch (err) {
@@ -515,6 +516,11 @@ export function ProblemProvider({
         });
         throw new Error("Sessão de trabalho não disponível");
       }
+      await saveSolution({
+        code: params.code,
+        stdin: params.stdin,
+        stdout: params.stdout,
+      });
       logWs("sendChatMessage:POST chat", { sessionId: session.id });
       const result = await chatMutation.mutateAsync({
         id: session.id,
@@ -527,13 +533,19 @@ export function ProblemProvider({
       });
       return { modelResponse: result.data.modelResponse };
     },
-    [ensureWorkSession, chatMutation]
+    [challengeId, ensureWorkSession, chatMutation, saveSolution]
   );
 
   const submitWorkSession = useCallback(async () => {
     if (!workSession?.id || workSession.endedAt) return;
+    const { getCode, getInput, output, error } = useCodeEditorStore.getState();
+    await saveSolution({
+      code: getCode(),
+      stdin: getInput(),
+      stdout: error ?? output ?? undefined,
+    });
     await submitMutation.mutateAsync({ id: workSession.id });
-  }, [workSession, submitMutation]);
+  }, [workSession, saveSolution, submitMutation]);
 
   const reopenWorkSession = useCallback(async () => {
     if (!workSession?.id || !workSession.endedAt) return;

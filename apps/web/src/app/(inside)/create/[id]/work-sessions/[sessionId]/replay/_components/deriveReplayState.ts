@@ -23,7 +23,10 @@ export type DerivedReplayState = {
   lastInteractionAt: string | null;
 };
 
-/** Estado visível após aplicar o prefixo interactions[0..stepIndex - 1]. */
+/**
+ * Estado após as primeiras `stepIndex` interações (`interactions[0..stepIndex-1]`).
+ * Passo 0 = antes de qualquer evento; passo 1 = após a 1.ª interação.
+ */
 export function deriveReplayState(
   interactions: ReplayInteraction[],
   stepIndex: number
@@ -50,14 +53,19 @@ export function deriveReplayState(
     }
   }
 
+  /** Último snapshot por campo (cronológico). Interações `chat` gravam `code`/`stdin`/`stdout` quando enviados. */
   let code = "";
   let stdin = "";
   let stdout = "";
   for (const i of prefix) {
-    if (i.interactionType === "code_run") {
-      if (i.code != null) code = i.code;
-      if (i.stdin != null) stdin = i.stdin;
-      if (i.stdout != null) stdout = i.stdout;
+    if (i.code != null) {
+      code = i.code;
+    }
+    if (i.stdin != null) {
+      stdin = i.stdin;
+    }
+    if (i.stdout != null) {
+      stdout = i.stdout;
     }
   }
 

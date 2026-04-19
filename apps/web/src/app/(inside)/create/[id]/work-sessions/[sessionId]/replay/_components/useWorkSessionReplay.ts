@@ -17,6 +17,17 @@ export function useWorkSessionReplay(interactions: ReplayInteraction[]) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
 
+  /** Evita reset ao re-render; só muda quando o conjunto de interações (ids) muda. */
+  const interactionsSignatureRef = useRef<string>("");
+
+  useEffect(() => {
+    const sig = interactions.map((i) => i.id).join("|");
+    if (sig === interactionsSignatureRef.current) return;
+    interactionsSignatureRef.current = sig;
+    setStepIndex(interactions.length > 0 ? 1 : 0);
+    setIsPlaying(false);
+  }, [interactions]);
+
   const effectiveStepIndex = Math.min(stepIndex, maxStepIndex);
 
   useEffect(() => {

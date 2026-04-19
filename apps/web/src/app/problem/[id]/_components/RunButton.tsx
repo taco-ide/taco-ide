@@ -1,6 +1,9 @@
 "use client";
 
-import { useCodeEditorStore, getExecutionResult } from "@/store/useCodeEditorStore";
+import {
+  useCodeEditorStore,
+  getExecutionResult,
+} from "@/store/useCodeEditorStore";
 import { useProblem } from "@/contexts/ProblemContext";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
@@ -13,14 +16,15 @@ function RunButton() {
     await runCode();
     const result = getExecutionResult();
     if (result) {
+      const codeSnapshot = result.code || useCodeEditorStore.getState().getCode();
       await addInteraction({
         interactionType: "code_run",
-        code: result.code,
+        code: codeSnapshot,
         stdin: getInput(),
         stdout: result.error ?? result.output,
       });
       await saveSolution({
-        code: result.code,
+        code: codeSnapshot,
         stdin: getInput(),
         stdout: result.error ?? result.output,
       });

@@ -6,7 +6,6 @@ import {
   ChatBubbleAvatar,
   ChatBubbleMessage,
 } from "@/components/ui/chat/chat-bubble";
-import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useRemarkSync } from "react-remark";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare } from "lucide-react";
@@ -112,13 +111,14 @@ export function ReplayChatColumn({
     const bubble = (
       <ChatBubble
         variant={message.role === "user" ? "sent" : "received"}
-        className="w-full"
+        className="max-w-[92%] items-start"
       >
         <ChatBubbleAvatar
           src=""
           fallback={message.role === "user" ? "👤" : "🤖"}
+          className="mt-1 h-8 w-8 shrink-0"
         />
-        <ChatBubbleMessage>
+        <ChatBubbleMessage className="w-full">
           {message.role === "assistant" ? (
             <RevealedAssistantLine
               fullText={message.content}
@@ -139,6 +139,7 @@ export function ReplayChatColumn({
     return (
       <motion.div
         key={message.key}
+        className="mb-4 last:mb-0"
         initial={shouldMotionEnter ? { opacity: 0, y: 10 } : false}
         animate={{ opacity: 1, y: 0 }}
         exit={
@@ -154,25 +155,32 @@ export function ReplayChatColumn({
   }
 
   return (
-    <Card className="flex h-full min-h-[320px] flex-col border-slate-700 bg-slate-800/40 text-slate-100 shadow-none lg:min-h-0">
+    <Card className="flex h-full min-h-[280px] flex-col overflow-hidden border-slate-700 bg-slate-800/40 text-slate-100 shadow-none lg:min-h-0">
       <CardHeader className="shrink-0 space-y-0 border-b border-slate-700/80 py-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-300">
           <MessageSquare className="h-4 w-4 text-amber-500/90" />
           Chat
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col p-0">
-        <ChatMessageList className="min-h-[240px] flex-1 border-0 p-3 lg:min-h-0">
-          {derived.messages.length === 0 ? (
-            <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4 text-sm text-slate-500">
-              Nenhuma mensagem de chat neste passo.
-            </div>
-          ) : (
-            <AnimatePresence initial={false}>
-              {derived.messages.map((m) => wrapMessage(m))}
-            </AnimatePresence>
-          )}
-        </ChatMessageList>
+      <CardContent className="flex min-h-0 flex-1 flex-col p-0 overflow-hidden">
+        {/* flex-1 + min-h-0 + overflow-y-auto: scroll interno (grid items têm min-height:auto por defeito) */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div
+            role="log"
+            aria-label="Mensagens do replay"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-2"
+          >
+            {derived.messages.length === 0 ? (
+              <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4 text-sm text-slate-500">
+                Nenhuma mensagem de chat neste passo.
+              </div>
+            ) : (
+              <AnimatePresence initial={false}>
+                {derived.messages.map((m) => wrapMessage(m))}
+              </AnimatePresence>
+            )}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

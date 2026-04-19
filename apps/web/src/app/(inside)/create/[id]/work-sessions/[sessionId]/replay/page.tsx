@@ -95,9 +95,9 @@ function ReplayContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      <div className="mx-auto max-w-[1920px] p-4 pb-8 flex flex-col gap-4 min-h-screen">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-slate-900 text-slate-100">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1920px] flex-1 flex-col gap-3 overflow-hidden p-4">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <Button
             type="button"
             variant="outline"
@@ -115,6 +115,7 @@ function ReplayContent() {
           ) : null}
         </div>
 
+        <div className="shrink-0">
         <ReplayToolbar
           stepIndex={replay.stepIndex}
           totalInteractions={replay.totalSteps}
@@ -131,22 +132,24 @@ function ReplayContent() {
           onTogglePlay={replay.togglePlay}
           lastInteractionAt={replay.derived.lastInteractionAt}
         />
+        </div>
 
         {replay.totalSteps === 0 ? (
-          <p className="text-sm text-slate-500 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3">
+          <p className="shrink-0 text-sm text-slate-500 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3">
             Esta sessão ainda não tem interações registadas.
           </p>
         ) : null}
 
-        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3 lg:min-h-0 lg:flex-1 lg:items-stretch lg:min-h-[min(720px,calc(100vh-220px))]">
-          <div className="flex min-h-[320px] flex-col lg:min-h-0 lg:h-full lg:max-h-[calc(100vh-220px)]">
+        {/* flex-1 + min-h-0: coluna do chat não empurra a página; scroll só dentro do log em ReplayChatColumn */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-3 lg:grid-rows-1 lg:items-stretch lg:gap-4">
+          <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
             <ReplayIOPanel
               stdin={replay.derived.stdin}
               stdout={replay.derived.stdout}
               animationsEnabled={replay.animationsEnabled}
             />
           </div>
-          <div className="flex min-h-[320px] flex-col lg:min-h-0 lg:h-full lg:max-h-[calc(100vh-220px)]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
             <ReplayChatColumn
               interactions={interactions}
               stepIndex={replay.stepIndex}
@@ -155,8 +158,11 @@ function ReplayContent() {
               derived={replay.derived}
             />
           </div>
-          <div className="flex min-h-[320px] flex-col lg:min-h-0 lg:h-full lg:max-h-[calc(100vh-220px)]">
-            <ReplayCodeColumn code={replay.derived.code} />
+          <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
+            <ReplayCodeColumn
+              code={replay.derived.code}
+              stepIndex={replay.stepIndex}
+            />
           </div>
         </div>
       </div>
@@ -166,8 +172,10 @@ function ReplayContent() {
 
 export default function WorkSessionReplayPage() {
   return (
-    <RoleGuard minimumRole="teacher" fallback={<AccessDenied />}>
-      <ReplayContent />
-    </RoleGuard>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <RoleGuard minimumRole="teacher" fallback={<AccessDenied />}>
+        <ReplayContent />
+      </RoleGuard>
+    </div>
   );
 }

@@ -1,10 +1,7 @@
 import { CodeEditorState } from "../types/index";
 import { create } from "zustand";
 import type { editor as MonacoEditor } from "monaco-editor";
-import {
-  isLegacyEditorTemplate,
-  LANGUAGE_CONFIG,
-} from "@/app/problem/[id]/_constants";
+import { LANGUAGE_CONFIG } from "@/app/problem/[id]/_constants";
 
 const getInitialState = () => {
   // if we're on the server, return default values
@@ -18,19 +15,14 @@ const getInitialState = () => {
   }
 
   // if we're on the client, return values from local storage bc localStorage is a browser API.
-  if (localStorage.getItem("editor-language") !== "python") {
-    localStorage.setItem("editor-language", "python");
-  }
-  const savedLanguage = "python";
   const savedTheme = localStorage.getItem("editor-theme") || "vs-dark";
   const savedFontSize = localStorage.getItem("editor-font-size") || 16;
-  const savedInput = localStorage.getItem("editor-input") || "";
 
   return {
-    language: savedLanguage,
+    language: "python",
     theme: savedTheme,
     fontSize: Number(savedFontSize),
-    input: savedInput,
+    input: "",
   };
 };
 
@@ -50,19 +42,10 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     getInput: () => get().input,
 
     setInput: (input: string) => {
-      localStorage.setItem("editor-input", input);
       set({ input });
     },
 
     setEditor: (editor: MonacoEditor.IStandaloneCodeEditor) => {
-      // Editor do desafio é só Python — chave fixa (evita restos de `editor-language` antigo).
-      let savedCode = localStorage.getItem("editor-code-python");
-      if (savedCode && isLegacyEditorTemplate(savedCode)) {
-        localStorage.removeItem("editor-code-python");
-        savedCode = null;
-      }
-      if (savedCode) editor.setValue(savedCode);
-
       set({ editor });
     },
 
@@ -77,14 +60,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     },
 
     setLanguage: (language: string) => {
-      // Save current language code before switching
-      const currentCode = get().editor?.getValue();
-      if (currentCode) {
-        localStorage.setItem(`editor-code-${get().language}`, currentCode);
-      }
-
-      localStorage.setItem("editor-language", language);
-
       set({
         language,
         output: "",
@@ -185,10 +160,6 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
 
     clearProblemSessionStorage: () => {
       if (typeof window === "undefined") return;
-      for (const key of Object.keys(LANGUAGE_CONFIG)) {
-        localStorage.removeItem(`editor-code-${key}`);
-      }
-      localStorage.setItem("editor-input", "");
       const defaultCode = LANGUAGE_CONFIG.python.defaultCode;
       get().editor?.setValue(defaultCode);
       set({

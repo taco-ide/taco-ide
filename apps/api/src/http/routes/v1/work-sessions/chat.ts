@@ -172,6 +172,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       const code = bodyCode ?? solution?.code ?? null;
+      const stdin = bodyStdin ?? solution?.stdin ?? null;
       const stdout = bodyStdout ?? solution?.stdout ?? null;
 
       // RAG: Search challenge knowledge bases for relevant context
@@ -267,6 +268,9 @@ export async function chatRoute(app: FastifyTypedInstance) {
         interactionType: "chat",
         userPrompt: message,
         modelResponse,
+        code,
+        stdin,
+        stdout,
       });
 
       await db

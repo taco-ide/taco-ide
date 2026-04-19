@@ -128,6 +128,11 @@ export function ReplayToolbar({
         <div className="text-sm text-slate-400">
           <span className="font-medium text-slate-300">Passo:</span>{" "}
           {stepIndex} / {totalInteractions}
+          {stepIndex === 0 && totalInteractions > 0 ? (
+            <span className="ml-1 text-slate-500">
+              (antes do 1.º evento)
+            </span>
+          ) : null}
           <span className="mx-2 text-slate-600">·</span>
           <span className="font-medium text-slate-300">Último evento:</span>{" "}
           {formatStepTime(lastInteractionAt)}

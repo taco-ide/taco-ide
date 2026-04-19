@@ -1,7 +1,7 @@
 "use client";
 
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import {
   defineMonacoThemes,
   isLegacyEditorTemplate,
@@ -21,39 +21,26 @@ const PYTHON_DEFAULT = LANGUAGE_CONFIG[EDITOR_LANG].defaultCode;
 function EditorPanel() {
   const { theme, fontSize, editor, setFontSize, setEditor, setInput } =
     useCodeEditorStore();
-  const { challengeId, solution, saveSolution, isSessionEnded } = useProblem();
+  const { challengeId, solution, isSessionEnded } = useProblem();
   const mounted = useMounted();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!editor) return;
 
-    // Template JS/TS antigo ainda na API — substituir e gravar Python default
-    if (solution?.code && isLegacyEditorTemplate(solution.code)) {
-      localStorage.removeItem(`editor-code-${EDITOR_LANG}`);
-      editor.setValue(PYTHON_DEFAULT);
-      void saveSolution({ code: PYTHON_DEFAULT });
-      return;
-    }
-
-    const fromServer =
-      solution?.code && !isLegacyEditorTemplate(solution.code)
+    const nextCode =
+      (solution?.code && !isLegacyEditorTemplate(solution.code)
         ? solution.code
-        : null;
-    if (fromServer) {
-      editor.setValue(fromServer);
-      return;
+        : null)
+      || PYTHON_DEFAULT;
+
+    if (editor.getValue() !== nextCode) {
+      editor.setValue(nextCode);
     }
-    let savedCode = localStorage.getItem(`editor-code-${EDITOR_LANG}`);
-    if (savedCode && isLegacyEditorTemplate(savedCode)) {
-      localStorage.removeItem(`editor-code-${EDITOR_LANG}`);
-      savedCode = null;
-    }
-    editor.setValue(savedCode || PYTHON_DEFAULT);
-  }, [editor, solution?.code, saveSolution]);
+  }, [editor, solution?.code]);
 
   useEffect(() => {
-    if (solution?.stdin) setInput(solution.stdin);
+    setInput(solution?.stdin ?? "");
   }, [solution?.stdin, setInput]);
 
   useEffect(() => {
@@ -63,23 +50,7 @@ function EditorPanel() {
 
   const handleRefresh = () => {
     if (editor) editor.setValue(PYTHON_DEFAULT);
-    localStorage.removeItem(`editor-code-${EDITOR_LANG}`);
   };
-
-  const debouncedSave = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleEditorChange = useCallback(
-    (value: string | undefined) => {
-      if (isSessionEnded) return;
-      if (value) {
-        localStorage.setItem(`editor-code-${EDITOR_LANG}`, value);
-        if (debouncedSave.current) clearTimeout(debouncedSave.current);
-        debouncedSave.current = setTimeout(() => {
-          saveSolution({ code: value });
-        }, 1000);
-      }
-    },
-    [saveSolution, isSessionEnded]
-  );
 
   const handleFontSizeChange = (newSize: number) => {
     const size = Math.min(Math.max(newSize, 12), 24);
@@ -144,7 +115,6 @@ function EditorPanel() {
           className="block"
           defaultValue={PYTHON_DEFAULT}
           language={LANGUAGE_CONFIG[EDITOR_LANG].monacoLanguage}
-          onChange={handleEditorChange}
           theme={theme}
           beforeMount={defineMonacoThemes}
           onMount={(editor: MonacoEditor.IStandaloneCodeEditor) =>

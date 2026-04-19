@@ -55,6 +55,31 @@ export class ApiError extends Error {
   }
 }
 
+function parseJsonResponse(
+  response: Response,
+  text: string
+): Record<string, unknown> {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return {};
+  }
+  try {
+    const parsed: unknown = JSON.parse(text);
+    if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+    return {};
+  } catch {
+    if (!response.ok) {
+      throw new ApiError(
+        trimmed.slice(0, 500) || "An error occurred",
+        response.status
+      );
+    }
+    return {};
+  }
+}
+
 /**
  * Kubb-compatible API client function
  * This function is used by Kubb generated hooks
@@ -80,33 +105,40 @@ async function apiClient<TData = unknown, TError = unknown, TRequest = unknown>(
     }
   }
 
+  const body = data !== undefined ? JSON.stringify(data) : undefined;
+  const mergedHeaders = new Headers(headers);
+  if (body !== undefined && !mergedHeaders.has("Content-Type")) {
+    mergedHeaders.set("Content-Type", "application/json");
+  }
+
   const response = await fetch(fullUrl, {
     method,
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    body: data ? JSON.stringify(data) : undefined,
+    headers: mergedHeaders,
+    body,
     signal,
   });
 
-  const responseData = await response.json();
+  const text = await response.text();
+  const responseData = parseJsonResponse(response, text);
 
   if (!response.ok) {
     if (response.status === 401) {
       handleUnauthorizedSession();
     }
-    throw new ApiError(
-      responseData.message || "An error occurred",
-      response.status,
-      responseData.errors
-    );
+    const message =
+      typeof responseData.message === "string"
+        ? responseData.message
+        : "An error occurred";
+    const errors = responseData.errors as
+      | Record<string, string | string[]>
+      | undefined;
+    throw new ApiError(message, response.status, errors);
   }
 
   // Kubb generated hooks use res.data - our API returns { success, data?, pagination? }
   // Wrap the full response so res.data = full API response (keeps data + pagination)
-  return { data: responseData } as { data: TData };
+  return { data: responseData as TData };
 }
 
 export default apiClient;

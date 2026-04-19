@@ -18,7 +18,7 @@ export function ReplayIOPanel({
   const duration = animationsEnabled ? 0.2 : 0;
 
   return (
-    <Card className="flex h-full min-h-[320px] flex-col border-slate-700 bg-slate-800/40 text-slate-100 shadow-none lg:min-h-0">
+    <Card className="flex h-full min-h-[280px] flex-col overflow-hidden border-slate-700 bg-slate-800/40 text-slate-100 shadow-none lg:min-h-0">
       <CardHeader className="shrink-0 space-y-0 border-b border-slate-700/80 py-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-300">
           <Keyboard className="h-4 w-4 text-amber-500/90" />
