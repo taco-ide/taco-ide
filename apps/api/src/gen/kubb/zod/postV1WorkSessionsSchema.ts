@@ -66,7 +66,7 @@ export const postV1WorkSessions409Schema = z.object({
 
 export const postV1WorkSessionsMutationRequestSchema = z.object({
     "challengeId": z.string().uuid(),
-"teachingAssistantId": z.string().uuid().describe("Optional. When omitted, server uses challenge default TA.").optional()
+"teachingAssistantId": z.string().uuid().optional()
     })
 
 export const postV1WorkSessionsMutationResponseSchema = z.lazy(() => postV1WorkSessions201Schema)

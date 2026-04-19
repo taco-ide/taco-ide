@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useLayoutEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditorPanel from "./_components/EditorPanel";
 import Header from "./_components/Header";
@@ -16,11 +16,32 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 import { FileText, Terminal, MessageCircle } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
+import { useGetV1ChallengesId } from "@/kubb/hooks";
+import { shouldOpenStaffWorkSessionsFirst } from "@/lib/staffProblemLanding";
+
+function StaffWorkSessionsRedirect({ challengeId }: { challengeId: string }) {
+  const router = useRouter();
+  useLayoutEffect(() => {
+    router.replace(`/create/${challengeId}/work-sessions`);
+  }, [challengeId, router]);
+  return (
+    <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10]">
+      <Loader2 className="h-10 w-10 animate-spin text-amber-500/90" />
+    </div>
+  );
+}
 
 function ProblemPageContent() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const id = params?.id as string | undefined;
+  const { user, isLoading: userLoading } = useUser();
+
+  const challengeQuery = useGetV1ChallengesId(id ?? "", {
+    query: { enabled: !!id },
+  });
 
   useEffect(() => {
     if (!id) {
@@ -34,6 +55,43 @@ function ProblemPageContent() {
         <Loader2 className="h-10 w-10 animate-spin text-amber-500/90" />
       </div>
     );
+  }
+
+  const viewAsStudent = searchParams.get("view") === "student";
+
+  if (userLoading || challengeQuery.isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10]">
+        <Loader2 className="h-10 w-10 animate-spin text-amber-500/90" />
+      </div>
+    );
+  }
+
+  if (challengeQuery.isError || !challengeQuery.data?.data) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-[#0c0d10] text-zinc-400 p-4">
+        <p className="text-rose-400/90">
+          Não foi possível carregar o problema.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/explore")}
+          className="px-4 py-2 bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg text-sm transition-colors"
+        >
+          Voltar para Explorar
+        </button>
+      </div>
+    );
+  }
+
+  const ch = challengeQuery.data.data;
+
+  if (
+    !viewAsStudent &&
+    user &&
+    shouldOpenStaffWorkSessionsFirst(user, ch)
+  ) {
+    return <StaffWorkSessionsRedirect challengeId={id} />;
   }
 
   return (
@@ -183,5 +241,15 @@ function ProblemPageInner() {
 }
 
 export default function ProblemPage() {
-  return <ProblemPageContent />;
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10]">
+          <Loader2 className="h-10 w-10 animate-spin text-amber-500/90" />
+        </div>
+      }
+    >
+      <ProblemPageContent />
+    </Suspense>
+  );
 }

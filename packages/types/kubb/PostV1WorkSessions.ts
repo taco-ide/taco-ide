@@ -159,7 +159,6 @@ export type PostV1WorkSessionsMutationRequest = {
     */
     challengeId: string;
     /**
-     * @description Optional. When omitted, server uses challenge default TA.
      * @type string | undefined, uuid
     */
     teachingAssistantId?: string;

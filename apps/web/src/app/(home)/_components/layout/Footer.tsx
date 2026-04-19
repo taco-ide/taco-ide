@@ -1,11 +1,16 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const Footer = () => {
   return (
     <footer className="bg-gradient-to-t from-[#151822] to-[#1a1f2e] py-12">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-center gap-6">
-          <div className="flex items-center gap-3">
+          <Link
+            href="/explore"
+            className="flex items-center gap-3 rounded-lg outline-offset-4 hover:opacity-90 transition-opacity"
+            aria-label="Ir para Explorar"
+          >
             <Image
               src="/mini-logo.png"
               alt="TACO-IDE Logo"
@@ -14,7 +19,7 @@ const Footer = () => {
               className="rounded-lg"
             />
             <span className="text-xl font-bold text-[#FFB800]">TACO-IDE</span>
-          </div>
+          </Link>
           <div className="flex gap-8 text-gray-400">
             <a href="#features" className="hover:text-white transition-colors">
               Features

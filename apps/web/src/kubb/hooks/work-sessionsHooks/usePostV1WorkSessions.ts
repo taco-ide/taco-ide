@@ -14,7 +14,7 @@ export const postV1WorkSessionsMutationKey = () => [{ url: '/v1/work-sessions/' 
 export type PostV1WorkSessionsMutationKey = ReturnType<typeof postV1WorkSessionsMutationKey>
 
 /**
- * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge.
+ * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge, or an active TA from the classroom/user organization when the challenge has no M2M row.
  * @summary Create work session
  * {@link /v1/work-sessions/}
  */
@@ -28,7 +28,7 @@ export async function postV1WorkSessions(data: PostV1WorkSessionsMutationRequest
 }
 
 /**
- * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge.
+ * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge, or an active TA from the classroom/user organization when the challenge has no M2M row.
  * @summary Create work session
  * {@link /v1/work-sessions/}
  */

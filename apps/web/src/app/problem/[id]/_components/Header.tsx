@@ -71,15 +71,19 @@ function Header() {
   return (
     <header className="shrink-0">
       <div className="flex items-center justify-between h-14 px-4 border-b border-zinc-800/60 bg-zinc-900/30">
-        <div className="hidden lg:flex items-center">
-          <Link href="/" className="flex items-center gap-2 group">
+        <div className="hidden lg:flex items-center min-h-0">
+          <Link
+            href="/explore"
+            className="flex items-center gap-2 group py-1"
+            aria-label="Ir para Explorar"
+          >
             <Image
               src="/header-logo.png"
               alt="TACO-IDE Logo"
-              width={32}
-              height={32}
+              width={220}
+              height={56}
               priority
-              className="opacity-90 group-hover:opacity-100 transition-opacity"
+              className="h-[52px] w-auto max-h-[calc(3.5rem-0.25rem)] object-contain object-left opacity-90 group-hover:opacity-100 transition-opacity"
             />
           </Link>
         </div>
