@@ -57,7 +57,7 @@ const envSchema = z.object({
     .transform((v) => v || undefined),
 
   // Server
-  PORT: z.coerce.number().default(4000),
+  PORT: z.coerce.number().default(3344),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -5,7 +5,7 @@ export type LangfuseContext = {
   userId?: string;
   sessionId?: string;
   tags?: string[];
-  metadata?: Record<string, string>;
+  metadata?: Record<string, unknown>;
 };
 
 export function getLangfuseCallback(
@@ -23,8 +23,7 @@ export function getLangfuseCallback(
     publicKey: env.LANGFUSE_PUBLIC_KEY,
     secretKey: env.LANGFUSE_SECRET_KEY,
     baseUrl: env.LANGFUSE_BASEURL,
-    flushAt: 1,
-    flushInterval: 0,
+    environment: env.NODE_ENV,
     userId: ctx.userId,
     sessionId: ctx.sessionId,
     tags: ctx.tags,
