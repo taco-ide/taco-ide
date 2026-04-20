@@ -19,14 +19,6 @@ export function getLangfuseCallback(
     return null;
   }
 
-  if (!env.LANGFUSE_BASEURL) {
-    console.warn(
-      "[langfuse] LANGFUSE_ENABLED=true but LANGFUSE_BASEURL is not set — " +
-        "traces will be sent to https://cloud.langfuse.com. " +
-        "Set LANGFUSE_BASEURL if you are using a self-hosted instance.",
-    );
-  }
-
   return new CallbackHandler({
     publicKey: env.LANGFUSE_PUBLIC_KEY,
     secretKey: env.LANGFUSE_SECRET_KEY,

@@ -51,7 +51,10 @@ const envSchema = z.object({
     .transform((v) => v === "true"),
   LANGFUSE_PUBLIC_KEY: z.string().optional(),
   LANGFUSE_SECRET_KEY: z.string().optional(),
-  LANGFUSE_BASEURL: z.string().url().optional(),
+  LANGFUSE_BASEURL: z
+    .union([z.string().url(), z.literal("")])
+    .optional()
+    .transform((v) => v || undefined),
 
   // Server
   PORT: z.coerce.number().default(4000),
