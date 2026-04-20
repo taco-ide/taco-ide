@@ -13,7 +13,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
+import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -147,6 +147,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
               streamMode: "messages",
               version: "v2",
               signal: controller.signal,
+              recursionLimit: 25,
               callbacks,
             },
           );
@@ -175,12 +176,13 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
       } catch (err) {
-        const errorMsg =
-          err instanceof Error && err.name === "AbortError"
-            ? "AI response timed out, please try again"
-            : err instanceof Error
-              ? err.message
-              : "Agent invocation failed";
+        request.log.error({ err }, "Teaching assistant agent error");
+        const isTimeout =
+          err instanceof AgentTimeoutError ||
+          (err instanceof Error && err.name === "AbortError");
+        const errorMsg = isTimeout
+          ? "AI response timed out, please try again"
+          : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
       } finally {

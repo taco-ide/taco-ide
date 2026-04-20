@@ -9,8 +9,6 @@ import {
   getClassroomInfo,
 } from "./tools";
 
-const checkpointer = new MemorySaver();
-
 /**
  * Build a Teachers Companion agent with a provided LLM instance.
  * The LLM instance may have custom parameters applied (temperature, max_tokens, etc.).
@@ -19,6 +17,7 @@ const checkpointer = new MemorySaver();
  * @returns A compiled LangGraph agent ready for invocation
  */
 export function buildTeachersCompanionAgent(llmInstance: BaseChatModel) {
+  const checkpointer = new MemorySaver();
   return createReactAgent({
     llm: llmInstance,
     tools: [

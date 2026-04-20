@@ -1,7 +1,7 @@
 "use client";
 
 import { CopyIcon, CornerDownLeft } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRemarkSync } from "react-remark";
 import { useProblem } from "@/contexts/ProblemContext";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
@@ -43,6 +43,13 @@ function ChatPanel() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [optimisticUserMessage, setOptimisticUserMessage] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const messages = useMemo(() => {
     const arr: Array<{
@@ -57,13 +64,13 @@ function ChatPanel() {
             arr.push({
               role: "user",
               content: i.userPrompt,
-              key: `${i.id}-user`,
+              key: i.id,
             });
           }
           arr.push({
             role: "assistant",
             content: i.modelResponse || "(Aguardando resposta...)",
-            key: `${i.id}-assistant`,
+            key: i.id,
           });
         }
       }
@@ -94,11 +101,19 @@ function ChatPanel() {
         stdin: getInput(),
         stdout: error || output || undefined,
       });
+      if (isMountedRef.current) {
+        setOptimisticUserMessage(null);
+      }
     } catch (err) {
-      setChatError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
+      if (isMountedRef.current) {
+        setChatError(
+          err instanceof Error ? err.message : "Erro ao enviar mensagem"
+        );
+      }
     } finally {
-      setOptimisticUserMessage(null);
-      setIsGenerating(false);
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
     }
   };
 
