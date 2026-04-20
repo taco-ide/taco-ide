@@ -13,9 +13,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { formatSSEEvent } from "../../../../agents/sse-events";
-import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
+import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -124,7 +122,6 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         const llmInstance = createLlm();
         const agent = buildTeachersCompanionAgent(llmInstance);
 
-
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         // Use AbortController to enforce timeout
@@ -150,7 +147,6 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
               streamMode: "messages",
               version: "v2",
               signal: controller.signal,
-              recursionLimit: 25,
               callbacks,
             },
           );
@@ -166,32 +162,27 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
                   : "";
 
               if (content) {
-                fullResponse += content;
-                reply.raw.write(formatSSEEvent({ type: "text", content }));
+                const data = JSON.stringify({ type: "text", content });
+                reply.raw.write(`data: ${data}\n\n`);
               }
             }
           }
 
-          // If the agent returned nothing (e.g. guardrail triggered), send a fallback
-          if (!fullResponse) {
-            fullResponse = AGENT_FALLBACK_RESPONSE;
-            reply.raw.write(formatSSEEvent({ type: "text", content: fullResponse }));
-          }
-
-          // Send done event with accumulated full response
-          reply.raw.write(formatSSEEvent({ type: "done", full_response: fullResponse }));
+          // Send done event
+          const doneData = JSON.stringify({ type: "done" });
+          reply.raw.write(`data: ${doneData}\n\n`);
         } finally {
           clearTimeout(timeout);
         }
       } catch (err) {
-        request.log.error({ err }, "Teaching assistant agent error");
-        const isTimeout =
-          err instanceof AgentTimeoutError ||
-          (err instanceof Error && err.name === "AbortError");
-        const errorMsg = isTimeout
-          ? "AI response timed out, please try again"
-          : "Agent invocation failed";
-        reply.raw.write(formatSSEEvent({ type: "error", content: errorMsg }));
+        const errorMsg =
+          err instanceof Error && err.name === "AbortError"
+            ? "AI response timed out, please try again"
+            : err instanceof Error
+              ? err.message
+              : "Agent invocation failed";
+        const errorData = JSON.stringify({ type: "error", content: errorMsg });
+        reply.raw.write(`data: ${errorData}\n\n`);
       } finally {
         if (langfuseCallback) {
           await langfuseCallback.flushAsync();

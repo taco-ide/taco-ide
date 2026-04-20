@@ -21,7 +21,7 @@ import {
   challengeSolution,
   model,
 } from "@repo/infra/db/schema";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
@@ -32,9 +32,6 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
-import { formatSupportMaterials } from "../../../../agents/support-materials";
-import { detectLanguageHint } from "../../../../agents/language-detect";
 
 // ==================== SCHEMAS ====================
 
@@ -269,49 +266,26 @@ export async function chatRoute(app: FastifyTypedInstance) {
       let modelResponse: string;
       let wasFallback = false;
       try {
-        // Load recent conversation history for context memory
-        const historyRows = await db
-          .select()
-          .from(userInteractionOnChallenge)
-          .where(eq(userInteractionOnChallenge.workSessionId, workSessionId))
-          .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
-          .limit(TA_HISTORY_TURN_CAP);
-
-        // Reverse to chronological order and build message pairs
-        const historyMessages = historyRows
-          .reverse()
-          .flatMap((row) => {
-            const msgs: (HumanMessage | AIMessage)[] = [];
-            // Only include pairs where modelResponse is non-empty (defensive)
-            if (row.userPrompt) {
-              msgs.push(new HumanMessage(row.userPrompt));
-            }
-            if (row.modelResponse?.trim()) {
-              msgs.push(new AIMessage(row.modelResponse));
-            }
-            return msgs;
-          });
-
         // Create LLM instance with model parameters applied
         const llmInstance = createLlm(modelParams);
         const agent = buildTeachingAssistantAgent(llmInstance);
 
-
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        // Use AbortController to enforce timeout
-        const controller = new AbortController();
-        const timeout = setTimeout(() => {
-          controller.abort();
-        }, AGENT_TIMEOUT_MS);
+        // Wrap agent invocation with timeout
+        let timeoutHandle: ReturnType<typeof setTimeout>;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(
+            () => reject(new AgentTimeoutError(AGENT_TIMEOUT_MS)),
+            AGENT_TIMEOUT_MS,
+          );
+        });
 
-        let result;
-        try {
-          result = await agent.invoke(
+        const result = await Promise.race([
+          agent.invoke(
             {
               messages: [
                 new SystemMessage(systemPrompt),
-                ...historyMessages,
                 new HumanMessage(message),
               ],
             },
@@ -322,13 +296,12 @@ export async function chatRoute(app: FastifyTypedInstance) {
                 challengeContext,
               },
               recursionLimit: 25,
-              signal: controller.signal,
               callbacks,
-            }
-          );
-        } finally {
-          clearTimeout(timeout);
-        }
+            },
+          ),
+          timeoutPromise,
+        ]);
+        clearTimeout(timeoutHandle!);
 
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
@@ -340,17 +313,14 @@ export async function chatRoute(app: FastifyTypedInstance) {
         wasFallback = !rawResponse.trim();
         modelResponse = rawResponse.trim() || AGENT_FALLBACK_RESPONSE;
       } catch (err) {
-        if (
-          err instanceof AgentTimeoutError ||
-          (err instanceof Error && err.name === "AbortError")
-        ) {
+        if (err instanceof AgentTimeoutError) {
           return reply.status(503).send({
             success: false as const,
             message: "AI response timed out, please try again",
           });
         }
-        request.log.error({ err }, "LangGraph agent error");
-        return reply.status(500).send({
+        request.server.log.error({ err }, "LangGraph agent error");
+        return reply.status(503).send({
           success: false as const,
           message: "Internal server error",
         });

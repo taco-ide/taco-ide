@@ -15,16 +15,12 @@ import {
   model,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
-import { eq, desc } from "drizzle-orm";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { eq } from "drizzle-orm";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
-import { formatSSEEvent } from "../../../../agents/sse-events";
-import { formatSupportMaterials } from "../../../../agents/support-materials";
-import { detectLanguageHint } from "../../../../agents/language-detect";
+import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -157,33 +153,9 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       });
 
       try {
-        // Load recent conversation history for context memory
-        const historyRows = await db
-          .select()
-          .from(userInteractionOnChallenge)
-          .where(eq(userInteractionOnChallenge.workSessionId, workSessionId))
-          .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
-          .limit(TA_HISTORY_TURN_CAP);
-
-        // Reverse to chronological order and build message pairs
-        const historyMessages = historyRows
-          .reverse()
-          .flatMap((row) => {
-            const msgs: (HumanMessage | AIMessage)[] = [];
-            // Only include pairs where modelResponse is non-empty (defensive)
-            if (row.userPrompt) {
-              msgs.push(new HumanMessage(row.userPrompt));
-            }
-            if (row.modelResponse?.trim()) {
-              msgs.push(new AIMessage(row.modelResponse));
-            }
-            return msgs;
-          });
-
         // Create LLM instance with model parameters applied
         const llmInstance = createLlm(modelParams);
         const agent = buildTeachingAssistantAgent(llmInstance);
-
 
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
@@ -199,7 +171,6 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
             {
               messages: [
                 new SystemMessage(systemPrompt),
-                ...historyMessages,
                 new HumanMessage(message),
               ],
             },
@@ -229,38 +200,47 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
               if (content) {
                 fullResponse += content;
-                reply.raw.write(formatSSEEvent({ type: "text", content }));
+                const data = JSON.stringify({ type: "text", content });
+                reply.raw.write(`data: ${data}\n\n`);
               }
             }
           }
 
           // If the agent returned nothing (e.g. guardrail triggered), send a fallback
           if (!fullResponse) {
-            fullResponse = AGENT_FALLBACK_RESPONSE;
-            reply.raw.write(formatSSEEvent({ type: "text", content: fullResponse }));
+            fullResponse =
+              "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
+            reply.raw.write(
+              `data: ${JSON.stringify({ type: "text", content: fullResponse })}\n\n`
+            );
           }
 
-          reply.raw.write(formatSSEEvent({ type: "done", full_response: fullResponse }));
+          // Send done event
+          const doneData = JSON.stringify({
+            type: "done",
+            full_response: fullResponse,
+          });
+          reply.raw.write(`data: ${doneData}\n\n`);
         } finally {
           clearTimeout(timeout);
         }
       } catch (err) {
-        request.log.error({ err }, "Teaching assistant agent error");
-        const isTimeout =
-          err instanceof AgentTimeoutError ||
-          (err instanceof Error && err.name === "AbortError");
-        const errorMsg = isTimeout
-          ? "AI response timed out, please try again"
-          : "Agent invocation failed";
-        reply.raw.write(formatSSEEvent({ type: "error", content: errorMsg }));
+        const errorMsg =
+          err instanceof Error && err.name === "AbortError"
+            ? "AI response timed out, please try again"
+            : err instanceof Error
+              ? err.message
+              : "Agent invocation failed";
+        const errorData = JSON.stringify({ type: "error", content: errorMsg });
+        reply.raw.write(`data: ${errorData}\n\n`);
       } finally {
         if (langfuseCallback) {
           await langfuseCallback.flushAsync();
         }
       }
 
-      // Persist interaction to DB (skip if the model output was the fallback response)
-      if (fullResponse && fullResponse !== AGENT_FALLBACK_RESPONSE) {
+      // Persist interaction to DB
+      if (fullResponse) {
         const interactionId = randomUUID();
         await db.insert(userInteractionOnChallenge).values({
           id: interactionId,
