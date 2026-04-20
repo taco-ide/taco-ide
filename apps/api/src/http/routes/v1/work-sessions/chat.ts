@@ -31,6 +31,7 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -90,8 +91,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
       }
 
       const { id: workSessionId } = request.params;
-      const { message, code: bodyCode, stdin: bodyStdin, stdout: bodyStdout } =
-        request.body;
+      const { message, code: bodyCode, stdout: bodyStdout } = request.body;
 
       const [session] = await db
         .select({
@@ -237,7 +237,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
         targetAudience: ta.targetAudience ?? "",
         challengeTitle: ch?.title ?? "",
         challengeDescription: ch?.description ?? "",
-        supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
+        supportMaterials:
+          typeof ch?.supportMaterials === "string"
+            ? ch.supportMaterials
+            : JSON.stringify(ch?.supportMaterials ?? null),
         kbContext: kbContext || undefined,
         currentCode: code ?? "",
         stdout: stdout ?? "",
@@ -246,7 +249,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const challengeContext = {
         title: ch?.title ?? "",
         description: ch?.description ?? "",
-        supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
+        supportMaterials:
+          typeof ch?.supportMaterials === "string"
+            ? ch.supportMaterials
+            : JSON.stringify(ch?.supportMaterials ?? null),
       };
 
       const langfuseCallback = getLangfuseCallback({
@@ -264,17 +270,15 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        // Wrap agent invocation with timeout
-        let timeoutHandle: ReturnType<typeof setTimeout>;
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutHandle = setTimeout(
-            () => reject(new AgentTimeoutError(AGENT_TIMEOUT_MS)),
-            AGENT_TIMEOUT_MS,
-          );
-        });
+        // Use AbortController to enforce timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => {
+          controller.abort();
+        }, AGENT_TIMEOUT_MS);
 
-        const result = await Promise.race([
-          agent.invoke(
+        let result;
+        try {
+          result = await agent.invoke(
             {
               messages: [
                 new SystemMessage(systemPrompt),
@@ -288,12 +292,13 @@ export async function chatRoute(app: FastifyTypedInstance) {
                 challengeContext,
               },
               recursionLimit: 25,
+              signal: controller.signal,
               callbacks,
-            },
-          ),
-          timeoutPromise,
-        ]);
-        clearTimeout(timeoutHandle!);
+            }
+          );
+        } finally {
+          clearTimeout(timeout);
+        }
 
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
@@ -302,17 +307,18 @@ export async function chatRoute(app: FastifyTypedInstance) {
             ? lastMsg.content
             : JSON.stringify(lastMsg?.content ?? "");
         // If the agent returned nothing (e.g. guardrail triggered), use a fallback
-        modelResponse =
-          rawResponse.trim() ||
-          "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
+        modelResponse = rawResponse.trim() || AGENT_FALLBACK_RESPONSE;
       } catch (err) {
-        if (err instanceof AgentTimeoutError) {
+        if (
+          err instanceof AgentTimeoutError ||
+          (err instanceof Error && err.name === "AbortError")
+        ) {
           return reply.status(503).send({
             success: false as const,
             message: "AI response timed out, please try again",
           });
         }
-        request.server.log.error({ err }, "LangGraph agent error");
+        request.log.error({ err }, "LangGraph agent error");
         return reply.status(503).send({
           success: false as const,
           message: "AI service temporarily unavailable",
@@ -323,7 +329,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         }
       }
 
-      const now = new Date();
+      const now = new Date(); // single timestamp shared between updatedAt and lastMessageAt
       const interactionId = randomUUID();
 
       await db.transaction(async (tx) => {

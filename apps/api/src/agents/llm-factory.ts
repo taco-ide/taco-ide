@@ -26,21 +26,12 @@ const LLMOverridesSchema = z.object({
 /**
  * Create an instance of ChatOpenAI with environment defaults merged with provided overrides.
  *
- * @param overrides - Optional record of LLM parameter overrides (temperature, max_tokens, top_p, frequency_penalty, presence_penalty)
+ * @param overrides - Optional LLM parameter overrides (temperature, max_tokens, top_p, frequency_penalty, presence_penalty)
  * @returns A new ChatOpenAI instance configured with validated parameters
  */
-export function createLlm(
-  overrides?: Record<string, unknown>
-): ChatOpenAI {
-  // Validate and filter overrides to only accepted keys
+export function createLlm(overrides?: unknown): ChatOpenAI {
   const validatedOverrides = overrides
-    ? LLMOverridesSchema.parse(
-        Object.fromEntries(
-          Object.entries(overrides).filter(([key]) =>
-            Object.keys(LLMOverridesSchema.shape).includes(key)
-          )
-        )
-      )
+    ? LLMOverridesSchema.parse(overrides)
     : {};
 
   return new ChatOpenAI({

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
   ResponseSchema500,
 } from "../../_responses/types";
@@ -12,7 +13,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
+import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -36,6 +37,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         body: TeacherMessageBodySchema,
         response: {
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
           500: ResponseSchema500,
         },
@@ -77,7 +79,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       if (!membership[0]) {
-        return reply.status(401).send({
+        return reply.status(403).send({
           success: false as const,
           message: "Not a member of this organization",
         });
@@ -141,6 +143,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
               streamMode: "messages",
               version: "v2",
               signal: controller.signal,
+              recursionLimit: 25,
               callbacks,
             },
           );
@@ -169,12 +172,13 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
       } catch (err) {
-        const errorMsg =
-          err instanceof Error && err.name === "AbortError"
-            ? "AI response timed out, please try again"
-            : err instanceof Error
-              ? err.message
-              : "Agent invocation failed";
+        request.log.error({ err }, "Teaching assistant agent error");
+        const isTimeout =
+          err instanceof AgentTimeoutError ||
+          (err instanceof Error && err.name === "AbortError");
+        const errorMsg = isTimeout
+          ? "AI response timed out, please try again"
+          : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
       } finally {

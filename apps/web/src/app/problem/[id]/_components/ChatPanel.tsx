@@ -1,7 +1,7 @@
 "use client";
 
 import { CopyIcon, CornerDownLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRemarkSync } from "react-remark";
 import { useProblem } from "@/contexts/ProblemContext";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
@@ -43,22 +43,47 @@ function ChatPanel() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [optimisticUserMessage, setOptimisticUserMessage] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
-  const messages: Array<{ role: string; content: string }> = [];
-  if (workSession?.interactions) {
-    for (const i of workSession.interactions) {
-      if (i.interactionType === "chat") {
-        if (i.userPrompt) messages.push({ role: "user", content: i.userPrompt });
-        messages.push({
-          role: "assistant",
-          content: i.modelResponse || "(Aguardando resposta...)",
-        });
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  const messages = useMemo(() => {
+    const arr: Array<{
+      role: string;
+      content: string;
+      key: string;
+    }> = [];
+    if (workSession?.interactions) {
+      for (const i of workSession.interactions) {
+        if (i.interactionType === "chat") {
+          if (i.userPrompt) {
+            arr.push({
+              role: "user",
+              content: i.userPrompt,
+              key: i.id,
+            });
+          }
+          arr.push({
+            role: "assistant",
+            content: i.modelResponse || "(Aguardando resposta...)",
+            key: i.id,
+          });
+        }
       }
     }
-  }
-  if (optimisticUserMessage) {
-    messages.push({ role: "user", content: optimisticUserMessage });
-  }
+    if (optimisticUserMessage) {
+      arr.push({
+        role: "user",
+        content: optimisticUserMessage,
+        key: "optimistic",
+      });
+    }
+    return arr;
+  }, [workSession?.interactions, optimisticUserMessage]);
 
   const submitMessage = async () => {
     if (isSessionEnded || !input.trim() || isGenerating) return;
@@ -76,13 +101,19 @@ function ChatPanel() {
         stdin: getInput(),
         stdout: error || output || undefined,
       });
+      if (isMountedRef.current) {
+        setOptimisticUserMessage(null);
+      }
     } catch (err) {
-      setChatError(
-        err instanceof Error ? err.message : "Erro ao enviar mensagem"
-      );
+      if (isMountedRef.current) {
+        setChatError(
+          err instanceof Error ? err.message : "Erro ao enviar mensagem"
+        );
+      }
     } finally {
-      setIsGenerating(false);
-      setOptimisticUserMessage(null);
+      if (isMountedRef.current) {
+        setIsGenerating(false);
+      }
     }
   };
 
@@ -102,7 +133,11 @@ function ChatPanel() {
     if (action === "Copy") {
       const message = messages[messageIndex];
       if (message?.role === "assistant") {
-        navigator.clipboard.writeText(message.content);
+        navigator.clipboard
+          .writeText(message.content)
+          .catch((clipErr) => {
+            console.warn("Failed to copy to clipboard:", clipErr);
+          });
       }
     }
   };
@@ -136,7 +171,7 @@ function ChatPanel() {
 
           {messages.map((message, index) => (
             <ChatBubble
-              key={index}
+              key={message.key}
               variant={message.role === "user" ? "sent" : "received"}
             >
               <ChatBubbleAvatar

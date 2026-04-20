@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
   ResponseSchema500,
 } from "../../_responses/types";
@@ -19,7 +20,8 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
+import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -45,6 +47,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         body: StudentMessageBodySchema,
         response: {
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
           500: ResponseSchema500,
         },
@@ -75,7 +78,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
       if (ws[0].userId !== user.id) {
         return reply
-          .status(401)
+          .status(403)
           .send({ success: false as const, message: "Not authorized" });
       }
 
@@ -111,7 +114,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         targetAudience: ta[0]?.targetAudience ?? "",
         challengeTitle: ch[0]?.title ?? "",
         challengeDescription: ch[0]?.description ?? "",
-        supportMaterials: JSON.stringify(ch[0]?.supportMaterials ?? ""),
+        supportMaterials:
+          typeof ch[0]?.supportMaterials === "string"
+            ? ch[0].supportMaterials
+            : JSON.stringify(ch[0]?.supportMaterials ?? null),
         currentCode: currentCode ?? "",
         stdout: stdout ?? "",
       });
@@ -120,7 +126,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       const challengeContext = {
         title: ch[0]?.title ?? "",
         description: ch[0]?.description ?? "",
-        supportMaterials: JSON.stringify(ch[0]?.supportMaterials ?? ""),
+        supportMaterials:
+          typeof ch[0]?.supportMaterials === "string"
+            ? ch[0].supportMaterials
+            : JSON.stringify(ch[0]?.supportMaterials ?? null),
       };
 
       // Stream SSE to the client
@@ -199,8 +208,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
           // If the agent returned nothing (e.g. guardrail triggered), send a fallback
           if (!fullResponse) {
-            fullResponse =
-              "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
+            fullResponse = AGENT_FALLBACK_RESPONSE;
             reply.raw.write(
               `data: ${JSON.stringify({ type: "text", content: fullResponse })}\n\n`
             );
@@ -216,12 +224,13 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
       } catch (err) {
-        const errorMsg =
-          err instanceof Error && err.name === "AbortError"
-            ? "AI response timed out, please try again"
-            : err instanceof Error
-              ? err.message
-              : "Agent invocation failed";
+        request.log.error({ err }, "Teaching assistant agent error");
+        const isTimeout =
+          err instanceof AgentTimeoutError ||
+          (err instanceof Error && err.name === "AbortError");
+        const errorMsg = isTimeout
+          ? "AI response timed out, please try again"
+          : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
       } finally {
