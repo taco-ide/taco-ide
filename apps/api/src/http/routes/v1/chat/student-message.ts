@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema401,
@@ -15,9 +16,10 @@ import {
 } from "@repo/infra/db/schema";
 import { eq } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
+import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
+import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -142,63 +144,84 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       });
 
       try {
+        // Create LLM instance with model parameters applied
+        const llmInstance = createLlm(modelParams);
+        const agent = buildTeachingAssistantAgent(llmInstance);
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        const stream = teachingAssistantAgent.streamEvents(
-          {
-            messages: [
-              new SystemMessage(systemPrompt),
-              new HumanMessage(message),
-            ],
-          },
-          {
-            configurable: {
-              thread_id: workSessionId,
-              challengeContext,
-              ...modelParams,
-            },
-            streamMode: "messages",
-            version: "v2",
-            callbacks,
-          },
+        // Use AbortController to enforce timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(
+          () => controller.abort(),
+          AGENT_TIMEOUT_MS,
         );
 
-        for await (const event of stream) {
-          if (
-            event.event === "on_chat_model_stream" &&
-            event.data?.chunk?.content
-          ) {
-            const content =
-              typeof event.data.chunk.content === "string"
-                ? event.data.chunk.content
-                : "";
+        try {
+          const stream = agent.streamEvents(
+            {
+              messages: [
+                new SystemMessage(systemPrompt),
+                new HumanMessage(message),
+              ],
+            },
+            {
+              configurable: {
+                thread_id: workSessionId,
+                challengeId: ws[0].challengeId,
+                challengeContext,
+              },
+              recursionLimit: 25,
+              streamMode: "messages",
+              version: "v2",
+              signal: controller.signal,
+              callbacks,
+            },
+          );
 
-            if (content) {
-              fullResponse += content;
-              const data = JSON.stringify({ type: "text", content });
-              reply.raw.write(`data: ${data}\n\n`);
+          for await (const event of stream) {
+            if (
+              event.event === "on_chat_model_stream" &&
+              event.data?.chunk?.content
+            ) {
+              const content =
+                typeof event.data.chunk.content === "string"
+                  ? event.data.chunk.content
+                  : "";
+
+              if (content) {
+                fullResponse += content;
+                const data = JSON.stringify({ type: "text", content });
+                reply.raw.write(`data: ${data}\n\n`);
+              }
             }
           }
-        }
 
-        // If the agent returned nothing (e.g. guardrail triggered), send a fallback
-        if (!fullResponse) {
-          fullResponse =
-            "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
-          reply.raw.write(
-            `data: ${JSON.stringify({ type: "text", content: fullResponse })}\n\n`
-          );
-        }
+          // If the agent returned nothing (e.g. guardrail triggered), send a fallback
+          if (!fullResponse) {
+            fullResponse =
+              "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
+            reply.raw.write(
+              `data: ${JSON.stringify({ type: "text", content: fullResponse })}\n\n`
+            );
+          }
 
-        // Send done event
-        const doneData = JSON.stringify({
-          type: "done",
-          full_response: fullResponse,
-        });
-        reply.raw.write(`data: ${doneData}\n\n`);
+          // Send done event
+          const doneData = JSON.stringify({
+            type: "done",
+            full_response: fullResponse,
+          });
+          reply.raw.write(`data: ${doneData}\n\n`);
+        } finally {
+          clearTimeout(timeout);
+        }
       } catch (err) {
         const errorMsg =
-          err instanceof Error ? err.message : "Agent invocation failed";
+          err instanceof Error && err.name === "AbortError"
+            ? "AI response timed out, please try again"
+            : err instanceof Error
+              ? err.message
+              : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
       } finally {
@@ -209,11 +232,12 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
       // Persist interaction to DB
       if (fullResponse) {
-        const interactionId = crypto.randomUUID();
+        const interactionId = randomUUID();
         await db.insert(userInteractionOnChallenge).values({
           id: interactionId,
           workSessionId,
           challengeId: ws[0].challengeId,
+          interactionType: "chat",
           userPrompt: message,
           modelResponse: fullResponse,
           code: currentCode ?? null,

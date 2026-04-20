@@ -21,7 +21,7 @@ import {
   model,
 } from "@repo/infra/db/schema";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
+import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
@@ -30,6 +30,7 @@ import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
+import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -257,25 +258,42 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
       let modelResponse: string;
       try {
+        // Create LLM instance with model parameters applied
+        const llmInstance = createLlm(modelParams);
+        const agent = buildTeachingAssistantAgent(llmInstance);
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        const result = await teachingAssistantAgent.invoke(
-          {
-            messages: [
-              new SystemMessage(systemPrompt),
-              new HumanMessage(message),
-            ],
-          },
-          {
-            configurable: {
-              thread_id: workSessionId,
-              challengeId: session.challengeId,
-              challengeContext,
-              ...modelParams,
+        // Wrap agent invocation with timeout
+        let timeoutHandle: ReturnType<typeof setTimeout>;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(
+            () => reject(new AgentTimeoutError(AGENT_TIMEOUT_MS)),
+            AGENT_TIMEOUT_MS,
+          );
+        });
+
+        const result = await Promise.race([
+          agent.invoke(
+            {
+              messages: [
+                new SystemMessage(systemPrompt),
+                new HumanMessage(message),
+              ],
             },
-            callbacks,
-          },
-        );
+            {
+              configurable: {
+                thread_id: workSessionId,
+                challengeId: session.challengeId,
+                challengeContext,
+              },
+              recursionLimit: 25,
+              callbacks,
+            },
+          ),
+          timeoutPromise,
+        ]);
+        clearTimeout(timeoutHandle!);
 
         // The agent returns a messages array; the last message is the AI reply.
         const lastMsg = result.messages[result.messages.length - 1];
@@ -288,6 +306,12 @@ export async function chatRoute(app: FastifyTypedInstance) {
           rawResponse.trim() ||
           "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
       } catch (err) {
+        if (err instanceof AgentTimeoutError) {
+          return reply.status(503).send({
+            success: false as const,
+            message: "AI response timed out, please try again",
+          });
+        }
         request.server.log.error({ err }, "LangGraph agent error");
         return reply.status(503).send({
           success: false as const,

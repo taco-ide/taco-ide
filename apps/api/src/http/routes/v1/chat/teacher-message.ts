@@ -9,9 +9,10 @@ import { db } from "@repo/infra/db";
 import { classroom, member } from "@repo/infra/db/schema";
 import { eq, and } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { teachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
+import { buildTeachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
+import { createLlm, AGENT_TIMEOUT_MS } from "../../../../agents/llm-factory";
 
 // ==================== SCHEMAS ====================
 
@@ -111,49 +112,69 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
       });
 
       try {
+        // Create LLM instance with default parameters
+        const llmInstance = createLlm();
+        const agent = buildTeachersCompanionAgent(llmInstance);
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        const stream = teachersCompanionAgent.streamEvents(
-          {
-            messages: [
-              new SystemMessage(systemPrompt),
-              new HumanMessage(message),
-            ],
-          },
-          {
-            configurable: {
-              thread_id: `teacher-${classroomId}-${user.id}`,
-              classroomContext,
-            },
-            streamMode: "messages",
-            version: "v2",
-            callbacks,
-          },
+        // Use AbortController to enforce timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(
+          () => controller.abort(),
+          AGENT_TIMEOUT_MS,
         );
 
-        for await (const event of stream) {
-          if (
-            event.event === "on_chat_model_stream" &&
-            event.data?.chunk?.content
-          ) {
-            const content =
-              typeof event.data.chunk.content === "string"
-                ? event.data.chunk.content
-                : "";
+        try {
+          const stream = agent.streamEvents(
+            {
+              messages: [
+                new SystemMessage(systemPrompt),
+                new HumanMessage(message),
+              ],
+            },
+            {
+              configurable: {
+                thread_id: `teacher-${classroomId}-${user.id}`,
+                classroomContext,
+              },
+              streamMode: "messages",
+              version: "v2",
+              signal: controller.signal,
+              callbacks,
+            },
+          );
 
-            if (content) {
-              const data = JSON.stringify({ type: "text", content });
-              reply.raw.write(`data: ${data}\n\n`);
+          for await (const event of stream) {
+            if (
+              event.event === "on_chat_model_stream" &&
+              event.data?.chunk?.content
+            ) {
+              const content =
+                typeof event.data.chunk.content === "string"
+                  ? event.data.chunk.content
+                  : "";
+
+              if (content) {
+                const data = JSON.stringify({ type: "text", content });
+                reply.raw.write(`data: ${data}\n\n`);
+              }
             }
           }
-        }
 
-        // Send done event
-        const doneData = JSON.stringify({ type: "done" });
-        reply.raw.write(`data: ${doneData}\n\n`);
+          // Send done event
+          const doneData = JSON.stringify({ type: "done" });
+          reply.raw.write(`data: ${doneData}\n\n`);
+        } finally {
+          clearTimeout(timeout);
+        }
       } catch (err) {
         const errorMsg =
-          err instanceof Error ? err.message : "Agent invocation failed";
+          err instanceof Error && err.name === "AbortError"
+            ? "AI response timed out, please try again"
+            : err instanceof Error
+              ? err.message
+              : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
       } finally {
