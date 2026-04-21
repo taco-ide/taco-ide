@@ -64,13 +64,13 @@ function ChatPanel() {
             arr.push({
               role: "user",
               content: i.userPrompt,
-              key: i.id,
+              key: `${i.id}-user`,
             });
           }
           arr.push({
             role: "assistant",
             content: i.modelResponse || "(Aguardando resposta...)",
-            key: i.id,
+            key: `${i.id}-assistant`,
           });
         }
       }
