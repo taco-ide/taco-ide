@@ -326,7 +326,9 @@ export async function chatRoute(app: FastifyTypedInstance) {
         });
       } finally {
         if (langfuseCallback) {
-          await langfuseCallback.flushAsync();
+          langfuseCallback.flushAsync().catch((flushErr) => {
+            request.log.warn({ err: flushErr }, "Langfuse flush failed");
+          });
         }
       }
 
