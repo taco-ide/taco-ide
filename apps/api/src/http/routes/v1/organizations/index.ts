@@ -3,6 +3,7 @@ import { listMembersRoute } from "./members/list";
 import { updateMemberRoleRoute } from "./members/updateRole";
 import { createInvitationRoute } from "./invitations/create";
 import { deleteInvitationRoute } from "./invitations/delete";
+import { emailDomainsRoutes } from "./email-domains";
 
 export async function organizationsRoutes(app: FastifyTypedInstance) {
   await app.register(
@@ -13,6 +14,7 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
           await updateMemberRoleRoute(sf);
           await createInvitationRoute(sf);
           await deleteInvitationRoute(sf);
+          await emailDomainsRoutes(sf);
         },
         { prefix: "/:id" }
       );
