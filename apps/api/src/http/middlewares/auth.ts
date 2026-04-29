@@ -39,6 +39,7 @@ export async function authMiddleware(
         image: user.image,
         emailVerified: user.emailVerified,
         isActive: user.isActive,
+        isPlatformAdmin: user.isPlatformAdmin,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })
@@ -100,6 +101,7 @@ export async function authMiddleware(
       image: userData[0].image,
       emailVerified: userData[0].emailVerified,
       isActive: userData[0].isActive,
+      isPlatformAdmin: userData[0].isPlatformAdmin,
       createdAt: userData[0].createdAt,
       updatedAt: userData[0].updatedAt,
       activeOrganizationId: activeOrgId,

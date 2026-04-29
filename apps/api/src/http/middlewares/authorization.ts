@@ -6,6 +6,29 @@ import {
 import type { RoleName, Resource, ActionFor } from "@repo/infra/auth";
 
 /**
+ * Middleware that allows only platform admins. The platform admin flag
+ * (`user.isPlatformAdmin`) lives outside the per-organization role model and
+ * is required for cross-org operations under `/v1/admin/*`.
+ */
+export function requirePlatformAdmin() {
+  return async function (request: FastifyRequest, reply: FastifyReply) {
+    if (!request.user) {
+      return reply.status(401).send({
+        success: false,
+        message: "Not authenticated",
+      });
+    }
+
+    if (!request.user.isPlatformAdmin) {
+      return reply.status(403).send({
+        success: false,
+        message: "Platform admin access required",
+      });
+    }
+  };
+}
+
+/**
  * Middleware factory that checks if the user has at least the specified role
  * in the hierarchy: student < teacher < coordinator < admin
  */
