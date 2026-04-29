@@ -4,45 +4,45 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
+import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembersQueryParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
-export const getV1OrganizationsIdMembersSuspenseQueryKey = (id: GetV1OrganizationsIdMembersPathParams["id"]) => [{ url: '/v1/organizations/:id/members', params: {id:id} }] as const
+export const getV1OrganizationsIdMembersSuspenseQueryKey = (id: GetV1OrganizationsIdMembersPathParams["id"], params?: GetV1OrganizationsIdMembersQueryParams) => [{ url: '/v1/organizations/:id/members', params: {id:id} }, ...(params ? [params] : [])] as const
 
 export type GetV1OrganizationsIdMembersSuspenseQueryKey = ReturnType<typeof getV1OrganizationsIdMembersSuspenseQueryKey>
 
 /**
- * @description List members of an organization. Requires teacher+ role. Organization ID must match active organization.
+ * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ in the org and the id must match the active organization.
  * @summary List organization members
  * {@link /v1/organizations/:id/members}
  */
-export async function getV1OrganizationsIdMembersSuspense(id: GetV1OrganizationsIdMembersPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
+export async function getV1OrganizationsIdMembersSuspense(id: GetV1OrganizationsIdMembersPathParams["id"], params?: GetV1OrganizationsIdMembersQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1OrganizationsIdMembersQueryResponse, ResponseErrorConfig<GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404>, unknown>({ method : "GET", url : `/v1/organizations/${id}/members`, ... requestConfig })  
+  const res = await request<GetV1OrganizationsIdMembersQueryResponse, ResponseErrorConfig<GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404>, unknown>({ method : "GET", url : `/v1/organizations/${id}/members`, params, ... requestConfig })  
   return res.data
 }
 
-export function getV1OrganizationsIdMembersSuspenseQueryOptions(id: GetV1OrganizationsIdMembersPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
-  const queryKey = getV1OrganizationsIdMembersSuspenseQueryKey(id)
+export function getV1OrganizationsIdMembersSuspenseQueryOptions(id: GetV1OrganizationsIdMembersPathParams["id"], params?: GetV1OrganizationsIdMembersQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
+  const queryKey = getV1OrganizationsIdMembersSuspenseQueryKey(id, params)
   return queryOptions<GetV1OrganizationsIdMembersQueryResponse, ResponseErrorConfig<GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404>, GetV1OrganizationsIdMembersQueryResponse, typeof queryKey>({
    enabled: !!(id),
    queryKey,
    queryFn: async ({ signal }) => {
       config.signal = signal
-      return getV1OrganizationsIdMembersSuspense(id, config)
+      return getV1OrganizationsIdMembersSuspense(id, params, config)
    },
   })
 }
 
 /**
- * @description List members of an organization. Requires teacher+ role. Organization ID must match active organization.
+ * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ in the org and the id must match the active organization.
  * @summary List organization members
  * {@link /v1/organizations/:id/members}
  */
-export function useGetV1OrganizationsIdMembersSuspense<TData = GetV1OrganizationsIdMembersQueryResponse, TQueryKey extends QueryKey = GetV1OrganizationsIdMembersSuspenseQueryKey>(id: GetV1OrganizationsIdMembersPathParams["id"], options: 
+export function useGetV1OrganizationsIdMembersSuspense<TData = GetV1OrganizationsIdMembersQueryResponse, TQueryKey extends QueryKey = GetV1OrganizationsIdMembersSuspenseQueryKey>(id: GetV1OrganizationsIdMembersPathParams["id"], params?: GetV1OrganizationsIdMembersQueryParams, options: 
 {
   query?: Partial<UseSuspenseQueryOptions<GetV1OrganizationsIdMembersQueryResponse, ResponseErrorConfig<GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404>, TData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
@@ -50,10 +50,10 @@ export function useGetV1OrganizationsIdMembersSuspense<TData = GetV1Organization
  = {}) {
   const { query: queryConfig = {}, client: config = {} } = options ?? {}
   const { client: queryClient, ...queryOptions } = queryConfig
-  const queryKey = queryOptions?.queryKey ?? getV1OrganizationsIdMembersSuspenseQueryKey(id)
+  const queryKey = queryOptions?.queryKey ?? getV1OrganizationsIdMembersSuspenseQueryKey(id, params)
 
   const query = useSuspenseQuery({
-   ...getV1OrganizationsIdMembersSuspenseQueryOptions(id, config),
+   ...getV1OrganizationsIdMembersSuspenseQueryOptions(id, params, config),
    queryKey,
    ...queryOptions
   } as unknown as UseSuspenseQueryOptions, queryClient) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404>> & { queryKey: TQueryKey }

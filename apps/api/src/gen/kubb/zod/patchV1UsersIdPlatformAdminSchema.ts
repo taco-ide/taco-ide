@@ -5,31 +5,23 @@
 
 import { z } from "zod";
 
-export const getV1OrganizationsIdMembersPathParamsSchema = z.object({
+export const patchV1UsersIdPlatformAdminPathParamsSchema = z.object({
     "id": z.string().uuid()
     })
-
-export const getV1OrganizationsIdMembersQueryParamsSchema = z.object({
-    "q": z.string().min(1).optional(),
-"role": z.enum(["student", "teacher", "coordinator", "admin"]).optional()
-    }).optional()
 
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers200Schema = z.object({
+export const patchV1UsersIdPlatformAdmin200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
-"data": z.array(z.object({
+"data": z.object({
     "id": z.string(),
-"userId": z.string(),
-"name": z.string(),
 "email": z.string(),
-"role": z.string(),
-"createdAt": z.string(),
-"lastActiveAt": z.string().nullable(),
-"joinedVia": z.enum(["domain", "manual", "invitation"])
-    })),
+"name": z.string(),
+"isPlatformAdmin": z.boolean(),
+"isActive": z.boolean()
+    }),
 "pagination": z.object({
     "total": z.number(),
 "page": z.number(),
@@ -41,7 +33,7 @@ export const getV1OrganizationsIdMembers200Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers401Schema = z.object({
+export const patchV1UsersIdPlatformAdmin401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -52,7 +44,7 @@ export const getV1OrganizationsIdMembers401Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers403Schema = z.object({
+export const patchV1UsersIdPlatformAdmin403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -63,7 +55,7 @@ export const getV1OrganizationsIdMembers403Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers404Schema = z.object({
+export const patchV1UsersIdPlatformAdmin404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -71,4 +63,19 @@ export const getV1OrganizationsIdMembers404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const getV1OrganizationsIdMembersQueryResponseSchema = z.lazy(() => getV1OrganizationsIdMembers200Schema)
+/**
+ * @description Default Response
+ */
+export const patchV1UsersIdPlatformAdmin409Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+export const patchV1UsersIdPlatformAdminMutationRequestSchema = z.object({
+    "isPlatformAdmin": z.boolean()
+    })
+
+export const patchV1UsersIdPlatformAdminMutationResponseSchema = z.lazy(() => patchV1UsersIdPlatformAdmin200Schema)
