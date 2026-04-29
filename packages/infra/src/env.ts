@@ -46,6 +46,11 @@ const envSchema = z.object({
 
   // Server
   PORT: z.coerce.number().default(4000),
+
+  // Platform admin seed (all optional; seed skips with a warning if any is missing)
+  PLATFORM_ADMIN_EMAIL: z.string().email().optional(),
+  PLATFORM_ADMIN_PASSWORD: z.string().min(12).optional(),
+  PLATFORM_ADMIN_NAME: z.string().min(2).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

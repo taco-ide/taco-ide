@@ -115,6 +115,14 @@ export const auth = betterAuth({
         type: "date",
         required: false,
       },
+      // input: false prevents clients from setting isPlatformAdmin during
+      // sign-up or self-update. Promotion is done server-side only.
+      isPlatformAdmin: {
+        type: "boolean",
+        defaultValue: false,
+        required: false,
+        input: false,
+      },
     },
   },
 
