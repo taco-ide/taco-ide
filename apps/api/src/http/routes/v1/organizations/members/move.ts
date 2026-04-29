@@ -157,9 +157,10 @@ export async function moveMemberRoute(app: FastifyTypedInstance) {
 
       const newId = randomUUID();
       const now = new Date();
+      const sourceMemberId = sourceMember[0].id;
 
       const inserted = await db.transaction(async (tx) => {
-        await tx.delete(member).where(eq(member.id, sourceMember[0].id));
+        await tx.delete(member).where(eq(member.id, sourceMemberId));
         const result = await tx
           .insert(member)
           .values({
@@ -178,6 +179,13 @@ export async function moveMemberRoute(app: FastifyTypedInstance) {
           });
         return result[0];
       });
+
+      if (!inserted) {
+        return reply.status(409).send({
+          success: false as const,
+          message: "Failed to insert member into target organization",
+        });
+      }
 
       return reply.status(200).send({
         success: true as const,

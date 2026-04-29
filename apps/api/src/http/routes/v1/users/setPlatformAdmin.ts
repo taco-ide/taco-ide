@@ -122,6 +122,14 @@ export async function setPlatformAdminRoute(app: FastifyTypedInstance) {
           isActive: user.isActive,
         });
 
+      const updatedUser = updated[0];
+      if (!updatedUser) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "User not found",
+        });
+      }
+
       // Revoke all sessions of the target user so the cookie cache (5 min)
       // cannot carry the previous platform-admin value.
       await db.delete(session).where(eq(session.userId, id));
@@ -129,11 +137,11 @@ export async function setPlatformAdminRoute(app: FastifyTypedInstance) {
       return reply.status(200).send({
         success: true as const,
         data: {
-          id: updated[0].id,
-          email: updated[0].email,
-          name: updated[0].name ?? "",
-          isPlatformAdmin: updated[0].isPlatformAdmin,
-          isActive: updated[0].isActive,
+          id: updatedUser.id,
+          email: updatedUser.email,
+          name: updatedUser.name ?? "",
+          isPlatformAdmin: updatedUser.isPlatformAdmin,
+          isActive: updatedUser.isActive,
         },
       });
     }

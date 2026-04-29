@@ -130,14 +130,22 @@ export async function addExistingMemberRoute(app: FastifyTypedInstance) {
           createdAt: member.createdAt,
         });
 
+      const created = inserted[0];
+      if (!created) {
+        return reply.status(409).send({
+          success: false as const,
+          message: "Failed to insert member",
+        });
+      }
+
       return reply.status(201).send({
         success: true as const,
         data: {
-          id: inserted[0].id,
-          userId: inserted[0].userId,
-          organizationId: inserted[0].organizationId,
-          role: inserted[0].role,
-          createdAt: inserted[0].createdAt.toISOString(),
+          id: created.id,
+          userId: created.userId,
+          organizationId: created.organizationId,
+          role: created.role,
+          createdAt: created.createdAt.toISOString(),
         },
       });
     }
