@@ -74,7 +74,12 @@ export async function authMiddleware(
 
     if (activeOrgId) {
       const memberData = await db
-        .select({ role: member.role, orgName: organization.name })
+        .select({
+          memberId: member.id,
+          role: member.role,
+          orgName: organization.name,
+          lastActiveAt: member.lastActiveAt,
+        })
         .from(member)
         .innerJoin(organization, eq(organization.id, member.organizationId))
         .where(
@@ -90,6 +95,19 @@ export async function authMiddleware(
           role = memberData[0].role;
         }
         activeOrgName = memberData[0].orgName;
+
+        // Debounced bump of member.lastActiveAt: only update if null or older
+        // than 5 minutes. Fire-and-forget; failure must not block the request.
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+        const last = memberData[0].lastActiveAt;
+        if (!last || last.getTime() < fiveMinutesAgo) {
+          db.update(member)
+            .set({ lastActiveAt: new Date() })
+            .where(eq(member.id, memberData[0].memberId))
+            .catch((err) => {
+              console.error("Failed to bump member.lastActiveAt:", err);
+            });
+        }
       }
     }
 
