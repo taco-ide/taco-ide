@@ -18,6 +18,7 @@ export const getV1UsersMe200Schema = z.object({
 "image": z.string().nullable(),
 "emailVerified": z.boolean(),
 "isActive": z.boolean(),
+"isPlatformAdmin": z.boolean(),
 "createdAt": z.string(),
 "updatedAt": z.string(),
 "activeOrganizationId": z.string().nullable(),

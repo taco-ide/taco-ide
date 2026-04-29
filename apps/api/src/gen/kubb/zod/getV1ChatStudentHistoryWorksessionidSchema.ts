@@ -5,24 +5,22 @@
 
 import { z } from "zod";
 
-export const getV1ClassroomsQueryParamsSchema = z.object({
-    "scope": z.enum(["mine", "org", "all"]).default("all"),
-"page": z.coerce.number().min(1).default(1),
-"perPage": z.coerce.number().min(1).max(100).default(20)
+export const getV1ChatStudentHistoryWorksessionidPathParamsSchema = z.object({
+    "workSessionId": z.string()
     })
 
 /**
  * @description Default Response
  */
-export const getV1Classrooms200Schema = z.object({
+export const getV1ChatStudentHistoryWorksessionid200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.array(z.object({
     "id": z.string(),
-"title": z.string(),
-"description": z.string().nullable(),
-"organizationId": z.string(),
-"organizationName": z.string().nullable(),
+"userPrompt": z.string(),
+"modelResponse": z.string(),
+"code": z.string().nullable(),
+"stdout": z.string().nullable(),
 "createdAt": z.string()
     })),
 "pagination": z.object({
@@ -30,13 +28,13 @@ export const getV1Classrooms200Schema = z.object({
 "page": z.number(),
 "perPage": z.number(),
 "totalPages": z.number()
-    })
+    }).optional()
     })
 
 /**
  * @description Default Response
  */
-export const getV1Classrooms400Schema = z.object({
+export const getV1ChatStudentHistoryWorksessionid401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -47,7 +45,7 @@ export const getV1Classrooms400Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1Classrooms401Schema = z.object({
+export const getV1ChatStudentHistoryWorksessionid404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -55,4 +53,4 @@ export const getV1Classrooms401Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const getV1ClassroomsQueryResponseSchema = z.lazy(() => getV1Classrooms200Schema)
+export const getV1ChatStudentHistoryWorksessionidQueryResponseSchema = z.lazy(() => getV1ChatStudentHistoryWorksessionid200Schema)

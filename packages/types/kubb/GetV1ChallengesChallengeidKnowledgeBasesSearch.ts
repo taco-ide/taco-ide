@@ -61,6 +61,19 @@ export type GetV1ChallengesChallengeidKnowledgeBasesSearch200 = {
         */
         similarity: number;
         /**
+         * @type object
+        */
+        metadata: {
+            /**
+             * @type array | undefined
+            */
+            titleHierarchy?: string[];
+            /**
+             * @type string | undefined
+            */
+            documentFilename?: string;
+        } | null;
+        /**
          * @type string
         */
         knowledgeBaseId: string;

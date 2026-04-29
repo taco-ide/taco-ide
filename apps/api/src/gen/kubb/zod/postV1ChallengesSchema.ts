@@ -70,7 +70,7 @@ export const postV1ChallengesMutationRequestSchema = z.object({
     "title": z.string().min(1).max(200),
 "description": z.string().optional(),
 "difficulty": z.enum(["easy", "medium", "hard"]),
-"classroomId": z.string().uuid().optional(),
+"classroomId": z.string().uuid(),
 "tags": z.array(z.string()).optional(),
 "supportMaterials": z.any().optional(),
 "possibleSolutions": z.any().optional()

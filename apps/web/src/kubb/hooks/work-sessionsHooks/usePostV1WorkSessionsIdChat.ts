@@ -14,7 +14,7 @@ export const postV1WorkSessionsIdChatMutationKey = () => [{ url: '/v1/work-sessi
 export type PostV1WorkSessionsIdChatMutationKey = ReturnType<typeof postV1WorkSessionsIdChatMutationKey>
 
 /**
- * @description Sends a user message to the Teaching Assistant via OpenRouter, saves the interaction, and returns the AI response
+ * @description Sends a user message to the Teaching Assistant agent, saves the interaction, and returns the AI response
  * @summary Send chat message and get TA response
  * {@link /v1/work-sessions/:id/chat}
  */
@@ -28,7 +28,7 @@ export async function postV1WorkSessionsIdChat(id: PostV1WorkSessionsIdChatPathP
 }
 
 /**
- * @description Sends a user message to the Teaching Assistant via OpenRouter, saves the interaction, and returns the AI response
+ * @description Sends a user message to the Teaching Assistant agent, saves the interaction, and returns the AI response
  * @summary Send chat message and get TA response
  * {@link /v1/work-sessions/:id/chat}
  */
