@@ -1,4 +1,9 @@
 import { FastifyTypedInstance } from "../../../types";
+import { listOrganizationsRoute } from "./list";
+import { createOrganizationRoute } from "./create";
+import { getOrganizationByIdRoute } from "./getById";
+import { updateOrganizationRoute } from "./update";
+import { setOrganizationActiveRoute } from "./setActive";
 import { listMembersRoute } from "./members/list";
 import { updateMemberRoleRoute } from "./members/updateRole";
 import { createInvitationRoute } from "./invitations/create";
@@ -7,6 +12,14 @@ import { deleteInvitationRoute } from "./invitations/delete";
 export async function organizationsRoutes(app: FastifyTypedInstance) {
   await app.register(
     async (fastify: FastifyTypedInstance) => {
+      // Top-level platform-admin routes (no :id prefix)
+      await listOrganizationsRoute(fastify);
+      await createOrganizationRoute(fastify);
+      await getOrganizationByIdRoute(fastify);
+      await updateOrganizationRoute(fastify);
+      await setOrganizationActiveRoute(fastify);
+
+      // Per-organization sub-routes (members, invitations) under /:id
       await fastify.register(
         async (sf: FastifyTypedInstance) => {
           await listMembersRoute(sf);
@@ -20,4 +33,3 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
     { prefix: "/organizations" }
   );
 }
-
