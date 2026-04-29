@@ -15,8 +15,11 @@ import { organization } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
+// Better Auth's organization plugin generates IDs with its own scheme
+// (not strictly UUID). organization.id in the schema is `text(...)`, so we
+// only require a non-empty string here.
 const OrganizationParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const UpdateOrganizationBodySchema = z
