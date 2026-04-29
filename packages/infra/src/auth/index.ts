@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
+import { and, asc, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { env } from "../env";
@@ -147,6 +149,76 @@ export const auth = betterAuth({
       creatorRole: "admin",
     }),
   ],
+
+  // Database hooks run inside Better Auth's create/update transactions.
+  // Throwing here aborts the user creation, so we always swallow errors
+  // in the auto-assignment hook and prefer a successful sign-up over a
+  // brittle one-shot membership.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (createdUser) => {
+          try {
+            const email = createdUser.email;
+            if (typeof email !== "string") return;
+            const domain = email.split("@")[1]?.toLowerCase().trim();
+            if (!domain) return;
+
+            // Pick the earliest active rule (createdAt ASC). Multiple rules
+            // for the same domain across different organizations are allowed
+            // by the global UNIQUE(domain, role) only when the role differs;
+            // we still tiebreak by createdAt for predictability.
+            const rules = await db
+              .select({
+                id: schema.organizationEmailDomain.id,
+                organizationId: schema.organizationEmailDomain.organizationId,
+                role: schema.organizationEmailDomain.role,
+                createdAt: schema.organizationEmailDomain.createdAt,
+              })
+              .from(schema.organizationEmailDomain)
+              .innerJoin(
+                schema.organization,
+                eq(
+                  schema.organization.id,
+                  schema.organizationEmailDomain.organizationId
+                )
+              )
+              .where(
+                and(
+                  eq(schema.organizationEmailDomain.domain, domain),
+                  eq(schema.organization.isActive, true)
+                )
+              )
+              .orderBy(asc(schema.organizationEmailDomain.createdAt))
+              .limit(1);
+
+            const rule = rules[0];
+            if (!rule) return;
+
+            // Insert the membership directly via Drizzle. Going through
+            // `auth.api.addMember` would enforce the org plugin's
+            // `membershipLimit` (default 100); we want auto-assignment to
+            // bypass that for new sign-ups.
+            await db.insert(schema.member).values({
+              id: randomUUID(),
+              userId: createdUser.id,
+              organizationId: rule.organizationId,
+              role: rule.role,
+              createdAt: new Date(),
+            });
+          } catch (err) {
+            console.error(
+              "[user.create.after] domain auto-assign failed:",
+              err
+            );
+            // Do NOT rethrow — failing the hook would roll back the user
+            // creation. Better: user signs up successfully, just without
+            // the auto-assignment.
+          }
+        },
+      },
+    },
+  },
 
   advanced: {
     useSecureCookies: env.NODE_ENV === "production",
