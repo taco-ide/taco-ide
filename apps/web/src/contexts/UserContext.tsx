@@ -23,6 +23,7 @@ export interface User {
   image: string | null;
   emailVerified: boolean;
   isActive: boolean;
+  isPlatformAdmin: boolean;
   activeOrganizationId: string | null;
   activeOrganizationName: string | null;
   role: string | null;
