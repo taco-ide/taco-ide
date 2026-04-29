@@ -9,6 +9,7 @@ import { listMembersRoute } from "./members/list";
 import { moveMemberRoute } from "./members/move";
 import { removeMemberRoute } from "./members/remove";
 import { updateMemberRoleRoute } from "./members/updateRole";
+import { importCsvMembersRoute } from "./members/importCsv";
 import { createInvitationRoute } from "./invitations/create";
 import { deleteInvitationRoute } from "./invitations/delete";
 
@@ -30,6 +31,8 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
           await moveMemberRoute(sf);
           await removeMemberRoute(sf);
           await updateMemberRoleRoute(sf);
+          // Phase 4 — Issue #64: bulk CSV member import.
+          await importCsvMembersRoute(sf);
           await createInvitationRoute(sf);
           await deleteInvitationRoute(sf);
         },

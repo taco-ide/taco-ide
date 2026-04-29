@@ -29,6 +29,12 @@ export type {
   Permission,
 } from "./permissions";
 
+// Re-export the Better Auth scrypt-based password hasher so consumers
+// (e.g. seeds, bulk import routes) can produce credentials compatible
+// with email/password sign-in without depending on `better-auth`
+// directly.
+export { hashPassword } from "better-auth/crypto";
+
 // ==================== AUTH INSTANCE ====================
 
 export const auth = betterAuth({
