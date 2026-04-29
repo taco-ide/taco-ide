@@ -6,7 +6,8 @@
 
 export type PutV1OrganizationsIdPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };
