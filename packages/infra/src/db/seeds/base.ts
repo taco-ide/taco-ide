@@ -8,6 +8,7 @@
  */
 import { db } from "../index";
 import { model, teachingAssistant } from "../schema";
+import { seedPlatformAdmin } from "./admin";
 
 // --- IDs fixos (reprodutiveis) ---
 export const SEED_MODEL_ID = "00000000-0000-0000-0000-000000000001";
@@ -53,6 +54,8 @@ export async function seedBase({ organizationId }: SeedBaseOptions = {}) {
   );
 
   console.log("[base] Structural data seeded.");
+
+  await seedPlatformAdmin();
 }
 
 // --- Standalone execution ---
