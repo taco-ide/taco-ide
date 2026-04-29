@@ -3,6 +3,7 @@ import { listOrganizationsRoute } from "./list";
 import { createOrganizationRoute } from "./create";
 import { getOrganizationByIdRoute } from "./getById";
 import { updateOrganizationRoute } from "./update";
+import { setOrganizationActiveRoute } from "./setActive";
 import { listMembersRoute } from "./members/list";
 import { updateMemberRoleRoute } from "./members/updateRole";
 import { createInvitationRoute } from "./invitations/create";
@@ -16,6 +17,7 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
       await createOrganizationRoute(fastify);
       await getOrganizationByIdRoute(fastify);
       await updateOrganizationRoute(fastify);
+      await setOrganizationActiveRoute(fastify);
 
       // Per-organization sub-routes (members, invitations) under /:id
       await fastify.register(
