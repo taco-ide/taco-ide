@@ -568,9 +568,6 @@ function PreviewStep({
 }: PreviewStepProps) {
   const summary = data?.summary;
   const rows = data?.rows ?? [];
-  const validCount = summary
-    ? summary.created + summary.linked + summary.skipped
-    : 0;
   const errorCount = summary?.errors ?? 0;
   const totalRows = summary?.total ?? rows.length;
   const previewRows = rows.slice(0, PREVIEW_ROW_LIMIT);
@@ -682,7 +679,7 @@ function PreviewStep({
         <Button
           type="button"
           onClick={onConfirm}
-          disabled={isLoading || !!error || validCount === 0}
+          disabled={isLoading || !!error || importableCount === 0}
           className="bg-amber-500 text-slate-900 hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-400"
         >
           <Check className="h-4 w-4" />
