@@ -102,6 +102,7 @@ export default function ClassroomPage() {
 
   const { data: orgMembersData } = useGetV1OrganizationsIdMembers(
     orgId ?? "",
+    undefined,
     { query: { enabled: !!(orgId && canManageEnrollments) } }
   );
   const orgMembers = orgMembersData?.data ?? [];

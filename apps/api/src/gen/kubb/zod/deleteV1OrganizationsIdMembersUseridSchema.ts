@@ -5,31 +5,20 @@
 
 import { z } from "zod";
 
-export const getV1OrganizationsIdMembersPathParamsSchema = z.object({
-    "id": z.string().uuid()
+export const deleteV1OrganizationsIdMembersUseridPathParamsSchema = z.object({
+    "id": z.string().uuid(),
+"userId": z.string().uuid()
     })
-
-export const getV1OrganizationsIdMembersQueryParamsSchema = z.object({
-    "q": z.string().min(1).optional(),
-"role": z.enum(["student", "teacher", "coordinator", "admin"]).optional()
-    }).optional()
 
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers200Schema = z.object({
+export const deleteV1OrganizationsIdMembersUserid200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
-"data": z.array(z.object({
-    "id": z.string(),
-"userId": z.string(),
-"name": z.string(),
-"email": z.string(),
-"role": z.string(),
-"createdAt": z.string(),
-"lastActiveAt": z.string().nullable(),
-"joinedVia": z.enum(["domain", "manual", "invitation"])
-    })),
+"data": z.object({
+    "message": z.string()
+    }),
 "pagination": z.object({
     "total": z.number(),
 "page": z.number(),
@@ -41,7 +30,7 @@ export const getV1OrganizationsIdMembers200Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers401Schema = z.object({
+export const deleteV1OrganizationsIdMembersUserid401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -52,7 +41,7 @@ export const getV1OrganizationsIdMembers401Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers403Schema = z.object({
+export const deleteV1OrganizationsIdMembersUserid403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -63,7 +52,7 @@ export const getV1OrganizationsIdMembers403Schema = z.object({
 /**
  * @description Default Response
  */
-export const getV1OrganizationsIdMembers404Schema = z.object({
+export const deleteV1OrganizationsIdMembersUserid404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -71,4 +60,15 @@ export const getV1OrganizationsIdMembers404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const getV1OrganizationsIdMembersQueryResponseSchema = z.lazy(() => getV1OrganizationsIdMembers200Schema)
+/**
+ * @description Default Response
+ */
+export const deleteV1OrganizationsIdMembersUserid409Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+export const deleteV1OrganizationsIdMembersUseridMutationResponseSchema = z.lazy(() => deleteV1OrganizationsIdMembersUserid200Schema)
