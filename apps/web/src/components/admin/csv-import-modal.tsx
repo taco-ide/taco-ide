@@ -927,20 +927,6 @@ export function CsvImportModal({
   const [resultError, setResultError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ResultFilter>("all");
 
-  // Reset everything when the modal closes.
-  useEffect(() => {
-    if (!open) {
-      setStep("upload");
-      setFile(null);
-      setFileError(null);
-      setPreviewData(undefined);
-      setPreviewError(null);
-      setResultData(undefined);
-      setResultError(null);
-      setFilter("all");
-    }
-  }, [open]);
-
   const previewMutation = useMutation({
     mutationFn: (params: { file: File }) =>
       importCsvRequest({
@@ -984,6 +970,22 @@ export function CsvImportModal({
       toast.error("Falha ao importar membros");
     },
   });
+
+  // Reset everything when the modal closes.
+  useEffect(() => {
+    if (!open) {
+      setStep("upload");
+      setFile(null);
+      setFileError(null);
+      setPreviewData(undefined);
+      setPreviewError(null);
+      setResultData(undefined);
+      setResultError(null);
+      setFilter("all");
+      previewMutation.reset();
+      importMutation.reset();
+    }
+  }, [open, previewMutation, importMutation]);
 
   const handlePickFile = useCallback((nextFile: File | null) => {
     setFileError(null);
