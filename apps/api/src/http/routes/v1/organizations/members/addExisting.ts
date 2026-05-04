@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ilike } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../../types";
 import {
@@ -85,7 +85,7 @@ export async function addExistingMemberRoute(app: FastifyTypedInstance) {
       const targetUser = await db
         .select({ id: user.id })
         .from(user)
-        .where(eq(user.email, normalizedEmail))
+        .where(ilike(user.email, normalizedEmail))
         .limit(1);
 
       if (!targetUser[0]) {
