@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -104,6 +104,8 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
     async (request, reply) => {
       const { id } = request.params;
 
+      // Single query: fetch the org row plus its three counts via correlated
+      // subqueries. Reduces 4 roundtrips to 1.
       const orgRows = await db
         .select({
           id: organization.id,
@@ -114,6 +116,19 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
           isActive: organization.isActive,
           createdAt: organization.createdAt,
           updatedAt: organization.updatedAt,
+          memberCount: sql<number>`(
+            SELECT count(*)::int FROM ${member}
+            WHERE ${member.organizationId} = ${organization.id}
+          )`,
+          classroomCount: sql<number>`(
+            SELECT count(*)::int FROM ${classroom}
+            WHERE ${classroom.organizationId} = ${organization.id}
+              AND ${classroom.deletedAt} IS NULL
+          )`,
+          domainCount: sql<number>`(
+            SELECT count(*)::int FROM ${organizationEmailDomain}
+            WHERE ${organizationEmailDomain.organizationId} = ${organization.id}
+          )`,
         })
         .from(organization)
         .where(eq(organization.id, id))
@@ -127,29 +142,6 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const memberCountResult = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(member)
-        .where(eq(member.organizationId, id));
-      const memberCount = Number(memberCountResult[0]?.count ?? 0);
-
-      const classroomCountResult = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(classroom)
-        .where(
-          and(
-            eq(classroom.organizationId, id),
-            isNull(classroom.deletedAt)
-          )
-        );
-      const classroomCount = Number(classroomCountResult[0]?.count ?? 0);
-
-      const domainCountResult = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(organizationEmailDomain)
-        .where(eq(organizationEmailDomain.organizationId, id));
-      const domainCount = Number(domainCountResult[0]?.count ?? 0);
-
       return reply.status(200).send({
         success: true as const,
         data: {
@@ -161,9 +153,9 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
           isActive: org.isActive,
           createdAt: org.createdAt.toISOString(),
           updatedAt: org.updatedAt.toISOString(),
-          memberCount,
-          classroomCount,
-          domainCount,
+          memberCount: Number(org.memberCount ?? 0),
+          classroomCount: Number(org.classroomCount ?? 0),
+          domainCount: Number(org.domainCount ?? 0),
         },
       });
     }
