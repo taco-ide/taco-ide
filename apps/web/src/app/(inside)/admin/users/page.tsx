@@ -73,8 +73,6 @@ export default function AdminUsersPage() {
     totalPages: 1,
   };
 
-  const platformAdminCount = rows.filter((u) => u.isPlatformAdmin).length;
-
   return (
     <div className="space-y-6">
       <div>
@@ -85,11 +83,7 @@ export default function AdminUsersPage() {
             <>
               {" "}
               · {pagination.total}{" "}
-              {pagination.total === 1 ? "usuário" : "usuários"} ·{" "}
-              {platformAdminCount}{" "}
-              {platformAdminCount === 1
-                ? "administrador da plataforma"
-                : "administradores da plataforma"}
+              {pagination.total === 1 ? "usuário" : "usuários"}
             </>
           ) : null}
         </p>
