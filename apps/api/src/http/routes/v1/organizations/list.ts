@@ -89,8 +89,12 @@ export async function listOrganizationsRoute(app: FastifyTypedInstance) {
         .where(whereClause);
       const total = Number(countResult[0]?.count ?? 0);
 
-      // Use a correlated subquery for classroomCount so it does not
-      // multiply against the LEFT JOIN to member (Cartesian product).
+      // Use correlated subqueries for both counts so they don't multiply via
+      // joins. This also lets us drop the LEFT JOIN + GROUP BY entirely.
+      const memberCountSql = sql<number>`(
+        SELECT count(*)::int FROM ${member}
+        WHERE ${member.organizationId} = ${organization.id}
+      )`;
       const classroomCountSql = sql<number>`(
         SELECT count(*)::int FROM ${classroom}
         WHERE ${classroom.organizationId} = ${organization.id}
@@ -105,13 +109,11 @@ export async function listOrganizationsRoute(app: FastifyTypedInstance) {
           logo: organization.logo,
           isActive: organization.isActive,
           createdAt: organization.createdAt,
-          memberCount: sql<number>`count(${member.id})::int`,
+          memberCount: memberCountSql,
           classroomCount: classroomCountSql,
         })
         .from(organization)
-        .leftJoin(member, eq(member.organizationId, organization.id))
         .where(whereClause)
-        .groupBy(organization.id)
         .orderBy(desc(organization.createdAt))
         .limit(perPage)
         .offset(offset);
