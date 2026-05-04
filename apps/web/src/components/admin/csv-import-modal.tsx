@@ -722,7 +722,7 @@ function ResultStep({
 
   const handleDownloadReport = () => {
     if (rows.length === 0) return;
-    const header = ["line", "email", "status", "message"];
+    const header = ["linha", "email", "status", "mensagem"];
     const lines = [header.join(",")];
     for (const row of rows) {
       lines.push(
