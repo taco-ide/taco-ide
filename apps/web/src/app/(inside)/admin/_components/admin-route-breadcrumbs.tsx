@@ -30,11 +30,17 @@ function buildSegments(pathname: string): SegmentInfo[] {
   return out;
 }
 
+interface AdminRouteBreadcrumbsProps {
+  onOpenMobileSidebar?: () => void;
+}
+
 /**
  * Builds breadcrumbs from the current pathname for the /admin area.
  * When an org id is in the path, fetches its name to render in place of the id.
  */
-export function AdminRouteBreadcrumbs() {
+export function AdminRouteBreadcrumbs({
+  onOpenMobileSidebar,
+}: AdminRouteBreadcrumbsProps) {
   const pathname = usePathname() ?? "";
   const segments = buildSegments(pathname);
 
@@ -59,5 +65,7 @@ export function AdminRouteBreadcrumbs() {
     return { label, href: fullPath };
   });
 
-  return <AdminTopbar breadcrumbs={items} />;
+  return (
+    <AdminTopbar breadcrumbs={items} onOpenMobileSidebar={onOpenMobileSidebar} />
+  );
 }
