@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { FormEvent, KeyboardEvent } from "react";
+import type { FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -114,13 +114,6 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
     submit();
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submit();
-    }
-  }
-
   return (
     <Card className="bg-slate-900/60 border-slate-700/60 text-white">
       <CardHeader>
@@ -143,7 +136,6 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
                   setDomain(e.target.value);
                   reset();
                 }}
-                onKeyDown={handleKeyDown}
                 placeholder="exemplo.edu.br"
                 className="h-10 flex-1 border-0 bg-transparent px-0 text-sm text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
                 aria-label="Domínio"
