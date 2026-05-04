@@ -17,6 +17,16 @@ import {
 } from "@repo/infra/db/schema";
 import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 
+// PostgreSQL SQLSTATE for unique_violation. Used to distinguish a race on
+// UNIQUE(domain, role) from any other DB error in the INSERT path.
+const PG_UNIQUE_VIOLATION = "23505";
+
+function isUniqueViolation(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const code = (err as { code?: unknown }).code;
+  return code === PG_UNIQUE_VIOLATION;
+}
+
 // ==================== SCHEMAS ====================
 
 const CreateEmailDomainParamsSchema = z.object({
@@ -125,6 +135,14 @@ export async function createEmailDomainRoute(app: FastifyTypedInstance) {
           createdAt,
         });
       } catch (err) {
+        // Only treat unique_violation (PG SQLSTATE 23505) as a race on the
+        // (domain, role) UNIQUE constraint. Any other error must propagate
+        // so it surfaces in logs and the caller gets a real 500 rather than
+        // a misleading 409.
+        if (!isUniqueViolation(err)) {
+          throw err;
+        }
+
         // Race condition: another writer inserted the same (domain, role)
         // between our SELECT and INSERT. Retry the lookup so we can return
         // the conflict message instead of a 500.
