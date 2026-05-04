@@ -133,9 +133,9 @@ async function importCsvRequest(params: {
   dryRun: boolean;
 }): Promise<ImportResponseData> {
   const { organizationId, file, dryRun } = params;
-  const url = `${API_BASE_URL}/v1/organizations/${organizationId}/members/import-csv${
-    dryRun ? "?dryRun=true" : ""
-  }`;
+  const url = `${API_BASE_URL}/v1/organizations/${encodeURIComponent(
+    organizationId,
+  )}/members/import-csv${dryRun ? "?dryRun=true" : ""}`;
   const formData = new FormData();
   formData.append("file", file, file.name);
 
