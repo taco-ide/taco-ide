@@ -315,7 +315,7 @@ function CsvRowsTable({ rows, variant }: CsvRowsTableProps) {
           <tbody>
             {rows.map((row, idx) => (
               <tr
-                key={`${row.line}-${idx}`}
+                key={row.line}
                 className={cn(
                   "border-b border-slate-800/60 last:border-b-0",
                   row.status === "error" && "bg-red-500/[0.04]",
