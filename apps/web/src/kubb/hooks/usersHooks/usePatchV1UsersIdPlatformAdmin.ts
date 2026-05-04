@@ -14,7 +14,7 @@ export const patchV1UsersIdPlatformAdminMutationKey = () => [{ url: '/v1/users/:
 export type PatchV1UsersIdPlatformAdminMutationKey = ReturnType<typeof patchV1UsersIdPlatformAdminMutationKey>
 
 /**
- * @description Sets `isPlatformAdmin` for a user. Blocks self-demotion when the caller is the only platform admin. On success, revokes all sessions of the target user so the 5-minute session cookie cache cannot keep stale claims.
+ * @description Sets `isPlatformAdmin` for a user. Blocks any demotion that would leave the platform without a Platform Admin (the guard runs inside a transaction with FOR UPDATE row locks to be safe under concurrency). On success, revokes all sessions of the target user so the 5-minute session cookie cache cannot keep stale claims.
  * @summary Toggle platform admin flag (admin)
  * {@link /v1/users/:id/platform-admin}
  */
@@ -28,7 +28,7 @@ export async function patchV1UsersIdPlatformAdmin(id: PatchV1UsersIdPlatformAdmi
 }
 
 /**
- * @description Sets `isPlatformAdmin` for a user. Blocks self-demotion when the caller is the only platform admin. On success, revokes all sessions of the target user so the 5-minute session cookie cache cannot keep stale claims.
+ * @description Sets `isPlatformAdmin` for a user. Blocks any demotion that would leave the platform without a Platform Admin (the guard runs inside a transaction with FOR UPDATE row locks to be safe under concurrency). On success, revokes all sessions of the target user so the 5-minute session cookie cache cannot keep stale claims.
  * @summary Toggle platform admin flag (admin)
  * {@link /v1/users/:id/platform-admin}
  */
