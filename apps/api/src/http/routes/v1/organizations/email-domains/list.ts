@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -8,12 +8,8 @@ import {
   ResponseSchema404,
 } from "../../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  organizationEmailDomain,
-  organization,
-  member,
-} from "@repo/infra/db/schema";
-import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
+import { organizationEmailDomain } from "@repo/infra/db/schema";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 
 // ==================== SCHEMAS ====================
 
@@ -40,6 +36,7 @@ export async function listEmailDomainsRoute(app: FastifyTypedInstance) {
   }>(
     "/email-domains",
     {
+      preHandler: requirePlatformAdminOrOrgRole("coordinator"),
       schema: {
         tags: ["organizations"],
         summary: "List email domain rules",
@@ -55,54 +52,7 @@ export async function listEmailDomainsRoute(app: FastifyTypedInstance) {
       },
     },
     async (request, reply) => {
-      const usr = request.user;
-      if (!usr) {
-        return reply.status(401).send({
-          success: false as const,
-          message: "Not authenticated",
-        });
-      }
-
       const { id: organizationId } = request.params;
-
-      const orgRow = await db
-        .select({ id: organization.id })
-        .from(organization)
-        .where(eq(organization.id, organizationId))
-        .limit(1);
-
-      if (!orgRow[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Organization not found",
-        });
-      }
-
-      if (!usr.isPlatformAdmin) {
-        const memberRow = await db
-          .select({ role: member.role })
-          .from(member)
-          .where(
-            and(
-              eq(member.organizationId, organizationId),
-              eq(member.userId, usr.id)
-            )
-          )
-          .limit(1);
-
-        const role = memberRow[0]?.role;
-        if (
-          !role ||
-          !isValidRole(role) ||
-          !hasMinimumRole(role, "coordinator")
-        ) {
-          return reply.status(403).send({
-            success: false as const,
-            message:
-              "Platform admin or coordinator of this organization required",
-          });
-        }
-      }
 
       const rows = await db
         .select({
@@ -118,7 +68,7 @@ export async function listEmailDomainsRoute(app: FastifyTypedInstance) {
       const data = rows.map((row) => ({
         id: row.id,
         domain: row.domain,
-        role: row.role as "student" | "teacher" | "coordinator" | "admin",
+        role: row.role,
         createdAt: row.createdAt.toISOString(),
       }));
 

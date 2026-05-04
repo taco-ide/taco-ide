@@ -14,9 +14,8 @@ import { db } from "@repo/infra/db";
 import {
   organizationEmailDomain,
   organization,
-  member,
 } from "@repo/infra/db/schema";
-import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 
 // ==================== SCHEMAS ====================
 
@@ -60,6 +59,7 @@ export async function createEmailDomainRoute(app: FastifyTypedInstance) {
   }>(
     "/email-domains",
     {
+      preHandler: requirePlatformAdminOrOrgRole("coordinator"),
       schema: {
         tags: ["organizations"],
         summary: "Create email domain rule",
@@ -78,55 +78,8 @@ export async function createEmailDomainRoute(app: FastifyTypedInstance) {
       },
     },
     async (request, reply) => {
-      const usr = request.user;
-      if (!usr) {
-        return reply.status(401).send({
-          success: false as const,
-          message: "Not authenticated",
-        });
-      }
-
       const { id: organizationId } = request.params;
       const { domain, role } = request.body;
-
-      const orgRow = await db
-        .select({ id: organization.id })
-        .from(organization)
-        .where(eq(organization.id, organizationId))
-        .limit(1);
-
-      if (!orgRow[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Organization not found",
-        });
-      }
-
-      if (!usr.isPlatformAdmin) {
-        const memberRow = await db
-          .select({ role: member.role })
-          .from(member)
-          .where(
-            and(
-              eq(member.organizationId, organizationId),
-              eq(member.userId, usr.id)
-            )
-          )
-          .limit(1);
-
-        const memberRole = memberRow[0]?.role;
-        if (
-          !memberRole ||
-          !isValidRole(memberRole) ||
-          !hasMinimumRole(memberRole, "coordinator")
-        ) {
-          return reply.status(403).send({
-            success: false as const,
-            message:
-              "Platform admin or coordinator of this organization required",
-          });
-        }
-      }
 
       // Pre-check the (domain, role) UNIQUE constraint so we can return a
       // friendly 409 message including the conflicting organization name.
