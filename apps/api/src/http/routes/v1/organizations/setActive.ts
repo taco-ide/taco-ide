@@ -76,6 +76,19 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
         });
       }
 
+      // No-op when state is unchanged: skip the transaction and session
+      // clearing entirely. Returns clearedSessions: 0 since nothing changed.
+      if (existing[0].isActive === isActive) {
+        return reply.status(200).send({
+          success: true as const,
+          data: {
+            id: existing[0].id,
+            isActive: existing[0].isActive,
+            clearedSessions: 0,
+          },
+        });
+      }
+
       const result = await db.transaction(async (tx) => {
         const [updated] = await tx
           .update(organization)
