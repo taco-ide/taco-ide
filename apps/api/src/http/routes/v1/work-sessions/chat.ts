@@ -23,6 +23,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
+import { getLangfuseCallback } from "../../../../agents/langfuse";
 
 // ==================== SCHEMAS ====================
 
@@ -219,8 +220,17 @@ export async function chatRoute(app: FastifyTypedInstance) {
         supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
       };
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: usr.id,
+        sessionId: workSessionId,
+        tags: ["agent:ta"],
+        metadata: { challengeId: session.challengeId, workSessionId },
+      });
+
       let modelResponse: string;
       try {
+        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+
         const result = await teachingAssistantAgent.invoke(
           {
             messages: [
@@ -235,6 +245,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
               challengeContext,
               ...modelParams,
             },
+            callbacks,
           },
         );
 
@@ -255,6 +266,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
           message:
             err instanceof Error ? err.message : "Failed to get AI response",
         });
+      } finally {
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
       }
 
       const now = new Date();
