@@ -42,9 +42,13 @@ export type { PostV1KnowledgeBasesKbidDocumentsMutationKey } from "./knowledge-b
 export type { PostV1KnowledgeBasesKbidEntriesMutationKey } from "./knowledge-basesHooks/usePostV1KnowledgeBasesKbidEntries.ts";
 export type { PutV1KnowledgeBasesKbidMutationKey } from "./knowledge-basesHooks/usePutV1KnowledgeBasesKbid.ts";
 export type { PutV1KnowledgeBasesKbidEntriesEntryidMutationKey } from "./knowledge-basesHooks/usePutV1KnowledgeBasesKbidEntriesEntryid.ts";
+export type { DeleteV1OrganizationsIdEmailDomainsDomainidMutationKey } from "./organizationsHooks/useDeleteV1OrganizationsIdEmailDomainsDomainid.ts";
 export type { DeleteV1OrganizationsIdInvitationsInvitationidMutationKey } from "./organizationsHooks/useDeleteV1OrganizationsIdInvitationsInvitationid.ts";
+export type { GetV1OrganizationsIdEmailDomainsQueryKey } from "./organizationsHooks/useGetV1OrganizationsIdEmailDomains.ts";
+export type { GetV1OrganizationsIdEmailDomainsSuspenseQueryKey } from "./organizationsHooks/useGetV1OrganizationsIdEmailDomainsSuspense.ts";
 export type { GetV1OrganizationsIdMembersQueryKey } from "./organizationsHooks/useGetV1OrganizationsIdMembers.ts";
 export type { GetV1OrganizationsIdMembersSuspenseQueryKey } from "./organizationsHooks/useGetV1OrganizationsIdMembersSuspense.ts";
+export type { PostV1OrganizationsIdEmailDomainsMutationKey } from "./organizationsHooks/usePostV1OrganizationsIdEmailDomains.ts";
 export type { PostV1OrganizationsIdInvitationsMutationKey } from "./organizationsHooks/usePostV1OrganizationsIdInvitations.ts";
 export type { PostV1OrganizationsIdMembersImportCsvMutationKey } from "./organizationsHooks/usePostV1OrganizationsIdMembersImportCsv.ts";
 export type { PutV1OrganizationsIdMembersUseridMutationKey } from "./organizationsHooks/usePutV1OrganizationsIdMembersUserid.ts";
@@ -107,9 +111,13 @@ export { postV1KnowledgeBasesKbidDocumentsMutationKey, postV1KnowledgeBasesKbidD
 export { postV1KnowledgeBasesKbidEntriesMutationKey, postV1KnowledgeBasesKbidEntries, usePostV1KnowledgeBasesKbidEntries } from "./knowledge-basesHooks/usePostV1KnowledgeBasesKbidEntries.ts";
 export { putV1KnowledgeBasesKbidMutationKey, putV1KnowledgeBasesKbid, usePutV1KnowledgeBasesKbid } from "./knowledge-basesHooks/usePutV1KnowledgeBasesKbid.ts";
 export { putV1KnowledgeBasesKbidEntriesEntryidMutationKey, putV1KnowledgeBasesKbidEntriesEntryid, usePutV1KnowledgeBasesKbidEntriesEntryid } from "./knowledge-basesHooks/usePutV1KnowledgeBasesKbidEntriesEntryid.ts";
+export { deleteV1OrganizationsIdEmailDomainsDomainidMutationKey, deleteV1OrganizationsIdEmailDomainsDomainid, useDeleteV1OrganizationsIdEmailDomainsDomainid } from "./organizationsHooks/useDeleteV1OrganizationsIdEmailDomainsDomainid.ts";
 export { deleteV1OrganizationsIdInvitationsInvitationidMutationKey, deleteV1OrganizationsIdInvitationsInvitationid, useDeleteV1OrganizationsIdInvitationsInvitationid } from "./organizationsHooks/useDeleteV1OrganizationsIdInvitationsInvitationid.ts";
+export { getV1OrganizationsIdEmailDomainsQueryKey, getV1OrganizationsIdEmailDomains, getV1OrganizationsIdEmailDomainsQueryOptions, useGetV1OrganizationsIdEmailDomains } from "./organizationsHooks/useGetV1OrganizationsIdEmailDomains.ts";
+export { getV1OrganizationsIdEmailDomainsSuspenseQueryKey, getV1OrganizationsIdEmailDomainsSuspense, getV1OrganizationsIdEmailDomainsSuspenseQueryOptions, useGetV1OrganizationsIdEmailDomainsSuspense } from "./organizationsHooks/useGetV1OrganizationsIdEmailDomainsSuspense.ts";
 export { getV1OrganizationsIdMembersQueryKey, getV1OrganizationsIdMembers, getV1OrganizationsIdMembersQueryOptions, useGetV1OrganizationsIdMembers } from "./organizationsHooks/useGetV1OrganizationsIdMembers.ts";
 export { getV1OrganizationsIdMembersSuspenseQueryKey, getV1OrganizationsIdMembersSuspense, getV1OrganizationsIdMembersSuspenseQueryOptions, useGetV1OrganizationsIdMembersSuspense } from "./organizationsHooks/useGetV1OrganizationsIdMembersSuspense.ts";
+export { postV1OrganizationsIdEmailDomainsMutationKey, postV1OrganizationsIdEmailDomains, usePostV1OrganizationsIdEmailDomains } from "./organizationsHooks/usePostV1OrganizationsIdEmailDomains.ts";
 export { postV1OrganizationsIdInvitationsMutationKey, postV1OrganizationsIdInvitations, usePostV1OrganizationsIdInvitations } from "./organizationsHooks/usePostV1OrganizationsIdInvitations.ts";
 export { postV1OrganizationsIdMembersImportCsvMutationKey, postV1OrganizationsIdMembersImportCsv, usePostV1OrganizationsIdMembersImportCsv } from "./organizationsHooks/usePostV1OrganizationsIdMembersImportCsv.ts";
 export { putV1OrganizationsIdMembersUseridMutationKey, putV1OrganizationsIdMembersUserid, usePutV1OrganizationsIdMembersUserid } from "./organizationsHooks/usePutV1OrganizationsIdMembersUserid.ts";
