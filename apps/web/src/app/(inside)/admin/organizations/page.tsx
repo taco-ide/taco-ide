@@ -40,25 +40,34 @@ export default function OrganizationsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOrg, setEditOrg] = useState<OrganizationRow | null>(null);
 
+  // Filter is handled server-side via `includeInactive`:
+  // - "active":   includeInactive=false (default) → only active rows
+  // - "all":      includeInactive=true            → active + inactive rows
+  // - "inactive": includeInactive=true + client-side filter on the page
+  //   (the API has no "inactive only" parameter today; pagination is hidden
+  //   in this mode to avoid misleading totals — see hidePager below.)
+  const includeInactive = filter !== "active";
+
   const params = useMemo(
     () => ({
       page,
       perPage: PER_PAGE,
-      ...(debouncedSearch.trim().length > 0 ? { q: debouncedSearch.trim() } : {}),
-      includeInactive: filter !== "active",
+      ...(debouncedSearch.trim().length > 0
+        ? { q: debouncedSearch.trim() }
+        : {}),
+      includeInactive,
     }),
-    [page, debouncedSearch, filter],
+    [page, debouncedSearch, includeInactive],
   );
 
-  const { data, isLoading, isFetching, error, refetch } = useGetV1Organizations(
-    params,
-  );
+  const { data, isLoading, isFetching, error, refetch } =
+    useGetV1Organizations(params);
 
-  const allRows: OrganizationRow[] = data?.data ?? [];
+  const fetchedRows: OrganizationRow[] = data?.data ?? [];
   const rows = useMemo(() => {
-    if (filter === "inactive") return allRows.filter((o) => !o.isActive);
-    return allRows;
-  }, [allRows, filter]);
+    if (filter === "inactive") return fetchedRows.filter((o) => !o.isActive);
+    return fetchedRows;
+  }, [fetchedRows, filter]);
 
   const pagination = data?.pagination ?? {
     total: 0,
@@ -67,9 +76,11 @@ export default function OrganizationsPage() {
     totalPages: 1,
   };
 
-  const totalsActive = allRows.filter((o) => o.isActive).length;
-  const totalsInactive = allRows.filter((o) => !o.isActive).length;
-  const totalsAll = pagination.total;
+  // When "Inativas" is selected, the count of items returned reflects the
+  // current page only (because filtering is post-fetch). Hiding the pager
+  // avoids showing wrong page counts. "Todas" / "Ativas" use server-side
+  // filters, so pagination is reliable.
+  const hidePager = filter === "inactive";
 
   const toggleActive = usePatchV1OrganizationsIdActive({
     mutation: {
@@ -78,7 +89,10 @@ export default function OrganizationsPage() {
         void queryClient.invalidateQueries({
           predicate: (query) => {
             const first = query.queryKey[0] as { url?: string } | undefined;
-            return first?.url === "/v1/organizations/" || first?.url === "/v1/organizations/:id";
+            return (
+              first?.url === "/v1/organizations/" ||
+              first?.url === "/v1/organizations/:id"
+            );
           },
         });
         // Touch the variable to keep it referenced for ts-strict noUnusedParameters compatibility.
@@ -97,16 +111,31 @@ export default function OrganizationsPage() {
   };
 
   const showInitialEmpty =
-    !isLoading && !error && rows.length === 0 && !debouncedSearch && filter === "all";
+    !isLoading &&
+    !error &&
+    rows.length === 0 &&
+    !debouncedSearch &&
+    filter === "all";
+
+  // Header summary uses `pagination.total`, which respects server-side
+  // filters (search + includeInactive). For "Inativas" we cannot compute a
+  // global count without API support; fall back to "X nesta página".
+  const summaryText = (() => {
+    if (filter === "inactive") {
+      return `${rows.length} inativa(s) nesta página`;
+    }
+    if (filter === "active") {
+      return `${pagination.total} ativa(s)`;
+    }
+    return `${pagination.total} no total`;
+  })();
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-white">Organizações</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            {totalsActive} ativas · {totalsInactive} inativas · {totalsAll} no total
-          </p>
+          <p className="mt-1 text-sm text-slate-400">{summaryText}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -233,17 +262,20 @@ export default function OrganizationsPage() {
                 onToggleActive={handleToggleActive}
                 togglingId={
                   toggleActive.isPending
-                    ? (toggleActive.variables as { id?: string } | undefined)?.id
+                    ? (toggleActive.variables as { id?: string } | undefined)
+                        ?.id
                     : undefined
                 }
               />
-              <Pager
-                page={pagination.page}
-                perPage={pagination.perPage}
-                total={pagination.total}
-                totalPages={pagination.totalPages}
-                onPageChange={setPage}
-              />
+              {!hidePager && (
+                <Pager
+                  page={pagination.page}
+                  perPage={pagination.perPage}
+                  total={pagination.total}
+                  totalPages={pagination.totalPages}
+                  onPageChange={setPage}
+                />
+              )}
             </>
           )}
         </div>
