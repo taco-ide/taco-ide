@@ -135,17 +135,18 @@ export async function createOrganizationRoute(app: FastifyTypedInstance) {
           body?: { message?: string; code?: string };
           message?: string;
         };
-        const status = error.statusCode ?? error.status;
         const code = error.body?.code ?? "";
         const message =
           error.body?.message ?? error.message ?? "Failed to create organization";
 
-        if (
-          status === 400 ||
-          status === "BAD_REQUEST" ||
+        // Narrow conflict detection: rely on Better Auth's explicit code or
+        // an unambiguous "slug ... already exists" message. Plain 400s are
+        // validation errors (e.g. name/slug length) and must surface as 400.
+        const isSlugConflict =
           code === "ORGANIZATION_ALREADY_EXISTS" ||
-          /already exists|slug/i.test(message)
-        ) {
+          /slug.*already exists|already exists.*slug/i.test(message);
+
+        if (isSlugConflict) {
           return reply.status(409).send({
             success: false as const,
             message: "Organization slug already exists",
