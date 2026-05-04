@@ -155,7 +155,12 @@ export const auth = betterAuth({
           try {
             const email = createdUser.email;
             if (typeof email !== "string") return;
-            const domain = email.split("@")[1]?.toLowerCase().trim();
+            // Use lastIndexOf("@") to handle quoted local parts like
+            // `"user@name"@example.com` — split("@")[1] would return the
+            // wrong portion in that (rare, but valid per RFC 5321) case.
+            const atIndex = email.lastIndexOf("@");
+            if (atIndex === -1) return;
+            const domain = email.slice(atIndex + 1).toLowerCase().trim();
             if (!domain) return;
 
             // Pick the earliest active rule (createdAt ASC). Multiple rules
