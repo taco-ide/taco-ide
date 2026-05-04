@@ -21,6 +21,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/apiClient";
 import { usePatchV1UsersIdPlatformAdmin } from "@/kubb/hooks/usersHooks/usePatchV1UsersIdPlatformAdmin";
+import { getV1UsersQueryKey } from "@/kubb/hooks/usersHooks/useGetV1Users";
+import { getV1UsersMeQueryKey } from "@/kubb/hooks/usersHooks/useGetV1UsersMe";
 import { AvatarSquare } from "./avatar-square";
 
 export interface ToggleAdminTarget {
@@ -63,10 +65,10 @@ export function ToggleAdminDialog({
             : "Usuário promovido a Administrador",
         );
         void queryClient.invalidateQueries({
-          predicate: (query) => {
-            const first = query.queryKey[0] as { url?: string } | undefined;
-            return first?.url === "/v1/users/" || first?.url === "/v1/users/me";
-          },
+          queryKey: [getV1UsersQueryKey({ q: "" })[0]],
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1UsersMeQueryKey(),
         });
         onOpenChange(false);
       },

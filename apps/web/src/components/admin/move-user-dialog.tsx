@@ -21,8 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetV1Organizations } from "@/kubb/hooks/organizationsHooks/useGetV1Organizations";
+import {
+  getV1OrganizationsQueryKey,
+  useGetV1Organizations,
+} from "@/kubb/hooks/organizationsHooks/useGetV1Organizations";
 import { usePostV1OrganizationsIdMembersUseridMove } from "@/kubb/hooks/organizationsHooks/usePostV1OrganizationsIdMembersUseridMove";
+import { getV1OrganizationsIdMembersQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdMembers";
+import { getV1OrganizationsIdQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
+import { getV1UsersQueryKey } from "@/kubb/hooks/usersHooks/useGetV1Users";
 import { ApiError } from "@/lib/apiClient";
 import { AvatarSquare } from "./avatar-square";
 import { RoleBadge, isAdminRole } from "./role-badge";
@@ -76,18 +82,27 @@ export function MoveUserDialog({
 
   const mutation = usePostV1OrganizationsIdMembersUseridMove({
     mutation: {
-      onSuccess: () => {
+      onSuccess: (_res, variables) => {
         toast.success("Usuário movido para a nova organização");
         void queryClient.invalidateQueries({
-          predicate: (query) => {
-            const first = query.queryKey[0] as { url?: string } | undefined;
-            return (
-              first?.url === "/v1/organizations/:id/members" ||
-              first?.url === "/v1/organizations/:id" ||
-              first?.url === "/v1/organizations/" ||
-              first?.url === "/v1/users/"
-            );
-          },
+          queryKey: getV1OrganizationsIdMembersQueryKey(currentOrgId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsIdMembersQueryKey(
+            variables.data.toOrganizationId,
+          ),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsIdQueryKey(currentOrgId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsIdQueryKey(variables.data.toOrganizationId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [getV1UsersQueryKey({ q: "" })[0]],
         });
         onOpenChange(false);
       },

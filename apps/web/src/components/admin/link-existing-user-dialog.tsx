@@ -17,6 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGetV1Users } from "@/kubb/hooks/usersHooks/useGetV1Users";
 import { usePostV1OrganizationsIdMembers } from "@/kubb/hooks/organizationsHooks/usePostV1OrganizationsIdMembers";
+import { getV1OrganizationsIdMembersQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdMembers";
+import { getV1OrganizationsIdQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
+import { getV1OrganizationsQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1Organizations";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/lib/apiClient";
@@ -77,14 +80,13 @@ export function LinkExistingUserDialog({
       onSuccess: () => {
         toast.success("Usuário vinculado à organização");
         void queryClient.invalidateQueries({
-          predicate: (query) => {
-            const first = query.queryKey[0] as { url?: string } | undefined;
-            return (
-              first?.url === "/v1/organizations/:id/members" ||
-              first?.url === "/v1/organizations/:id" ||
-              first?.url === "/v1/organizations/"
-            );
-          },
+          queryKey: getV1OrganizationsIdMembersQueryKey(organizationId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsIdQueryKey(organizationId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsQueryKey(),
         });
         onOpenChange(false);
       },

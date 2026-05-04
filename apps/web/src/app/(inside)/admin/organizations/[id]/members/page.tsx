@@ -16,10 +16,18 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useGetV1OrganizationsIdMembers } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdMembers";
+import {
+  getV1OrganizationsIdMembersQueryKey,
+  useGetV1OrganizationsIdMembers,
+} from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdMembers";
 import { usePutV1OrganizationsIdMembersUserid } from "@/kubb/hooks/organizationsHooks/usePutV1OrganizationsIdMembersUserid";
 import { useDeleteV1OrganizationsIdMembersUserid } from "@/kubb/hooks/organizationsHooks/useDeleteV1OrganizationsIdMembersUserid";
-import { useGetV1OrganizationsId } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
+import {
+  getV1OrganizationsIdQueryKey,
+  useGetV1OrganizationsId,
+} from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
+import { getV1OrganizationsQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1Organizations";
+import { getV1UsersQueryKey } from "@/kubb/hooks/usersHooks/useGetV1Users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -136,13 +144,10 @@ export default function MembersTabPage() {
       onSuccess: () => {
         toast.success("Papel atualizado");
         void queryClient.invalidateQueries({
-          predicate: (query) => {
-            const first = query.queryKey[0] as { url?: string } | undefined;
-            return (
-              first?.url === "/v1/organizations/:id/members" ||
-              first?.url === "/v1/users/"
-            );
-          },
+          queryKey: getV1OrganizationsIdMembersQueryKey(orgId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [getV1UsersQueryKey({ q: "" })[0]],
         });
       },
       onError: (err) => {
@@ -165,15 +170,16 @@ export default function MembersTabPage() {
         toast.success("Membro removido da organização");
         setRemoveTarget(null);
         void queryClient.invalidateQueries({
-          predicate: (query) => {
-            const first = query.queryKey[0] as { url?: string } | undefined;
-            return (
-              first?.url === "/v1/organizations/:id/members" ||
-              first?.url === "/v1/organizations/:id" ||
-              first?.url === "/v1/organizations/" ||
-              first?.url === "/v1/users/"
-            );
-          },
+          queryKey: getV1OrganizationsIdMembersQueryKey(orgId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsIdQueryKey(orgId),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: getV1OrganizationsQueryKey(),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [getV1UsersQueryKey({ q: "" })[0]],
         });
       },
       onError: (err) => {
