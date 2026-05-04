@@ -337,6 +337,21 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
       const persistResults = new Map<number, RowReport>();
 
       if (!dryRun) {
+        // Pre-hash passwords for new users OUTSIDE the transaction.
+        // scrypt is intentionally CPU-intensive; running it inside the
+        // transaction would hold a DB connection and locks for the entire
+        // hashing window (potentially tens of seconds for 500 rows),
+        // exhausting the pool and stalling unrelated queries.
+        const hashedPasswords = new Map<number, string>();
+        for (const row of categorized) {
+          if (row.kind === "create") {
+            hashedPasswords.set(
+              row.line,
+              await hashPassword(row.data.password)
+            );
+          }
+        }
+
         try {
           await db.transaction(async (tx) => {
             for (const row of categorized) {
@@ -346,7 +361,12 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
 
               if (row.kind === "create") {
                 const newUserId = randomUUID();
-                const passwordHash = await hashPassword(row.data.password);
+                const passwordHash = hashedPasswords.get(row.line);
+                if (!passwordHash) {
+                  throw new Error(
+                    `Missing pre-computed password hash for line ${row.line}`
+                  );
+                }
 
                 await tx.insert(user).values({
                   id: newUserId,
