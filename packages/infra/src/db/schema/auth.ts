@@ -91,6 +91,9 @@ export const member = pgTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     role: text("role").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    // Bumped by authMiddleware on each authenticated request (debounced 5min).
+    // Nullable: not all existing members have activity recorded yet.
+    lastActiveAt: timestamp("last_active_at"),
   },
   (table) => [
     uniqueIndex("member_org_user_idx").on(table.organizationId, table.userId),

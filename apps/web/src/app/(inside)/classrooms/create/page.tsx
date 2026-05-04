@@ -53,9 +53,13 @@ export default function CreateClassroomPage() {
   const orgId = user?.activeOrganizationId ?? null;
   const isCoordinatorPlus = user?.role === "coordinator" || user?.role === "admin";
 
-  const { data: orgMembersData } = useGetV1OrganizationsIdMembers(orgId ?? "", {
-    query: { enabled: !!(orgId && isCoordinatorPlus) },
-  });
+  const { data: orgMembersData } = useGetV1OrganizationsIdMembers(
+    orgId ?? "",
+    undefined,
+    {
+      query: { enabled: !!(orgId && isCoordinatorPlus) },
+    }
+  );
   const teachersInOrg =
     orgMembersData?.data?.filter((m) =>
       ["teacher", "coordinator", "admin"].includes(m.role)
