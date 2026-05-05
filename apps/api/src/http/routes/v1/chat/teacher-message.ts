@@ -14,6 +14,8 @@ import { buildTeachersCompanionAgent } from "../../../../agents/teachers-compani
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
+import { formatSSEEvent } from "../../../../agents/sse-events";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -164,15 +166,20 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
                   : "";
 
               if (content) {
-                const data = JSON.stringify({ type: "text", content });
-                reply.raw.write(`data: ${data}\n\n`);
+                fullResponse += content;
+                reply.raw.write(formatSSEEvent({ type: "text", content }));
               }
             }
           }
 
-          // Send done event
-          const doneData = JSON.stringify({ type: "done" });
-          reply.raw.write(`data: ${doneData}\n\n`);
+          // If the agent returned nothing (e.g. guardrail triggered), send a fallback
+          if (!fullResponse) {
+            fullResponse = AGENT_FALLBACK_RESPONSE;
+            reply.raw.write(formatSSEEvent({ type: "text", content: fullResponse }));
+          }
+
+          // Send done event with accumulated full response
+          reply.raw.write(formatSSEEvent({ type: "done", full_response: fullResponse }));
         } finally {
           clearTimeout(timeout);
         }
@@ -184,8 +191,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         const errorMsg = isTimeout
           ? "AI response timed out, please try again"
           : "Agent invocation failed";
-        const errorData = JSON.stringify({ type: "error", content: errorMsg });
-        reply.raw.write(`data: ${errorData}\n\n`);
+        reply.raw.write(formatSSEEvent({ type: "error", content: errorMsg }));
       } finally {
         if (langfuseCallback) {
           await langfuseCallback.flushAsync();
