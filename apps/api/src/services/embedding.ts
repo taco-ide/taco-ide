@@ -56,6 +56,9 @@ export async function generateEmbeddings(
       });
 
       if (!response.ok) {
+        console.warn(
+          `[Embedding] Batch ${i / BATCH_SIZE} failed with status ${response.status}`
+        );
         continue;
       }
 
@@ -66,8 +69,11 @@ export async function generateEmbeddings(
       for (const item of json.data) {
         results[i + item.index] = item.embedding;
       }
-    } catch {
-      // batch failed, results remain null for these indices
+    } catch (err) {
+      console.warn(
+        `[Embedding] Batch ${i / BATCH_SIZE} network error:`,
+        err instanceof Error ? err.message : err
+      );
     }
   }
 

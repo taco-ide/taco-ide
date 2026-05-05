@@ -41,6 +41,7 @@ export async function searchKnowledgeBase({
   const queryEmbedding = await generateEmbedding(query);
 
   if (!queryEmbedding) {
+    console.warn("[KB Search] Embedding generation failed, returning empty results");
     return [];
   }
 
@@ -113,6 +114,7 @@ export async function searchChallengeKnowledgeBases({
   const queryEmbedding = await generateEmbedding(query);
 
   if (!queryEmbedding) {
+    console.warn("[KB Search] Embedding generation failed, returning empty results");
     return [];
   }
 

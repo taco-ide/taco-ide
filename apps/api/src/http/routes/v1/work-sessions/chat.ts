@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -9,6 +9,7 @@ import {
   ResponseSchema403,
   ResponseSchema404,
   ResponseSchema429,
+  ResponseSchema500,
   ResponseSchema503,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
@@ -20,7 +21,7 @@ import {
   challengeSolution,
   model,
 } from "@repo/infra/db/schema";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
@@ -31,7 +32,7 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
+import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -77,6 +78,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           403: ResponseSchema403,
           404: ResponseSchema404,
           429: ResponseSchema429,
+          500: ResponseSchema500,
           503: ResponseSchema503,
         },
       },
@@ -263,7 +265,31 @@ export async function chatRoute(app: FastifyTypedInstance) {
       });
 
       let modelResponse: string;
+      let wasFallback = false;
       try {
+        // Load recent conversation history for context memory
+        const historyRows = await db
+          .select()
+          .from(userInteractionOnChallenge)
+          .where(eq(userInteractionOnChallenge.workSessionId, workSessionId))
+          .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
+          .limit(TA_HISTORY_TURN_CAP);
+
+        // Reverse to chronological order and build message pairs
+        const historyMessages = historyRows
+          .reverse()
+          .flatMap((row) => {
+            const msgs: (HumanMessage | AIMessage)[] = [];
+            // Only include pairs where modelResponse is non-empty (defensive)
+            if (row.userPrompt) {
+              msgs.push(new HumanMessage(row.userPrompt));
+            }
+            if (row.modelResponse?.trim()) {
+              msgs.push(new AIMessage(row.modelResponse));
+            }
+            return msgs;
+          });
+
         // Create LLM instance with model parameters applied
         const llmInstance = createLlm(modelParams);
         const agent = buildTeachingAssistantAgent(llmInstance);
@@ -283,6 +309,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
             {
               messages: [
                 new SystemMessage(systemPrompt),
+                ...historyMessages,
                 new HumanMessage(message),
               ],
             },
@@ -308,6 +335,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
             ? lastMsg.content
             : JSON.stringify(lastMsg?.content ?? "");
         // If the agent returned nothing (e.g. guardrail triggered), use a fallback
+        wasFallback = !rawResponse.trim();
         modelResponse = rawResponse.trim() || AGENT_FALLBACK_RESPONSE;
       } catch (err) {
         if (
@@ -320,9 +348,9 @@ export async function chatRoute(app: FastifyTypedInstance) {
           });
         }
         request.log.error({ err }, "LangGraph agent error");
-        return reply.status(503).send({
+        return reply.status(500).send({
           success: false as const,
-          message: "AI service temporarily unavailable",
+          message: "Internal server error",
         });
       } finally {
         if (langfuseCallback) {
@@ -335,27 +363,25 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const now = new Date(); // single timestamp shared between updatedAt and lastMessageAt
       const interactionId = randomUUID();
 
-      await db.transaction(async (tx) => {
-        await tx.insert(userInteractionOnChallenge).values({
+      // Only persist the interaction if the model output was not a fallback response
+      if (!wasFallback) {
+        await db.insert(userInteractionOnChallenge).values({
           id: interactionId,
           workSessionId,
           challengeId: session.challengeId,
           interactionType: "chat",
           userPrompt: message,
           modelResponse,
-          code,
-          stdin,
-          stdout,
         });
 
-        await tx
+        await db
           .update(workSession)
           .set({
             updatedAt: now,
             lastMessageAt: now,
           })
           .where(eq(workSession.id, workSessionId));
-      });
+      }
 
       return reply.status(200).send({
         success: true as const,

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -82,6 +82,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let streamError = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -109,11 +110,36 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 }
                 return { messages };
               });
+            } else if (data.type === "error") {
+              // Handle SSE-level error
+              streamError = true;
+              set({ error: data.content || "Stream error" });
+              // Continue draining the stream in case more events follow
+            } else if (data.type === "done") {
+              // Optional: use full_response to replace/verify streamed content
+              // For now, just treat it as an explicit completion signal
             }
           } catch {
             // Ignore partial JSON chunks
           }
         }
+      }
+
+      // Clean up empty assistant message if stream error occurred
+      if (streamError) {
+        set((state) => {
+          const messages = [...state.messages];
+          const lastMsg = messages[messages.length - 1];
+          // Remove the empty assistant message or one with only whitespace
+          if (
+            lastMsg &&
+            lastMsg.role === "assistant" &&
+            (!lastMsg.content || !lastMsg.content.trim())
+          ) {
+            messages.pop();
+          }
+          return { messages };
+        });
       }
     } catch (err) {
       const errorMessage =
