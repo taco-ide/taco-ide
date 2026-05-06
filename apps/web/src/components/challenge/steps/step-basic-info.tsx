@@ -15,7 +15,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Lightbulb, Plus, X } from "lucide-react";
 import { difficultyLevels } from "@/components/challenge/constants";
 import type { ChallengeFormData } from "@/components/challenge/schema";
 import {
@@ -107,6 +108,34 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
     return (
         <Card className="p-6 bg-slate-800 border-slate-700">
             <div className="space-y-4">
+                <Alert className="border-amber-500/35 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-400">
+                    <Lightbulb className="h-4 w-4" />
+                    <AlertTitle className="text-amber-100">
+                        Primeiro desafio: o que o aluno enxerga
+                    </AlertTitle>
+                    <AlertDescription className="text-amber-100/90 space-y-2">
+                        <ul className="list-disc pl-4 space-y-1.5 text-sm">
+                            <li>
+                                <strong className="text-amber-50">Titulo e tags</strong> aparecem na lista de desafios
+                                para o aluno identificar o exercicio.
+                            </li>
+                            <li>
+                                <strong className="text-amber-50">Dificuldade</strong> ajuda o aluno a esperar o nivel de
+                                esforco (nao altera correcao automatica por si so).
+                            </li>
+                            <li>
+                                <strong className="text-amber-50">Turma (obrigatoria)</strong> define{" "}
+                                <em>onde</em> o desafio fica disponivel. Sem turma, seus alunos nao acessam o problema
+                                pelo fluxo normal da turma.
+                            </li>
+                        </ul>
+                        <p className="text-xs text-amber-200/80 pt-1">
+                            Exemplo de titulo: &quot;Soma de dois numeros&quot; ou &quot;Ordenar lista com bubble
+                            sort&quot;.
+                        </p>
+                    </AlertDescription>
+                </Alert>
+
                 <div>
                     <Label className="text-slate-200">Problem Title</Label>
                     <Input

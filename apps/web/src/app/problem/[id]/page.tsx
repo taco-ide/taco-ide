@@ -8,6 +8,7 @@ import Header from "./_components/Header";
 import IoPanel from "./_components/IoPanel";
 import ProblemDescription from "./_components/ProblemDescription";
 import ChatPanel from "./_components/ChatPanel";
+import { ProblemWorkspaceOnboarding } from "./_components/ProblemWorkspaceOnboarding";
 import { ProblemProvider, useProblem } from "@/contexts/ProblemContext";
 import { Loader2 } from "lucide-react";
 import {
@@ -72,6 +73,7 @@ function ProblemPageInner() {
   return (
     <div className="h-screen w-screen flex flex-col bg-[#0c0d10] text-zinc-300 overflow-hidden">
       <Header />
+      <ProblemWorkspaceOnboarding />
 
       <div className="flex-1 min-h-0 flex flex-col px-3 pb-3">
         <ResizablePanelGroup direction="horizontal" className="gap-1">
