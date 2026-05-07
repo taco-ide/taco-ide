@@ -17,6 +17,7 @@ import { eq } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
+import { getLangfuseCallback } from "../../../../agents/langfuse";
 
 // ==================== SCHEMAS ====================
 
@@ -130,7 +131,19 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
       let fullResponse = "";
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: user.id,
+        sessionId: workSessionId,
+        tags: ["agent:ta"],
+        metadata: {
+          challengeId: ws[0].challengeId,
+          workSessionId,
+        },
+      });
+
       try {
+        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+
         const stream = teachingAssistantAgent.streamEvents(
           {
             messages: [
@@ -146,6 +159,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
             },
             streamMode: "messages",
             version: "v2",
+            callbacks,
           },
         );
 
@@ -187,6 +201,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           err instanceof Error ? err.message : "Agent invocation failed";
         const errorData = JSON.stringify({ type: "error", content: errorMsg });
         reply.raw.write(`data: ${errorData}\n\n`);
+      } finally {
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
       }
 
       // Persist interaction to DB
