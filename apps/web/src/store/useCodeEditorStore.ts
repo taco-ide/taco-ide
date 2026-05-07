@@ -40,7 +40,10 @@ export const useCodeEditorStore = create<CodeEditorState>((set, get) => {
     pyodideStatus: "idle",
 
     preloadPyodide: () => {
-      pyodideService.preload().catch(() => {});
+      pyodideService.preload().catch((err) => {
+        console.warn("Pyodide preload failed:", err);
+        useCodeEditorStore.setState({ pyodideStatus: "error" });
+      });
     },
 
     getCode: () => get().editor?.getValue() || "",

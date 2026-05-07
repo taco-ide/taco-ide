@@ -6,17 +6,19 @@ import {
   ResponseSchema201,
   ResponseSchema400,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
-  ResponseSchema409,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import {
   workSession,
-  challenge,
   challengeTeachingAssistant,
-  classroom,
   teachingAssistant,
 } from "@repo/infra/db/schema";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -56,8 +58,8 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
           201: CreateWorkSessionResponseSchema,
           400: ResponseSchema400,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
-          409: ResponseSchema409,
         },
       },
     },
@@ -73,13 +75,8 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
       const { challengeId, teachingAssistantId: bodyTeachingAssistantId } =
         request.body;
 
-      const ch = await db
-        .select({ id: challenge.id, classroomId: challenge.classroomId })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
@@ -123,17 +120,7 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
         if (defaultRow) {
           teachingAssistantId = defaultRow.teachingAssistantId;
         } else {
-          // Sem M2M (ex.: desafio criado quando a org ainda não tinha TA ativo).
-          // Mesma regra que em challenges/create: TA ativo da organização da turma ou da org ativa.
-          let organizationId: string | null = null;
-          if (ch[0].classroomId) {
-            const [cl] = await db
-              .select({ organizationId: classroom.organizationId })
-              .from(classroom)
-              .where(eq(classroom.id, ch[0].classroomId))
-              .limit(1);
-            organizationId = cl?.organizationId ?? null;
-          }
+          let organizationId: string | null = ctx.organizationId;
           if (!organizationId && usr.activeOrganizationId) {
             organizationId = usr.activeOrganizationId;
           }
@@ -163,40 +150,47 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
         }
       }
 
-      const [existingSession] = await db
-        .select({ id: workSession.id })
-        .from(workSession)
-        .where(
-          and(
-            eq(workSession.userId, usr.id),
-            eq(workSession.challengeId, challengeId)
-          )
-        )
-        .limit(1);
-
-      if (existingSession) {
-        return reply.status(409).send({
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok) {
+        return reply.status(access.status).send({
           success: false as const,
-          message: "A work session already exists for this challenge",
+          message: access.message,
         });
       }
 
-      const [session] = await db
+      const insertResult = await db
         .insert(workSession)
         .values({
           id: randomUUID(),
           userId: usr.id,
           challengeId,
           teachingAssistantId,
-          classroomId: ch[0].classroomId,
+          classroomId: ctx.classroomId,
+        })
+        .onConflictDoNothing({
+          target: [workSession.userId, workSession.challengeId],
         })
         .returning();
 
+      let session = insertResult[0];
       if (!session) {
-        return reply.status(500).send({
-          success: false as const,
-          message: "Failed to create work session",
-        });
+        const [existing] = await db
+          .select()
+          .from(workSession)
+          .where(
+            and(
+              eq(workSession.userId, usr.id),
+              eq(workSession.challengeId, challengeId)
+            )
+          )
+          .limit(1);
+        if (!existing) {
+          return reply.status(500).send({
+            success: false as const,
+            message: "Failed to create work session",
+          });
+        }
+        session = existing;
       }
 
       return reply.status(201).send({

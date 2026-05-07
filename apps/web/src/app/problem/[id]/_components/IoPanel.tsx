@@ -11,7 +11,7 @@ import {
   Terminal,
   Keyboard,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import RunningCodeSkeleton from "./RunningCodeSkeleton";
 
 function OutputSection() {
@@ -99,9 +99,19 @@ function OutputSection() {
 }
 
 function InputSection() {
-  const { isSessionEnded } = useProblem();
+  const { challengeId, solution, isSessionEnded } = useProblem();
   const { input, setInput } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
+  const userEditedStdinRef = useRef(false);
+
+  useEffect(() => {
+    userEditedStdinRef.current = false;
+  }, [challengeId]);
+
+  useEffect(() => {
+    if (userEditedStdinRef.current) return;
+    setInput(solution?.stdin ?? "");
+  }, [solution?.stdin, setInput, challengeId]);
 
   const handleCopy = async () => {
     if (!input) return;
@@ -139,7 +149,10 @@ function InputSection() {
       <div className="p-3 min-h-[100px]">
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            userEditedStdinRef.current = true;
+            setInput(e.target.value);
+          }}
           disabled={isSessionEnded}
           className="h-full min-h-[80px] w-full rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="Digite o input aqui..."

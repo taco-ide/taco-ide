@@ -10,7 +10,10 @@ import {
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import { workSession } from "@repo/infra/db/schema";
-import { hasMinimumRole } from "@repo/infra/auth";
+import {
+  assertStaffCanAccessChallengeWorkSessions,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 const WorkSessionParamsSchema = z.object({
   id: z.string().uuid(),
@@ -53,13 +56,6 @@ export async function reopenWorkSessionRoute(app: FastifyTypedInstance) {
         });
       }
 
-      if (!usr.role || !hasMinimumRole(usr.role, "teacher")) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Only teachers and above can reopen a work session",
-        });
-      }
-
       const { id } = request.params;
 
       const [session] = await db
@@ -72,6 +68,26 @@ export async function reopenWorkSessionRoute(app: FastifyTypedInstance) {
         return reply.status(404).send({
           success: false as const,
           message: "Work session not found",
+        });
+      }
+
+      const ctx = await loadChallengeWorkAccessContext(session.challengeId);
+      if (!ctx) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Challenge not found",
+        });
+      }
+
+      const access = await assertStaffCanAccessChallengeWorkSessions(
+        usr,
+        ctx,
+        "mutate"
+      );
+      if (!access.ok) {
+        return reply.status(access.status).send({
+          success: false as const,
+          message: access.message,
         });
       }
 

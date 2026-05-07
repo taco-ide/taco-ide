@@ -1,13 +1,18 @@
 import { z } from "zod";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { workSession, challenge } from "@repo/infra/db/schema";
+import { workSession } from "@repo/infra/db/schema";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -47,6 +52,7 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         response: {
           200: GetWorkSessionResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -62,16 +68,19 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
 
       const { challengeId } = request.query;
 
-      const [ch] = await db
-        .select({ id: challenge.id })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch) {
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
+        });
+      }
+
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok) {
+        return reply.status(access.status).send({
+          success: false as const,
+          message: access.message,
         });
       }
 

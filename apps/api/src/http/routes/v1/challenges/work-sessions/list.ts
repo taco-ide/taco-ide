@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   eq,
   and,
-  isNull,
   isNotNull,
   desc,
   sql,
@@ -17,7 +16,11 @@ import {
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, workSession, user } from "@repo/infra/db/schema";
+import { workSession, user } from "@repo/infra/db/schema";
+import {
+  assertCanListChallengeWorkSessions,
+  loadChallengeWorkAccessContext,
+} from "../../../../services/work-session-access";
 
 const ListWorkSessionsParamsSchema = z.object({
   challengeId: z.string().uuid(),
@@ -71,7 +74,7 @@ export async function listChallengeWorkSessionsRoute(
         tags: ["challenge-work-sessions"],
         summary: "List work sessions for challenge (staff)",
         description:
-          "Paginated list of student work sessions for a challenge. Teachers: own challenges only. Coordinators/admins: any.",
+          "Paginated list of student work sessions for a challenge. Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.",
         params: ListWorkSessionsParamsSchema,
         querystring: ListWorkSessionsQuerySchema,
         response: {
@@ -95,26 +98,19 @@ export async function listChallengeWorkSessionsRoute(
       const { page, perPage, submittedOnly, search } = request.query;
       const offset = (page - 1) * perPage;
 
-      const [ch] = await db
-        .select({
-          id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch) {
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
         });
       }
 
-      if (usr.role === "teacher" && ch.createdByUserId !== usr.id) {
-        return reply.status(403).send({
+      const listAccess = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!listAccess.ok) {
+        return reply.status(listAccess.status).send({
           success: false as const,
-          message: "You can only view work sessions for your own challenges",
+          message: listAccess.message,
         });
       }
 

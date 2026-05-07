@@ -102,10 +102,8 @@ function is404(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
 }
 
-/** Logs de diagnóstico da sessão (dev ou NEXT_PUBLIC_DEBUG_WORK_SESSION=1). */
-const WS_DEBUG =
-  process.env.NEXT_PUBLIC_DEBUG_WORK_SESSION === "1" ||
-  process.env.NODE_ENV !== "production";
+/** Logs de diagnóstico da sessão apenas com NEXT_PUBLIC_DEBUG_WORK_SESSION=1. */
+const WS_DEBUG = process.env.NEXT_PUBLIC_DEBUG_WORK_SESSION === "1";
 
 function logWs(label: string, payload?: Record<string, unknown>) {
   if (!WS_DEBUG) return;

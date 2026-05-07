@@ -19,29 +19,31 @@ const EDITOR_LANG = "python" as const;
 const PYTHON_DEFAULT = LANGUAGE_CONFIG[EDITOR_LANG].defaultCode;
 
 function EditorPanel() {
-  const { theme, fontSize, editor, setFontSize, setEditor, setInput, preloadPyodide } =
+  const { theme, fontSize, editor, setFontSize, setEditor, preloadPyodide } =
     useCodeEditorStore();
   const { challengeId, solution, isSessionEnded } = useProblem();
   const mounted = useMounted();
   const containerRef = useRef<HTMLDivElement>(null);
+  /** Evita sobrescrever código local quando `solution` é atualizado pelo servidor (refetch). */
+  const userEditedCodeRef = useRef(false);
+
+  useEffect(() => {
+    userEditedCodeRef.current = false;
+  }, [challengeId]);
 
   useEffect(() => {
     if (!editor) return;
+    if (userEditedCodeRef.current) return;
 
     const nextCode =
       (solution?.code && !isLegacyEditorTemplate(solution.code)
         ? solution.code
-        : null)
-      || PYTHON_DEFAULT;
+        : null) || PYTHON_DEFAULT;
 
     if (editor.getValue() !== nextCode) {
       editor.setValue(nextCode);
     }
-  }, [editor, solution?.code]);
-
-  useEffect(() => {
-    setInput(solution?.stdin ?? "");
-  }, [solution?.stdin, setInput]);
+  }, [editor, solution?.code, challengeId]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
@@ -53,6 +55,7 @@ function EditorPanel() {
   }, [preloadPyodide]);
 
   const handleRefresh = () => {
+    userEditedCodeRef.current = true;
     if (editor) editor.setValue(PYTHON_DEFAULT);
   };
 
@@ -121,6 +124,9 @@ function EditorPanel() {
           language={LANGUAGE_CONFIG[EDITOR_LANG].monacoLanguage}
           theme={theme}
           beforeMount={defineMonacoThemes}
+          onChange={() => {
+            userEditedCodeRef.current = true;
+          }}
           onMount={(editor: MonacoEditor.IStandaloneCodeEditor) =>
             setEditor(editor)
           }

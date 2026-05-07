@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -12,7 +12,11 @@ import {
   workSession,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
-import { hasMinimumRole } from "@repo/infra/auth";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  assertStaffCanAccessChallengeWorkSessions,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -90,14 +94,35 @@ export async function getWorkSessionByIdRoute(app: FastifyTypedInstance) {
       }
 
       const isOwner = session.userId === usr.id;
-      const isStaff =
-        usr.role !== null && hasMinimumRole(usr.role, "teacher");
 
-      if (!isOwner && !isStaff) {
-        return reply.status(403).send({
+      const ctx = await loadChallengeWorkAccessContext(session.challengeId);
+      if (!ctx) {
+        return reply.status(404).send({
           success: false as const,
-          message: "Not authorized to access this work session",
+          message: "Challenge not found",
         });
+      }
+
+      if (isOwner) {
+        const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+        if (!access.ok) {
+          return reply.status(access.status).send({
+            success: false as const,
+            message: access.message,
+          });
+        }
+      } else {
+        const access = await assertStaffCanAccessChallengeWorkSessions(
+          usr,
+          ctx,
+          "read"
+        );
+        if (!access.ok) {
+          return reply.status(access.status).send({
+            success: false as const,
+            message: access.message,
+          });
+        }
       }
 
       const interactions = await db
