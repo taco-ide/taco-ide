@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1KnowledgeBasesKbidDocumentsQueryResponse, GetV1KnowledgeBasesKbidDocumentsPathParams, GetV1KnowledgeBasesKbidDocumentsQueryParams, GetV1KnowledgeBasesKbidDocuments401, GetV1KnowledgeBasesKbidDocuments403, GetV1KnowledgeBasesKbidDocuments404 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidDocuments.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1KnowledgeBasesKbidDocumentsQueryResponse, GetV1KnowledgeBasesKbidDocumentsPathParams, GetV1KnowledgeBasesKbidDocumentsQueryParams, GetV1KnowledgeBasesKbidDocuments401, GetV1KnowledgeBasesKbidDocuments403, GetV1KnowledgeBasesKbidDocuments404 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidDocuments.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1KnowledgeBasesKbidDocumentsSuspenseQueryKey = (kbId: GetV1KnowledgeBasesKbidDocumentsPathParams["kbId"], params?: GetV1KnowledgeBasesKbidDocumentsQueryParams) => [{ url: '/v1/knowledge-bases/:kbId/documents/', params: {kbId:kbId} }, ...(params ? [params] : [])] as const

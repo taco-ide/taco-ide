@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesChallengeidKnowledgeBasesQueryResponse, GetV1ChallengesChallengeidKnowledgeBasesPathParams, GetV1ChallengesChallengeidKnowledgeBases401, GetV1ChallengesChallengeidKnowledgeBases403, GetV1ChallengesChallengeidKnowledgeBases404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidKnowledgeBases.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChallengesChallengeidKnowledgeBasesQueryResponse, GetV1ChallengesChallengeidKnowledgeBasesPathParams, GetV1ChallengesChallengeidKnowledgeBases401, GetV1ChallengesChallengeidKnowledgeBases403, GetV1ChallengesChallengeidKnowledgeBases404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidKnowledgeBases.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesChallengeidKnowledgeBasesQueryKey = (challengeId: GetV1ChallengesChallengeidKnowledgeBasesPathParams["challengeId"]) => [{ url: '/v1/challenges/:challengeId/knowledge-bases/', params: {challengeId:challengeId} }] as const

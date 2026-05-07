@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginFormData, loginSchema } from "@/lib/schemas";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function LoginForm({
@@ -16,6 +17,9 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const { login, error, isLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const sessionExpiredReason =
+    searchParams.get("reason") === "session_expired";
 
   const {
     register,
@@ -39,6 +43,14 @@ export function LoginForm({
               Sign in to your TACO account
             </p>
           </div>
+          {sessionExpiredReason && (
+            <Alert>
+              <AlertTitle>Sessão expirada ou inválida</AlertTitle>
+              <AlertDescription>
+                Inicia sessão novamente.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input

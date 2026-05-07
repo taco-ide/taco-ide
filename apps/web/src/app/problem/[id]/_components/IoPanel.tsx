@@ -1,21 +1,24 @@
 "use client";
 
+import { useProblem } from "@/contexts/ProblemContext";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import {
   AlertTriangle,
   CheckCircle,
   Clock,
   Copy,
+  Loader2,
   Terminal,
   Keyboard,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import RunningCodeSkeleton from "./RunningCodeSkeleton";
 
 function OutputSection() {
-  const { output, error, isRunning } = useCodeEditorStore();
+  const { output, error, isRunning, pyodideStatus, language } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
   const hasContent = error || output;
+  const isPythonLoading = isRunning && language === 'python' && pyodideStatus === 'loading';
 
   const handleCopy = async () => {
     if (!hasContent) return;
@@ -54,7 +57,14 @@ function OutputSection() {
         <div className="p-3">
           <div className="rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm min-h-[80px]">
             {isRunning ? (
-              <RunningCodeSkeleton />
+              isPythonLoading ? (
+                <div className="flex flex-col items-center justify-center h-full min-h-[60px] text-zinc-500">
+                  <Loader2 className="size-5 mb-1 animate-spin opacity-60" />
+                  <p className="text-xs">Carregando runtime Python (apenas na primeira vez)...</p>
+                </div>
+              ) : (
+                <RunningCodeSkeleton />
+              )
             ) : error ? (
               <div className="flex items-start gap-3 text-rose-400/90">
                 <AlertTriangle className="size-5 shrink-0 mt-0.5" />
@@ -89,8 +99,19 @@ function OutputSection() {
 }
 
 function InputSection() {
+  const { challengeId, solution, isSessionEnded } = useProblem();
   const { input, setInput } = useCodeEditorStore();
   const [isCopied, setIsCopied] = useState(false);
+  const userEditedStdinRef = useRef(false);
+
+  useEffect(() => {
+    userEditedStdinRef.current = false;
+  }, [challengeId]);
+
+  useEffect(() => {
+    if (userEditedStdinRef.current) return;
+    setInput(solution?.stdin ?? "");
+  }, [solution?.stdin, setInput, challengeId]);
 
   const handleCopy = async () => {
     if (!input) return;
@@ -128,8 +149,12 @@ function InputSection() {
       <div className="p-3 min-h-[100px]">
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="h-full min-h-[80px] w-full rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all"
+          onChange={(e) => {
+            userEditedStdinRef.current = true;
+            setInput(e.target.value);
+          }}
+          disabled={isSessionEnded}
+          className="h-full min-h-[80px] w-full rounded-lg bg-zinc-800/40 border border-zinc-700/40 p-3 font-mono text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="Digite o input aqui..."
         />
       </div>

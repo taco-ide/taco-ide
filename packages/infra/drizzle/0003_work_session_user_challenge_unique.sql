@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "work_session_user_challenge_idx" ON "work_session" USING btree ("user_id","challenge_id");

@@ -23,7 +23,7 @@ export const getV1WorkSessionsByChallenge200Schema = z.object({
 "createdAt": z.string(),
 "lastMessageAt": z.string().nullable(),
 "endedAt": z.string().nullable()
-    }),
+    }).nullable(),
 "pagination": z.object({
     "total": z.number(),
 "page": z.number(),

@@ -1,8 +1,12 @@
 "use client";
 
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
-import { useEffect, useRef, useCallback } from "react";
-import { defineMonacoThemes, LANGUAGE_CONFIG } from "../_constants";
+import { useEffect, useRef } from "react";
+import {
+  defineMonacoThemes,
+  isLegacyEditorTemplate,
+  LANGUAGE_CONFIG,
+} from "../_constants";
 import type { editor as MonacoEditor } from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import Image from "next/image";
@@ -10,52 +14,50 @@ import { RotateCcwIcon, TypeIcon } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
 import { useProblem } from "@/contexts/ProblemContext";
 
+/** Editor do desafio é só Python; não usar `language` do store (pode estar desatualizado). */
+const EDITOR_LANG = "python" as const;
+const PYTHON_DEFAULT = LANGUAGE_CONFIG[EDITOR_LANG].defaultCode;
+
 function EditorPanel() {
-  const { language, theme, fontSize, editor, setFontSize, setEditor, setInput } =
+  const { theme, fontSize, editor, setFontSize, setEditor, preloadPyodide } =
     useCodeEditorStore();
-  const { solution, saveSolution } = useProblem();
+  const { challengeId, solution, isSessionEnded } = useProblem();
   const mounted = useMounted();
   const containerRef = useRef<HTMLDivElement>(null);
+  /** Evita sobrescrever código local quando `solution` é atualizado pelo servidor (refetch). */
+  const userEditedCodeRef = useRef(false);
+
+  useEffect(() => {
+    userEditedCodeRef.current = false;
+  }, [challengeId]);
 
   useEffect(() => {
     if (!editor) return;
-    // Prioridade: server solution > localStorage > default
-    if (solution?.code) {
-      editor.setValue(solution.code);
-      return;
-    }
-    const savedCode = localStorage.getItem(`editor-code-${language}`);
-    editor.setValue(savedCode || LANGUAGE_CONFIG[language].defaultCode);
-  }, [language, editor, solution?.code]);
+    if (userEditedCodeRef.current) return;
 
-  useEffect(() => {
-    if (solution?.stdin) setInput(solution.stdin);
-  }, [solution?.stdin, setInput]);
+    const nextCode =
+      (solution?.code && !isLegacyEditorTemplate(solution.code)
+        ? solution.code
+        : null) || PYTHON_DEFAULT;
+
+    if (editor.getValue() !== nextCode) {
+      editor.setValue(nextCode);
+    }
+  }, [editor, solution?.code, challengeId]);
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem("editor-font-size");
     if (savedFontSize) setFontSize(parseInt(savedFontSize));
   }, [setFontSize]);
 
-  const handleRefresh = () => {
-    const defaultCode = LANGUAGE_CONFIG[language].defaultCode;
-    if (editor) editor.setValue(defaultCode);
-    localStorage.removeItem(`editor-code-${language}`);
-  };
+  useEffect(() => {
+    preloadPyodide();
+  }, [preloadPyodide]);
 
-  const debouncedSave = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleEditorChange = useCallback(
-    (value: string | undefined) => {
-      if (value) {
-        localStorage.setItem(`editor-code-${language}`, value);
-        if (debouncedSave.current) clearTimeout(debouncedSave.current);
-        debouncedSave.current = setTimeout(() => {
-          saveSolution({ code: value });
-        }, 1000);
-      }
-    },
-    [language, saveSolution]
-  );
+  const handleRefresh = () => {
+    userEditedCodeRef.current = true;
+    if (editor) editor.setValue(PYTHON_DEFAULT);
+  };
 
   const handleFontSizeChange = (newSize: number) => {
     const size = Math.min(Math.max(newSize, 12), 24);
@@ -72,7 +74,7 @@ function EditorPanel() {
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-7 h-7 rounded-md bg-zinc-800/60">
             <Image
-              src={"/" + language + ".png"}
+              src={`/${EDITOR_LANG}.png`}
               alt="Logo"
               width={18}
               height={18}
@@ -93,15 +95,18 @@ function EditorPanel() {
               onChange={(e) =>
                 handleFontSizeChange(parseInt(e.target.value))
               }
-              className="w-16 h-1 bg-zinc-600 rounded cursor-pointer accent-amber-500"
+              disabled={isSessionEnded}
+              className="w-16 h-1 bg-zinc-600 rounded cursor-pointer accent-amber-500 disabled:opacity-50"
             />
             <span className="text-xs text-zinc-500 w-5 text-right">
               {fontSize}
             </span>
           </div>
           <button
+            type="button"
             onClick={handleRefresh}
-            className="p-1.5 hover:bg-zinc-800/60 rounded-md transition-colors text-zinc-500 hover:text-zinc-400"
+            disabled={isSessionEnded}
+            className="p-1.5 hover:bg-zinc-800/60 rounded-md transition-colors text-zinc-500 hover:text-zinc-400 disabled:opacity-40 disabled:pointer-events-none"
             aria-label="Resetar código"
           >
             <RotateCcwIcon className="size-4" />
@@ -112,16 +117,21 @@ function EditorPanel() {
       {/* Editor com flex para preencher espaço */}
       <div className="flex-1 min-h-0 relative min-h-[200px]">
         <Editor
+          key={challengeId ?? "editor"}
           height="100%"
           className="block"
-          language={LANGUAGE_CONFIG[language].monacoLanguage}
-          onChange={handleEditorChange}
+          defaultValue={PYTHON_DEFAULT}
+          language={LANGUAGE_CONFIG[EDITOR_LANG].monacoLanguage}
           theme={theme}
           beforeMount={defineMonacoThemes}
+          onChange={() => {
+            userEditedCodeRef.current = true;
+          }}
           onMount={(editor: MonacoEditor.IStandaloneCodeEditor) =>
             setEditor(editor)
           }
           options={{
+            readOnly: isSessionEnded,
             minimap: { enabled: false },
             fontSize,
             automaticLayout: true,

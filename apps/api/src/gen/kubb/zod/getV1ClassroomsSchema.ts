@@ -36,6 +36,17 @@ export const getV1Classrooms200Schema = z.object({
 /**
  * @description Default Response
  */
+export const getV1Classrooms400Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const getV1Classrooms401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),

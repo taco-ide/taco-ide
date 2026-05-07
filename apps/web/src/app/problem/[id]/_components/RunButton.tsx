@@ -1,26 +1,33 @@
 "use client";
 
-import { useCodeEditorStore, getExecutionResult } from "@/store/useCodeEditorStore";
+import {
+  useCodeEditorStore,
+  getExecutionResult,
+} from "@/store/useCodeEditorStore";
 import { useProblem } from "@/contexts/ProblemContext";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
 
 function RunButton() {
-  const { runCode, isRunning, getInput } = useCodeEditorStore();
-  const { addInteraction, saveSolution } = useProblem();
+  const { runCode, isRunning, getInput, pyodideStatus, language } =
+    useCodeEditorStore();
+  const { addInteraction, saveSolution, isSessionEnded } = useProblem();
+
+  const isPythonLoading = isRunning && language === 'python' && pyodideStatus === 'loading';
 
   const handleRun = async () => {
     await runCode();
     const result = getExecutionResult();
     if (result) {
+      const codeSnapshot = result.code || useCodeEditorStore.getState().getCode();
       await addInteraction({
         interactionType: "code_run",
-        code: result.code,
+        code: codeSnapshot,
         stdin: getInput(),
         stdout: result.error ?? result.output,
       });
       await saveSolution({
-        code: result.code,
+        code: codeSnapshot,
         stdin: getInput(),
         stdout: result.error ?? result.output,
       });
@@ -30,7 +37,7 @@ function RunButton() {
   return (
     <motion.button
       onClick={handleRun}
-      disabled={isRunning}
+      disabled={isRunning || isSessionEnded}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       className={`
@@ -49,7 +56,9 @@ function RunButton() {
               <Loader2 className="w-4 h-4 animate-spin text-white/70" />
               <div className="absolute inset-0 blur animate-pulse" />
             </div>
-            <span className="text-sm font-medium text-white/90">Executing...</span>
+            <span className="text-sm font-medium text-white/90">
+              {isPythonLoading ? "Carregando Python..." : "Executando..."}
+            </span>
           </>
         ) : (
           <>

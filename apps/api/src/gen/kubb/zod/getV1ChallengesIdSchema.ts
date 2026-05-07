@@ -24,6 +24,9 @@ export const getV1ChallengesId200Schema = z.object({
 "supportMaterials": z.any().nullish(),
 "author": z.string().nullable(),
 "classroomTitle": z.string().nullable(),
+"createdByUserId": z.string().nullable(),
+"classroomId": z.string().nullable(),
+"classroomTeacherUserId": z.string().nullable(),
 "teachingAssistants": z.array(z.object({
     "id": z.string(),
 "alias": z.string(),

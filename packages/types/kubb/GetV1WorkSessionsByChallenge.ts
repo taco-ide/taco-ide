@@ -61,7 +61,7 @@ export type GetV1WorkSessionsByChallenge200 = {
          * @type string
         */
         endedAt: string | null;
-    };
+    } | null;
     /**
      * @type object | undefined
     */

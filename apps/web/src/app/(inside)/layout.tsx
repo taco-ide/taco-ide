@@ -6,9 +6,9 @@ import { UserProvider } from "@/contexts/UserContext";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <UserProvider>
-      <div className="flex flex-col bg-slate-900 min-h-screen w-full">
+      <div className="flex h-dvh max-h-dvh min-h-0 w-full flex-col overflow-hidden bg-slate-900">
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
         <Footer />
       </div>
     </UserProvider>

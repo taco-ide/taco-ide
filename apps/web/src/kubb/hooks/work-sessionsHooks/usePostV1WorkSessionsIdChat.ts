@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1WorkSessionsIdChatMutationKey = () => [{ url: '/v1/work-sessions/:id/chat' }] as const
@@ -14,7 +14,7 @@ export const postV1WorkSessionsIdChatMutationKey = () => [{ url: '/v1/work-sessi
 export type PostV1WorkSessionsIdChatMutationKey = ReturnType<typeof postV1WorkSessionsIdChatMutationKey>
 
 /**
- * @description Sends a user message to the Teaching Assistant via OpenRouter, saves the interaction, and returns the AI response
+ * @description Sends a user message to the Teaching Assistant agent, saves the interaction, and returns the AI response
  * @summary Send chat message and get TA response
  * {@link /v1/work-sessions/:id/chat}
  */
@@ -28,7 +28,7 @@ export async function postV1WorkSessionsIdChat(id: PostV1WorkSessionsIdChatPathP
 }
 
 /**
- * @description Sends a user message to the Teaching Assistant via OpenRouter, saves the interaction, and returns the AI response
+ * @description Sends a user message to the Teaching Assistant agent, saves the interaction, and returns the AI response
  * @summary Send chat message and get TA response
  * {@link /v1/work-sessions/:id/chat}
  */
