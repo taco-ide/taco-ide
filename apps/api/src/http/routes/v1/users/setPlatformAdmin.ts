@@ -15,7 +15,7 @@ import { session, user } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const SetPlatformAdminParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const SetPlatformAdminBodySchema = z.object({

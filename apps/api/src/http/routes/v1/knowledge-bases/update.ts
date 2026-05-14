@@ -14,7 +14,7 @@ import { knowledgeBase } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const UpdateKnowledgeBaseParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const UpdateKnowledgeBaseBodySchema = z.object({

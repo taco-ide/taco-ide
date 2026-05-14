@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema201,
@@ -9,10 +10,8 @@ import {
   ResponseSchema409,
 } from "../../_responses/types";
 import { requirePlatformAdmin } from "../../../middlewares/authorization";
-import { getRequestHeaders } from "../../../lib/requestHeaders";
-import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
-import { organization } from "@repo/infra/db/schema";
+import { member, organization } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -75,47 +74,63 @@ export async function createOrganizationRoute(app: FastifyTypedInstance) {
       }
 
       const { name, slug, logo } = request.body;
-      const headers = getRequestHeaders(request);
+
+      // Reject duplicate slug up-front so we return a clean 409 instead of
+      // relying on the unique-constraint error.
+      const existing = await db
+        .select({ id: organization.id })
+        .from(organization)
+        .where(eq(organization.slug, slug))
+        .limit(1);
+
+      if (existing[0]) {
+        return reply.status(409).send({
+          success: false as const,
+          message: "Organization slug already exists",
+        });
+      }
 
       try {
-        const result = await auth.api.createOrganization({
-          body: {
+        const now = new Date();
+        const orgId = randomUUID();
+
+        const inserted = await db
+          .insert(organization)
+          .values({
+            id: orgId,
             name,
             slug,
-            ...(logo ? { logo } : {}),
-            keepCurrentActiveOrganization: true,
-          },
-          headers,
-        });
-
-        if (!result?.id) {
-          return reply.status(400).send({
-            success: false as const,
-            message: "Failed to create organization",
-          });
-        }
-
-        // Re-read to capture authoritative timestamps and isActive default.
-        const persisted = await db
-          .select({
+            logo: logo ?? null,
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning({
             id: organization.id,
             name: organization.name,
             slug: organization.slug,
             logo: organization.logo,
             isActive: organization.isActive,
             createdAt: organization.createdAt,
-          })
-          .from(organization)
-          .where(eq(organization.id, result.id))
-          .limit(1);
+          });
 
-        const org = persisted[0];
+        const org = inserted[0];
         if (!org) {
           return reply.status(400).send({
             success: false as const,
-            message: "Organization was created but could not be loaded",
+            message: "Failed to create organization",
           });
         }
+
+        // Make the calling Platform Admin the org's first admin to preserve
+        // the previous Better Auth behavior (creatorRole=admin).
+        await db.insert(member).values({
+          id: randomUUID(),
+          userId: usr.id,
+          organizationId: org.id,
+          role: "admin",
+          createdAt: now,
+        });
 
         return reply.status(201).send({
           success: true as const,
@@ -130,23 +145,11 @@ export async function createOrganizationRoute(app: FastifyTypedInstance) {
         });
       } catch (err) {
         const error = err as {
-          status?: string | number;
-          statusCode?: number;
-          body?: { message?: string; code?: string };
+          code?: string;
           message?: string;
         };
-        const code = error.body?.code ?? "";
-        const message =
-          error.body?.message ?? error.message ?? "Failed to create organization";
-
-        // Narrow conflict detection: rely on Better Auth's explicit code or
-        // an unambiguous "slug ... already exists" message. Plain 400s are
-        // validation errors (e.g. name/slug length) and must surface as 400.
-        const isSlugConflict =
-          code === "ORGANIZATION_ALREADY_EXISTS" ||
-          /slug.*already exists|already exists.*slug/i.test(message);
-
-        if (isSlugConflict) {
+        // Unique violation on slug (PostgreSQL 23505) as a defensive fallback.
+        if (error.code === "23505") {
           return reply.status(409).send({
             success: false as const,
             message: "Organization slug already exists",
@@ -156,7 +159,7 @@ export async function createOrganizationRoute(app: FastifyTypedInstance) {
         request.log.error({ err }, "createOrganization failed");
         return reply.status(400).send({
           success: false as const,
-          message,
+          message: error.message ?? "Failed to create organization",
         });
       }
     }

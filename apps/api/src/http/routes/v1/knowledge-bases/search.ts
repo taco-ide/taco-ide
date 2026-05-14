@@ -15,7 +15,7 @@ import { searchKnowledgeBase } from "../../../../services/knowledge-base-search"
 // ==================== SCHEMAS ====================
 
 const SearchKnowledgeBaseParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const SearchKnowledgeBaseQuerySchema = z.object({

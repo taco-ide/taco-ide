@@ -30,7 +30,7 @@ function isUniqueViolation(err: unknown): boolean {
 // ==================== SCHEMAS ====================
 
 const CreateEmailDomainParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const DomainSchema = z

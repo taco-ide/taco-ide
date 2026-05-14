@@ -15,8 +15,8 @@ import { member } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const RemoveMemberParamsSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.string().min(1),
+  userId: z.string().min(1),
 });
 
 const RemoveMemberResponseSchema = ResponseSchema200.extend({

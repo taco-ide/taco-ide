@@ -6,7 +6,8 @@
 
 export type PostV1OrganizationsIdInvitationsPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };

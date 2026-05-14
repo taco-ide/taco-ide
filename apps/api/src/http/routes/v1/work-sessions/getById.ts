@@ -16,7 +16,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const WorkSessionParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const InteractionSchema = z.object({

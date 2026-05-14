@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const postV1ClassroomsIdUnenrollPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
 
 /**
@@ -62,7 +62,7 @@ export const postV1ClassroomsIdUnenroll404Schema = z.object({
     })
 
 export const postV1ClassroomsIdUnenrollMutationRequestSchema = z.union([z.any(), z.object({
-    "userId": z.string().uuid().optional()
+    "userId": z.string().min(1).optional()
     })])
 
 export const postV1ClassroomsIdUnenrollMutationResponseSchema = z.lazy(() => postV1ClassroomsIdUnenroll200Schema)

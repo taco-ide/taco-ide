@@ -7,16 +7,15 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requireRole } from "../../../../middlewares/authorization";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
-import { auth } from "@repo/infra/auth";
+import { auth, hasMinimumRole } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { invitation } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
 const OrgInvitationParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   invitationId: z.string(),
 });
 
@@ -34,7 +33,6 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
   }>(
     "/invitations/:invitationId",
     {
-      preHandler: [requireRole("coordinator")],
       schema: {
         tags: ["organizations"],
         summary: "Cancel invitation",
@@ -60,11 +58,20 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
 
       const { id: organizationId, invitationId } = request.params;
 
-      if (organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Organization ID must match your active organization",
-        });
+      // Platform admins bypass the active-organization + role check.
+      if (!usr.isPlatformAdmin) {
+        if (organizationId !== usr.activeOrganizationId) {
+          return reply.status(403).send({
+            success: false as const,
+            message: "Organization ID must match your active organization",
+          });
+        }
+        if (!usr.role || !hasMinimumRole(usr.role, "coordinator")) {
+          return reply.status(403).send({
+            success: false as const,
+            message: "Insufficient role permissions",
+          });
+        }
       }
 
       const inv = await db
@@ -85,20 +92,52 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const headers = getRequestHeaders(request);
-      await auth.api.cancelInvitation({
-        body: {
-          invitationId,
-        },
-        headers,
-      });
+      if (usr.isPlatformAdmin) {
+        // Platform Admin may not be a member of the org, so the Better Auth
+        // cancelInvitation handler would reject. Mark the invitation as
+        // canceled directly, matching the organization plugin schema.
+        await db
+          .update(invitation)
+          .set({ status: "canceled" })
+          .where(eq(invitation.id, invitationId));
 
-      return reply.status(200).send({
-        success: true as const,
-        data: {
-          message: "Invitation cancelled successfully",
-        },
-      });
+        return reply.status(200).send({
+          success: true as const,
+          data: {
+            message: "Invitation cancelled successfully",
+          },
+        });
+      }
+
+      const headers = getRequestHeaders(request);
+      try {
+        await auth.api.cancelInvitation({
+          body: {
+            invitationId,
+          },
+          headers,
+        });
+
+        return reply.status(200).send({
+          success: true as const,
+          data: {
+            message: "Invitation cancelled successfully",
+          },
+        });
+      } catch (err) {
+        const error = err as {
+          statusCode?: number;
+          body?: { message?: string; code?: string };
+          message?: string;
+        };
+        const message =
+          error.body?.message ?? error.message ?? "Failed to cancel invitation";
+        request.log.error({ err }, "cancelInvitation failed");
+        return reply.status(403).send({
+          success: false as const,
+          message,
+        });
+      }
     }
   );
 }

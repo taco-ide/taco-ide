@@ -18,7 +18,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const AddInteractionParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const AddInteractionBodySchema = z.object({

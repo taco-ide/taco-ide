@@ -6,8 +6,8 @@
 import { z } from "zod";
 
 export const postV1OrganizationsIdMembersUseridMovePathParamsSchema = z.object({
-    "id": z.string().uuid(),
-"userId": z.string().uuid()
+    "id": z.string().min(1),
+"userId": z.string().min(1)
     })
 
 /**
@@ -87,7 +87,7 @@ export const postV1OrganizationsIdMembersUseridMove409Schema = z.object({
     })
 
 export const postV1OrganizationsIdMembersUseridMoveMutationRequestSchema = z.object({
-    "toOrganizationId": z.string().uuid(),
+    "toOrganizationId": z.string().min(1),
 "newRole": z.enum(["student", "teacher", "coordinator", "admin"])
     })
 

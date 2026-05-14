@@ -17,12 +17,12 @@ import { member, organization } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const MoveMemberParamsSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.string().min(1),
+  userId: z.string().min(1),
 });
 
 const MoveMemberBodySchema = z.object({
-  toOrganizationId: z.string().uuid(),
+  toOrganizationId: z.string().min(1),
   newRole: z.enum(["student", "teacher", "coordinator", "admin"]),
 });
 

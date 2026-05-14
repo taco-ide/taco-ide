@@ -19,8 +19,8 @@ import {
 // ==================== SCHEMAS ====================
 
 const CreateWorkSessionBodySchema = z.object({
-  challengeId: z.string().uuid(),
-  teachingAssistantId: z.string().uuid(),
+  challengeId: z.string().min(1),
+  teachingAssistantId: z.string().min(1),
 });
 
 const WorkSessionSchema = z.object({

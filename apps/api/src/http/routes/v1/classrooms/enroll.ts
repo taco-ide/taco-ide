@@ -14,11 +14,11 @@ import { classroom, userClassroom, member } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const ClassroomParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const EnrollBodySchema = z.object({
-  userId: z.string().uuid().optional(),
+  userId: z.string().min(1).optional(),
 });
 
 // ==================== ROUTE ====================

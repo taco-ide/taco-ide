@@ -69,7 +69,7 @@ export const postV1KnowledgeBases404Schema = z.object({
 export const postV1KnowledgeBasesMutationRequestSchema = z.object({
     "title": z.string().min(1).max(200),
 "description": z.string().optional(),
-"classroomId": z.string().uuid()
+"classroomId": z.string().min(1)
     })
 
 export const postV1KnowledgeBasesMutationResponseSchema = z.lazy(() => postV1KnowledgeBases201Schema)

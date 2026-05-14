@@ -6,11 +6,13 @@
 
 export type PutV1OrganizationsIdMembersUseridPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     userId: string;
 };

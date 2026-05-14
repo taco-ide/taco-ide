@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const patchV1UsersIdPlatformAdminPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
 
 /**

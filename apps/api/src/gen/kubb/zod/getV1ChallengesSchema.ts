@@ -7,7 +7,7 @@ import { z } from "zod";
 
 export const getV1ChallengesQueryParamsSchema = z.object({
     "scope": z.enum(["mine", "public", "all"]).default("all"),
-"classroomId": z.string().uuid().optional(),
+"classroomId": z.string().min(1).optional(),
 "difficulty": z.enum(["easy", "medium", "hard"]).optional(),
 "tags": z.string().optional(),
 "page": z.coerce.number().min(1).default(1),

@@ -25,7 +25,7 @@ const REQUIRED_COLUMNS = ["name", "email", "password", "role"] as const;
 // ==================== SCHEMAS ====================
 
 const ImportCsvParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const ImportCsvQuerySchema = z.object({

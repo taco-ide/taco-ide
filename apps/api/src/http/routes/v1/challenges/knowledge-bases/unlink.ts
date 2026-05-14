@@ -14,8 +14,8 @@ import { challenge, challengeKnowledgeBase } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const UnlinkKnowledgeBaseParamsSchema = z.object({
-  challengeId: z.string().uuid(),
-  kbId: z.string().uuid(),
+  challengeId: z.string().min(1),
+  kbId: z.string().min(1),
 });
 
 // ==================== ROUTE ====================

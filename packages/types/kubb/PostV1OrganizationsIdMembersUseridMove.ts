@@ -6,11 +6,13 @@
 
 export type PostV1OrganizationsIdMembersUseridMovePathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     userId: string;
 };
@@ -222,7 +224,8 @@ export type PostV1OrganizationsIdMembersUseridMoveMutationRequestNewRoleEnum = (
 
 export type PostV1OrganizationsIdMembersUseridMoveMutationRequest = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     toOrganizationId: string;
     /**

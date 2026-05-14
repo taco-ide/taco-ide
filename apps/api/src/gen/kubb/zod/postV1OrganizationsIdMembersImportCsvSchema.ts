@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const postV1OrganizationsIdMembersImportCsvPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
 
 export const postV1OrganizationsIdMembersImportCsvQueryParamsSchema = z.object({

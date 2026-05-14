@@ -14,11 +14,11 @@ import { challenge, classroom, member } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const ChallengeParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const UpdateChallengeBodySchema = z.object({
-  classroomId: z.string().uuid().nullable(),
+  classroomId: z.string().min(1).nullable(),
 });
 
 const UpdateChallengeResponseSchema = ResponseSchema200.extend({

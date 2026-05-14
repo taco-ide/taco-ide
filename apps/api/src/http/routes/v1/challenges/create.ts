@@ -24,7 +24,7 @@ const CreateChallengeBodySchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  classroomId: z.string().uuid(),
+  classroomId: z.string().min(1),
   tags: z.array(z.string()).optional(),
   supportMaterials: z.unknown().optional(),
   possibleSolutions: z.unknown().optional(),

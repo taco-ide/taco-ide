@@ -24,7 +24,7 @@ import { generateEmbeddings } from "../../../../../services/embedding";
 // ==================== SCHEMAS ====================
 
 const UploadDocumentParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const DocumentSchema = z.object({

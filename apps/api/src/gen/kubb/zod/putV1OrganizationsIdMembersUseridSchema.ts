@@ -6,8 +6,8 @@
 import { z } from "zod";
 
 export const putV1OrganizationsIdMembersUseridPathParamsSchema = z.object({
-    "id": z.string().uuid(),
-"userId": z.string().uuid()
+    "id": z.string().min(1),
+"userId": z.string().min(1)
     })
 
 /**

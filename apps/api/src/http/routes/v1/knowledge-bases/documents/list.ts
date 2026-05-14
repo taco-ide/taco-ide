@@ -15,7 +15,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const ListDocumentsParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const ListDocumentsQuerySchema = z.object({

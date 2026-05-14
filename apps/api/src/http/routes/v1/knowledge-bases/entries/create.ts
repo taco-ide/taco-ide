@@ -16,7 +16,7 @@ import { generateEmbedding } from "../../../../../services/embedding";
 // ==================== SCHEMAS ====================
 
 const CreateEntryParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const CreateEntryBodySchema = z.object({

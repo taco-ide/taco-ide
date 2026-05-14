@@ -17,7 +17,7 @@ import { member, organization, user } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const AddExistingMemberParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const AddExistingMemberBodySchema = z.object({

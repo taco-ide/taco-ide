@@ -37,7 +37,7 @@ export async function getSolutionRoute(app: FastifyTypedInstance) {
         tags: ["solutions"],
         summary: "Get solution for challenge",
         description: "Returns the current user's solution state for a challenge",
-        params: z.object({ id: z.string().uuid() }),
+        params: z.object({ id: z.string().min(1) }),
         response: {
           200: GetSolutionResponseSchema,
           401: ResponseSchema401,

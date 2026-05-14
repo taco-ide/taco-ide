@@ -54,8 +54,8 @@ export const postV1WorkSessions404Schema = z.object({
     })
 
 export const postV1WorkSessionsMutationRequestSchema = z.object({
-    "challengeId": z.string().uuid(),
-"teachingAssistantId": z.string().uuid()
+    "challengeId": z.string().min(1),
+"teachingAssistantId": z.string().min(1)
     })
 
 export const postV1WorkSessionsMutationResponseSchema = z.lazy(() => postV1WorkSessions201Schema)

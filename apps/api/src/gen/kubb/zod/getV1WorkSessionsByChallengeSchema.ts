@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const getV1WorkSessionsByChallengeQueryParamsSchema = z.object({
-    "challengeId": z.string().uuid()
+    "challengeId": z.string().min(1)
     })
 
 /**

@@ -18,7 +18,7 @@ import { knowledgeBase, classroom } from "@repo/infra/db/schema";
 const CreateKnowledgeBaseBodySchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().optional(),
-  classroomId: z.string().uuid(),
+  classroomId: z.string().min(1),
 });
 
 const KnowledgeBaseCreatedSchema = z.object({

@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const getV1ChallengesChallengeidKnowledgeBasesSearchPathParamsSchema = z.object({
-    "challengeId": z.string().uuid()
+    "challengeId": z.string().min(1)
     })
 
 export const getV1ChallengesChallengeidKnowledgeBasesSearchQueryParamsSchema = z.object({

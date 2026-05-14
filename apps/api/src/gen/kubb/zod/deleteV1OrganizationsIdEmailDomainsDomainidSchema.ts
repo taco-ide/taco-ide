@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const deleteV1OrganizationsIdEmailDomainsDomainidPathParamsSchema = z.object({
-    "id": z.string().uuid(),
+    "id": z.string().min(1),
 "domainId": z.string()
     })
 

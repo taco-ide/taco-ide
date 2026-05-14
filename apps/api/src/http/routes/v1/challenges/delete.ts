@@ -14,7 +14,7 @@ import { challenge } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const DeleteChallengeParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 // ==================== ROUTE ====================

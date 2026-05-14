@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const patchV1ChallengesIdPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
 
 /**
@@ -73,7 +73,7 @@ export const patchV1ChallengesId404Schema = z.object({
     })
 
 export const patchV1ChallengesIdMutationRequestSchema = z.object({
-    "classroomId": z.string().uuid().nullable()
+    "classroomId": z.string().min(1).nullable()
     })
 
 export const patchV1ChallengesIdMutationResponseSchema = z.lazy(() => patchV1ChallengesId200Schema)

@@ -14,7 +14,7 @@ import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authoriza
 // ==================== SCHEMAS ====================
 
 const DeleteEmailDomainParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   domainId: z.string(),
 });
 

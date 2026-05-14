@@ -16,7 +16,7 @@ import { searchChallengeKnowledgeBases } from "../../../../../services/knowledge
 // ==================== SCHEMAS ====================
 
 const SearchChallengeKBParamsSchema = z.object({
-  challengeId: z.string().uuid(),
+  challengeId: z.string().min(1),
 });
 
 const SearchChallengeKBQuerySchema = z.object({

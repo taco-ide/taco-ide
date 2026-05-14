@@ -8,18 +8,17 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requireRole } from "../../../../middlewares/authorization";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
 import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { member } from "@repo/infra/db/schema";
-import { isValidRole } from "@repo/infra/auth";
+import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
 
 // ==================== SCHEMAS ====================
 
 const OrgMembersParamsSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.string().min(1),
+  userId: z.string().min(1),
 });
 
 const UpdateRoleBodySchema = z.object({
@@ -41,7 +40,6 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
   }>(
     "/members/:userId",
     {
-      preHandler: [requireRole("coordinator")],
       schema: {
         tags: ["organizations"],
         summary: "Update member role",
@@ -70,11 +68,20 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
       const { id: organizationId, userId } = request.params;
       const { role } = request.body;
 
-      if (organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Organization ID must match your active organization",
-        });
+      // Platform admins bypass the active-organization + role check.
+      if (!usr.isPlatformAdmin) {
+        if (organizationId !== usr.activeOrganizationId) {
+          return reply.status(403).send({
+            success: false as const,
+            message: "Organization ID must match your active organization",
+          });
+        }
+        if (!usr.role || !hasMinimumRole(usr.role, "coordinator")) {
+          return reply.status(403).send({
+            success: false as const,
+            message: "Insufficient role permissions",
+          });
+        }
       }
 
       if (!isValidRole(role)) {
@@ -102,15 +109,22 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const headers = getRequestHeaders(request);
-      await auth.api.updateMemberRole({
-        body: {
-          memberId: memberRow[0].id,
-          role: [role],
-          organizationId,
-        },
-        headers,
-      });
+      if (usr.isPlatformAdmin) {
+        await db
+          .update(member)
+          .set({ role })
+          .where(eq(member.id, memberRow[0].id));
+      } else {
+        const headers = getRequestHeaders(request);
+        await auth.api.updateMemberRole({
+          body: {
+            memberId: memberRow[0].id,
+            role: [role],
+            organizationId,
+          },
+          headers,
+        });
+      }
 
       return reply.status(200).send({
         success: true as const,
