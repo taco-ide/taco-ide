@@ -20,6 +20,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
+import { Star } from "lucide-react";
 
 function Header() {
   const isTeacherPlus = useHasMinimumRole("teacher");
@@ -34,14 +35,20 @@ function Header() {
   const [reopening, setReopening] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [taGrade, setTaGrade] = useState<number>(0);
+  const [taGradeHover, setTaGradeHover] = useState<number>(0);
 
   const hasSession = !!workSession?.id;
 
   const handleSubmit = async () => {
-    if (!hasSession || isSessionEnded) return;
+    if (!hasSession || isSessionEnded || taGrade < 1) return;
     setSubmitting(true);
     try {
-      await submitWorkSession();
+      await submitWorkSession({ taGrade });
+      setSubmitDialogOpen(false);
+      setTaGrade(0);
+      setTaGradeHover(0);
     } finally {
       setSubmitting(false);
     }
@@ -94,16 +101,95 @@ function Header() {
 
           {/* Work session actions */}
           {hasSession && !isSessionEnded && (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              disabled={submitting}
-              onClick={handleSubmit}
-              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+            <AlertDialog
+              open={submitDialogOpen}
+              onOpenChange={(open) => {
+                setSubmitDialogOpen(open);
+                if (!open) {
+                  setTaGrade(0);
+                  setTaGradeHover(0);
+                }
+              }}
             >
-              {submitting ? "A submeter…" : "Submeter"}
-            </Button>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={submitting}
+                  className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
+                >
+                  {submitting ? "A submeter…" : "Submeter"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-zinc-900 border-zinc-800">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-zinc-100">
+                    Submeter resolução?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-zinc-400">
+                    Antes de submeter, avalia o Assistente de Ensino (AT) que
+                    te acompanhou nesta sessão, de 1 a 5 estrelas. A tua
+                    identidade <strong className="text-zinc-200">não</strong>{" "}
+                    será associada à avaliação — apenas o AT, a nota e a data
+                    são guardados.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-3">
+                  <div
+                    className="flex items-center gap-1"
+                    role="radiogroup"
+                    aria-label="Avaliação do AT (1 a 5 estrelas)"
+                    onMouseLeave={() => setTaGradeHover(0)}
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => {
+                      const active = (taGradeHover || taGrade) >= n;
+                      return (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={taGrade === n}
+                          aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
+                          onClick={() => setTaGrade(n)}
+                          onMouseEnter={() => setTaGradeHover(n)}
+                          className="p-1 rounded hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                        >
+                          <Star
+                            className={
+                              active
+                                ? "h-7 w-7 text-amber-400 fill-amber-400"
+                                : "h-7 w-7 text-zinc-600"
+                            }
+                          />
+                        </button>
+                      );
+                    })}
+                    <span className="ml-3 text-sm text-zinc-400 min-w-[3ch]">
+                      {taGrade > 0 ? `${taGrade}/5` : "—"}
+                    </span>
+                  </div>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel
+                    disabled={submitting}
+                    className="bg-zinc-800 border-zinc-700 text-zinc-200"
+                  >
+                    Cancelar
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={submitting || taGrade < 1}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleSubmit();
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                  >
+                    {submitting ? "A submeter…" : "Confirmar submissão"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
 
           {hasSession && isSessionEnded && (

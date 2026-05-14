@@ -370,6 +370,28 @@ export const replayInteraction = pgTable("replay_interaction", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ==================== TEACHING ASSISTANT EVALUATIONS ====================
+//
+// Anonymous student rating of the TA captured at submit time.
+// Privacy: only teachingAssistantId + grade + timestamp are persisted —
+// no userId / workSessionId / challengeId, so a rating cannot be traced
+// back to a specific student.
+
+export const teachingAssistantEvaluation = pgTable(
+  "teaching_assistant_evaluation",
+  {
+    id: text("id").primaryKey(),
+    teachingAssistantId: text("teaching_assistant_id")
+      .notNull()
+      .references(() => teachingAssistant.id, { onDelete: "cascade" }),
+    grade: integer("grade").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("teaching_assistant_evaluation_ta_idx").on(table.teachingAssistantId),
+  ]
+);
+
 // ==================== EXPORT TYPES ====================
 
 export type Classroom = typeof classroom.$inferSelect;
@@ -397,3 +419,7 @@ export type NewKnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferInsert
 export type ChallengeKnowledgeBase = typeof challengeKnowledgeBase.$inferSelect;
 export type ConversationReplay = typeof conversationReplay.$inferSelect;
 export type ReplayInteraction = typeof replayInteraction.$inferSelect;
+export type TeachingAssistantEvaluation =
+  typeof teachingAssistantEvaluation.$inferSelect;
+export type NewTeachingAssistantEvaluation =
+  typeof teachingAssistantEvaluation.$inferInsert;
