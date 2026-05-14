@@ -87,7 +87,7 @@ export function CreateOrganizationDialog({
           <DialogFooter className="gap-2 pt-2">
             <Button
               type="button"
-              variant="outline"
+              variant="outline-dark"
               onClick={() => onOpenChange(false)}
               disabled={mutation.isPending}
             >

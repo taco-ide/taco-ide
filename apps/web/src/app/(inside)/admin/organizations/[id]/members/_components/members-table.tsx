@@ -201,7 +201,7 @@ export function MembersTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onMove(row)}
-                            className="focus:bg-slate-800"
+                            className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white"
                           >
                             <ArrowRightLeft className="mr-2 h-3.5 w-3.5" />
                             Mover para outra organização
@@ -210,7 +210,7 @@ export function MembersTable({
                           <DropdownMenuItem
                             onClick={() => onRemove(row)}
                             disabled={solo}
-                            className="text-rose-300 focus:bg-rose-500/10 focus:text-rose-200"
+                            className="text-rose-300 focus:bg-rose-500/10 focus:text-rose-200 data-[highlighted]:bg-rose-500/10 data-[highlighted]:text-rose-200"
                           >
                             <UserMinus className="mr-2 h-3.5 w-3.5" />
                             Remover desta organização

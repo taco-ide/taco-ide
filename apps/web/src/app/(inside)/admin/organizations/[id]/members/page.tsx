@@ -28,7 +28,7 @@ import {
 } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
 import { getV1OrganizationsQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1Organizations";
 import { getV1UsersQueryKey } from "@/kubb/hooks/usersHooks/useGetV1Users";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
@@ -282,11 +282,13 @@ export default function MembersTabPage() {
             >
               <DropdownMenuItem
                 onClick={() => setLinkOpen(true)}
-                className="focus:bg-slate-800"
+                className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white"
               >
-                <Link2 className="mr-2 h-3.5 w-3.5" />
+                <Link2 className="mr-2 h-3.5 w-3.5 text-slate-300" />
                 <div className="flex flex-col items-start">
-                  <span className="text-sm">Vincular usuário existente</span>
+                  <span className="text-sm text-slate-100">
+                    Vincular usuário existente
+                  </span>
                   <span className="text-[11px] text-slate-400">
                     Buscar em toda a plataforma
                   </span>
@@ -294,11 +296,13 @@ export default function MembersTabPage() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setCsvOpen(true)}
-                className="focus:bg-slate-800"
+                className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white"
               >
-                <FileSpreadsheet className="mr-2 h-3.5 w-3.5" />
+                <FileSpreadsheet className="mr-2 h-3.5 w-3.5 text-slate-300" />
                 <div className="flex flex-col items-start">
-                  <span className="text-sm">Importar de CSV</span>
+                  <span className="text-sm text-slate-100">
+                    Importar de CSV
+                  </span>
                   <span className="text-[11px] text-slate-400">
                     Adicionar vários de uma vez
                   </span>
@@ -320,7 +324,7 @@ export default function MembersTabPage() {
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             size="sm"
             onClick={() => {
               void refetch();
@@ -414,7 +418,7 @@ export default function MembersTabPage() {
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={removeMember.isPending}
-              className="bg-slate-800 text-white border-slate-700 hover:bg-slate-700"
+              className={buttonVariants({ variant: "outline-dark" })}
             >
               Cancelar
             </AlertDialogCancel>

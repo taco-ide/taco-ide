@@ -31,7 +31,7 @@ export default function OrganizationDetailLayout({
   if (error || !data?.data) {
     return (
       <div className="space-y-4">
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline-dark" size="sm">
           <Link href="/admin/organizations">
             <ArrowLeft className="h-3.5 w-3.5" />
             Voltar

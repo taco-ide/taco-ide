@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { CirclePause, CirclePlay, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -149,7 +149,7 @@ export default function OrganizationSettingsPage() {
             <div className="flex justify-end gap-2 border-t border-slate-700/60 pt-4">
               <Button
                 type="button"
-                variant="outline"
+                variant="outline-dark"
                 onClick={() =>
                   form.reset({
                     name: org.name,
@@ -202,7 +202,7 @@ export default function OrganizationSettingsPage() {
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="outline-dark"
               onClick={() => setConfirmOpen(true)}
               className="border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
             >
@@ -232,7 +232,10 @@ export default function OrganizationSettingsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={toggleActive.isPending}>
+            <AlertDialogCancel
+              disabled={toggleActive.isPending}
+              className={buttonVariants({ variant: "outline-dark" })}
+            >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

@@ -215,7 +215,7 @@ export default function OrganizationsPage() {
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             size="sm"
             onClick={() => {
               void refetch();

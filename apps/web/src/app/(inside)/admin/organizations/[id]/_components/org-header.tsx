@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { AvatarSquare } from "@/components/admin/avatar-square";
 import { StatusPill } from "@/components/admin/status-pill";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -125,7 +125,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             onClick={() => setEditOpen(true)}
           >
             <Pencil className="h-4 w-4" />
@@ -133,7 +133,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
           </Button>
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             onClick={() => setConfirmOpen(true)}
             className="border-red-500/30 text-red-300 hover:bg-red-500/10 hover:text-red-200"
           >
@@ -168,7 +168,10 @@ export function OrgHeader({ org }: OrgHeaderProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={toggleActive.isPending}>
+            <AlertDialogCancel
+              disabled={toggleActive.isPending}
+              className={buttonVariants({ variant: "outline-dark" })}
+            >
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

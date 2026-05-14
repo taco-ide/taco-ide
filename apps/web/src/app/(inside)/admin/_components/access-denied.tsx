@@ -36,7 +36,7 @@ export function AccessDenied() {
           </div>
         )}
         <div className="mt-6 flex justify-center">
-          <Button asChild variant="outline">
+          <Button asChild variant="outline-dark">
             <Link href="/explore">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar para o app

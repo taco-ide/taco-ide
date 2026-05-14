@@ -56,7 +56,7 @@ export default function OrganizationDomainsPage() {
             </div>
             <Button
               type="button"
-              variant="outline"
+              variant="outline-dark"
               size="sm"
               onClick={() => domainsQuery.refetch()}
               disabled={domainsQuery.isFetching}
