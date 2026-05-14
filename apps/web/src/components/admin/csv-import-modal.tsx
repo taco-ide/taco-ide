@@ -514,8 +514,8 @@ function UploadStep({
           </p>
           <Button
             type="button"
-            variant="outline"
-            className="w-full border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
+            variant="outline-dark"
+            className="w-full"
             onClick={handleDownloadTemplate}
           >
             <FileDown className="h-4 w-4" />
@@ -527,9 +527,8 @@ function UploadStep({
       <div className="flex justify-end gap-2 border-t border-slate-800 pt-4">
         <Button
           type="button"
-          variant="outline"
+          variant="outline-dark"
           onClick={onCancel}
-          className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           Cancelar
         </Button>
@@ -649,9 +648,8 @@ function PreviewStep({
       <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
         <Button
           type="button"
-          variant="outline"
+          variant="outline-dark"
           onClick={onBack}
-          className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
@@ -659,9 +657,8 @@ function PreviewStep({
         {error && !isLoading && (
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             onClick={onRetry}
-            className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
           >
             <RefreshCcw className="h-4 w-4" />
             Tentar novamente
@@ -820,10 +817,9 @@ function ResultStep({
       <div className="flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
         <Button
           type="button"
-          variant="outline"
+          variant="outline-dark"
           onClick={handleDownloadReport}
           disabled={isLoading || rows.length === 0}
-          className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
         >
           <FileDown className="h-4 w-4" />
           Baixar relatório.csv
@@ -831,9 +827,8 @@ function ResultStep({
         {error && !isLoading && (
           <Button
             type="button"
-            variant="outline"
+            variant="outline-dark"
             onClick={onRetry}
-            className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white"
           >
             <RefreshCcw className="h-4 w-4" />
             Tentar novamente
@@ -971,7 +966,15 @@ export function CsvImportModal({
     },
   });
 
-  // Reset everything when the modal closes.
+  const previewResetRef = useRef(previewMutation.reset);
+  previewResetRef.current = previewMutation.reset;
+  const importResetRef = useRef(importMutation.reset);
+  importResetRef.current = importMutation.reset;
+
+  // Reset everything when the modal closes. The mutation `reset` functions
+  // are read through refs to keep this effect's deps stable — React Query
+  // returns a new mutation object on every render, so including it in deps
+  // would cause an infinite render loop.
   useEffect(() => {
     if (!open) {
       setStep("upload");
@@ -982,10 +985,10 @@ export function CsvImportModal({
       setResultData(undefined);
       setResultError(null);
       setFilter("all");
-      previewMutation.reset();
-      importMutation.reset();
+      previewResetRef.current();
+      importResetRef.current();
     }
-  }, [open, previewMutation, importMutation]);
+  }, [open]);
 
   const handlePickFile = useCallback((nextFile: File | null) => {
     setFileError(null);
