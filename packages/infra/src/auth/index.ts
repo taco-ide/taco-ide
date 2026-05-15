@@ -38,6 +38,10 @@ export type {
 // directly.
 export { hashPassword } from "better-auth/crypto";
 
+// Re-export APIError so the API can map Better Auth errors (401/403/...)
+// to clean HTTP responses without depending on `better-auth` directly.
+export { APIError } from "better-auth/api";
+
 // ==================== AUTH INSTANCE ====================
 
 export const auth = betterAuth({

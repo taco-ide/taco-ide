@@ -118,14 +118,36 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
           .where(eq(member.id, memberRow[0].id));
       } else {
         const headers = getRequestHeaders(request);
-        await auth.api.updateMemberRole({
-          body: {
-            memberId: memberRow[0].id,
-            role: [role],
-            organizationId,
-          },
-          headers,
-        });
+        try {
+          await auth.api.updateMemberRole({
+            body: {
+              memberId: memberRow[0].id,
+              role: [role],
+              organizationId,
+            },
+            headers,
+          });
+        } catch (err) {
+          const error = err as {
+            statusCode?: number;
+            status?: number;
+            body?: { message?: string; code?: string };
+            message?: string;
+          };
+          const statusCode =
+            typeof error.statusCode === "number" && error.statusCode >= 400
+              ? error.statusCode
+              : typeof error.status === "number" && error.status >= 400
+                ? error.status
+                : 400;
+          const message =
+            error.body?.message ?? error.message ?? "Failed to update member role";
+          request.log.error({ err }, "updateMemberRole failed");
+          return reply.status(statusCode).send({
+            success: false as const,
+            message,
+          });
+        }
       }
 
       return reply.status(200).send({

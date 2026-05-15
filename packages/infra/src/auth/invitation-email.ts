@@ -3,6 +3,15 @@ import { env } from "../env";
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
+export function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export interface SendInvitationEmailParams {
   to: string;
   organizationName: string;
@@ -33,10 +42,12 @@ export async function sendInvitationEmail({
 }: SendInvitationEmailParams): Promise<void> {
   const acceptUrl = `${env.FRONTEND_URL}/auth/accept-invitation?id=${encodeURIComponent(invitationId)}`;
   const inviterLine = inviterName
-    ? `${inviterName} invited you to join`
+    ? `${escapeHtml(inviterName)} invited you to join`
     : "You have been invited to join";
+  const safeOrgName = escapeHtml(organizationName);
+  const safeRole = escapeHtml(role);
   const expiresLine = expiresAt
-    ? `<p>This invitation expires on ${expiresAt.toUTCString()}.</p>`
+    ? `<p>This invitation expires on ${escapeHtml(expiresAt.toUTCString())}.</p>`
     : "";
 
   if (!resend) {
@@ -62,7 +73,7 @@ export async function sendInvitationEmail({
           </head>
           <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #333;">You're invited</h1>
-            <p>${inviterLine} <strong>${organizationName}</strong> on TACO-IDE as <strong>${role}</strong>.</p>
+            <p>${inviterLine} <strong>${safeOrgName}</strong> on TACO-IDE as <strong>${safeRole}</strong>.</p>
             <a href="${acceptUrl}"
                style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
               Accept Invitation

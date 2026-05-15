@@ -1,5 +1,6 @@
 import { fastify } from "fastify";
 import fastifyCors from "@fastify/cors";
+import { APIError } from "@repo/infra/auth";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -57,6 +58,30 @@ app.setErrorHandler((error, request, reply) => {
     return reply.status(500).send({
       success: false,
       message: "Response serialization failed",
+    });
+  }
+
+  // Better Auth throws APIError (extends Error) with .statusCode (number)
+  // and .status (numeric or string code). Map to a clean 4xx/5xx response
+  // before falling through to the generic handler.
+  if (error instanceof APIError) {
+    const apiErr = error as unknown as {
+      statusCode?: number;
+      status?: number | string;
+      message?: string;
+    };
+    const apiStatus =
+      typeof apiErr.statusCode === "number" && apiErr.statusCode >= 400
+        ? apiErr.statusCode
+        : typeof apiErr.status === "number" && apiErr.status >= 400
+          ? apiErr.status
+          : 400;
+    if (apiStatus >= 500) {
+      request.log.error({ err: error }, "Better Auth APIError (5xx)");
+    }
+    return reply.status(apiStatus).send({
+      success: false,
+      message: apiErr.message || "Authentication error",
     });
   }
 

@@ -127,13 +127,20 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
       } catch (err) {
         const error = err as {
           statusCode?: number;
+          status?: number;
           body?: { message?: string; code?: string };
           message?: string;
         };
+        const statusCode =
+          typeof error.statusCode === "number" && error.statusCode >= 400
+            ? error.statusCode
+            : typeof error.status === "number" && error.status >= 400
+              ? error.status
+              : 400;
         const message =
           error.body?.message ?? error.message ?? "Failed to cancel invitation";
         request.log.error({ err }, "cancelInvitation failed");
-        return reply.status(403).send({
+        return reply.status(statusCode).send({
           success: false as const,
           message,
         });

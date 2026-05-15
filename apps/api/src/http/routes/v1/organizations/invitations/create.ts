@@ -105,48 +105,106 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
         // reject the call with a 500. Insert the invitation row directly,
         // matching the schema produced by the organization plugin.
         const normalizedEmail = email.toLowerCase();
-
-        const existing = await db
-          .select({ id: invitation.id })
-          .from(invitation)
-          .where(
-            and(
-              eq(invitation.email, normalizedEmail),
-              eq(invitation.organizationId, organizationId),
-              eq(invitation.status, "pending")
-            )
-          )
-          .limit(1);
-
-        if (existing[0]) {
-          return reply.status(400).send({
-            success: false as const,
-            message: "A pending invitation already exists for this email",
-          });
-        }
-
         const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
-        const inserted = await db
-          .insert(invitation)
-          .values({
-            id: randomUUID(),
-            email: normalizedEmail,
-            inviterId: usr.id,
-            organizationId,
-            role,
-            status: "pending",
-            expiresAt,
-          })
-          .returning({
-            id: invitation.id,
-            email: invitation.email,
-            role: invitation.role,
-            status: invitation.status,
-            expiresAt: invitation.expiresAt,
-          });
 
-        const created = inserted[0];
-        if (!created) {
+        type CreatedInvitation = {
+          id: string;
+          email: string;
+          role: string;
+          status: string;
+          expiresAt: Date;
+        };
+
+        let created: CreatedInvitation;
+        try {
+          // SERIALIZABLE isolation ensures parallel callers cannot both
+          // pass the existence check; the second commit raises 40001
+          // (serialization_failure) and we retry once before surfacing
+          // the duplicate to the client. PG error code 23505 is also
+          // handled as a fallback for a future UNIQUE constraint on
+          // (email, organization_id, status).
+          const runTx = () =>
+            db.transaction(
+              async (tx) => {
+                const existing = await tx
+                  .select({ id: invitation.id })
+                  .from(invitation)
+                  .where(
+                    and(
+                      eq(invitation.email, normalizedEmail),
+                      eq(invitation.organizationId, organizationId),
+                      eq(invitation.status, "pending")
+                    )
+                  )
+                  .limit(1);
+
+                if (existing[0]) {
+                  throw new Error("DUPLICATE_PENDING_INVITATION");
+                }
+
+                const inserted = await tx
+                  .insert(invitation)
+                  .values({
+                    id: randomUUID(),
+                    email: normalizedEmail,
+                    inviterId: usr.id,
+                    organizationId,
+                    role,
+                    status: "pending",
+                    expiresAt,
+                  })
+                  .returning({
+                    id: invitation.id,
+                    email: invitation.email,
+                    role: invitation.role,
+                    status: invitation.status,
+                    expiresAt: invitation.expiresAt,
+                  });
+
+                const row = inserted[0];
+                if (!row) {
+                  throw new Error("INSERT_RETURNED_EMPTY");
+                }
+                return row;
+              },
+              { isolationLevel: "serializable" }
+            );
+
+          const maxAttempts = 5;
+          let attempt = 0;
+          while (true) {
+            try {
+              created = await runTx();
+              break;
+            } catch (err) {
+              const pgCode = (err as { code?: string } | null)?.code;
+              attempt++;
+              if (pgCode === "40001" && attempt < maxAttempts) {
+                // Serialization conflict from a concurrent insert.
+                // Retry with small backoff; the retry's existence check
+                // now sees the row committed by the winner and surfaces
+                // a clean duplicate-detection 400.
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 10 + Math.random() * 20)
+                );
+                continue;
+              }
+              throw err;
+            }
+          }
+        } catch (err) {
+          const pgCode = (err as { code?: string } | null)?.code;
+          if (
+            (err instanceof Error &&
+              err.message === "DUPLICATE_PENDING_INVITATION") ||
+            pgCode === "23505"
+          ) {
+            return reply.status(400).send({
+              success: false as const,
+              message: "A pending invitation already exists for this email",
+            });
+          }
+          request.log.error({ err }, "createInvitation (platform admin) failed");
           return reply.status(400).send({
             success: false as const,
             message: "Failed to create invitation",
@@ -237,13 +295,20 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
       } catch (err) {
         const error = err as {
           statusCode?: number;
+          status?: number;
           body?: { message?: string; code?: string };
           message?: string;
         };
+        const statusCode =
+          typeof error.statusCode === "number" && error.statusCode >= 400
+            ? error.statusCode
+            : typeof error.status === "number" && error.status >= 400
+              ? error.status
+              : 400;
         const message =
           error.body?.message ?? error.message ?? "Failed to create invitation";
         request.log.error({ err }, "createInvitation failed");
-        return reply.status(400).send({
+        return reply.status(statusCode).send({
           success: false as const,
           message,
         });
