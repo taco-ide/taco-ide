@@ -8,6 +8,7 @@
     "./db/schema": "./src/db/schema/index.ts",
     "./auth": "./src/auth/index.ts",
     "./auth/client": "./src/auth/client.ts",
+    "./auth/invitation-email": "./src/auth/invitation-email.ts",
     "./env": "./src/env.ts"
   },
   "scripts": {

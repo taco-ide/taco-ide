@@ -7,6 +7,7 @@ import { db } from "../db";
 import * as schema from "../db/schema";
 import { env } from "../env";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email";
+import { sendInvitationEmail } from "./invitation-email";
 import {
   ac,
   studentRole,
@@ -147,6 +148,25 @@ export const auth = betterAuth({
       },
       allowUserToCreateOrganization: true,
       creatorRole: "admin",
+      sendInvitationEmail: async (data) => {
+        try {
+          await sendInvitationEmail({
+            to: data.email,
+            organizationName: data.organization.name,
+            invitationId: data.id,
+            inviterName: data.inviter.user.name ?? undefined,
+            expiresAt: data.invitation.expiresAt,
+            role: data.role,
+          });
+        } catch (err) {
+          console.error(
+            "[organization.sendInvitationEmail] failed:",
+            err
+          );
+          // Swallow: the invitation row already exists; the user can be
+          // re-notified later. Throwing here would abort the create call.
+        }
+      },
     }),
   ],
 

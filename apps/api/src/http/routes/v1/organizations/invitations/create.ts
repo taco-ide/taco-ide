@@ -11,8 +11,9 @@ import {
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
 import { auth } from "@repo/infra/auth";
 import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
+import { sendInvitationEmail } from "@repo/infra/auth/invitation-email";
 import { db } from "@repo/infra/db";
-import { invitation } from "@repo/infra/db/schema";
+import { invitation, organization, user } from "@repo/infra/db/schema";
 
 const INVITATION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -22,10 +23,12 @@ const OrgParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const CreateInvitationBodySchema = z.object({
-  email: z.string().email(),
-  role: z.enum(["student", "teacher", "coordinator", "admin"]),
-});
+const CreateInvitationBodySchema = z
+  .object({
+    email: z.string().email(),
+    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+  })
+  .strict();
 
 const InvitationResponseSchema = ResponseSchema201.extend({
   data: z.object({
@@ -148,6 +151,38 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
             success: false as const,
             message: "Failed to create invitation",
           });
+        }
+
+        // Better Auth's sendInvitationEmail hook only fires through
+        // auth.api.createInvitation, which we bypassed above. Dispatch
+        // the email manually so the invitee gets a link.
+        try {
+          const [orgRow] = await db
+            .select({ name: organization.name })
+            .from(organization)
+            .where(eq(organization.id, organizationId))
+            .limit(1);
+          const [inviterRow] = await db
+            .select({ name: user.name })
+            .from(user)
+            .where(eq(user.id, usr.id))
+            .limit(1);
+
+          await sendInvitationEmail({
+            to: created.email,
+            organizationName: orgRow?.name ?? "your organization",
+            invitationId: created.id,
+            inviterName: inviterRow?.name ?? undefined,
+            expiresAt: created.expiresAt,
+            role: created.role,
+          });
+        } catch (err) {
+          // Idempotent: invitation row exists. Surface in logs so the
+          // operator can re-send; do not fail the request.
+          request.log.error(
+            { err, invitationId: created.id },
+            "sendInvitationEmail (platform admin) failed"
+          );
         }
 
         return reply.status(201).send({
