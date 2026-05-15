@@ -128,10 +128,10 @@ function Header() {
                     Submeter resolução?
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-zinc-400">
-                    Antes de submeter, avalia o Assistente de Ensino (AT) que
-                    te acompanhou nesta sessão, de 1 a 5 estrelas. A tua
+                    Antes de submeter, avalie o Assistente de Ensino (AT) que
+                    lhe acompanhou nesta sessão, de 1 a 5 estrelas. A sua
                     identidade <strong className="text-zinc-200">não</strong>{" "}
-                    será associada à avaliação — apenas o AT, a nota e a data
+                    será associada à avaliação. Apenas o AT, a nota e a data
                     são guardados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
