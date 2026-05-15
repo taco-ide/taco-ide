@@ -20,10 +20,12 @@ const AddExistingMemberParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const AddExistingMemberBodySchema = z.object({
-  email: z.string().email(),
-  role: z.enum(["student", "teacher", "coordinator", "admin"]),
-});
+const AddExistingMemberBodySchema = z
+  .object({
+    email: z.string().email(),
+    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+  })
+  .strict();
 
 const AddExistingMemberItemSchema = z.object({
   id: z.string(),

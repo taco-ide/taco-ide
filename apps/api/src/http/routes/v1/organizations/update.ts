@@ -36,6 +36,7 @@ const UpdateOrganizationBodySchema = z
     logo: z.string().url().nullable().optional(),
     metadata: z.string().nullable().optional(),
   })
+  .strict()
   .refine(
     (body) =>
       body.name !== undefined ||

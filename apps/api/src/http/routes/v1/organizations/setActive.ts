@@ -21,9 +21,11 @@ const OrganizationParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const SetActiveBodySchema = z.object({
-  isActive: z.boolean(),
-});
+const SetActiveBodySchema = z
+  .object({
+    isActive: z.boolean(),
+  })
+  .strict();
 
 const SetActiveResponseSchema = ResponseSchema200.extend({
   data: z.object({

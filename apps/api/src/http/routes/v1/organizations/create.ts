@@ -15,17 +15,19 @@ import { member, organization } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const CreateOrganizationBodySchema = z.object({
-  name: z.string().min(1).max(120),
-  slug: z
-    .string()
-    .min(1)
-    .max(60)
-    .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i, {
-      message: "Slug must be alphanumeric with optional hyphens",
-    }),
-  logo: z.string().url().optional(),
-});
+const CreateOrganizationBodySchema = z
+  .object({
+    name: z.string().min(1).max(120),
+    slug: z
+      .string()
+      .min(1)
+      .max(60)
+      .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i, {
+        message: "Slug must be alphanumeric with optional hyphens",
+      }),
+    logo: z.string().url().optional(),
+  })
+  .strict();
 
 const OrganizationCreatedSchema = z.object({
   id: z.string(),

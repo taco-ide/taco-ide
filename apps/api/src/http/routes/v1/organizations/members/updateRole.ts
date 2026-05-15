@@ -21,9 +21,11 @@ const OrgMembersParamsSchema = z.object({
   userId: z.string().min(1),
 });
 
-const UpdateRoleBodySchema = z.object({
-  role: z.enum(["student", "teacher", "coordinator", "admin"]),
-});
+const UpdateRoleBodySchema = z
+  .object({
+    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+  })
+  .strict();
 
 const UpdateRoleResponseSchema = ResponseSchema200.extend({
   data: z.object({

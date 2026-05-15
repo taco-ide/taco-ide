@@ -18,9 +18,11 @@ const SetPlatformAdminParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const SetPlatformAdminBodySchema = z.object({
-  isPlatformAdmin: z.boolean(),
-});
+const SetPlatformAdminBodySchema = z
+  .object({
+    isPlatformAdmin: z.boolean(),
+  })
+  .strict();
 
 const SetPlatformAdminUserSchema = z.object({
   id: z.string(),

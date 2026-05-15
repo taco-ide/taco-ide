@@ -21,10 +21,12 @@ const MoveMemberParamsSchema = z.object({
   userId: z.string().min(1),
 });
 
-const MoveMemberBodySchema = z.object({
-  toOrganizationId: z.string().min(1),
-  newRole: z.enum(["student", "teacher", "coordinator", "admin"]),
-});
+const MoveMemberBodySchema = z
+  .object({
+    toOrganizationId: z.string().min(1),
+    newRole: z.enum(["student", "teacher", "coordinator", "admin"]),
+  })
+  .strict();
 
 const MoveMemberItemSchema = z.object({
   id: z.string(),

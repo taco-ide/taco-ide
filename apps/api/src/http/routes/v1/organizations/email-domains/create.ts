@@ -46,10 +46,12 @@ const DomainSchema = z
     { message: "Invalid domain format" }
   );
 
-const CreateEmailDomainBodySchema = z.object({
-  domain: DomainSchema,
-  role: z.enum(["student", "teacher", "coordinator", "admin"]),
-});
+const CreateEmailDomainBodySchema = z
+  .object({
+    domain: DomainSchema,
+    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+  })
+  .strict();
 
 const CreateEmailDomainResponseSchema = ResponseSchema201.extend({
   data: z.object({
