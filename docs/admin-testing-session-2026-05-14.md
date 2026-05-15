@@ -8,8 +8,8 @@
 - **5 flows do plano de teste executados** (login/gate, CRUD orgs, gestão de usuários, CSV import, domínios automáticos)
 - **8 bugs identificados e corrigidos** em runtime
 - **9 gaps adicionais cobertos** após o plano original (edge cases, matriz de permissões cross-role, último admin, etc.)
-- **2 follow-ups** ainda em curso (helper de email para convites, `.strict()` Zod)
-- **4 commits semânticos** aplicados na branch `test/admin-full-integration`
+- **2 follow-ups críticos concluídos** (helper de email para convites, `.strict()` Zod em 10 schemas)
+- **7 commits semânticos** aplicados na branch `test/admin-full-integration`
 
 ---
 
@@ -322,8 +322,8 @@ Team `taco-admin-fixes` com 9+ agentes em paralelo ao longo da sessão:
 | `fix-bug-8-zod-500` | BUG #8 | ✅ |
 | `test-api-edges` | Edge cases B/C/D/E + download CSV + audit serialização | ✅ |
 | `test-role-permissions` | Matriz cross-role | ✅ |
-| `extract-invitation-email-helper` | Follow-up email convite | 🔄 em curso |
-| `apply-strict-zod-schemas` | Follow-up `.strict()` Zod | 🔄 em curso |
+| `extract-invitation-email-helper` | Follow-up email convite | ✅ |
+| `apply-strict-zod-schemas` | Follow-up `.strict()` Zod | ✅ |
 
 ---
 
@@ -332,6 +332,9 @@ Team `taco-admin-fixes` com 9+ agentes em paralelo ao longo da sessão:
 Branch `test/admin-full-integration`:
 
 ```
+26b0bcfc docs: add admin panel testing session report
+048e21f5 fix(api): reject unknown fields in admin route body schemas
+415c598d fix(api): send invitation email from platform admin bypass path
 43c339bc style(web): apply dark theme to admin buttons, dropdowns and dialogs
 1a1b48c8 fix(web): support Next.js 16 async params and break csv-import loop
 2fab75cc fix(api): unblock platform admin panel and fix validation errors
@@ -346,8 +349,8 @@ PR consolidado pendente (api.github.com com timeout intermitente durante a sess�
 
 | # | Item | Status |
 |---|---|---|
-| F1 | Extrair `sendInvitationEmail` em helper compartilhado e chamar no branch Platform Admin de `invitations/create.ts` (perdemos o hook do Better Auth) | 🔄 em curso |
-| F2 | Aplicar `.strict()` em schemas Zod de body críticos para rejeitar extra fields | 🔄 em curso |
+| F1 | Extrair `sendInvitationEmail` em helper compartilhado (`packages/infra/src/auth/invitation-email.ts`); chamado pelo hook Better Auth e pelo branch Platform Admin Drizzle. Try/catch em ambos. Log para stdout em dev (sem Resend). | ✅ commit `415c598d` |
+| F2 | `.strict()` aplicado em 10 schemas de body (organizations/*, users/*). Validado: extra field retorna 400 com `errors: {_: ["Unrecognized key(s)..."]}` | ✅ commit `048e21f5` |
 | F3 | `name: "A"` (1 char) aceito em `POST /organizations` — schema declara `min(1)`. Decidir se quer min humano (≥2) | 📝 registrado |
 | F4 | Seed dev fica bagunçado após testes (aluno promovido a teacher, prof a admin) — rodar `db:reset` ou criar `db:reset:dev` script | 📝 registrado |
 | F5 | Validar download CSV via Playwright (clique + `page.expect_download()`) — só foi validado via simulação E2E | 📝 registrado |
