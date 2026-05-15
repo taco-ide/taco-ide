@@ -9,7 +9,8 @@
 - **8 bugs identificados e corrigidos** em runtime
 - **9 gaps adicionais cobertos** após o plano original (edge cases, matriz de permissões cross-role, último admin, etc.)
 - **2 follow-ups críticos concluídos** (helper de email para convites, `.strict()` Zod em 10 schemas)
-- **7 commits semânticos** aplicados na branch `test/admin-full-integration`
+- **QA cruzado** com 3 agentes independentes (code review, regression test, pattern audit) — **0 regressões** + 5 issues identificados e corrigidos pós-review
+- **9 commits semânticos** aplicados na branch `test/admin-full-integration`
 
 ---
 
@@ -324,6 +325,10 @@ Team `taco-admin-fixes` com 9+ agentes em paralelo ao longo da sessão:
 | `test-role-permissions` | Matriz cross-role | ✅ |
 | `extract-invitation-email-helper` | Follow-up email convite | ✅ |
 | `apply-strict-zod-schemas` | Follow-up `.strict()` Zod | ✅ |
+| `qa-code-review` | Code review independente dos 7 commits | ✅ (5 issues → fix) |
+| `qa-regression-test` | Re-run matriz E2E completa | ✅ (0 regressões) |
+| `qa-pattern-audit` | Procurar padrões similares aos 8 bugs | ✅ (6 limpos, 2 baixos) |
+| `post-review-fixes` | Fix dos 2 CRITICAL + 3 IMPORTANT do review | ✅ commit `5669318e` |
 
 ---
 
@@ -332,6 +337,8 @@ Team `taco-admin-fixes` com 9+ agentes em paralelo ao longo da sessão:
 Branch `test/admin-full-integration`:
 
 ```
+5669318e fix(api): post-review hardening for admin panel routes
+827d1fd9 docs: update testing session report with follow-up completion
 26b0bcfc docs: add admin panel testing session report
 048e21f5 fix(api): reject unknown fields in admin route body schemas
 415c598d fix(api): send invitation email from platform admin bypass path
@@ -351,6 +358,11 @@ PR consolidado pendente (api.github.com com timeout intermitente durante a sess�
 |---|---|---|
 | F1 | Extrair `sendInvitationEmail` em helper compartilhado (`packages/infra/src/auth/invitation-email.ts`); chamado pelo hook Better Auth e pelo branch Platform Admin Drizzle. Try/catch em ambos. Log para stdout em dev (sem Resend). | ✅ commit `415c598d` |
 | F2 | `.strict()` aplicado em 10 schemas de body (organizations/*, users/*). Validado: extra field retorna 400 com `errors: {_: ["Unrecognized key(s)..."]}` | ✅ commit `048e21f5` |
+| **QA-1** | **XSS no `invitation-email.ts`** — `organizationName`/`inviterName`/`role` vinham do DB direto pro HTML. Adicionado `escapeHtml()` em todas as interpolações DB-sourced | ✅ commit `5669318e` |
+| **QA-2** | **TOCTOU em `invitations/create.ts`** — SELECT-then-INSERT sem proteção; 2 paralelos do mesmo admin criavam 2 rows. Envolvido em `db.transaction({isolationLevel:"serializable"})` com retry 5x em `40001` + handler de `23505` | ✅ commit `5669318e` |
+| **QA-3** | `APIError` do Better Auth tem `.status`, não `.statusCode` — handler global mapeava pra 500. Adicionado branch `error instanceof APIError`; re-exportado de `@repo/infra/auth` | ✅ commit `5669318e` |
+| **QA-4** | `invitations/delete.ts` catch hardcoded 403 — substituído por `error.statusCode ?? error.status ?? 400` | ✅ commit `5669318e` |
+| **QA-5** | `updateRole.ts` branch não-admin sem try/catch — qualquer erro Better Auth virava 500. Envolvido com try/catch dinâmico | ✅ commit `5669318e` |
 | F3 | `name: "A"` (1 char) aceito em `POST /organizations` — schema declara `min(1)`. Decidir se quer min humano (≥2) | 📝 registrado |
 | F4 | Seed dev fica bagunçado após testes (aluno promovido a teacher, prof a admin) — rodar `db:reset` ou criar `db:reset:dev` script | 📝 registrado |
 | F5 | Validar download CSV via Playwright (clique + `page.expect_download()`) — só foi validado via simulação E2E | 📝 registrado |
