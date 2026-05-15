@@ -169,14 +169,14 @@ export type PostV1WorkSessionsIdSubmit404 = {
     };
 };
 
-export type PostV1WorkSessionsIdSubmitMutationRequest = (any | {
+export type PostV1WorkSessionsIdSubmitMutationRequest = {
     /**
      * @minLength 1
      * @maxLength 5
      * @type integer | undefined
     */
     taGrade?: number;
-});
+};
 
 export type PostV1WorkSessionsIdSubmitMutationResponse = PostV1WorkSessionsIdSubmit200;
 

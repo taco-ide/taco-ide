@@ -549,7 +549,7 @@ export function ProblemProvider({
         data:
           typeof options?.taGrade === "number"
             ? { taGrade: options.taGrade }
-            : undefined,
+            : {},
       });
     },
     [workSession, saveSolution, submitMutation]

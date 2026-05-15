@@ -22,11 +22,9 @@ const WorkSessionParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
-const SubmitWorkSessionBodySchema = z
-  .object({
-    taGrade: z.number().int().min(1).max(5).optional(),
-  })
-  .optional();
+const SubmitWorkSessionBodySchema = z.object({
+  taGrade: z.number().int().min(1).max(5).optional(),
+});
 
 const SubmitWorkSessionResponseSchema = ResponseSchema200.extend({
   data: z.object({
@@ -128,11 +126,21 @@ export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
 
       const taGrade = request.body?.taGrade;
       if (typeof taGrade === "number") {
-        await db.insert(teachingAssistantEvaluation).values({
-          id: crypto.randomUUID(),
-          teachingAssistantId: session.teachingAssistantId,
-          grade: taGrade,
-        });
+        // Best-effort: a failed evaluation insert must not 500 a successful
+        // submission. The rating is anonymous and sparse; losing one is
+        // acceptable, blocking the student is not.
+        try {
+          await db.insert(teachingAssistantEvaluation).values({
+            id: crypto.randomUUID(),
+            teachingAssistantId: session.teachingAssistantId,
+            grade: taGrade,
+          });
+        } catch (err) {
+          request.log.error(
+            { err, teachingAssistantId: session.teachingAssistantId },
+            "Failed to persist teaching assistant evaluation"
+          );
+        }
       }
 
       return reply.status(200).send({
