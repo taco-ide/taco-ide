@@ -357,7 +357,7 @@ PR consolidado pendente (api.github.com com timeout intermitente durante a sess�
 | # | Item | Status |
 |---|---|---|
 | F1 | Extrair `sendInvitationEmail` em helper compartilhado (`packages/infra/src/auth/invitation-email.ts`); chamado pelo hook Better Auth e pelo branch Platform Admin Drizzle. Try/catch em ambos. Log para stdout em dev (sem Resend). | ✅ commit `415c598d` |
-| F2 | `.strict()` aplicado em 10 schemas de body (organizations/*, users/*). Validado: extra field retorna 400 com `errors: {_: ["Unrecognized key(s)..."]}` | ✅ commit `048e21f5` |
+| F2 | Aplicar `.strict()` em todos os schemas Zod de **body** e **querystring** em rotas v1 (não só admin) — querystring sem strict causa params como `?status=active` serem silenciosamente descartados em `GET /v1/organizations`. 17 body + 11 querystring schemas tocados em 26 arquivos; kubb regenerado | ✅ |
 | **QA-1** | **XSS no `invitation-email.ts`** — `organizationName`/`inviterName`/`role` vinham do DB direto pro HTML. Adicionado `escapeHtml()` em todas as interpolações DB-sourced | ✅ commit `5669318e` |
 | **QA-2** | **TOCTOU em `invitations/create.ts`** — SELECT-then-INSERT sem proteção; 2 paralelos do mesmo admin criavam 2 rows. Envolvido em `db.transaction({isolationLevel:"serializable"})` com retry 5x em `40001` + handler de `23505` | ✅ commit `5669318e` |
 | **QA-3** | `APIError` do Better Auth tem `.status`, não `.statusCode` — handler global mapeava pra 500. Adicionado branch `error instanceof APIError`; re-exportado de `@repo/infra/auth` | ✅ commit `5669318e` |
@@ -366,8 +366,9 @@ PR consolidado pendente (api.github.com com timeout intermitente durante a sess�
 | F3 | `name: "A"` (1 char) aceito em `POST /organizations` — schema declara `min(1)`. Decidir se quer min humano (≥2) | 📝 registrado |
 | F4 | Seed dev fica bagunçado após testes (aluno promovido a teacher, prof a admin) — rodar `db:reset` ou criar `db:reset:dev` script | 📝 registrado |
 | F5 | Validar download CSV via Playwright (clique + `page.expect_download()`) — só foi validado via simulação E2E | 📝 registrado |
-| F6 | Considerar bypass de `isPlatformAdmin` dentro do middleware `requireRole` (atualmente cada handler faz inline) — depois de auditar uso fora de `organizations/**` | 📝 registrado |
+| F6 | **Decisão de design**: Platform Admin NÃO terá bypass cross-org em entidades pedagógicas (challenges, KB, classrooms, work-sessions). Para gerenciar conteúdo de uma org, Platform Admin se vincula como member. Bypass inline em handlers de `organizations/**` permanece como única exceção (gestão da plataforma). | ✅ fechado |
 | F7 | Cache de role em sessão Better Auth: ao alterar role via Drizzle bypass, o `usr.role` em cookie/JWT não é invalidado até refresh — mesmo comportamento do caminho `auth.api.*`, não é regressão | 📝 registrado |
+| F8 | `apps/web/src/contexts/UserContext.tsx` — `refetch` estava nas deps do `useEffect` de auto-active-org. Refatorado para `useRef(refetch)` igual `csv-import-modal.tsx` (mesma classe do BUG #3); deps reduzidas a `[isLoading, is401, user?.id, user?.activeOrganizationId]` | ✅ |
 
 ---
 
@@ -415,6 +416,7 @@ Para resetar limpo: `cd packages/infra && npm run db:reset` (drop + migrate + se
 6. **`focus:` (CSS) ≠ `data-[highlighted]` (Radix)** — para dropdown items destacados em teclado/hover, ambos precisam estar estilizados
 7. **React Query mutation objects mudam de identidade a cada render** — nunca colocar nas deps de `useEffect`; usar `useRef(mutation.reset)` para callbacks estáveis
 8. **`dotenv` corta valores no `#`** — envs com caracteres especiais (senhas, secrets) precisam de aspas explícitas
+9. **Querystring schemas sem `.strict()` mentem em silêncio** — Zod default ignora keys desconhecidas em `z.object({})`, então params inválidos (digitação errada, params removidos sem cliente atualizar) viram no-op invisível. Em rotas com filtros opcionais, isso esconde bugs de cliente. Sempre aplicar `.strict()` em querystring schemas, especialmente após o `setErrorHandler` global do BUG #8 transformar campos extras em 400 limpo.
 
 ---
 
