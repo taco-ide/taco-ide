@@ -115,22 +115,40 @@ export async function addExistingMemberRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const inserted = await db
-        .insert(member)
-        .values({
-          id: randomUUID(),
-          userId: targetUser[0].id,
-          organizationId,
-          role,
-          createdAt: new Date(),
-        })
-        .returning({
-          id: member.id,
-          userId: member.userId,
-          organizationId: member.organizationId,
-          role: member.role,
-          createdAt: member.createdAt,
+      let inserted;
+      try {
+        inserted = await db
+          .insert(member)
+          .values({
+            id: randomUUID(),
+            userId: targetUser[0].id,
+            organizationId,
+            role,
+            createdAt: new Date(),
+          })
+          .returning({
+            id: member.id,
+            userId: member.userId,
+            organizationId: member.organizationId,
+            role: member.role,
+            createdAt: member.createdAt,
+          });
+      } catch (err) {
+        const error = err as { code?: string; message?: string };
+        // Unique violation on (organization_id, user_id) — PostgreSQL 23505 —
+        // covers race conditions where two requests pass the pre-existence check.
+        if (error.code === "23505") {
+          return reply.status(409).send({
+            success: false as const,
+            message: "User is already a member of this organization",
+          });
+        }
+        request.log.error({ err }, "addExistingMember failed");
+        return reply.status(400).send({
+          success: false as const,
+          message: error.message ?? "Failed to add member",
         });
+      }
 
       const created = inserted[0];
       if (!created) {
