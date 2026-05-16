@@ -196,10 +196,21 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
       }
 
       // ---- 2. Parse the CSV ----------------------------------------------
+      // Tolerate real-world CSVs produced by spreadsheet apps:
+      //  - `bom: true` strips the UTF-8 BOM that Excel (pt-BR) prepends, so
+      //    the first header doesn't end up as "﻿name".
+      //  - `delimiter: [",", ";"]` lets the parser auto-pick between the
+      //    US locale (",") and the European/Excel pt-BR locale (";").
+      //  - `columns` callback lowercases header names so headers like
+      //    `NAME,Email,Role` match the lowercase keys expected by the
+      //    per-row Zod schema below.
       let records: Record<string, unknown>[];
       try {
         records = parseCsv(buffer, {
-          columns: true,
+          bom: true,
+          delimiter: [",", ";"],
+          columns: (header: string[]) =>
+            header.map((h) => h.trim().toLowerCase()),
           skip_empty_lines: true,
           trim: true,
         }) as Record<string, unknown>[];
@@ -502,12 +513,15 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
 function extractHeaderFromBuffer(buffer: Buffer): string[] {
   try {
     const headerOnly = parseCsv(buffer, {
+      bom: true,
+      delimiter: [",", ";"],
       columns: false,
       skip_empty_lines: true,
       trim: true,
       to_line: 1,
     }) as string[][];
-    return headerOnly[0] ?? [];
+    const firstRow = headerOnly[0] ?? [];
+    return firstRow.map((h) => h.trim().toLowerCase());
   } catch {
     return [];
   }
