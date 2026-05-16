@@ -24,7 +24,8 @@ const CreateOrganizationBodySchema = z
       .max(60)
       .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i, {
         message: "Slug must be alphanumeric with optional hyphens",
-      }),
+      })
+      .transform((v) => v.toLowerCase()),
     logo: z.string().url().optional(),
   })
   .strict();
@@ -96,42 +97,43 @@ export async function createOrganizationRoute(app: FastifyTypedInstance) {
         const now = new Date();
         const orgId = randomUUID();
 
-        const inserted = await db
-          .insert(organization)
-          .values({
-            id: orgId,
-            name,
-            slug,
-            logo: logo ?? null,
-            isActive: true,
+        const org = await db.transaction(async (tx) => {
+          const inserted = await tx
+            .insert(organization)
+            .values({
+              id: orgId,
+              name,
+              slug,
+              logo: logo ?? null,
+              isActive: true,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning({
+              id: organization.id,
+              name: organization.name,
+              slug: organization.slug,
+              logo: organization.logo,
+              isActive: organization.isActive,
+              createdAt: organization.createdAt,
+            });
+
+          const created = inserted[0];
+          if (!created) {
+            throw new Error("Failed to create organization");
+          }
+
+          // Make the calling Platform Admin the org's first admin to preserve
+          // the previous Better Auth behavior (creatorRole=admin).
+          await tx.insert(member).values({
+            id: randomUUID(),
+            userId: usr.id,
+            organizationId: created.id,
+            role: "admin",
             createdAt: now,
-            updatedAt: now,
-          })
-          .returning({
-            id: organization.id,
-            name: organization.name,
-            slug: organization.slug,
-            logo: organization.logo,
-            isActive: organization.isActive,
-            createdAt: organization.createdAt,
           });
 
-        const org = inserted[0];
-        if (!org) {
-          return reply.status(400).send({
-            success: false as const,
-            message: "Failed to create organization",
-          });
-        }
-
-        // Make the calling Platform Admin the org's first admin to preserve
-        // the previous Better Auth behavior (creatorRole=admin).
-        await db.insert(member).values({
-          id: randomUUID(),
-          userId: usr.id,
-          organizationId: org.id,
-          role: "admin",
-          createdAt: now,
+          return created;
         });
 
         return reply.status(201).send({
