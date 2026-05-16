@@ -97,6 +97,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   /** Better Auth deixa `activeOrganizationId` null até `organization.setActive`; o seed só cria `member`. */
   const autoActiveOrgAttempted = useRef(false);
 
+  // `refetch` is read through a ref to keep the auto-active-org effect's deps
+  // stable — React Query returns a new function reference on every render, so
+  // including it in deps would cause the effect to re-run on every render.
+  const refetchRef = useRef(refetch);
+  refetchRef.current = refetch;
+
   useEffect(() => {
     if (is401 || !user) {
       autoActiveOrgAttempted.current = false;
@@ -121,7 +127,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           organizationId: first.id,
         });
         if (!setError) {
-          await refetch();
+          await refetchRef.current();
         }
       } catch (e) {
         console.warn("Não foi possível definir organização ativa:", e);
@@ -133,7 +139,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     is401,
     user?.id,
     user?.activeOrganizationId,
-    refetch,
   ]);
 
   const fetchUser = async () => {
