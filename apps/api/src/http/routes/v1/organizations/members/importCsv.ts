@@ -19,7 +19,12 @@ import { account, member, user } from "@repo/infra/db/schema";
 // ==================== CONSTANTS ====================
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
-const MAX_ROWS = 500;
+// Synchronous credential hashing (scrypt is CPU-bound) caps how many rows
+// we can practically process per request without blocking the event loop
+// for tens of seconds. Keep this conservative; bulk imports beyond this
+// should be split or moved to a background job.
+const MAX_ROWS = 100;
+const HASH_CONCURRENCY = 8;
 const REQUIRED_COLUMNS = ["name", "email", "password", "role"] as const;
 
 // ==================== SCHEMAS ====================
@@ -353,25 +358,35 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
         // Pre-hash passwords for new users OUTSIDE the transaction.
         // scrypt is intentionally CPU-intensive; running it inside the
         // transaction would hold a DB connection and locks for the entire
-        // hashing window (potentially tens of seconds for 500 rows),
-        // exhausting the pool and stalling unrelated queries.
+        // hashing window, exhausting the pool and stalling unrelated
+        // queries. We process the hashes in bounded-concurrency chunks
+        // (HASH_CONCURRENCY) so the request latency improves without
+        // letting a single import saturate the event loop.
         const hashedPasswords = new Map<number, string>();
-        for (const row of categorized) {
-          if (row.kind === "create") {
-            hashedPasswords.set(
-              row.line,
-              await hashPassword(row.data.password)
-            );
-          }
+        const createRows = categorized.filter(
+          (r): r is Extract<CategorizedRow, { kind: "create" }> =>
+            r.kind === "create"
+        );
+        for (let i = 0; i < createRows.length; i += HASH_CONCURRENCY) {
+          const chunk = createRows.slice(i, i + HASH_CONCURRENCY);
+          const hashes = await Promise.all(
+            chunk.map((r) => hashPassword(r.data.password))
+          );
+          chunk.forEach((r, idx) => hashedPasswords.set(r.line, hashes[idx]!));
         }
 
-        try {
-          await db.transaction(async (tx) => {
-            for (const row of categorized) {
-              if (row.kind === "skip") {
-                continue;
-              }
+        // One transaction per row so a single failure (e.g. a unique
+        // constraint slipping past the pre-check due to a race) does not
+        // abort the whole import. This matches the documented
+        // "best-effort processing" contract: invalid rows are reported
+        // but do not block valid ones.
+        for (const row of categorized) {
+          if (row.kind === "skip") {
+            continue;
+          }
 
+          try {
+            await db.transaction(async (tx) => {
               if (row.kind === "create") {
                 const newUserId = randomUUID();
                 const passwordHash = hashedPasswords.get(row.line);
@@ -404,13 +419,7 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
                   organizationId,
                   role: row.data.role,
                 });
-
-                persistResults.set(row.line, {
-                  line: row.line,
-                  email: row.data.email,
-                  status: "created",
-                });
-                continue;
+                return;
               }
 
               // kind === "link"
@@ -420,26 +429,28 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
                 organizationId,
                 role: row.data.role,
               });
+            });
 
-              persistResults.set(row.line, {
-                line: row.line,
-                email: row.data.email,
-                status: "linked",
-              });
-            }
-          });
-        } catch (err) {
-          request.server.log.error(
-            { err, organizationId },
-            "CSV import transaction failed"
-          );
-          return reply.status(400).send({
-            success: false as const,
-            message:
-              err instanceof Error
-                ? `Failed to persist members: ${err.message}`
-                : "Failed to persist members",
-          });
+            persistResults.set(row.line, {
+              line: row.line,
+              email: row.data.email,
+              status: row.kind === "create" ? "created" : "linked",
+            });
+          } catch (err) {
+            request.server.log.error(
+              { err, organizationId, line: row.line, email: row.data.email },
+              "CSV import row failed"
+            );
+            persistResults.set(row.line, {
+              line: row.line,
+              email: row.data.email,
+              status: "error",
+              message:
+                err instanceof Error
+                  ? err.message.slice(0, 200)
+                  : "Failed to persist row",
+            });
+          }
         }
       }
 
