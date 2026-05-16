@@ -6,7 +6,7 @@
 ## Sumário executivo
 
 - **5 flows do plano de teste executados** (login/gate, CRUD orgs, gestão de usuários, CSV import, domínios automáticos)
-- **8 bugs identificados e corrigidos** em runtime
+- **11 bugs identificados e corrigidos** em runtime (BUGs #1 a #11)
 - **9 gaps adicionais cobertos** após o plano original (edge cases, matriz de permissões cross-role, último admin, etc.)
 - **2 follow-ups críticos concluídos** (helper de email para convites, `.strict()` Zod em 10 schemas)
 - **QA cruzado** com 3 agentes independentes (code review, regression test, pattern audit) — **0 regressões** + 5 issues identificados e corrigidos pós-review
@@ -288,6 +288,39 @@ app.setErrorHandler((error, request, reply) => {
 
 **Agente**: `fix-bug-8-zod-500`
 
+### BUG #9 — CSV importer rejeita CSV exportado por Excel BR
+
+**Sintoma**: usuários que exportam CSV pelo Excel em locale pt-BR recebem 400 "Missing required column(s)" — embora o arquivo pareça correto visualmente.
+
+**Causa raiz** (3 problemas combinados em `apps/api/src/http/routes/v1/organizations/members/importCsv.ts`):
+1. `csv-parse/sync` sem `bom: true` — header `name` vira `﻿name` quando arquivo tem BOM UTF-8 (default do Excel BR).
+2. Separador hardcoded como `,` — Excel BR usa `;` como default da locale.
+3. Headers case-sensitive — `NAME,Email,PASSWORD,Role` é rejeitado.
+
+**Fix**: ativar `bom: true`, aceitar `;` como separador alternativo, normalizar headers para lowercase no parsing.
+
+**Agente**: `fix-csv-importer-parser`
+
+### BUG #10 — `removeMember` deixa session com `active_organization_id` stale
+
+**Sintoma**: ao remover user X da org Y, sessões de X que tinham `active_organization_id=Y` continuam apontando para Y no DB. Better Auth revalida e devolve null no client (não é exploit), mas estado fica inconsistente e checks server-side que leem `usr.activeOrganizationId` podem se basear em valor obsoleto.
+
+**Causa raiz**: `apps/api/src/http/routes/v1/organizations/members/remove.ts` não replica o cleanup de `setActive.ts:104-114`.
+
+**Fix**: dentro da mesma transação, após `db.delete(member)`, fazer `UPDATE session SET active_organization_id = NULL WHERE user_id = ? AND active_organization_id = ?`.
+
+**Agente**: `fix-remove-member-session-cleanup`
+
+### BUG #11 — React Query retenta 4x em 404
+
+**Sintoma**: entrar em `/admin/organizations/<id-inexistente>` dispara 4 requests com backoff (~0, 1.5s, 3.5s, 7.6s) antes da UI mostrar erro.
+
+**Causa raiz**: QueryClient global sem predicate de retry — retenta default (3x) também para 4xx.
+
+**Fix**: configurar `defaultOptions.queries.retry` para não retentar quando `error.status >= 400 && < 500`.
+
+**Agente**: `fix-rq-retry-404`
+
 ---
 
 ## 4. Gaps cobertos pós-plano original
@@ -369,6 +402,8 @@ PR consolidado pendente (api.github.com com timeout intermitente durante a sess�
 | F6 | **Decisão de design**: Platform Admin NÃO terá bypass cross-org em entidades pedagógicas (challenges, KB, classrooms, work-sessions). Para gerenciar conteúdo de uma org, Platform Admin se vincula como member. Bypass inline em handlers de `organizations/**` permanece como única exceção (gestão da plataforma). | ✅ fechado |
 | F7 | Cache de role em sessão Better Auth: ao alterar role via Drizzle bypass, o `usr.role` em cookie/JWT não é invalidado até refresh — mesmo comportamento do caminho `auth.api.*`, não é regressão | 📝 registrado |
 | F8 | `apps/web/src/contexts/UserContext.tsx` — `refetch` estava nas deps do `useEffect` de auto-active-org. Refatorado para `useRef(refetch)` igual `csv-import-modal.tsx` (mesma classe do BUG #3); deps reduzidas a `[isLoading, is401, user?.id, user?.activeOrganizationId]` | ✅ |
+| F9 | **Audit log ausente** — não existe tabela `audit_log` no schema. Ações admin (criar/editar/excluir org, mudar role, remover member, importCsv, toggle platform-admin) não deixam rastro. Impacto LGPD/compliance e investigação de incidentes. Criar tabela + helper de instrumentação + chamar nos handlers críticos. | 📝 registrado |
+| F10 | **Auto-link via domínio com `role:"admin"` é vetor latente de privilege-escalation** — domain rule criado com `role:"admin"` faz qualquer email no domínio virar admin real da org. Mitigação atual: só admin já autenticado cria a rule. Recomendação: forçar role máximo no auto-link a `teacher`, ou exigir flag `requireApproval` para `admin` + alerta na UI. | 📝 registrado |
 
 ---
 
@@ -417,6 +452,8 @@ Para resetar limpo: `cd packages/infra && npm run db:reset` (drop + migrate + se
 7. **React Query mutation objects mudam de identidade a cada render** — nunca colocar nas deps de `useEffect`; usar `useRef(mutation.reset)` para callbacks estáveis
 8. **`dotenv` corta valores no `#`** — envs com caracteres especiais (senhas, secrets) precisam de aspas explícitas
 9. **Querystring schemas sem `.strict()` mentem em silêncio** — Zod default ignora keys desconhecidas em `z.object({})`, então params inválidos (digitação errada, params removidos sem cliente atualizar) viram no-op invisível. Em rotas com filtros opcionais, isso esconde bugs de cliente. Sempre aplicar `.strict()` em querystring schemas, especialmente após o `setErrorHandler` global do BUG #8 transformar campos extras em 400 limpo.
+10. **CSV de planilha BR exige tolerância no parser** — Excel locale pt-BR exporta CSV com BOM UTF-8 + separador `;` + headers que podem vir capitalizados. Parser estrito quebra a UX. Habilitar `bom: true`, aceitar `;`, e normalizar headers para lowercase no parsing são fixes triviais com alto impacto em adoção.
+11. **Cleanup de session ao remover member deve espelhar deactivate** — `setActive(false)` zera `session.active_organization_id`, mas `removeMember` não fazia. Quando há 2 caminhos que terminam no mesmo estado lógico (user "perde" a org), garantir consistência transacional em ambos.
 
 ---
 
