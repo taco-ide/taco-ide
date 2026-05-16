@@ -6,7 +6,8 @@
 
 export type GetV1ChallengesIdPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };

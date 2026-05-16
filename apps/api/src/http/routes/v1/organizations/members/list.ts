@@ -22,10 +22,12 @@ const ListMembersParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const ListMembersQuerySchema = z.object({
-  q: z.string().trim().min(1).optional(),
-  role: z.enum(["student", "teacher", "coordinator", "admin"]).optional(),
-});
+const ListMembersQuerySchema = z
+  .object({
+    q: z.string().trim().min(1).optional(),
+    role: z.enum(["student", "teacher", "coordinator", "admin"]).optional(),
+  })
+  .strict();
 
 const MemberItemSchema = z.object({
   id: z.string(),

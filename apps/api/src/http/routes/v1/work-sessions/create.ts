@@ -18,10 +18,12 @@ import {
 
 // ==================== SCHEMAS ====================
 
-const CreateWorkSessionBodySchema = z.object({
-  challengeId: z.string().min(1),
-  teachingAssistantId: z.string().min(1),
-});
+const CreateWorkSessionBodySchema = z
+  .object({
+    challengeId: z.string().min(1),
+    teachingAssistantId: z.string().min(1),
+  })
+  .strict();
 
 const WorkSessionSchema = z.object({
   id: z.string(),

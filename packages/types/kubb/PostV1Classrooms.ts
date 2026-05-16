@@ -144,11 +144,13 @@ export type PostV1ClassroomsMutationRequest = {
     */
     description?: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     organizationId: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     teacherUserId?: string | null;
 };

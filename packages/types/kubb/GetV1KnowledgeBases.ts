@@ -6,7 +6,8 @@
 
 export type GetV1KnowledgeBasesQueryParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     classroomId: string;
     /**

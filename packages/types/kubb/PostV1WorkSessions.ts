@@ -129,11 +129,13 @@ export type PostV1WorkSessions404 = {
 
 export type PostV1WorkSessionsMutationRequest = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     challengeId: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     teachingAssistantId: string;
 };

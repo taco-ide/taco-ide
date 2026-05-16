@@ -12,11 +12,13 @@ import { member, organization, user } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const SearchUsersQuerySchema = z.object({
-  q: z.string().trim().min(2),
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-});
+const SearchUsersQuerySchema = z
+  .object({
+    q: z.string().trim().min(2),
+    page: z.coerce.number().min(1).default(1),
+    perPage: z.coerce.number().min(1).max(100).default(20),
+  })
+  .strict();
 
 const SearchUsersMembershipSchema = z.object({
   organizationId: z.string(),

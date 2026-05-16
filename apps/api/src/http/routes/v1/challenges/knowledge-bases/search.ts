@@ -19,10 +19,12 @@ const SearchChallengeKBParamsSchema = z.object({
   challengeId: z.string().min(1),
 });
 
-const SearchChallengeKBQuerySchema = z.object({
-  q: z.string().min(1),
-  limit: z.coerce.number().min(1).max(50).default(10),
-});
+const SearchChallengeKBQuerySchema = z
+  .object({
+    q: z.string().min(1),
+    limit: z.coerce.number().min(1).max(50).default(10),
+  })
+  .strict();
 
 const SearchResultItemSchema = z.object({
   chunkId: z.string(),

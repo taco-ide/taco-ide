@@ -15,11 +15,13 @@ import { knowledgeBase, classroom } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const CreateKnowledgeBaseBodySchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().optional(),
-  classroomId: z.string().min(1),
-});
+const CreateKnowledgeBaseBodySchema = z
+  .object({
+    title: z.string().min(1).max(200),
+    description: z.string().optional(),
+    classroomId: z.string().min(1),
+  })
+  .strict();
 
 const KnowledgeBaseCreatedSchema = z.object({
   id: z.string(),

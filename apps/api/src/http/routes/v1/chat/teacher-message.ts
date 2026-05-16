@@ -14,10 +14,12 @@ import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-compan
 
 // ==================== SCHEMAS ====================
 
-const TeacherMessageBodySchema = z.object({
-  classroomId: z.string(),
-  message: z.string().min(1),
-});
+const TeacherMessageBodySchema = z
+  .object({
+    classroomId: z.string(),
+    message: z.string().min(1),
+  })
+  .strict();
 
 // ==================== ROUTE ====================
 

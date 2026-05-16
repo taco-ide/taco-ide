@@ -6,7 +6,8 @@
 
 export type GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     challengeId: string;
 };

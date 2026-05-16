@@ -185,7 +185,8 @@ export type PostV1ChallengesMutationRequest = {
     */
     difficulty: PostV1ChallengesMutationRequestDifficultyEnum;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     classroomId: string;
     /**

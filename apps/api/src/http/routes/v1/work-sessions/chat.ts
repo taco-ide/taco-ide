@@ -30,12 +30,14 @@ const ChatParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const ChatBodySchema = z.object({
-  message: z.string().min(1).max(10000),
-  code: z.string().optional(),
-  stdin: z.string().optional(),
-  stdout: z.string().optional(),
-});
+const ChatBodySchema = z
+  .object({
+    message: z.string().min(1).max(10000),
+    code: z.string().optional(),
+    stdin: z.string().optional(),
+    stdout: z.string().optional(),
+  })
+  .strict();
 
 const ChatResponseSchema = ResponseSchema200.extend({
   data: z.object({

@@ -6,11 +6,13 @@
 
 export type DeleteV1KnowledgeBasesKbidEntriesEntryidPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     kbId: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     entryId: string;
 };

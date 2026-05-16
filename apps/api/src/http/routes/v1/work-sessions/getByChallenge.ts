@@ -11,9 +11,11 @@ import { workSession, challenge } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const GetByChallengeQuerySchema = z.object({
-  challengeId: z.string().min(1),
-});
+const GetByChallengeQuerySchema = z
+  .object({
+    challengeId: z.string().min(1),
+  })
+  .strict();
 
 const WorkSessionSchema = z.object({
   id: z.string(),

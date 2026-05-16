@@ -6,11 +6,13 @@
 
 export type DeleteV1KnowledgeBasesKbidDocumentsDocidPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     kbId: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     docId: string;
 };

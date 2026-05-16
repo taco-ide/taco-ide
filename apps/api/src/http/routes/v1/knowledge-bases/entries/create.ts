@@ -19,9 +19,11 @@ const CreateEntryParamsSchema = z.object({
   kbId: z.string().min(1),
 });
 
-const CreateEntryBodySchema = z.object({
-  content: z.string().min(1),
-});
+const CreateEntryBodySchema = z
+  .object({
+    content: z.string().min(1),
+  })
+  .strict();
 
 const EntryCreatedSchema = z.object({
   id: z.string(),

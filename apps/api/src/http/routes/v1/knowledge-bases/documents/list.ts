@@ -18,10 +18,12 @@ const ListDocumentsParamsSchema = z.object({
   kbId: z.string().min(1),
 });
 
-const ListDocumentsQuerySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-});
+const ListDocumentsQuerySchema = z
+  .object({
+    page: z.coerce.number().min(1).default(1),
+    perPage: z.coerce.number().min(1).max(100).default(20),
+  })
+  .strict();
 
 const DocumentItemSchema = z.object({
   id: z.string(),

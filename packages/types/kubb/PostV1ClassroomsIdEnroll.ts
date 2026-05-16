@@ -6,7 +6,8 @@
 
 export type PostV1ClassroomsIdEnrollPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };
@@ -137,7 +138,8 @@ export type PostV1ClassroomsIdEnroll404 = {
 
 export type PostV1ClassroomsIdEnrollMutationRequest = (any | {
     /**
-     * @type string | undefined, uuid
+     * @minLength 1
+     * @type string | undefined
     */
     userId?: string;
 });

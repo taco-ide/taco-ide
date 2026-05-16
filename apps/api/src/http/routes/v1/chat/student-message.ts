@@ -20,12 +20,14 @@ import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assist
 
 // ==================== SCHEMAS ====================
 
-const StudentMessageBodySchema = z.object({
-  workSessionId: z.string(),
-  message: z.string().min(1),
-  currentCode: z.string().optional(),
-  stdout: z.string().optional(),
-});
+const StudentMessageBodySchema = z
+  .object({
+    workSessionId: z.string(),
+    message: z.string().min(1),
+    currentCode: z.string().optional(),
+    stdout: z.string().optional(),
+  })
+  .strict();
 
 // ==================== ROUTE ====================
 

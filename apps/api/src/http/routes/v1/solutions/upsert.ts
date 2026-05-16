@@ -13,12 +13,14 @@ import { challengeSolution, challenge } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const UpsertSolutionBodySchema = z.object({
-  code: z.string().optional(),
-  stdin: z.string().optional(),
-  stdout: z.string().optional(),
-  chatHistory: z.unknown().optional(),
-});
+const UpsertSolutionBodySchema = z
+  .object({
+    code: z.string().optional(),
+    stdin: z.string().optional(),
+    stdout: z.string().optional(),
+    chatHistory: z.unknown().optional(),
+  })
+  .strict();
 
 const SolutionSchema = z.object({
   id: z.string(),

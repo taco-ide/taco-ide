@@ -19,9 +19,11 @@ const UpdateEntryParamsSchema = z.object({
   entryId: z.string().min(1),
 });
 
-const UpdateEntryBodySchema = z.object({
-  content: z.string().min(1),
-});
+const UpdateEntryBodySchema = z
+  .object({
+    content: z.string().min(1),
+  })
+  .strict();
 
 const EntryUpdatedSchema = z.object({
   id: z.string(),

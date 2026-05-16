@@ -12,12 +12,14 @@ import { classroom, member, organization } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const ListOrganizationsQuerySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-  q: z.string().trim().min(1).optional(),
-  includeInactive: z.coerce.boolean().default(false),
-});
+const ListOrganizationsQuerySchema = z
+  .object({
+    page: z.coerce.number().min(1).default(1),
+    perPage: z.coerce.number().min(1).max(100).default(20),
+    q: z.string().trim().min(1).optional(),
+    includeInactive: z.coerce.boolean().default(false),
+  })
+  .strict();
 
 const OrganizationListItemSchema = z.object({
   id: z.string(),

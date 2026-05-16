@@ -17,9 +17,11 @@ const ChallengeParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const UpdateChallengeBodySchema = z.object({
-  classroomId: z.string().min(1).nullable(),
-});
+const UpdateChallengeBodySchema = z
+  .object({
+    classroomId: z.string().min(1).nullable(),
+  })
+  .strict();
 
 const UpdateChallengeResponseSchema = ResponseSchema200.extend({
   data: z.object({

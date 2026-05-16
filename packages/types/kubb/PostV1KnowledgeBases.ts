@@ -173,7 +173,8 @@ export type PostV1KnowledgeBasesMutationRequest = {
     */
     description?: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     classroomId: string;
 };

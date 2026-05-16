@@ -28,12 +28,14 @@ const ImportCsvParamsSchema = z.object({
   id: z.string().min(1),
 });
 
-const ImportCsvQuerySchema = z.object({
-  dryRun: z
-    .enum(["true", "false"])
-    .optional()
-    .transform((value) => value === "true"),
-});
+const ImportCsvQuerySchema = z
+  .object({
+    dryRun: z
+      .enum(["true", "false"])
+      .optional()
+      .transform((value) => value === "true"),
+  })
+  .strict();
 
 const RoleEnum = z.enum(["student", "teacher", "coordinator", "admin"]);
 

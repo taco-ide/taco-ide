@@ -23,9 +23,11 @@ const LinkKnowledgeBaseParamsSchema = z.object({
   challengeId: z.string().min(1),
 });
 
-const LinkKnowledgeBaseBodySchema = z.object({
-  knowledgeBaseId: z.string().min(1),
-});
+const LinkKnowledgeBaseBodySchema = z
+  .object({
+    knowledgeBaseId: z.string().min(1),
+  })
+  .strict();
 
 const LinkKnowledgeBaseResponseSchema = ResponseSchema201.extend({
   data: z.object({
