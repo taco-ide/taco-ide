@@ -10,7 +10,7 @@ import {
 } from "../../../_responses/types";
 import { requirePlatformAdmin } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { member } from "@repo/infra/db/schema";
+import { member, session } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -89,6 +89,20 @@ export async function removeMemberRoute(app: FastifyTypedInstance) {
         }
 
         await tx.delete(member).where(eq(member.id, target[0].id));
+
+        // Clear stale active_organization_id on sessions where the removed
+        // user still pointed to this org. Mirrors the cleanup done by
+        // organizations/setActive.ts when an org is deactivated.
+        await tx
+          .update(session)
+          .set({ activeOrganizationId: null, updatedAt: new Date() })
+          .where(
+            and(
+              eq(session.userId, userId),
+              eq(session.activeOrganizationId, organizationId)
+            )
+          );
+
         return { kind: "ok" as const };
       });
 
