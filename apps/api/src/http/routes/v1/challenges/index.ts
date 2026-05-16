@@ -6,6 +6,7 @@ import { updateChallengeRoute } from "./update";
 import { deleteChallengeRoute } from "./delete";
 import { solutionsRoutes } from "../solutions";
 import { challengeKnowledgeBasesRoutes } from "./knowledge-bases";
+import { challengeWorkSessionsRoutes } from "./work-sessions";
 
 export async function challengesRoutes(app: FastifyTypedInstance) {
   await app.register(
@@ -26,6 +27,12 @@ export async function challengesRoutes(app: FastifyTypedInstance) {
           await challengeKnowledgeBasesRoutes(sf);
         },
         { prefix: "/:challengeId/knowledge-bases" }
+      );
+      await fastify.register(
+        async (sf: FastifyTypedInstance) => {
+          await challengeWorkSessionsRoutes(sf);
+        },
+        { prefix: "/:challengeId/work-sessions" }
       );
     },
     { prefix: "/challenges" }

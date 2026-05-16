@@ -1,6 +1,6 @@
 {
-  "id": "202f431c-fa31-4e36-b3db-c6e33198cb8d",
-  "prevId": "0a801512-7740-4937-8dc4-bab0b7723955",
+  "id": "b5bfb4c6-5090-4745-893a-2de10bcaf3ac",
+  "prevId": "e4d535ac-80bf-42ed-aa9d-c25a89a8882e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2108,7 +2108,29 @@
           "notNull": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "work_session_user_challenge_idx": {
+          "name": "work_session_user_challenge_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "challenge_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "work_session_user_id_user_id_fk": {
           "name": "work_session_user_id_user_id_fk",

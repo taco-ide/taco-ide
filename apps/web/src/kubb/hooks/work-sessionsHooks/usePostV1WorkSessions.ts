@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsMutationRequest, PostV1WorkSessionsMutationResponse, PostV1WorkSessions400, PostV1WorkSessions401, PostV1WorkSessions404 } from "../../../../../../packages/types/kubb/PostV1WorkSessions.ts";
+import type { PostV1WorkSessionsMutationRequest, PostV1WorkSessionsMutationResponse, PostV1WorkSessions400, PostV1WorkSessions401, PostV1WorkSessions403, PostV1WorkSessions404 } from "../../../../../../packages/types/kubb/PostV1WorkSessions.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ export const postV1WorkSessionsMutationKey = () => [{ url: '/v1/work-sessions/' 
 export type PostV1WorkSessionsMutationKey = ReturnType<typeof postV1WorkSessionsMutationKey>
 
 /**
- * @description Start a new work session on a challenge with a teaching assistant
+ * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge, or an active TA from the classroom/user organization when the challenge has no M2M row.
  * @summary Create work session
  * {@link /v1/work-sessions/}
  */
@@ -23,18 +23,18 @@ export async function postV1WorkSessions(data: PostV1WorkSessionsMutationRequest
   
   const requestData = data  
   
-  const res = await request<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404>, PostV1WorkSessionsMutationRequest>({ method : "POST", url : `/v1/work-sessions/`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions403 | PostV1WorkSessions404>, PostV1WorkSessionsMutationRequest>({ method : "POST", url : `/v1/work-sessions/`, data : requestData, ... requestConfig })  
   return res.data
 }
 
 /**
- * @description Start a new work session on a challenge with a teaching assistant
+ * @description Start a new work session on a challenge. Optionally pass teachingAssistantId; if omitted, the server picks the default TA linked to the challenge, or an active TA from the classroom/user organization when the challenge has no M2M row.
  * @summary Create work session
  * {@link /v1/work-sessions/}
  */
 export function usePostV1WorkSessions<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404>, {data: PostV1WorkSessionsMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions403 | PostV1WorkSessions404>, {data: PostV1WorkSessionsMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1WorkSessionsMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1WorkSessions<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1WorkSessionsMutationKey()
 
-  return useMutation<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404>, {data: PostV1WorkSessionsMutationRequest}, TContext>({
+  return useMutation<PostV1WorkSessionsMutationResponse, ResponseErrorConfig<PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions403 | PostV1WorkSessions404>, {data: PostV1WorkSessionsMutationRequest}, TContext>({
     mutationFn: async({ data }) => {
       return postV1WorkSessions(data, config)
     },

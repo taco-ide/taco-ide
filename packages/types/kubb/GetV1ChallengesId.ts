@@ -64,6 +64,18 @@ export type GetV1ChallengesId200 = {
         */
         classroomTitle: string | null;
         /**
+         * @type string
+        */
+        createdByUserId: string | null;
+        /**
+         * @type string
+        */
+        classroomId: string | null;
+        /**
+         * @type string
+        */
+        classroomTeacherUserId: string | null;
+        /**
          * @type array
         */
         teachingAssistants: {

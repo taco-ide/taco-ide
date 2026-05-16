@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
+import type { PostV1WorkSessionsIdChatMutationRequest, PostV1WorkSessionsIdChatMutationResponse, PostV1WorkSessionsIdChatPathParams, PostV1WorkSessionsIdChat400, PostV1WorkSessionsIdChat401, PostV1WorkSessionsIdChat403, PostV1WorkSessionsIdChat404, PostV1WorkSessionsIdChat429, PostV1WorkSessionsIdChat503 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdChat.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export async function postV1WorkSessionsIdChat(id: PostV1WorkSessionsIdChatPathP
   
   const requestData = data  
   
-  const res = await request<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat503>, PostV1WorkSessionsIdChatMutationRequest>({ method : "POST", url : `/v1/work-sessions/${id}/chat`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat503>, PostV1WorkSessionsIdChatMutationRequest>({ method : "POST", url : `/v1/work-sessions/${id}/chat`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function postV1WorkSessionsIdChat(id: PostV1WorkSessionsIdChatPathP
  */
 export function usePostV1WorkSessionsIdChat<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat503>, {id: PostV1WorkSessionsIdChatPathParams["id"], data: PostV1WorkSessionsIdChatMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat503>, {id: PostV1WorkSessionsIdChatPathParams["id"], data: PostV1WorkSessionsIdChatMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1WorkSessionsIdChatMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1WorkSessionsIdChat<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1WorkSessionsIdChatMutationKey()
 
-  return useMutation<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat503>, {id: PostV1WorkSessionsIdChatPathParams["id"], data: PostV1WorkSessionsIdChatMutationRequest}, TContext>({
+  return useMutation<PostV1WorkSessionsIdChatMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat503>, {id: PostV1WorkSessionsIdChatPathParams["id"], data: PostV1WorkSessionsIdChatMutationRequest}, TContext>({
     mutationFn: async({ id, data }) => {
       return postV1WorkSessionsIdChat(id, data, config)
     },

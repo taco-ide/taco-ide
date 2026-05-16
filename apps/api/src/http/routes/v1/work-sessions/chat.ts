@@ -8,6 +8,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
   ResponseSchema503,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
@@ -23,6 +24,12 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { teachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
+import { getLangfuseCallback } from "../../../../agents/langfuse";
+import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -55,6 +62,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
   }>(
     "/:id/chat",
     {
+      preHandler: [workSessionChatRateLimitPreHandler],
       schema: {
         tags: ["work-sessions"],
         summary: "Send chat message and get TA response",
@@ -68,6 +76,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
           503: ResponseSchema503,
         },
       },
@@ -115,6 +124,25 @@ export async function chatRoute(app: FastifyTypedInstance) {
         return reply.status(400).send({
           success: false as const,
           message: "Cannot chat in an ended work session",
+        });
+      }
+
+      const ctx = await loadChallengeWorkAccessContext(session.challengeId);
+      if (!ctx) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Challenge not found",
+        });
+      }
+
+      const participate = await assertCanParticipateInChallengeWorkSession(
+        usr,
+        ctx
+      );
+      if (!participate.ok) {
+        return reply.status(participate.status).send({
+          success: false as const,
+          message: participate.message,
         });
       }
 
@@ -174,6 +202,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       const code = bodyCode ?? solution?.code ?? null;
+      const stdin = bodyStdin ?? solution?.stdin ?? null;
       const stdout = bodyStdout ?? solution?.stdout ?? null;
 
       // RAG: Search challenge knowledge bases for relevant context
@@ -221,8 +250,17 @@ export async function chatRoute(app: FastifyTypedInstance) {
         supportMaterials: JSON.stringify(ch?.supportMaterials ?? ""),
       };
 
+      const langfuseCallback = getLangfuseCallback({
+        userId: usr.id,
+        sessionId: workSessionId,
+        tags: ["agent:ta"],
+        metadata: { challengeId: session.challengeId, workSessionId },
+      });
+
       let modelResponse: string;
       try {
+        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+
         const result = await teachingAssistantAgent.invoke(
           {
             messages: [
@@ -237,6 +275,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
               challengeContext,
               ...modelParams,
             },
+            callbacks,
           },
         );
 
@@ -251,33 +290,41 @@ export async function chatRoute(app: FastifyTypedInstance) {
           rawResponse.trim() ||
           "Não posso ajudar com isso. Vamos focar no exercício de programação? Se tiver dúvidas sobre o código ou o problema, estou aqui para ajudar!";
       } catch (err) {
-        console.error("LangGraph agent error:", err);
+        request.server.log.error({ err }, "LangGraph agent error");
         return reply.status(503).send({
           success: false as const,
-          message:
-            err instanceof Error ? err.message : "Failed to get AI response",
+          message: "AI service temporarily unavailable",
         });
+      } finally {
+        if (langfuseCallback) {
+          await langfuseCallback.flushAsync();
+        }
       }
 
       const now = new Date();
       const interactionId = randomUUID();
 
-      await db.insert(userInteractionOnChallenge).values({
-        id: interactionId,
-        workSessionId,
-        challengeId: session.challengeId,
-        interactionType: "chat",
-        userPrompt: message,
-        modelResponse,
-      });
+      await db.transaction(async (tx) => {
+        await tx.insert(userInteractionOnChallenge).values({
+          id: interactionId,
+          workSessionId,
+          challengeId: session.challengeId,
+          interactionType: "chat",
+          userPrompt: message,
+          modelResponse,
+          code,
+          stdin,
+          stdout,
+        });
 
-      await db
-        .update(workSession)
-        .set({
-          updatedAt: now,
-          lastMessageAt: now,
-        })
-        .where(eq(workSession.id, workSessionId));
+        await tx
+          .update(workSession)
+          .set({
+            updatedAt: now,
+            lastMessageAt: now,
+          })
+          .where(eq(workSession.id, workSessionId));
+      });
 
       return reply.status(200).send({
         success: true as const,

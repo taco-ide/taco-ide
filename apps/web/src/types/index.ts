@@ -1,5 +1,7 @@
 import type { editor as MonacoEditor } from "monaco-editor";
 
+export type PyodideStatus = 'idle' | 'loading' | 'ready' | 'error';
+
 export interface Theme {
   id: string;
   label: string;
@@ -46,6 +48,7 @@ export interface CodeEditorState {
   fontSize: number;
   editor: MonacoEditor.IStandaloneCodeEditor | null;
   executionResult: ExecutionResult | null;
+  pyodideStatus: PyodideStatus;
 
   setEditor: (editor: MonacoEditor.IStandaloneCodeEditor) => void;
   getCode: () => string;
@@ -55,4 +58,7 @@ export interface CodeEditorState {
   setTheme: (theme: string) => void;
   setFontSize: (fontSize: number) => void;
   runCode: () => Promise<void>;
+  /** Clears per-language code cache, stdin, output; resets editor to default template. */
+  clearProblemSessionStorage: () => void;
+  preloadPyodide: () => void;
 }

@@ -160,23 +160,32 @@ export const challengeTeachingAssistant = pgTable(
 
 // ==================== WORK SESSIONS ====================
 
-export const workSession = pgTable("work_session", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id),
-  challengeId: text("challenge_id")
-    .notNull()
-    .references(() => challenge.id),
-  classroomId: text("classroom_id").references(() => classroom.id),
-  teachingAssistantId: text("teaching_assistant_id")
-    .notNull()
-    .references(() => teachingAssistant.id),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  lastMessageAt: timestamp("last_message_at"),
-  endedAt: timestamp("ended_at"),
-});
+export const workSession = pgTable(
+  "work_session",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenge.id),
+    classroomId: text("classroom_id").references(() => classroom.id),
+    teachingAssistantId: text("teaching_assistant_id")
+      .notNull()
+      .references(() => teachingAssistant.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    lastMessageAt: timestamp("last_message_at"),
+    endedAt: timestamp("ended_at"),
+  },
+  (table) => [
+    uniqueIndex("work_session_user_challenge_idx").on(
+      table.userId,
+      table.challengeId
+    ),
+  ]
+);
 
 // ==================== INTERACTION TYPES ====================
 

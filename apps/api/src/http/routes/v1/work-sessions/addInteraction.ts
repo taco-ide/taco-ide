@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -14,6 +14,10 @@ import {
   workSession,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -118,28 +122,46 @@ export async function addInteractionRoute(app: FastifyTypedInstance) {
         });
       }
 
+      const ctx = await loadChallengeWorkAccessContext(session.challengeId);
+      if (!ctx) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Challenge not found",
+        });
+      }
+
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok) {
+        return reply.status(access.status).send({
+          success: false as const,
+          message: access.message,
+        });
+      }
+
       const now = new Date();
       const interactionId = randomUUID();
 
-      await db.insert(userInteractionOnChallenge).values({
-        id: interactionId,
-        workSessionId,
-        challengeId: session.challengeId,
-        interactionType,
-        userPrompt,
-        modelResponse,
-        code,
-        stdin,
-        stdout,
-      });
+      await db.transaction(async (tx) => {
+        await tx.insert(userInteractionOnChallenge).values({
+          id: interactionId,
+          workSessionId,
+          challengeId: session.challengeId,
+          interactionType,
+          userPrompt,
+          modelResponse,
+          code,
+          stdin,
+          stdout,
+        });
 
-      await db
-        .update(workSession)
-        .set({
-          updatedAt: now,
-          lastMessageAt: now,
-        })
-        .where(eq(workSession.id, workSessionId));
+        await tx
+          .update(workSession)
+          .set({
+            updatedAt: now,
+            lastMessageAt: now,
+          })
+          .where(eq(workSession.id, workSessionId));
+      });
 
       return reply.status(201).send({
         success: true as const,

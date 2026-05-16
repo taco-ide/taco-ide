@@ -37,6 +37,10 @@ const GetChallengeResponseSchema = ResponseSchema200.extend({
     supportMaterials: z.unknown().nullable(),
     author: z.string().nullable(),
     classroomTitle: z.string().nullable(),
+    /** Para o cliente decidir landing (ex.: lista de sessões vs IDE do aluno). */
+    createdByUserId: z.string().nullable(),
+    classroomId: z.string().nullable(),
+    classroomTeacherUserId: z.string().nullable(),
     teachingAssistants: z.array(TeachingAssistantItemSchema),
     createdAt: z.string(),
   }),
@@ -84,6 +88,9 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           createdAt: challenge.createdAt,
           authorName: user.name,
           classroomTitle: classroom.title,
+          createdByUserId: challenge.createdByUserId,
+          classroomId: challenge.classroomId,
+          classroomTeacherUserId: classroom.teacherUserId,
         })
         .from(challenge)
         .leftJoin(classroom, eq(challenge.classroomId, classroom.id))
@@ -124,6 +131,9 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           supportMaterials: ch.supportMaterials ?? null,
           author: ch.authorName ?? null,
           classroomTitle: ch.classroomTitle ?? null,
+          createdByUserId: ch.createdByUserId ?? null,
+          classroomId: ch.classroomId ?? null,
+          classroomTeacherUserId: ch.classroomTeacherUserId ?? null,
           teachingAssistants: tas.map((t) => ({
             id: t.id,
             alias: t.alias,

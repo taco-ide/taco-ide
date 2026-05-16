@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
+import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge403, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
 import { queryOptions, useQuery } from "@tanstack/react-query";
@@ -14,20 +14,20 @@ export const getV1WorkSessionsByChallengeQueryKey = (params: GetV1WorkSessionsBy
 export type GetV1WorkSessionsByChallengeQueryKey = ReturnType<typeof getV1WorkSessionsByChallengeQueryKey>
 
 /**
- * @description Returns the most recent active (not ended) work session for the user on a challenge
- * @summary Get active work session for challenge
+ * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */
 export async function getV1WorkSessionsByChallenge(params: GetV1WorkSessionsByChallengeQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, unknown>({ method : "GET", url : `/v1/work-sessions/by-challenge`, params, ... requestConfig })  
+  const res = await request<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, unknown>({ method : "GET", url : `/v1/work-sessions/by-challenge`, params, ... requestConfig })  
   return res.data
 }
 
 export function getV1WorkSessionsByChallengeQueryOptions(params: GetV1WorkSessionsByChallengeQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1WorkSessionsByChallengeQueryKey(params)
-  return queryOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, GetV1WorkSessionsByChallengeQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, GetV1WorkSessionsByChallengeQueryResponse, typeof queryKey>({
    enabled: !!(params),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -38,13 +38,13 @@ export function getV1WorkSessionsByChallengeQueryOptions(params: GetV1WorkSessio
 }
 
 /**
- * @description Returns the most recent active (not ended) work session for the user on a challenge
- * @summary Get active work session for challenge
+ * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */
 export function useGetV1WorkSessionsByChallenge<TData = GetV1WorkSessionsByChallengeQueryResponse, TQueryData = GetV1WorkSessionsByChallengeQueryResponse, TQueryKey extends QueryKey = GetV1WorkSessionsByChallengeQueryKey>(params: GetV1WorkSessionsByChallengeQueryParams, options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1WorkSessionsByChallenge<TData = GetV1WorkSessionsByChall
    ...getV1WorkSessionsByChallengeQueryOptions(params, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

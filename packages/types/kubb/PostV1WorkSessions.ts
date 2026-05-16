@@ -101,6 +101,32 @@ export type PostV1WorkSessions401 = {
     };
 };
 
+export const postV1WorkSessions403SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1WorkSessions403SuccessEnum = (typeof postV1WorkSessions403SuccessEnum)[keyof typeof postV1WorkSessions403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1WorkSessions403 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1WorkSessions403SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1WorkSessions404SuccessEnum = {
     "false": false
 } as const;
@@ -129,15 +155,13 @@ export type PostV1WorkSessions404 = {
 
 export type PostV1WorkSessionsMutationRequest = {
     /**
-     * @minLength 1
-     * @type string
+     * @type string, uuid
     */
     challengeId: string;
     /**
-     * @minLength 1
-     * @type string
+     * @type string | undefined, uuid
     */
-    teachingAssistantId: string;
+    teachingAssistantId?: string;
 };
 
 export type PostV1WorkSessionsMutationResponse = PostV1WorkSessions201;
@@ -145,5 +169,5 @@ export type PostV1WorkSessionsMutationResponse = PostV1WorkSessions201;
 export type PostV1WorkSessionsMutation = {
     Response: PostV1WorkSessions201;
     Request: PostV1WorkSessionsMutationRequest;
-    Errors: PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions404;
+    Errors: PostV1WorkSessions400 | PostV1WorkSessions401 | PostV1WorkSessions403 | PostV1WorkSessions404;
 };

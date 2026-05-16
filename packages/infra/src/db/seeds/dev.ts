@@ -1,6 +1,7 @@
 /**
  * Seed de desenvolvimento: base + dados FAKE para dev.
- * - Organizacao demo, usuarios teste (RBAC), turmas, challenges
+ * - Organizacao demo, model + TA (via seedBase), usuarios teste (RBAC), turmas, challenges
+ * - Cada challenge recebe linha em challenge_teaching_assistant -> SEED_TA_ID
  * - Senha padrao para todas as contas: Teste123!@
  *
  * Rode: cd packages/infra && npm run db:seed:dev
@@ -64,13 +65,7 @@ const DEV_PASSWORD = "Teste123!@";
 async function seed() {
   console.log("[dev] Seeding development data (org, users, classrooms, challenges)...\n");
 
-  // --- 1. Base: dados estruturais (model + TA) ---
-  await seedBase({ organizationId: SEED_ORG_ID });
-
-  // Better Auth usa scrypt (formato salt:hex), nao bcrypt
-  const passwordHash = await hashPassword(DEV_PASSWORD);
-
-  // --- 2. Organizacao demo ---
+  // --- 1. Organizacao demo (obrigatoria ANTES do seedBase: o TA usa FK para organization.id) ---
   await safeInsert("organization", () =>
     db.insert(organization).values({
       id: SEED_ORG_ID,
@@ -79,6 +74,13 @@ async function seed() {
       metadata: JSON.stringify({ seeded: true }),
     })
   );
+
+  // --- 2. Base: model LLM + teaching assistant (createdByOrganizationId = org demo) ---
+  // O TA padrao vem de seeds/base.ts (SEED_TA_ID). Nao duplicar aqui.
+  await seedBase({ organizationId: SEED_ORG_ID });
+
+  // Better Auth usa scrypt (formato salt:hex), nao bcrypt
+  const passwordHash = await hashPassword(DEV_PASSWORD);
 
   // --- 3. Usuarios teste (email verificado para login direto) ---
   await safeInsert("user teacher", () =>
@@ -294,6 +296,7 @@ async function seed() {
     },
   ];
 
+  // Cada desafio fica ligado ao TA seed (SEED_TA_ID) para GET /challenges/:id e work sessions.
   for (const c of challenges) {
     await safeInsert(`challenge ${c.title}`, async () => {
       await db.insert(challenge).values({

@@ -45,6 +45,17 @@ export const postV1WorkSessions401Schema = z.object({
 /**
  * @description Default Response
  */
+export const postV1WorkSessions403Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const postV1WorkSessions404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
@@ -54,8 +65,8 @@ export const postV1WorkSessions404Schema = z.object({
     })
 
 export const postV1WorkSessionsMutationRequestSchema = z.object({
-    "challengeId": z.string().min(1),
-"teachingAssistantId": z.string().min(1)
+    "challengeId": z.string().uuid(),
+"teachingAssistantId": z.string().uuid().optional()
     })
 
 export const postV1WorkSessionsMutationResponseSchema = z.lazy(() => postV1WorkSessions201Schema)

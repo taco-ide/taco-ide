@@ -4,6 +4,8 @@ export type { GetV1ChallengesChallengeidKnowledgeBasesSearchQueryKey } from "./c
 export type { GetV1ChallengesChallengeidKnowledgeBasesSearchSuspenseQueryKey } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBasesSearchSuspense.ts";
 export type { GetV1ChallengesChallengeidKnowledgeBasesSuspenseQueryKey } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBasesSuspense.ts";
 export type { PostV1ChallengesChallengeidKnowledgeBasesMutationKey } from "./challenge-knowledge-basesHooks/usePostV1ChallengesChallengeidKnowledgeBases.ts";
+export type { GetV1ChallengesChallengeidWorkSessionsQueryKey } from "./challenge-work-sessionsHooks/useGetV1ChallengesChallengeidWorkSessions.ts";
+export type { GetV1ChallengesChallengeidWorkSessionsSuspenseQueryKey } from "./challenge-work-sessionsHooks/useGetV1ChallengesChallengeidWorkSessionsSuspense.ts";
 export type { DeleteV1ChallengesIdMutationKey } from "./challengesHooks/useDeleteV1ChallengesId.ts";
 export type { GetV1ChallengesQueryKey } from "./challengesHooks/useGetV1Challenges.ts";
 export type { GetV1ChallengesIdQueryKey } from "./challengesHooks/useGetV1ChallengesId.ts";
@@ -73,6 +75,7 @@ export type { GetV1UsersMeSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeS
 export type { GetV1UsersSuspenseQueryKey } from "./usersHooks/useGetV1UsersSuspense.ts";
 export type { PatchV1UsersIdPlatformAdminMutationKey } from "./usersHooks/usePatchV1UsersIdPlatformAdmin.ts";
 export type { PutV1UsersMeMutationKey } from "./usersHooks/usePutV1UsersMe.ts";
+export type { DeleteV1WorkSessionsIdResetMutationKey } from "./work-sessionsHooks/useDeleteV1WorkSessionsIdReset.ts";
 export type { GetV1WorkSessionsByChallengeQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsByChallenge.ts";
 export type { GetV1WorkSessionsByChallengeSuspenseQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsByChallengeSuspense.ts";
 export type { GetV1WorkSessionsIdQueryKey } from "./work-sessionsHooks/useGetV1WorkSessionsId.ts";
@@ -80,12 +83,16 @@ export type { GetV1WorkSessionsIdSuspenseQueryKey } from "./work-sessionsHooks/u
 export type { PostV1WorkSessionsMutationKey } from "./work-sessionsHooks/usePostV1WorkSessions.ts";
 export type { PostV1WorkSessionsIdChatMutationKey } from "./work-sessionsHooks/usePostV1WorkSessionsIdChat.ts";
 export type { PostV1WorkSessionsIdInteractionsMutationKey } from "./work-sessionsHooks/usePostV1WorkSessionsIdInteractions.ts";
+export type { PostV1WorkSessionsIdReopenMutationKey } from "./work-sessionsHooks/usePostV1WorkSessionsIdReopen.ts";
+export type { PostV1WorkSessionsIdSubmitMutationKey } from "./work-sessionsHooks/usePostV1WorkSessionsIdSubmit.ts";
 export { deleteV1ChallengesChallengeidKnowledgeBasesKbidMutationKey, deleteV1ChallengesChallengeidKnowledgeBasesKbid, useDeleteV1ChallengesChallengeidKnowledgeBasesKbid } from "./challenge-knowledge-basesHooks/useDeleteV1ChallengesChallengeidKnowledgeBasesKbid.ts";
 export { getV1ChallengesChallengeidKnowledgeBasesQueryKey, getV1ChallengesChallengeidKnowledgeBases, getV1ChallengesChallengeidKnowledgeBasesQueryOptions, useGetV1ChallengesChallengeidKnowledgeBases } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBases.ts";
 export { getV1ChallengesChallengeidKnowledgeBasesSearchQueryKey, getV1ChallengesChallengeidKnowledgeBasesSearch, getV1ChallengesChallengeidKnowledgeBasesSearchQueryOptions, useGetV1ChallengesChallengeidKnowledgeBasesSearch } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBasesSearch.ts";
 export { getV1ChallengesChallengeidKnowledgeBasesSearchSuspenseQueryKey, getV1ChallengesChallengeidKnowledgeBasesSearchSuspense, getV1ChallengesChallengeidKnowledgeBasesSearchSuspenseQueryOptions, useGetV1ChallengesChallengeidKnowledgeBasesSearchSuspense } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBasesSearchSuspense.ts";
 export { getV1ChallengesChallengeidKnowledgeBasesSuspenseQueryKey, getV1ChallengesChallengeidKnowledgeBasesSuspense, getV1ChallengesChallengeidKnowledgeBasesSuspenseQueryOptions, useGetV1ChallengesChallengeidKnowledgeBasesSuspense } from "./challenge-knowledge-basesHooks/useGetV1ChallengesChallengeidKnowledgeBasesSuspense.ts";
 export { postV1ChallengesChallengeidKnowledgeBasesMutationKey, postV1ChallengesChallengeidKnowledgeBases, usePostV1ChallengesChallengeidKnowledgeBases } from "./challenge-knowledge-basesHooks/usePostV1ChallengesChallengeidKnowledgeBases.ts";
+export { getV1ChallengesChallengeidWorkSessionsQueryKey, getV1ChallengesChallengeidWorkSessions, getV1ChallengesChallengeidWorkSessionsQueryOptions, useGetV1ChallengesChallengeidWorkSessions } from "./challenge-work-sessionsHooks/useGetV1ChallengesChallengeidWorkSessions.ts";
+export { getV1ChallengesChallengeidWorkSessionsSuspenseQueryKey, getV1ChallengesChallengeidWorkSessionsSuspense, getV1ChallengesChallengeidWorkSessionsSuspenseQueryOptions, useGetV1ChallengesChallengeidWorkSessionsSuspense } from "./challenge-work-sessionsHooks/useGetV1ChallengesChallengeidWorkSessionsSuspense.ts";
 export { deleteV1ChallengesIdMutationKey, deleteV1ChallengesId, useDeleteV1ChallengesId } from "./challengesHooks/useDeleteV1ChallengesId.ts";
 export { getV1ChallengesQueryKey, getV1Challenges, getV1ChallengesQueryOptions, useGetV1Challenges } from "./challengesHooks/useGetV1Challenges.ts";
 export { getV1ChallengesIdQueryKey, getV1ChallengesId, getV1ChallengesIdQueryOptions, useGetV1ChallengesId } from "./challengesHooks/useGetV1ChallengesId.ts";
@@ -155,6 +162,7 @@ export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspens
 export { getV1UsersSuspenseQueryKey, getV1UsersSuspense, getV1UsersSuspenseQueryOptions, useGetV1UsersSuspense } from "./usersHooks/useGetV1UsersSuspense.ts";
 export { patchV1UsersIdPlatformAdminMutationKey, patchV1UsersIdPlatformAdmin, usePatchV1UsersIdPlatformAdmin } from "./usersHooks/usePatchV1UsersIdPlatformAdmin.ts";
 export { putV1UsersMeMutationKey, putV1UsersMe, usePutV1UsersMe } from "./usersHooks/usePutV1UsersMe.ts";
+export { deleteV1WorkSessionsIdResetMutationKey, deleteV1WorkSessionsIdReset, useDeleteV1WorkSessionsIdReset } from "./work-sessionsHooks/useDeleteV1WorkSessionsIdReset.ts";
 export { getV1WorkSessionsByChallengeQueryKey, getV1WorkSessionsByChallenge, getV1WorkSessionsByChallengeQueryOptions, useGetV1WorkSessionsByChallenge } from "./work-sessionsHooks/useGetV1WorkSessionsByChallenge.ts";
 export { getV1WorkSessionsByChallengeSuspenseQueryKey, getV1WorkSessionsByChallengeSuspense, getV1WorkSessionsByChallengeSuspenseQueryOptions, useGetV1WorkSessionsByChallengeSuspense } from "./work-sessionsHooks/useGetV1WorkSessionsByChallengeSuspense.ts";
 export { getV1WorkSessionsIdQueryKey, getV1WorkSessionsId, getV1WorkSessionsIdQueryOptions, useGetV1WorkSessionsId } from "./work-sessionsHooks/useGetV1WorkSessionsId.ts";
@@ -162,3 +170,5 @@ export { getV1WorkSessionsIdSuspenseQueryKey, getV1WorkSessionsIdSuspense, getV1
 export { postV1WorkSessionsMutationKey, postV1WorkSessions, usePostV1WorkSessions } from "./work-sessionsHooks/usePostV1WorkSessions.ts";
 export { postV1WorkSessionsIdChatMutationKey, postV1WorkSessionsIdChat, usePostV1WorkSessionsIdChat } from "./work-sessionsHooks/usePostV1WorkSessionsIdChat.ts";
 export { postV1WorkSessionsIdInteractionsMutationKey, postV1WorkSessionsIdInteractions, usePostV1WorkSessionsIdInteractions } from "./work-sessionsHooks/usePostV1WorkSessionsIdInteractions.ts";
+export { postV1WorkSessionsIdReopenMutationKey, postV1WorkSessionsIdReopen, usePostV1WorkSessionsIdReopen } from "./work-sessionsHooks/usePostV1WorkSessionsIdReopen.ts";
+export { postV1WorkSessionsIdSubmitMutationKey, postV1WorkSessionsIdSubmit, usePostV1WorkSessionsIdSubmit } from "./work-sessionsHooks/usePostV1WorkSessionsIdSubmit.ts";

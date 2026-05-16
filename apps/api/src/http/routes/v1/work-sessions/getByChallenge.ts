@@ -1,13 +1,18 @@
 import { z } from "zod";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { workSession, challenge } from "@repo/infra/db/schema";
+import { workSession } from "@repo/infra/db/schema";
+import {
+  assertCanParticipateInChallengeWorkSession,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 
 // ==================== SCHEMAS ====================
 
@@ -28,7 +33,8 @@ const WorkSessionSchema = z.object({
 });
 
 const GetWorkSessionResponseSchema = ResponseSchema200.extend({
-  data: WorkSessionSchema,
+  /** Null when the challenge exists but the user has no work session yet (avoids 404 noise in the client). */
+  data: WorkSessionSchema.nullable(),
 });
 
 // ==================== ROUTE ====================
@@ -41,13 +47,14 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
     {
       schema: {
         tags: ["work-sessions"],
-        summary: "Get active work session for challenge",
+        summary: "Get work session for challenge",
         description:
-          "Returns the most recent active (not ended) work session for the user on a challenge",
+          "Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.",
         querystring: GetByChallengeQuerySchema,
         response: {
           200: GetWorkSessionResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -63,16 +70,19 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
 
       const { challengeId } = request.query;
 
-      const [ch] = await db
-        .select({ id: challenge.id })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch) {
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
+        });
+      }
+
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok) {
+        return reply.status(access.status).send({
+          success: false as const,
+          message: access.message,
         });
       }
 
@@ -82,17 +92,16 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         .where(
           and(
             eq(workSession.userId, usr.id),
-            eq(workSession.challengeId, challengeId),
-            isNull(workSession.endedAt)
+            eq(workSession.challengeId, challengeId)
           )
         )
-        .orderBy(desc(workSession.updatedAt))
+        .orderBy(desc(workSession.createdAt))
         .limit(1);
 
       if (!session) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "No active work session found for this challenge",
+        return reply.status(200).send({
+          success: true as const,
+          data: null,
         });
       }
 

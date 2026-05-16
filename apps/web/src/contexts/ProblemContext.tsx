@@ -17,12 +17,17 @@ import {
   usePutV1ChallengesIdSolution,
   usePostV1WorkSessionsIdInteractions,
   usePostV1WorkSessionsIdChat,
+  usePostV1WorkSessionsIdSubmit,
+  usePostV1WorkSessionsIdReopen,
+  useDeleteV1WorkSessionsIdReset,
   getV1WorkSessionsByChallengeQueryKey,
+  getV1WorkSessionsByChallengeQueryOptions,
   getV1WorkSessionsIdQueryKey,
   getV1WorkSessionsIdQueryOptions,
   getV1ChallengesIdSolutionQueryKey,
 } from "@/kubb/hooks";
 import { ApiError } from "@/lib/apiClient";
+import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 
 export type Challenge = {
   id: string;
@@ -40,6 +45,7 @@ export type WorkSession = {
   id: string;
   challengeId: string;
   teachingAssistantId: string;
+  endedAt: string | null;
   interactions: {
     id: string;
     interactionType: string;
@@ -66,6 +72,7 @@ type ProblemContextValue = {
   challenge: Challenge | null;
   workSession: WorkSession | null;
   solution: Solution | null;
+  isSessionEnded: boolean;
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -84,12 +91,63 @@ type ProblemContextValue = {
     stdin?: string;
     stdout?: string;
   }) => Promise<{ modelResponse: string }>;
+  submitWorkSession: () => Promise<void>;
+  reopenWorkSession: () => Promise<void>;
+  resetWorkSession: () => Promise<void>;
 };
 
 const ProblemContext = createContext<ProblemContextValue | null>(null);
 
 function is404(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
+}
+
+/** Logs de diagnóstico da sessão apenas com NEXT_PUBLIC_DEBUG_WORK_SESSION=1. */
+const WS_DEBUG = process.env.NEXT_PUBLIC_DEBUG_WORK_SESSION === "1";
+
+function logWs(label: string, payload?: Record<string, unknown>) {
+  if (!WS_DEBUG) return;
+  if (payload && Object.keys(payload).length > 0) {
+    console.log(`[ProblemContext:workSession] ${label}`, payload);
+  } else {
+    console.log(`[ProblemContext:workSession] ${label}`);
+  }
+}
+
+function logWsError(label: string, err: unknown) {
+  if (!WS_DEBUG) return;
+  const extra =
+    err instanceof ApiError
+      ? { message: err.message, status: err.status, name: err.name }
+      : err instanceof Error
+        ? { message: err.message, name: err.name }
+        : { value: String(err) };
+  console.warn(`[ProblemContext:workSession] ${label}`, extra, err);
+}
+
+function mapWorkSession(raw: {
+  id: string;
+  challengeId: string;
+  teachingAssistantId: string;
+  endedAt: string | null;
+  interactions: WorkSession["interactions"];
+}): WorkSession {
+  return {
+    id: raw.id,
+    challengeId: raw.challengeId,
+    teachingAssistantId: raw.teachingAssistantId,
+    endedAt: raw.endedAt ?? null,
+    interactions: raw.interactions.map((i) => ({
+      id: i.id,
+      interactionType: i.interactionType,
+      userPrompt: i.userPrompt,
+      modelResponse: i.modelResponse,
+      code: i.code,
+      stdin: i.stdin,
+      stdout: i.stdout,
+      createdAt: i.createdAt,
+    })),
+  };
 }
 
 export function ProblemProvider({
@@ -115,7 +173,8 @@ export function ProblemProvider({
     {
       query: {
         enabled: !!challengeId,
-        retry: (_, error) => !is404(error),
+        // Sem sessão ainda: API devolve 200 com data null (não 404), para não poluir a consola do browser.
+        retry: false,
       },
     }
   );
@@ -168,6 +227,49 @@ export function ProblemProvider({
     },
   });
 
+  const submitMutation = usePostV1WorkSessionsIdSubmit({
+    mutation: {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsIdQueryKey(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsByChallengeQueryKey({ challengeId }),
+        });
+      },
+    },
+  });
+
+  const reopenMutation = usePostV1WorkSessionsIdReopen({
+    mutation: {
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsIdQueryKey(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsByChallengeQueryKey({ challengeId }),
+        });
+      },
+    },
+  });
+
+  const resetMutation = useDeleteV1WorkSessionsIdReset({
+    mutation: {
+      onSuccess: (_, variables) => {
+        setCreatedSessionId(null);
+        queryClient.removeQueries({
+          queryKey: getV1WorkSessionsIdQueryKey(variables.id),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getV1WorkSessionsByChallengeQueryKey({ challengeId }),
+        });
+        queryClient.invalidateQueries({
+          queryKey: getV1ChallengesIdSolutionQueryKey(challengeId),
+        });
+      },
+    },
+  });
+
   const rawChallenge = challengeQuery.data?.data ?? null;
   const challenge: Challenge | null = rawChallenge
     ? {
@@ -187,11 +289,17 @@ export function ProblemProvider({
       }
     : null;
 
-  const workSession = fullSessionQuery.data?.data ?? null;
+  const rawWs = fullSessionQuery.data?.data;
+  const workSession: WorkSession | null = rawWs
+    ? mapWorkSession(rawWs)
+    : null;
 
+  const isSessionEnded = workSession?.endedAt != null;
+
+  /** Não incluir fullSessionQuery: ao criar sessão no 1.º chat, GET /work-sessions/:id
+   *  ficaria em loading e desmontava a UI inteira (abas voltavam para «Problema»). */
   const isLoading =
-    challengeQuery.isLoading ||
-    (!!sessionId && fullSessionQuery.isLoading);
+    challengeQuery.isLoading || byChallengeQuery.isLoading;
 
   const error =
     challengeQuery.error && !is404(challengeQuery.error)
@@ -201,28 +309,133 @@ export function ProblemProvider({
       : null;
 
   const ensureWorkSession = useCallback(async (): Promise<WorkSession | null> => {
-    if (workSession) return workSession;
-    if (!challenge?.teachingAssistants?.length) return null;
+    logWs("ensureWorkSession:start", {
+      challengeId,
+      hasWorkSession: !!workSession,
+      endedAt: workSession?.endedAt ?? null,
+      sessionId: sessionId ?? null,
+      createdSessionId: createdSessionId ?? null,
+      byChallenge: {
+        isLoading: byChallengeQuery.isLoading,
+        isFetched: byChallengeQuery.isFetched,
+        isError: byChallengeQuery.isError,
+        dataId: byChallengeQuery.data?.data?.id ?? null,
+      },
+      challengeTaCount: challenge?.teachingAssistants?.length ?? 0,
+    });
+
+    if (workSession?.endedAt) {
+      logWs("ensureWorkSession:exit sessão já terminada (endedAt)", {
+        endedAt: workSession.endedAt,
+      });
+      return null;
+    }
+    if (workSession) {
+      logWs("ensureWorkSession:reuse workSession em memória", {
+        id: workSession.id,
+      });
+      return workSession;
+    }
+
+    // Já temos id (by-challenge) mas GET /:id ainda não hidratou o estado — ir buscar em vez de criar (evita 409).
+    if (sessionId) {
+      logWs("ensureWorkSession:fetch GET /work-sessions/:id", { sessionId });
+      try {
+        const fullSession = await queryClient.fetchQuery(
+          getV1WorkSessionsIdQueryOptions(sessionId)
+        );
+        const mapped = mapWorkSession(fullSession.data);
+        if (mapped.endedAt) {
+          logWs("ensureWorkSession:exit sessão terminada após fetch", {
+            id: mapped.id,
+            endedAt: mapped.endedAt,
+          });
+          return null;
+        }
+        logWs("ensureWorkSession:ok após fetch por id", { id: mapped.id });
+        return mapped;
+      } catch (err) {
+        logWsError("ensureWorkSession:erro em fetch GET /work-sessions/:id", err);
+        return null;
+      }
+    }
+
     const defaultTa =
-      challenge.teachingAssistants.find((t) => t.isDefault) ??
-      challenge.teachingAssistants[0];
+      challenge?.teachingAssistants?.find((t) => t.isDefault) ??
+      challenge?.teachingAssistants?.[0];
+
+    logWs("ensureWorkSession:POST criar sessão", {
+      challengeId,
+      teachingAssistantId: defaultTa?.id ?? "(omitido — servidor escolhe)",
+    });
     try {
       const response = await createSessionMutation.mutateAsync({
-        data: {
-          challengeId,
-          teachingAssistantId: defaultTa.id,
-        },
+        data: defaultTa
+          ? { challengeId, teachingAssistantId: defaultTa.id }
+          : { challengeId },
       });
       const newSessionId = response.data.id;
       setCreatedSessionId(newSessionId);
       const fullSession = await queryClient.fetchQuery(
         getV1WorkSessionsIdQueryOptions(newSessionId)
       );
-      return fullSession.data;
-    } catch {
+      logWs("ensureWorkSession:ok após criar", { id: newSessionId });
+      return mapWorkSession(fullSession.data);
+    } catch (err) {
+      const status =
+        err instanceof ApiError
+          ? err.status
+          : err instanceof Error && "status" in err
+            ? (err as { status: number }).status
+            : undefined;
+      logWsError("ensureWorkSession:erro ao criar sessão", err);
+      logWs("ensureWorkSession:status do erro", { status: status ?? "unknown" });
+
+      // 409 → sessão já existe (race condition); ir buscá-la em vez de criar.
+      if (status === 409) {
+        logWs("ensureWorkSession:409 → recuperar via by-challenge", {});
+        try {
+          const byChallenge = await queryClient.fetchQuery(
+            getV1WorkSessionsByChallengeQueryOptions({ challengeId })
+          );
+          const existingId = byChallenge.data?.id;
+          logWs("ensureWorkSession:409 recovery by-challenge", {
+            existingId: existingId ?? null,
+          });
+          if (!existingId) return null;
+          setCreatedSessionId(existingId);
+          const fullSession = await queryClient.fetchQuery(
+            getV1WorkSessionsIdQueryOptions(existingId)
+          );
+          const mapped = mapWorkSession(fullSession.data);
+          if (mapped.endedAt) {
+            logWs("ensureWorkSession:exit 409 recovery sessão terminada", {
+              endedAt: mapped.endedAt,
+            });
+            return null;
+          }
+          logWs("ensureWorkSession:ok após 409 recovery", { id: mapped.id });
+          return mapped;
+        } catch (recoveryErr) {
+          logWsError("ensureWorkSession:erro no recovery 409", recoveryErr);
+          return null;
+        }
+      }
       return null;
     }
-  }, [challenge, workSession, challengeId, createSessionMutation, queryClient]);
+  }, [
+    challenge,
+    workSession,
+    sessionId,
+    challengeId,
+    createdSessionId,
+    createSessionMutation,
+    queryClient,
+    byChallengeQuery.isLoading,
+    byChallengeQuery.isFetched,
+    byChallengeQuery.isError,
+    byChallengeQuery.data,
+  ]);
 
   const refetch = useCallback(async () => {
     await Promise.all([
@@ -269,9 +482,10 @@ export function ProblemProvider({
             interactionType: data.interactionType,
             userPrompt: data.userPrompt ?? "",
             modelResponse: data.modelResponse ?? "",
-            code: data.code,
-            stdin: data.stdin,
-            stdout: data.stdout,
+            // JSON.stringify omite `undefined`; strings garantem que o campo chega à API.
+            code: data.code ?? "",
+            stdin: data.stdin ?? "",
+            stdout: data.stdout ?? "",
           },
         });
       } catch (err) {
@@ -288,8 +502,24 @@ export function ProblemProvider({
       stdin?: string;
       stdout?: string;
     }) => {
+      logWs("sendChatMessage:before ensureWorkSession", {
+        challengeId,
+        messageLen: params.message?.length ?? 0,
+      });
       const session = await ensureWorkSession();
-      if (!session) throw new Error("Sessão de trabalho não disponível");
+      if (!session) {
+        logWs("sendChatMessage:FALHA — ensureWorkSession devolveu null", {
+          challengeId,
+          hint: "Ver logs acima de ensureWorkSession:* para o motivo",
+        });
+        throw new Error("Sessão de trabalho não disponível");
+      }
+      await saveSolution({
+        code: params.code,
+        stdin: params.stdin,
+        stdout: params.stdout,
+      });
+      logWs("sendChatMessage:POST chat", { sessionId: session.id });
       const result = await chatMutation.mutateAsync({
         id: session.id,
         data: {
@@ -301,20 +531,46 @@ export function ProblemProvider({
       });
       return { modelResponse: result.data.modelResponse };
     },
-    [ensureWorkSession, chatMutation]
+    [challengeId, ensureWorkSession, chatMutation, saveSolution]
   );
+
+  const submitWorkSession = useCallback(async () => {
+    if (!workSession?.id || workSession.endedAt) return;
+    const { getCode, getInput, output, error } = useCodeEditorStore.getState();
+    await saveSolution({
+      code: getCode(),
+      stdin: getInput(),
+      stdout: error ?? output ?? undefined,
+    });
+    await submitMutation.mutateAsync({ id: workSession.id });
+  }, [workSession, saveSolution, submitMutation]);
+
+  const reopenWorkSession = useCallback(async () => {
+    if (!workSession?.id || !workSession.endedAt) return;
+    await reopenMutation.mutateAsync({ id: workSession.id });
+  }, [workSession, reopenMutation]);
+
+  const resetWorkSession = useCallback(async () => {
+    if (!workSession?.id) return;
+    await resetMutation.mutateAsync({ id: workSession.id });
+    useCodeEditorStore.getState().clearProblemSessionStorage();
+  }, [workSession, resetMutation]);
 
   const value: ProblemContextValue = {
     challengeId,
     challenge,
     workSession,
     solution,
+    isSessionEnded,
     isLoading,
     error,
     refetch,
     saveSolution,
     addInteraction,
     sendChatMessage,
+    submitWorkSession,
+    reopenWorkSession,
+    resetWorkSession,
   };
 
   return (

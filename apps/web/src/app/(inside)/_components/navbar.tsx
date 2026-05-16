@@ -32,19 +32,23 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-[#1a1f2e]/80 border-b border-white/10">
+    <header className="sticky top-0 z-50 shrink-0 backdrop-blur-md bg-[#1a1f2e]/80 border-b border-white/10">
       <div className="container mx-auto p-4 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="">
+          <Link
+            href="/explore"
+            className="flex items-center shrink-0"
+            aria-label="Ir para Explorar"
+          >
             <Image
               src="/header-logo.png"
               alt="TACO-IDE Logo"
-              width={100}
-              height={100}
+              width={220}
+              height={56}
               priority
-              className="transform hover:scale-110 transition-transform duration-300"
+              className="h-14 w-auto max-h-14 object-contain object-left transform hover:scale-110 transition-transform duration-300"
             />
-          </div>
+          </Link>
         </div>
 
         <div className="flex items-center gap-4">
