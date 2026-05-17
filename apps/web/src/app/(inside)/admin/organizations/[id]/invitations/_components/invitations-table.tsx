@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Mail, X } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Mail, Send, X } from "lucide-react";
 import { toast } from "sonner";
+import apiClient, { ApiError } from "@/lib/apiClient";
 import {
   Table,
   TableBody,
@@ -113,6 +114,54 @@ export function InvitationsTable({
     },
   });
 
+  // The Kubb hook for POST /v1/organizations/:id/invitations/:invitationId/resend
+  // is generated on the next `npm run kubb`. Until then we issue the call
+  // directly through the shared apiClient (same wrapper used by Kubb hooks),
+  // so credentials, error mapping and base URL are consistent.
+  const resendMutation = useMutation<
+    { success: true; data: { id: string; status: string; expiresAt: string } },
+    Error,
+    { invitationId: string; email: string }
+  >({
+    mutationFn: async ({ invitationId }) => {
+      const res = await apiClient<{
+        success: true;
+        data: { id: string; status: string; expiresAt: string };
+      }>({
+        method: "POST",
+        url: `/v1/organizations/${organizationId}/invitations/${invitationId}/resend`,
+      });
+      return res.data;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success(`Convite reenviado para "${variables.email}"`);
+      void queryClient.invalidateQueries({
+        queryKey: [getV1OrganizationsIdInvitationsQueryKey(organizationId)[0]],
+      });
+    },
+    onError: (err) => {
+      if (err instanceof ApiError && err.status === 409) {
+        toast.error(
+          err.message ||
+            "Não é possível reenviar este convite no estado atual.",
+        );
+        return;
+      }
+      if (err instanceof ApiError && err.status === 404) {
+        toast.error("Convite não encontrado. Atualize a lista.");
+        void queryClient.invalidateQueries({
+          queryKey: [
+            getV1OrganizationsIdInvitationsQueryKey(organizationId)[0],
+          ],
+        });
+        return;
+      }
+      toast.error(
+        err instanceof Error ? err.message : "Erro ao reenviar convite",
+      );
+    },
+  });
+
   return (
     <div className="rounded-lg border border-slate-700/60 bg-slate-900/60">
       <Table>
@@ -142,7 +191,7 @@ export function InvitationsTable({
                   <Skeleton className="h-3 w-28 bg-slate-800" />
                 </TableCell>
                 <TableCell className="text-right">
-                  <Skeleton className="ml-auto h-7 w-7 bg-slate-800" />
+                  <Skeleton className="ml-auto h-7 w-16 bg-slate-800" />
                 </TableCell>
               </TableRow>
             ))}
@@ -175,15 +224,40 @@ export function InvitationsTable({
                   {formatDateTime(row.createdAt)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <button
-                    type="button"
-                    title="Cancelar convite"
-                    aria-label={`Cancelar convite de ${row.email}`}
-                    onClick={() => setPendingCancel(row)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-400/80 hover:bg-red-500/10 hover:text-red-300"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      title="Reenviar convite"
+                      aria-label={`Reenviar convite para ${row.email}`}
+                      disabled={
+                        resendMutation.isPending &&
+                        resendMutation.variables?.invitationId === row.id
+                      }
+                      onClick={() =>
+                        resendMutation.mutate({
+                          invitationId: row.id,
+                          email: row.email,
+                        })
+                      }
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-amber-300/80 hover:bg-amber-500/10 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {resendMutation.isPending &&
+                      resendMutation.variables?.invitationId === row.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      title="Cancelar convite"
+                      aria-label={`Cancelar convite de ${row.email}`}
+                      onClick={() => setPendingCancel(row)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-400/80 hover:bg-red-500/10 hover:text-red-300"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
