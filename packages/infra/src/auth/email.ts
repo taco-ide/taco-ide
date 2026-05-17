@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { env } from "../env";
+import { escapeHtml } from "./invitation-email";
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
@@ -28,6 +29,7 @@ export async function sendPasswordResetEmail({
   }
 
   try {
+    const safeUserName = escapeHtml(userName);
     await resend.emails.send({
       from: env.EMAIL_FROM,
       to,
@@ -41,9 +43,9 @@ export async function sendPasswordResetEmail({
           </head>
           <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #333;">Reset Your Password</h1>
-            <p>Hi ${userName},</p>
+            <p>Hi ${safeUserName},</p>
             <p>You requested to reset your password. Click the button below to create a new password:</p>
-            <a href="${resetUrl}" 
+            <a href="${resetUrl}"
                style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
               Reset Password
             </a>
@@ -79,6 +81,7 @@ export async function sendVerificationEmail({
   }
 
   try {
+    const safeUserName = escapeHtml(userName);
     await resend.emails.send({
       from: env.EMAIL_FROM,
       to,
@@ -92,9 +95,9 @@ export async function sendVerificationEmail({
           </head>
           <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h1 style="color: #333;">Verify Your Email</h1>
-            <p>Hi ${userName},</p>
+            <p>Hi ${safeUserName},</p>
             <p>Welcome to TACO-IDE! Please verify your email address by clicking the button below:</p>
-            <a href="${verificationUrl}" 
+            <a href="${verificationUrl}"
                style="display: inline-block; background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
               Verify Email
             </a>
