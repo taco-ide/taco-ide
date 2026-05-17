@@ -12,6 +12,7 @@ import { updateMemberRoleRoute } from "./members/updateRole";
 import { importCsvMembersRoute } from "./members/importCsv";
 import { createInvitationRoute } from "./invitations/create";
 import { deleteInvitationRoute } from "./invitations/delete";
+import { listInvitationsRoute } from "./invitations/list";
 import { emailDomainsRoutes } from "./email-domains";
 
 export async function organizationsRoutes(app: FastifyTypedInstance) {
@@ -36,6 +37,7 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
           await importCsvMembersRoute(sf);
           await createInvitationRoute(sf);
           await deleteInvitationRoute(sf);
+          await listInvitationsRoute(sf);
           await emailDomainsRoutes(sf);
         },
         { prefix: "/:id" }

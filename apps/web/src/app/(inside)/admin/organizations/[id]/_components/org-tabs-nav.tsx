@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, Settings, Users } from "lucide-react";
+import { Globe, Mail, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrgTabsNavProps {
@@ -11,6 +11,7 @@ interface OrgTabsNavProps {
 
 const tabs = [
   { key: "members", label: "Membros", icon: Users },
+  { key: "invitations", label: "Convites", icon: Mail },
   { key: "domains", label: "Domínios", icon: Globe },
   { key: "settings", label: "Configurações", icon: Settings },
 ] as const;
