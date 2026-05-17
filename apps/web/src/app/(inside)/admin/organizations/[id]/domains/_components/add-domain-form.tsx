@@ -26,14 +26,17 @@ interface AddDomainFormProps {
   organizationId: string;
 }
 
-const ROLE_OPTIONS: AdminRole[] = [
-  "student",
-  "teacher",
-  "coordinator",
-  "admin",
-];
+// Auto-link rules can NOT grant "admin": signing up with an email matching
+// the rule must never make a stranger a real org admin. See backend cap in
+// apps/api/src/http/routes/v1/organizations/email-domains/create.ts and the
+// runtime defense-in-depth cap in packages/infra/src/auth/index.ts. The
+// Kubb-generated request type already excludes "admin" — we narrow
+// `AdminRole` to mirror that contract on the client side.
+type AutoLinkRole = Exclude<AdminRole, "admin">;
 
-const DEFAULT_ROLE: AdminRole = "teacher";
+const ROLE_OPTIONS: AutoLinkRole[] = ["student", "teacher", "coordinator"];
+
+const DEFAULT_ROLE: AutoLinkRole = "teacher";
 
 // Mirrors backend normalization in
 // apps/api/src/http/routes/v1/organizations/email-domains/create.ts
@@ -53,7 +56,7 @@ const domainSchema = z
 export function AddDomainForm({ organizationId }: AddDomainFormProps) {
   const queryClient = useQueryClient();
   const [domain, setDomain] = useState("");
-  const [role, setRole] = useState<AdminRole>(DEFAULT_ROLE);
+  const [role, setRole] = useState<AutoLinkRole>(DEFAULT_ROLE);
   const [error, setError] = useState<string | null>(null);
 
   const createMutation = usePostV1OrganizationsIdEmailDomains({
@@ -155,7 +158,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
           <Select
             value={role}
             onValueChange={(value) => {
-              setRole(value as AdminRole);
+              setRole(value as AutoLinkRole);
               reset();
             }}
             disabled={createMutation.isPending}

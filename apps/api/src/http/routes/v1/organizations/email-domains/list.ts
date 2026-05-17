@@ -17,10 +17,13 @@ const ListEmailDomainsParamsSchema = z.object({
   id: z.string().min(1),
 });
 
+// `admin` is intentionally absent: auto-link rules are capped at
+// "coordinator" (see create.ts). Legacy rows with role="admin" are
+// downgraded by migration 0005_cap_email_domain_admin_role.sql.
 const EmailDomainItemSchema = z.object({
   id: z.string(),
   domain: z.string(),
-  role: z.enum(["student", "teacher", "coordinator", "admin"]),
+  role: z.enum(["student", "teacher", "coordinator"]),
   createdAt: z.string().datetime(),
 });
 
@@ -65,10 +68,14 @@ export async function listEmailDomainsRoute(app: FastifyTypedInstance) {
         .where(eq(organizationEmailDomain.organizationId, organizationId))
         .orderBy(asc(organizationEmailDomain.createdAt));
 
+      // Defense-in-depth: cap legacy rows where role="admin" got persisted
+      // before the F10 fix. The DB migration downgrades them, but if a
+      // fixture/seed reintroduces "admin" we still never expose it through
+      // the API or hand out admin via auto-link.
       const data = rows.map((row) => ({
         id: row.id,
         domain: row.domain,
-        role: row.role,
+        role: row.role === "admin" ? ("coordinator" as const) : row.role,
         createdAt: row.createdAt.toISOString(),
       }));
 

@@ -21,8 +21,7 @@ export type PostV1OrganizationsIdEmailDomains201SuccessEnum = (typeof postV1Orga
 export const dataRoleEnum2 = {
     "student": "student",
     "teacher": "teacher",
-    "coordinator": "coordinator",
-    "admin": "admin"
+    "coordinator": "coordinator"
 } as const;
 
 export type DataRoleEnum2 = (typeof dataRoleEnum2)[keyof typeof dataRoleEnum2];
@@ -195,8 +194,7 @@ export type PostV1OrganizationsIdEmailDomains409 = {
 export const postV1OrganizationsIdEmailDomainsMutationRequestRoleEnum = {
     "student": "student",
     "teacher": "teacher",
-    "coordinator": "coordinator",
-    "admin": "admin"
+    "coordinator": "coordinator"
 } as const;
 
 export type PostV1OrganizationsIdEmailDomainsMutationRequestRoleEnum = (typeof postV1OrganizationsIdEmailDomainsMutationRequestRoleEnum)[keyof typeof postV1OrganizationsIdEmailDomainsMutationRequestRoleEnum];

@@ -18,7 +18,7 @@ export const getV1OrganizationsIdEmailDomains200Schema = z.object({
 "data": z.array(z.object({
     "id": z.string(),
 "domain": z.string(),
-"role": z.enum(["student", "teacher", "coordinator", "admin"]),
+"role": z.enum(["student", "teacher", "coordinator"]),
 "createdAt": z.string().datetime()
     })),
 "pagination": z.object({

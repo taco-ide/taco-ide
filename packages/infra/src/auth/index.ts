@@ -224,6 +224,19 @@ export const auth = betterAuth({
             const rule = rules[0];
             if (!rule) return;
 
+            // Defense-in-depth: cap the effective auto-link role at
+            // "teacher". Even if a legacy row in `organization_email_domain`
+            // still carries role="admin" (e.g. a seed predating the F10
+            // migration, or a manual SQL fixture), self-service sign-up must
+            // NEVER grant the real org `admin` role to a stranger whose
+            // only credential is owning an email at a matching domain.
+            // Body validation in
+            // apps/api/.../email-domains/create.ts already blocks new
+            // "admin" rules; migration 0005 downgrades existing ones.
+            // This cap is the last line of defense.
+            const effectiveRole: schema.OrganizationEmailDomain["role"] =
+              rule.role === "admin" ? "teacher" : rule.role;
+
             // Insert the membership directly via Drizzle. Going through
             // `auth.api.addMember` would enforce the org plugin's
             // `membershipLimit` (default 100); we want auto-assignment to
@@ -232,7 +245,7 @@ export const auth = betterAuth({
               id: randomUUID(),
               userId: createdUser.id,
               organizationId: rule.organizationId,
-              role: rule.role,
+              role: effectiveRole,
               createdAt: new Date(),
             });
           } catch (err) {

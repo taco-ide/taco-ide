@@ -18,7 +18,7 @@ export const postV1OrganizationsIdEmailDomains201Schema = z.object({
 "data": z.object({
     "id": z.string(),
 "domain": z.string(),
-"role": z.enum(["student", "teacher", "coordinator", "admin"]),
+"role": z.enum(["student", "teacher", "coordinator"]),
 "createdAt": z.string().datetime()
     })
     })
@@ -80,7 +80,7 @@ export const postV1OrganizationsIdEmailDomains409Schema = z.object({
 
 export const postV1OrganizationsIdEmailDomainsMutationRequestSchema = z.object({
     "domain": z.string().min(3).max(253),
-"role": z.enum(["student", "teacher", "coordinator", "admin"])
+"role": z.enum(["student", "teacher", "coordinator"])
     })
 
 export const postV1OrganizationsIdEmailDomainsMutationResponseSchema = z.lazy(() => postV1OrganizationsIdEmailDomains201Schema)

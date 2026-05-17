@@ -21,8 +21,7 @@ export type GetV1OrganizationsIdEmailDomains200SuccessEnum = (typeof getV1Organi
 export const dataRoleEnum = {
     "student": "student",
     "teacher": "teacher",
-    "coordinator": "coordinator",
-    "admin": "admin"
+    "coordinator": "coordinator"
 } as const;
 
 export type DataRoleEnum = (typeof dataRoleEnum)[keyof typeof dataRoleEnum];

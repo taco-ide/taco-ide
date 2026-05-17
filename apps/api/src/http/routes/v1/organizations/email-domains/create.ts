@@ -46,10 +46,31 @@ const DomainSchema = z
     { message: "Invalid domain format" }
   );
 
+// Auto-link rules cannot grant "admin": signing up with an email matching the
+// rule must never make a stranger a real org admin. The cap is "coordinator"
+// — high enough to onboard teaching staff, low enough to keep
+// organization-level destructive actions gated behind a manual promotion.
+// See also: defense-in-depth cap in packages/infra/src/auth/index.ts (user
+// create hook) for legacy rows that may still carry role="admin".
+const AutoLinkRoleSchema = z.enum(["student", "teacher", "coordinator"], {
+  errorMap: (issue, ctx) => {
+    if (
+      issue.code === "invalid_enum_value" &&
+      (issue as { received?: unknown }).received === "admin"
+    ) {
+      return {
+        message:
+          "Auto-link rules cannot grant 'admin' role for security reasons.",
+      };
+    }
+    return { message: ctx.defaultError };
+  },
+});
+
 const CreateEmailDomainBodySchema = z
   .object({
     domain: DomainSchema,
-    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+    role: AutoLinkRoleSchema,
   })
   .strict();
 
@@ -57,7 +78,7 @@ const CreateEmailDomainResponseSchema = ResponseSchema201.extend({
   data: z.object({
     id: z.string(),
     domain: z.string(),
-    role: z.enum(["student", "teacher", "coordinator", "admin"]),
+    role: AutoLinkRoleSchema,
     createdAt: z.string().datetime(),
   }),
 });
