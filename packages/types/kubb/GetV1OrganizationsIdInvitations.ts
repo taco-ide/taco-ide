@@ -25,6 +25,19 @@ export type GetV1OrganizationsIdInvitationsQueryParams = {
      * @type string | undefined
     */
     status?: GetV1OrganizationsIdInvitationsQueryParamsStatusEnum;
+    /**
+     * @minLength 1
+     * @default 1
+     * @type integer | undefined
+    */
+    page?: number;
+    /**
+     * @minLength 1
+     * @maxLength 100
+     * @default 20
+     * @type integer | undefined
+    */
+    perPage?: number;
 };
 
 export const getV1OrganizationsIdInvitations200SuccessEnum = {
@@ -87,9 +100,9 @@ export type GetV1OrganizationsIdInvitations200 = {
         inviterEmail: string | null;
     }[];
     /**
-     * @type object | undefined
+     * @type object
     */
-    pagination?: {
+    pagination: {
         /**
          * @type number
         */

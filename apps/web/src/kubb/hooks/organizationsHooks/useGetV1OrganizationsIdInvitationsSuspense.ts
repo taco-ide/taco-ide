@@ -14,7 +14,7 @@ export const getV1OrganizationsIdInvitationsSuspenseQueryKey = (id: GetV1Organiz
 export type GetV1OrganizationsIdInvitationsSuspenseQueryKey = ReturnType<typeof getV1OrganizationsIdInvitationsSuspenseQueryKey>
 
 /**
- * @description List invitations for an organization. Defaults to pending only. Allowed for platform admins or coordinators+ of the organization.
+ * @description List invitations for an organization. Defaults to pending only. Paginated via `page` and `perPage` (max 100). Pending rows past `expires_at` are flipped to `expired` on read (lazy expiration). Allowed for platform admins or coordinators+ of the organization.
  * @summary List invitations
  * {@link /v1/organizations/:id/invitations}
  */
@@ -38,7 +38,7 @@ export function getV1OrganizationsIdInvitationsSuspenseQueryOptions(id: GetV1Org
 }
 
 /**
- * @description List invitations for an organization. Defaults to pending only. Allowed for platform admins or coordinators+ of the organization.
+ * @description List invitations for an organization. Defaults to pending only. Paginated via `page` and `perPage` (max 100). Pending rows past `expires_at` are flipped to `expired` on read (lazy expiration). Allowed for platform admins or coordinators+ of the organization.
  * @summary List invitations
  * {@link /v1/organizations/:id/invitations}
  */

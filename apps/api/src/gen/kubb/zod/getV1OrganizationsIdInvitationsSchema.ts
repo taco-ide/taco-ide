@@ -10,7 +10,9 @@ export const getV1OrganizationsIdInvitationsPathParamsSchema = z.object({
     })
 
 export const getV1OrganizationsIdInvitationsQueryParamsSchema = z.object({
-    "status": z.enum(["pending", "all"]).default("pending")
+    "status": z.enum(["pending", "all"]).default("pending"),
+"page": z.coerce.number().int().min(1).default(1),
+"perPage": z.coerce.number().int().min(1).max(100).default(20)
     })
 
 /**
@@ -35,7 +37,7 @@ export const getV1OrganizationsIdInvitations200Schema = z.object({
 "page": z.number(),
 "perPage": z.number(),
 "totalPages": z.number()
-    }).optional()
+    })
     })
 
 /**
