@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
+import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404, PutV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export async function putV1OrganizationsIdMembersUserid(id: PutV1OrganizationsId
   
   const requestData = data  
   
-  const res = await request<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404>, PutV1OrganizationsIdMembersUseridMutationRequest>({ method : "PUT", url : `/v1/organizations/${id}/members/${userId}`, data : requestData, ... requestConfig })  
+  const res = await request<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404 | PutV1OrganizationsIdMembersUserid409>, PutV1OrganizationsIdMembersUseridMutationRequest>({ method : "PUT", url : `/v1/organizations/${id}/members/${userId}`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function putV1OrganizationsIdMembersUserid(id: PutV1OrganizationsId
  */
 export function usePutV1OrganizationsIdMembersUserid<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404>, {id: PutV1OrganizationsIdMembersUseridPathParams["id"], userId: PutV1OrganizationsIdMembersUseridPathParams["userId"], data: PutV1OrganizationsIdMembersUseridMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404 | PutV1OrganizationsIdMembersUserid409>, {id: PutV1OrganizationsIdMembersUseridPathParams["id"], userId: PutV1OrganizationsIdMembersUseridPathParams["userId"], data: PutV1OrganizationsIdMembersUseridMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PutV1OrganizationsIdMembersUseridMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePutV1OrganizationsIdMembersUserid<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? putV1OrganizationsIdMembersUseridMutationKey()
 
-  return useMutation<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404>, {id: PutV1OrganizationsIdMembersUseridPathParams["id"], userId: PutV1OrganizationsIdMembersUseridPathParams["userId"], data: PutV1OrganizationsIdMembersUseridMutationRequest}, TContext>({
+  return useMutation<PutV1OrganizationsIdMembersUseridMutationResponse, ResponseErrorConfig<PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404 | PutV1OrganizationsIdMembersUserid409>, {id: PutV1OrganizationsIdMembersUseridPathParams["id"], userId: PutV1OrganizationsIdMembersUseridPathParams["userId"], data: PutV1OrganizationsIdMembersUseridMutationRequest}, TContext>({
     mutationFn: async({ id, userId, data }) => {
       return putV1OrganizationsIdMembersUserid(id, userId, data, config)
     },

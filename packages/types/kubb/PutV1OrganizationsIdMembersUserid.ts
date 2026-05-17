@@ -171,6 +171,32 @@ export type PutV1OrganizationsIdMembersUserid404 = {
     };
 };
 
+export const putV1OrganizationsIdMembersUserid409SuccessEnum = {
+    "false": false
+} as const;
+
+export type PutV1OrganizationsIdMembersUserid409SuccessEnum = (typeof putV1OrganizationsIdMembersUserid409SuccessEnum)[keyof typeof putV1OrganizationsIdMembersUserid409SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PutV1OrganizationsIdMembersUserid409 = {
+    /**
+     * @type boolean
+    */
+    success: PutV1OrganizationsIdMembersUserid409SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const putV1OrganizationsIdMembersUseridMutationRequestRoleEnum = {
     "student": "student",
     "teacher": "teacher",
@@ -193,5 +219,5 @@ export type PutV1OrganizationsIdMembersUseridMutation = {
     Response: PutV1OrganizationsIdMembersUserid200;
     Request: PutV1OrganizationsIdMembersUseridMutationRequest;
     PathParams: PutV1OrganizationsIdMembersUseridPathParams;
-    Errors: PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404;
+    Errors: PutV1OrganizationsIdMembersUserid400 | PutV1OrganizationsIdMembersUserid401 | PutV1OrganizationsIdMembersUserid403 | PutV1OrganizationsIdMembersUserid404 | PutV1OrganizationsIdMembersUserid409;
 };

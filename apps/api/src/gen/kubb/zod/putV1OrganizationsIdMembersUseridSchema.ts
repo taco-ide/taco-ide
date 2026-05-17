@@ -71,6 +71,17 @@ export const putV1OrganizationsIdMembersUserid404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const putV1OrganizationsIdMembersUserid409Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
 export const putV1OrganizationsIdMembersUseridMutationRequestSchema = z.object({
     "role": z.enum(["student", "teacher", "coordinator", "admin"])
     })
