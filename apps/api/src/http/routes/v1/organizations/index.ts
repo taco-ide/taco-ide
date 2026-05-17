@@ -1,5 +1,6 @@
 import { FastifyTypedInstance } from "../../../types";
 import { listOrganizationsRoute } from "./list";
+import { listMyOrganizationsRoute } from "./mine";
 import { createOrganizationRoute } from "./create";
 import { getOrganizationByIdRoute } from "./getById";
 import { updateOrganizationRoute } from "./update";
@@ -13,11 +14,19 @@ import { importCsvMembersRoute } from "./members/importCsv";
 import { createInvitationRoute } from "./invitations/create";
 import { deleteInvitationRoute } from "./invitations/delete";
 import { listInvitationsRoute } from "./invitations/list";
+import { resendInvitationRoute } from "./invitations/resend";
 import { emailDomainsRoutes } from "./email-domains";
 
 export async function organizationsRoutes(app: FastifyTypedInstance) {
   await app.register(
     async (fastify: FastifyTypedInstance) => {
+      // Authenticated user route: list active orgs they belong to. Must be
+      // registered before listOrganizationsRoute because both share the
+      // "/organizations" prefix and Fastify resolves the more specific path
+      // first regardless of order, but keeping it grouped near the top makes
+      // intent explicit.
+      await listMyOrganizationsRoute(fastify);
+
       // Top-level platform-admin routes (no :id prefix)
       await listOrganizationsRoute(fastify);
       await createOrganizationRoute(fastify);
@@ -38,6 +47,7 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
           await createInvitationRoute(sf);
           await deleteInvitationRoute(sf);
           await listInvitationsRoute(sf);
+          await resendInvitationRoute(sf);
           await emailDomainsRoutes(sf);
         },
         { prefix: "/:id" }

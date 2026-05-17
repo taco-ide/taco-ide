@@ -3,7 +3,7 @@ import { auth, isValidRole } from "@repo/infra/auth";
 import type { RoleName } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { user, member, organization } from "@repo/infra/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 
 export async function authMiddleware(
   request: FastifyRequest,
@@ -54,21 +54,51 @@ export async function authMiddleware(
       });
     }
 
-    // Resolve role and org name from active organization
+    // Resolve role and org name from active organization.
+    //
+    // session.activeOrganizationId is the source of truth, but it can point to
+    // a deactivated org (Better Auth doesn't enforce this) or be NULL right
+    // after login / after the platform admin deactivates the user's org
+    // (setActive route clears matching sessions). In both cases we fall back
+    // to the user's oldest membership whose org is still active, so the UI
+    // never lands in a "ghost" state where /me returns a deactivated org.
     let activeOrgId = session.session.activeOrganizationId ?? null;
     let role: RoleName | null = null;
     let activeOrgName: string | null = null;
 
-    // If no active org, auto-resolve from user's first membership
+    // If the session points to an org, ensure it's still active. If it's not,
+    // treat it as if no active org was set so we can fall back to a healthy
+    // membership below.
+    if (activeOrgId) {
+      const orgRow = await db
+        .select({ id: organization.id, isActive: organization.isActive })
+        .from(organization)
+        .where(eq(organization.id, activeOrgId))
+        .limit(1);
+      if (!orgRow[0] || !orgRow[0].isActive) {
+        activeOrgId = null;
+      }
+    }
+
+    // No active org (or it pointed to a deactivated one): pick the oldest
+    // membership belonging to an active org. orderBy is required for
+    // deterministic behavior when the user has multiple memberships.
     if (!activeOrgId) {
-      const firstMembership = await db
+      const firstActiveMembership = await db
         .select({ orgId: member.organizationId })
         .from(member)
-        .where(eq(member.userId, session.user.id))
+        .innerJoin(organization, eq(organization.id, member.organizationId))
+        .where(
+          and(
+            eq(member.userId, session.user.id),
+            eq(organization.isActive, true)
+          )
+        )
+        .orderBy(asc(member.createdAt))
         .limit(1);
 
-      if (firstMembership[0]) {
-        activeOrgId = firstMembership[0].orgId;
+      if (firstActiveMembership[0]) {
+        activeOrgId = firstActiveMembership[0].orgId;
       }
     }
 
@@ -85,7 +115,8 @@ export async function authMiddleware(
         .where(
           and(
             eq(member.userId, session.user.id),
-            eq(member.organizationId, activeOrgId)
+            eq(member.organizationId, activeOrgId),
+            eq(organization.isActive, true)
           )
         )
         .limit(1);

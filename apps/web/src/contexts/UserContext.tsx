@@ -116,11 +116,22 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     void (async () => {
       try {
-        const { data: orgs, error: listError } =
-          await authClient.organization.list();
-        if (listError || !orgs?.length) return;
-
-        const first = orgs[0];
+        // Use our own /organizations/mine endpoint instead of
+        // authClient.organization.list() because Better Auth's plugin doesn't
+        // expose our `is_active` flag and would happily return deactivated
+        // orgs — picking the first of those would loop back to a NULL active
+        // org once the auth middleware filters it out.
+        const res = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+          }/v1/organizations/mine`,
+          { credentials: "include" }
+        );
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          data?: Array<{ id: string }>;
+        };
+        const first = body.data?.[0];
         if (!first?.id) return;
 
         const { error: setError } = await authClient.organization.setActive({
