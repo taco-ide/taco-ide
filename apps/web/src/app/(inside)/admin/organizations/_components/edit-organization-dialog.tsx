@@ -80,9 +80,21 @@ export function EditOrganizationDialog({
       },
       onError: (err) => {
         const status = (err as { status?: number } | undefined)?.status;
+        if (status === 409) {
+          form.setError(
+            "slug",
+            {
+              type: "manual",
+              message:
+                "Já existe uma organização com este slug. Escolha outro.",
+            },
+            { shouldFocus: true },
+          );
+          return;
+        }
         const message =
           err instanceof Error ? err.message : "Erro ao atualizar organização";
-        toast.error(status === 409 ? "Slug já está em uso" : message);
+        toast.error(`Erro ao atualizar organização: ${message}`);
       },
     },
   });

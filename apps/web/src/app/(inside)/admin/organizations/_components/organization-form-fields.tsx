@@ -99,9 +99,9 @@ export function OrganizationFormFields({
             id="org-slug"
             type="text"
             placeholder="ifsp"
-            {...register("slug", {
-              setValueAs: (v: string) => slugify(v ?? ""),
-            })}
+            autoComplete="off"
+            spellCheck={false}
+            {...register("slug")}
             className="w-full bg-transparent px-3 py-2 text-sm text-white outline-none"
           />
         </div>
