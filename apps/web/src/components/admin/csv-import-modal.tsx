@@ -35,7 +35,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
-const MAX_ROWS = 500;
+const MAX_ROWS = 100;
 const PREVIEW_ROW_LIMIT = 50;
 
 // Template highlights the supported pt-BR aliases (`Nome`, `E-mail`,
