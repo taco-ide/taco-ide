@@ -12,7 +12,7 @@ import {
 } from "../../../_responses/types";
 import { requirePlatformAdmin } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { member, organization } from "@repo/infra/db/schema";
+import { member, organization, session } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -171,6 +171,21 @@ export async function moveMemberRoute(app: FastifyTypedInstance) {
             role: member.role,
             createdAt: member.createdAt,
           });
+
+        // Clear stale active_organization_id on sessions where the moved user
+        // still pointed to the source org. Mirrors the cleanup done by
+        // members/remove.ts so sessions cannot keep accessing an org the user
+        // is no longer a member of.
+        await tx
+          .update(session)
+          .set({ activeOrganizationId: null, updatedAt: new Date() })
+          .where(
+            and(
+              eq(session.userId, userId),
+              eq(session.activeOrganizationId, fromOrganizationId)
+            )
+          );
+
         return { kind: "ok" as const, inserted: insertedRows[0] };
       });
 
