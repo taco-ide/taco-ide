@@ -73,6 +73,18 @@ export async function setPlatformAdminRoute(app: FastifyTypedInstance) {
       const { id } = request.params;
       const { isPlatformAdmin } = request.body;
 
+      // Block self-demote: a Platform Admin cannot remove their own status,
+      // even when other admins exist. Another Platform Admin must do it so
+      // we always have a reviewer audit-trail and to avoid accidental
+      // lock-outs (the operation also revokes all sessions of the target).
+      if (request.user.id === id && isPlatformAdmin === false) {
+        return reply.code(409).send({
+          success: false as const,
+          message:
+            "You cannot remove your own Platform Admin status. Ask another Platform Admin to do it.",
+        });
+      }
+
       // Run target lookup, last-platform-admin guard, update and session
       // revocation inside a single transaction. The platform-admin lookup
       // uses FOR UPDATE so concurrent demotions cannot both pass the check
