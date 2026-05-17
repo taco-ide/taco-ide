@@ -106,6 +106,13 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
 
       // Single query: fetch the org row plus its three counts via correlated
       // subqueries. Reduces 4 roundtrips to 1.
+      // Note: when interpolating columns inside `sql\`\``, only the bare
+      // column name is emitted — not `table.column`. The correlated subquery
+      // would then resolve `${member.organizationId}` and `${organization.id}`
+      // to the unqualified `"organization_id"` and `"id"`, both binding to the
+      // inner `member` row, and the count always collapses to 0. The literal
+      // `member.organization_id` / `organization.id` references below force
+      // the intended cross-scope correlation.
       const orgRows = await db
         .select({
           id: organization.id,
@@ -118,16 +125,16 @@ export async function getOrganizationByIdRoute(app: FastifyTypedInstance) {
           updatedAt: organization.updatedAt,
           memberCount: sql<number>`(
             SELECT count(*)::int FROM ${member}
-            WHERE ${member.organizationId} = ${organization.id}
+            WHERE member.organization_id = organization.id
           )`,
           classroomCount: sql<number>`(
             SELECT count(*)::int FROM ${classroom}
-            WHERE ${classroom.organizationId} = ${organization.id}
-              AND ${classroom.deletedAt} IS NULL
+            WHERE classroom.organization_id = organization.id
+              AND classroom.deleted_at IS NULL
           )`,
           domainCount: sql<number>`(
             SELECT count(*)::int FROM ${organizationEmailDomain}
-            WHERE ${organizationEmailDomain.organizationId} = ${organization.id}
+            WHERE organization_email_domain.organization_id = organization.id
           )`,
         })
         .from(organization)

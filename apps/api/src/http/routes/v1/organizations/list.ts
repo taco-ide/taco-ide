@@ -93,14 +93,19 @@ export async function listOrganizationsRoute(app: FastifyTypedInstance) {
 
       // Use correlated subqueries for both counts so they don't multiply via
       // joins. This also lets us drop the LEFT JOIN + GROUP BY entirely.
+      // Note: when interpolating columns inside `sql\`\``, only the bare
+      // column name is emitted — not `table.column`. Using `${tbl.col}` here
+      // resolves both sides to unqualified `"organization_id"` / `"id"`
+      // bound to the inner row, and the count silently zeros out. Write the
+      // qualified `table.column` references inline to force the correlation.
       const memberCountSql = sql<number>`(
         SELECT count(*)::int FROM ${member}
-        WHERE ${member.organizationId} = ${organization.id}
+        WHERE member.organization_id = organization.id
       )`;
       const classroomCountSql = sql<number>`(
         SELECT count(*)::int FROM ${classroom}
-        WHERE ${classroom.organizationId} = ${organization.id}
-          AND ${classroom.deletedAt} IS NULL
+        WHERE classroom.organization_id = organization.id
+          AND classroom.deleted_at IS NULL
       )`;
 
       const rows = await db
