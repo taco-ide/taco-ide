@@ -38,10 +38,14 @@ const MAX_FILE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
 const MAX_ROWS = 500;
 const PREVIEW_ROW_LIMIT = 50;
 
+// Template highlights the supported pt-BR aliases (`Nome`, `E-mail`,
+// `Senha`, `Funcao`) plus showcases that the password column may be left
+// blank — the backend will auto-generate one and surface it in the
+// per-row report so the admin can share it out-of-band.
 const TEMPLATE_CSV =
-  "name,email,password,role\n" +
+  "Nome,E-mail,Senha,Funcao\n" +
   "Maria Silva,maria.silva@exemplo.edu.br,SenhaForte123!,student\n" +
-  "João Santos,joao.santos@exemplo.edu.br,SenhaForte456!,teacher\n";
+  "João Santos,joao.santos@exemplo.edu.br,,teacher\n";
 
 // ==================== Types ====================
 
@@ -52,6 +56,9 @@ type ImportRow = {
   email: string;
   status: RowStatus;
   message?: string;
+  // Set by the API only for `created` rows whose password was
+  // auto-generated. Allows the admin to share it out-of-band.
+  generatedPassword?: string;
 };
 
 type ImportSummary = {
@@ -339,7 +346,18 @@ function CsvRowsTable({ rows, variant }: CsvRowsTableProps) {
                   {row.line}
                 </td>
                 <td className="px-3 py-2 text-slate-400">
-                  {row.message || "—"}
+                  {row.generatedPassword ? (
+                    <div className="flex flex-col gap-0.5">
+                      <span>
+                        {row.message || "Senha gerada automaticamente"}
+                      </span>
+                      <code className="self-start rounded bg-slate-800/80 px-1.5 py-0.5 font-mono text-[10.5px] text-amber-300">
+                        {row.generatedPassword}
+                      </code>
+                    </div>
+                  ) : (
+                    row.message || "—"
+                  )}
                 </td>
               </tr>
             ))}
@@ -482,25 +500,36 @@ function UploadStep({
           </div>
           <pre className="overflow-x-auto rounded bg-black/30 p-2.5 font-mono text-[11px] leading-relaxed text-slate-300">
             <code>
-              <span className="text-slate-500"># colunas obrigatórias</span>
+              <span className="text-slate-500"># colunas: name, email, role (senha opcional)</span>
               {"\n"}
-              <span className="text-amber-300">name</span>,
-              <span className="text-amber-300">email</span>,
-              <span className="text-amber-300">password</span>,
-              <span className="text-amber-300">role</span>
+              <span className="text-amber-300">Nome</span>,
+              <span className="text-amber-300">E-mail</span>,
+              <span className="text-amber-300">Senha</span>,
+              <span className="text-amber-300">Funcao</span>
               {"\n"}
               <span className="text-slate-400">
                 Maria Silva,maria@exemplo.edu.br,SenhaForte123!,student
               </span>
               {"\n"}
               <span className="text-slate-400">
-                João Santos,joao@exemplo.edu.br,SenhaForte456!,teacher
+                João Santos,joao@exemplo.edu.br,,teacher
               </span>
             </code>
           </pre>
           <p className="mt-2 text-[11px] text-slate-500">
+            Cabeçalhos aceitos (sem distinção de maiúsculas/acentos):{" "}
+            <code>name</code>/<code>nome</code>, <code>email</code>/
+            <code>e-mail</code>, <code>password</code>/<code>senha</code>,{" "}
+            <code>role</code>/<code>função</code>/<code>papel</code>.
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
             Papéis aceitos: <code>student</code>, <code>teacher</code>,{" "}
             <code>coordinator</code>, <code>admin</code>.
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            <span className="text-amber-300">Senha é opcional</span>: deixe em
+            branco para o sistema gerar uma senha aleatória (exibida no
+            relatório final).
           </p>
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
@@ -719,7 +748,15 @@ function ResultStep({
 
   const handleDownloadReport = () => {
     if (rows.length === 0) return;
-    const header = ["linha", "email", "status", "mensagem"];
+    // Senha gerada vai no CSV para o admin distribuir; o backend só envia
+    // esse campo em linhas `created` cuja senha foi auto-gerada.
+    const header = [
+      "linha",
+      "email",
+      "status",
+      "mensagem",
+      "senha_gerada",
+    ];
     const lines = [header.join(",")];
     for (const row of rows) {
       lines.push(
@@ -728,6 +765,7 @@ function ResultStep({
           csvEscape(row.email),
           csvEscape(row.status),
           csvEscape(row.message ?? ""),
+          csvEscape(row.generatedPassword ?? ""),
         ].join(","),
       );
     }
@@ -768,7 +806,15 @@ function ResultStep({
               totalCount === 1 ? "linha importada" : "linhas importadas"
             } com sucesso`}
           >
-            Os novos usuários já podem entrar com a senha definida no CSV.
+            {rows.some((row) => row.generatedPassword) ? (
+              <>
+                Os novos usuários já podem entrar com a senha definida no CSV.
+                Linhas sem senha receberam uma <strong>senha gerada</strong> —
+                baixe o relatório abaixo para compartilhá-la com cada usuário.
+              </>
+            ) : (
+              <>Os novos usuários já podem entrar com a senha definida no CSV.</>
+            )}
           </Banner>
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">

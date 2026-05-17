@@ -106,6 +106,10 @@ export type PostV1OrganizationsIdMembersImportCsv200 = {
              * @type string | undefined
             */
             message?: string;
+            /**
+             * @type string | undefined
+            */
+            generatedPassword?: string;
         }[];
     };
     /**

@@ -32,7 +32,8 @@ export const postV1OrganizationsIdMembersImportCsv200Schema = z.object({
     "line": z.number(),
 "email": z.string(),
 "status": z.enum(["created", "linked", "skipped", "error"]),
-"message": z.string().optional()
+"message": z.string().optional(),
+"generatedPassword": z.string().optional()
     }))
     }),
 "pagination": z.object({

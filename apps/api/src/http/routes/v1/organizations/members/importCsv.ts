@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { parse as parseCsv } from "csv-parse/sync";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { FastifyTypedInstance } from "../../../../types";
@@ -25,7 +25,53 @@ const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB
 // should be split or moved to a background job.
 const MAX_ROWS = 100;
 const HASH_CONCURRENCY = 8;
-const REQUIRED_COLUMNS = ["name", "email", "password", "role"] as const;
+// `password` is optional — when absent we generate a random one per row.
+const REQUIRED_COLUMNS = ["name", "email", "role"] as const;
+const GENERATED_PASSWORD_BYTES = 16;
+
+// Header aliases let teachers upload CSVs exported from pt-BR spreadsheets
+// without renaming columns. The keys are normalized forms (lowercase, no
+// diacritics) of the headers, and the values are the canonical column
+// names expected by the per-row Zod schema.
+const HEADER_ALIASES: Record<string, string> = {
+  // name
+  name: "name",
+  nome: "name",
+  // email
+  email: "email",
+  "e-mail": "email",
+  // password
+  password: "password",
+  senha: "password",
+  // role
+  role: "role",
+  funcao: "role",
+  papel: "role",
+};
+
+/**
+ * Normalize a CSV header for alias lookup. Strips BOM, trims, lowercases,
+ * and removes diacritics so `"Função"`, `"FUNÇÃO"`, and `"funcao"` all
+ * collapse to the same key.
+ */
+function normalizeHeader(raw: string): string {
+  return raw
+    .replace(/^﻿/, "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Map a normalized header to its canonical column name, or return the
+ * normalized form unchanged so unknown columns still flow through (they
+ * are ignored later by the Zod schema).
+ */
+function canonicalHeader(raw: string): string {
+  const normalized = normalizeHeader(raw);
+  return HEADER_ALIASES[normalized] ?? normalized;
+}
 
 // ==================== SCHEMAS ====================
 
@@ -44,13 +90,26 @@ const ImportCsvQuerySchema = z
 
 const RoleEnum = z.enum(["student", "teacher", "coordinator", "admin"]);
 
+// Treat empty strings as "absent" so missing-password rows in CSVs that
+// still include the column (e.g. `Nome,Email,Senha,Funcao` with the senha
+// cell blank) flow through the optional path instead of failing the min
+// length check.
+const OptionalPasswordSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? undefined : trimmed;
+  },
+  z.string().min(12, "Password must be at least 12 characters").optional(),
+);
+
 const CsvRowSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z
     .string()
     .email("Invalid email format")
     .transform((value) => value.toLowerCase()),
-  password: z.string().min(12, "Password must be at least 12 characters"),
+  password: OptionalPasswordSchema,
   role: RoleEnum,
 });
 
@@ -72,6 +131,10 @@ const ImportCsvResponseSchema = ResponseSchema200.extend({
         email: z.string(),
         status: z.enum(["created", "linked", "skipped", "error"]),
         message: z.string().optional(),
+        // Set only for `created` rows whose password was auto-generated
+        // because the CSV omitted it. Surfaces the generated value to the
+        // admin so they can share it out-of-band. Never emailed.
+        generatedPassword: z.string().optional(),
       })
     ),
   }),
@@ -84,6 +147,7 @@ type RowReport = {
   email: string;
   status: "created" | "linked" | "skipped" | "error";
   message?: string;
+  generatedPassword?: string;
 };
 
 type ParsedRow = {
@@ -157,7 +221,7 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
         tags: ["organizations"],
         summary: "Bulk import members from a CSV file",
         description:
-          "Upload a CSV with columns name,email,password,role to bulk-create or link members in the organization. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.",
+          "Upload a CSV with columns name,email,role (and optional password) to bulk-create or link members in the organization. Headers are matched case-insensitively and accept pt-BR aliases (Nome, E-mail, Senha, Função/Papel). When a password is omitted the API auto-generates a random one and returns it via `generatedPassword` per row — share it with the user out-of-band. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.",
         consumes: ["multipart/form-data"],
         params: ImportCsvParamsSchema,
         querystring: ImportCsvQuerySchema,
@@ -206,16 +270,17 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
       //    the first header doesn't end up as "﻿name".
       //  - `delimiter: [",", ";"]` lets the parser auto-pick between the
       //    US locale (",") and the European/Excel pt-BR locale (";").
-      //  - `columns` callback lowercases header names so headers like
-      //    `NAME,Email,Role` match the lowercase keys expected by the
-      //    per-row Zod schema below.
+      //  - `columns` callback runs each header through `canonicalHeader`
+      //    so pt-BR variants (`Nome`, `Função`, `Senha`, `E-mail`),
+      //    mixed-case headers (`Name`, `EMAIL`) and aliases all collapse
+      //    to the canonical lowercase keys expected by the per-row Zod
+      //    schema below.
       let records: Record<string, unknown>[];
       try {
         records = parseCsv(buffer, {
           bom: true,
           delimiter: [",", ";"],
-          columns: (header: string[]) =>
-            header.map((h) => h.trim().toLowerCase()),
+          columns: (header: string[]) => header.map(canonicalHeader),
           skip_empty_lines: true,
           trim: true,
         }) as Record<string, unknown>[];
@@ -354,6 +419,13 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
       // ---- 8. Persist (unless dryRun) ------------------------------------
       const persistResults = new Map<number, RowReport>();
 
+      // Track which rows had their password auto-generated so we can
+      // surface the plaintext in the response report. Populated whether
+      // or not we hit the persistence path (so dryRun previews can flag
+      // it). Only generated values are stored — supplied passwords are
+      // never echoed back.
+      const generatedPasswords = new Map<number, string>();
+
       if (!dryRun) {
         // Pre-hash passwords for new users OUTSIDE the transaction.
         // scrypt is intentionally CPU-intensive; running it inside the
@@ -367,10 +439,27 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
           (r): r is Extract<CategorizedRow, { kind: "create" }> =>
             r.kind === "create"
         );
+        // Resolve each row's effective password up front so the
+        // bounded-concurrency hashing loop below can run unchanged.
+        // Rows whose CSV cell was blank get a `randomBytes`-derived
+        // base64url string, and we remember the plaintext so we can
+        // include it in the per-row report.
+        const effectivePasswords = new Map<number, string>();
+        for (const row of createRows) {
+          if (row.data.password) {
+            effectivePasswords.set(row.line, row.data.password);
+            continue;
+          }
+          const generated = randomBytes(GENERATED_PASSWORD_BYTES).toString(
+            "base64url",
+          );
+          effectivePasswords.set(row.line, generated);
+          generatedPasswords.set(row.line, generated);
+        }
         for (let i = 0; i < createRows.length; i += HASH_CONCURRENCY) {
           const chunk = createRows.slice(i, i + HASH_CONCURRENCY);
           const hashes = await Promise.all(
-            chunk.map((r) => hashPassword(r.data.password))
+            chunk.map((r) => hashPassword(effectivePasswords.get(r.line)!)),
           );
           chunk.forEach((r, idx) => hashedPasswords.set(r.line, hashes[idx]!));
         }
@@ -431,10 +520,18 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
               });
             });
 
+            const generated = generatedPasswords.get(row.line);
             persistResults.set(row.line, {
               line: row.line,
               email: row.data.email,
               status: row.kind === "create" ? "created" : "linked",
+              ...(generated && row.kind === "create"
+                ? {
+                    generatedPassword: generated,
+                    message:
+                      "Password auto-generated — share it with the user out-of-band",
+                  }
+                : {}),
             });
           } catch (err) {
             request.server.log.error(
@@ -471,11 +568,19 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
         }
 
         if (dryRun) {
+          // Flag rows that will get a generated password so the preview UI
+          // can warn the admin before they confirm — we don't materialize
+          // the actual value here because the hashing/generation runs only
+          // on the persistence path.
+          const willGeneratePassword =
+            row.kind === "create" && !row.data.password;
           rowReports.set(row.line, {
             line: row.line,
             email: row.data.email,
             status: row.kind === "create" ? "created" : "linked",
-            message: "Dry run — no changes persisted",
+            message: willGeneratePassword
+              ? "Dry run — password will be auto-generated"
+              : "Dry run — no changes persisted",
           });
           continue;
         }
@@ -532,7 +637,7 @@ function extractHeaderFromBuffer(buffer: Buffer): string[] {
       to_line: 1,
     }) as string[][];
     const firstRow = headerOnly[0] ?? [];
-    return firstRow.map((h) => h.trim().toLowerCase());
+    return firstRow.map(canonicalHeader);
   } catch {
     return [];
   }

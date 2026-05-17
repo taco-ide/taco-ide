@@ -14,7 +14,7 @@ export const postV1OrganizationsIdMembersImportCsvMutationKey = () => [{ url: '/
 export type PostV1OrganizationsIdMembersImportCsvMutationKey = ReturnType<typeof postV1OrganizationsIdMembersImportCsvMutationKey>
 
 /**
- * @description Upload a CSV with columns name,email,password,role to bulk-create or link members in the organization. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.
+ * @description Upload a CSV with columns name,email,role (and optional password) to bulk-create or link members in the organization. Headers are matched case-insensitively and accept pt-BR aliases (Nome, E-mail, Senha, Função/Papel). When a password is omitted the API auto-generates a random one and returns it via `generatedPassword` per row — share it with the user out-of-band. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.
  * @summary Bulk import members from a CSV file
  * {@link /v1/organizations/:id/members/import-csv}
  */
@@ -26,7 +26,7 @@ export async function postV1OrganizationsIdMembersImportCsv(id: PostV1Organizati
 }
 
 /**
- * @description Upload a CSV with columns name,email,password,role to bulk-create or link members in the organization. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.
+ * @description Upload a CSV with columns name,email,role (and optional password) to bulk-create or link members in the organization. Headers are matched case-insensitively and accept pt-BR aliases (Nome, E-mail, Senha, Função/Papel). When a password is omitted the API auto-generates a random one and returns it via `generatedPassword` per row — share it with the user out-of-band. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.
  * @summary Bulk import members from a CSV file
  * {@link /v1/organizations/:id/members/import-csv}
  */
