@@ -57,6 +57,17 @@ export const postV1OrganizationsIdInvitations403Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const postV1OrganizationsIdInvitations409Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
 export const postV1OrganizationsIdInvitationsMutationRequestSchema = z.object({
     "email": z.string().email(),
 "role": z.enum(["student", "teacher", "coordinator", "admin"])

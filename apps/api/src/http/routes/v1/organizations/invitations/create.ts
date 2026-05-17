@@ -7,6 +7,7 @@ import {
   ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
+  ResponseSchema409,
 } from "../../../_responses/types";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
 import { auth } from "@repo/infra/auth";
@@ -61,6 +62,7 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           400: ResponseSchema400,
           401: ResponseSchema401,
           403: ResponseSchema403,
+          409: ResponseSchema409,
         },
       },
     },
@@ -120,9 +122,9 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           // SERIALIZABLE isolation ensures parallel callers cannot both
           // pass the existence check; the second commit raises 40001
           // (serialization_failure) and we retry once before surfacing
-          // the duplicate to the client. PG error code 23505 is also
-          // handled as a fallback for a future UNIQUE constraint on
-          // (email, organization_id, status).
+          // the duplicate to the client as 409. PG error code 23505 is
+          // also handled as a fallback for a future UNIQUE constraint
+          // on (email, organization_id, status).
           const runTx = () =>
             db.transaction(
               async (tx) => {
@@ -183,7 +185,7 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
                 // Serialization conflict from a concurrent insert.
                 // Retry with small backoff; the retry's existence check
                 // now sees the row committed by the winner and surfaces
-                // a clean duplicate-detection 400.
+                // a clean duplicate-detection 409.
                 await new Promise((resolve) =>
                   setTimeout(resolve, 10 + Math.random() * 20)
                 );
@@ -199,9 +201,10 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
               err.message === "DUPLICATE_PENDING_INVITATION") ||
             pgCode === "23505"
           ) {
-            return reply.status(400).send({
+            return reply.status(409).send({
               success: false as const,
-              message: "A pending invitation already exists for this email",
+              message:
+                "A pending invitation already exists for this email in this organization.",
             });
           }
           request.log.error({ err }, "createInvitation (platform admin) failed");
@@ -299,18 +302,36 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           body?: { message?: string; code?: string };
           message?: string;
         };
-        const statusCode =
+        const rawStatus =
           typeof error.statusCode === "number" && error.statusCode >= 400
             ? error.statusCode
             : typeof error.status === "number" && error.status >= 400
               ? error.status
               : 400;
-        const message =
+        const rawMessage =
           error.body?.message ?? error.message ?? "Failed to create invitation";
+        // Better Auth surfaces duplicate-pending / already-a-member as
+        // BAD_REQUEST (400). These are conflict-class errors and should
+        // be normalized to 409, mirroring addExistingMember's mapping.
+        if (/already invited|pending invitation already exists/i.test(rawMessage)) {
+          request.log.error({ err }, "createInvitation failed (duplicate)");
+          return reply.status(409).send({
+            success: false as const,
+            message:
+              "A pending invitation already exists for this email in this organization.",
+          });
+        }
+        if (/already a member/i.test(rawMessage)) {
+          request.log.error({ err }, "createInvitation failed (already member)");
+          return reply.status(409).send({
+            success: false as const,
+            message: "User is already a member of this organization.",
+          });
+        }
         request.log.error({ err }, "createInvitation failed");
-        return reply.status(statusCode).send({
+        return reply.status(rawStatus).send({
           success: false as const,
-          message,
+          message: rawMessage,
         });
       }
     }
