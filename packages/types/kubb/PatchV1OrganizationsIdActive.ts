@@ -46,6 +46,10 @@ export type PatchV1OrganizationsIdActive200 = {
          * @type number
         */
         clearedSessions: number;
+        /**
+         * @type number
+        */
+        canceledInvitations: number;
     };
     /**
      * @type object | undefined

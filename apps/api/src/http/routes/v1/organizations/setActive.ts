@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -10,7 +10,7 @@ import {
 } from "../../_responses/types";
 import { requirePlatformAdmin } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { organization, session } from "@repo/infra/db/schema";
+import { invitation, organization, session } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -32,6 +32,7 @@ const SetActiveResponseSchema = ResponseSchema200.extend({
     id: z.string(),
     isActive: z.boolean(),
     clearedSessions: z.number(),
+    canceledInvitations: z.number(),
   }),
 });
 
@@ -49,7 +50,7 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
         tags: ["organizations"],
         summary: "Toggle organization active flag (platform admin)",
         description:
-          "Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this).",
+          "Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this) and cancels every pending invitation belonging to it (all within the same transaction).",
         params: OrganizationParamsSchema,
         body: SetActiveBodySchema,
         response: {
@@ -87,6 +88,7 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
             id: existing[0].id,
             isActive: existing[0].isActive,
             clearedSessions: 0,
+            canceledInvitations: 0,
           },
         });
       }
@@ -102,6 +104,7 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
           });
 
         let clearedSessions = 0;
+        let canceledInvitations = 0;
         if (!isActive) {
           const cleared = await tx
             .update(session)
@@ -109,9 +112,24 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
             .where(eq(session.activeOrganizationId, id))
             .returning({ id: session.id });
           clearedSessions = cleared.length;
+
+          // Cancel every still-pending invitation belonging to this org so
+          // they cannot be redeemed after a future reactivation (aligns with
+          // soft-delete semantics for members).
+          const canceled = await tx
+            .update(invitation)
+            .set({ status: "canceled" })
+            .where(
+              and(
+                eq(invitation.organizationId, id),
+                eq(invitation.status, "pending")
+              )
+            )
+            .returning({ id: invitation.id });
+          canceledInvitations = canceled.length;
         }
 
-        return { updated, clearedSessions };
+        return { updated, clearedSessions, canceledInvitations };
       });
 
       if (!result.updated) {
@@ -127,6 +145,7 @@ export async function setOrganizationActiveRoute(app: FastifyTypedInstance) {
           id: result.updated.id,
           isActive: result.updated.isActive,
           clearedSessions: result.clearedSessions,
+          canceledInvitations: result.canceledInvitations,
         },
       });
     }

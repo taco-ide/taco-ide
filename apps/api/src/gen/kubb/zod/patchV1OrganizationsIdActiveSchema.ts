@@ -18,7 +18,8 @@ export const patchV1OrganizationsIdActive200Schema = z.object({
 "data": z.object({
     "id": z.string(),
 "isActive": z.boolean(),
-"clearedSessions": z.number()
+"clearedSessions": z.number(),
+"canceledInvitations": z.number()
     }),
 "pagination": z.object({
     "total": z.number(),

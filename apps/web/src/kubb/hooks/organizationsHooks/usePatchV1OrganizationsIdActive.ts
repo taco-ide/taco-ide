@@ -14,7 +14,7 @@ export const patchV1OrganizationsIdActiveMutationKey = () => [{ url: '/v1/organi
 export type PatchV1OrganizationsIdActiveMutationKey = ReturnType<typeof patchV1OrganizationsIdActiveMutationKey>
 
 /**
- * @description Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this).
+ * @description Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this) and cancels every pending invitation belonging to it (all within the same transaction).
  * @summary Toggle organization active flag (platform admin)
  * {@link /v1/organizations/:id/active}
  */
@@ -28,7 +28,7 @@ export async function patchV1OrganizationsIdActive(id: PatchV1OrganizationsIdAct
 }
 
 /**
- * @description Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this).
+ * @description Activates or deactivates an organization. When deactivating, also clears any session.activeOrganizationId pointing to this org (no FK enforces this) and cancels every pending invitation belonging to it (all within the same transaction).
  * @summary Toggle organization active flag (platform admin)
  * {@link /v1/organizations/:id/active}
  */
