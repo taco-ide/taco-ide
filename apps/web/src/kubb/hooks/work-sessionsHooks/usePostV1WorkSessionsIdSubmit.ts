@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsIdSubmitMutationResponse, PostV1WorkSessionsIdSubmitPathParams, PostV1WorkSessionsIdSubmit400, PostV1WorkSessionsIdSubmit401, PostV1WorkSessionsIdSubmit403, PostV1WorkSessionsIdSubmit404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdSubmit.ts";
+import type { PostV1WorkSessionsIdSubmitMutationRequest, PostV1WorkSessionsIdSubmitMutationResponse, PostV1WorkSessionsIdSubmitPathParams, PostV1WorkSessionsIdSubmit400, PostV1WorkSessionsIdSubmit401, PostV1WorkSessionsIdSubmit403, PostV1WorkSessionsIdSubmit404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdSubmit.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -14,35 +14,37 @@ export const postV1WorkSessionsIdSubmitMutationKey = () => [{ url: '/v1/work-ses
 export type PostV1WorkSessionsIdSubmitMutationKey = ReturnType<typeof postV1WorkSessionsIdSubmitMutationKey>
 
 /**
- * @description Marks the work session as submitted (sets endedAt). Only the session owner can submit.
+ * @description Marks the work session as submitted (sets endedAt). Optionally records an anonymous 1–5 rating for the teaching assistant — only the TA id, grade and timestamp are stored. Only the session owner can submit.
  * @summary Submit work session
  * {@link /v1/work-sessions/:id/submit}
  */
-export async function postV1WorkSessionsIdSubmit(id: PostV1WorkSessionsIdSubmitPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
+export async function postV1WorkSessionsIdSubmit(id: PostV1WorkSessionsIdSubmitPathParams["id"], data?: PostV1WorkSessionsIdSubmitMutationRequest, config: Partial<RequestConfig<PostV1WorkSessionsIdSubmitMutationRequest>> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, unknown>({ method : "POST", url : `/v1/work-sessions/${id}/submit`, ... requestConfig })  
+  const requestData = data  
+  
+  const res = await request<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, PostV1WorkSessionsIdSubmitMutationRequest>({ method : "POST", url : `/v1/work-sessions/${id}/submit`, data : requestData, ... requestConfig })  
   return res.data
 }
 
 /**
- * @description Marks the work session as submitted (sets endedAt). Only the session owner can submit.
+ * @description Marks the work session as submitted (sets endedAt). Optionally records an anonymous 1–5 rating for the teaching assistant — only the TA id, grade and timestamp are stored. Only the session owner can submit.
  * @summary Submit work session
  * {@link /v1/work-sessions/:id/submit}
  */
 export function usePostV1WorkSessionsIdSubmit<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, {id: PostV1WorkSessionsIdSubmitPathParams["id"]}, TContext> & { client?: QueryClient },
-  client?: Partial<RequestConfig> & { client?: typeof fetch },
+  mutation?: UseMutationOptions<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, {id: PostV1WorkSessionsIdSubmitPathParams["id"], data?: PostV1WorkSessionsIdSubmitMutationRequest}, TContext> & { client?: QueryClient },
+  client?: Partial<RequestConfig<PostV1WorkSessionsIdSubmitMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
   const { mutation = {}, client: config = {} } = options ?? {}
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1WorkSessionsIdSubmitMutationKey()
 
-  return useMutation<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, {id: PostV1WorkSessionsIdSubmitPathParams["id"]}, TContext>({
-    mutationFn: async({ id }) => {
-      return postV1WorkSessionsIdSubmit(id, config)
+  return useMutation<PostV1WorkSessionsIdSubmitMutationResponse, ResponseErrorConfig<PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404>, {id: PostV1WorkSessionsIdSubmitPathParams["id"], data?: PostV1WorkSessionsIdSubmitMutationRequest}, TContext>({
+    mutationFn: async({ id, data }) => {
+      return postV1WorkSessionsIdSubmit(id, data, config)
     },
     mutationKey,
     ...mutationOptions

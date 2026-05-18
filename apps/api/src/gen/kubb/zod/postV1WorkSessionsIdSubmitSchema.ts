@@ -71,4 +71,8 @@ export const postV1WorkSessionsIdSubmit404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+export const postV1WorkSessionsIdSubmitMutationRequestSchema = z.object({
+    "taGrade": z.number().int().min(1).max(5).optional()
+    })
+
 export const postV1WorkSessionsIdSubmitMutationResponseSchema = z.lazy(() => postV1WorkSessionsIdSubmit200Schema)

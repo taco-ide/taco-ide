@@ -169,10 +169,20 @@ export type PostV1WorkSessionsIdSubmit404 = {
     };
 };
 
+export type PostV1WorkSessionsIdSubmitMutationRequest = {
+    /**
+     * @minLength 1
+     * @maxLength 5
+     * @type integer | undefined
+    */
+    taGrade?: number;
+};
+
 export type PostV1WorkSessionsIdSubmitMutationResponse = PostV1WorkSessionsIdSubmit200;
 
 export type PostV1WorkSessionsIdSubmitMutation = {
     Response: PostV1WorkSessionsIdSubmit200;
+    Request: PostV1WorkSessionsIdSubmitMutationRequest;
     PathParams: PostV1WorkSessionsIdSubmitPathParams;
     Errors: PostV1WorkSessionsIdSubmit400 | PostV1WorkSessionsIdSubmit401 | PostV1WorkSessionsIdSubmit403 | PostV1WorkSessionsIdSubmit404;
 };
