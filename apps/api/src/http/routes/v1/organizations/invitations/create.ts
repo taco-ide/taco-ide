@@ -14,7 +14,8 @@ import { auth } from "@repo/infra/auth";
 import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
 import { sendInvitationEmail } from "@repo/infra/auth/invitation-email";
 import { db } from "@repo/infra/db";
-import { invitation, organization, user } from "@repo/infra/db/schema";
+import { invitation, member, organization, user } from "@repo/infra/db/schema";
+import { sql } from "drizzle-orm";
 
 const INVITATION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
@@ -128,6 +129,34 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           const runTx = () =>
             db.transaction(
               async (tx) => {
+                // Guard: if the email already belongs to a member of this
+                // org, reject before creating a pending invitation that
+                // could never be accepted. Mirrors the Better Auth branch
+                // ("User is already a member of this organization.").
+                //
+                // Race window: the SELECT runs inside SERIALIZABLE with a
+                // 40001 retry, but there is no UNIQUE constraint between
+                // invitation and member. A concurrent member insert
+                // committed after this SELECT but before the invitation
+                // INSERT will not be caught here — the invitation row
+                // would be created and the eventual accept-call would
+                // surface the duplicate. Treating this as a cosmetic gap.
+                const existingMember = await tx
+                  .select({ id: member.id })
+                  .from(member)
+                  .innerJoin(user, eq(member.userId, user.id))
+                  .where(
+                    and(
+                      eq(member.organizationId, organizationId),
+                      eq(sql`lower(${user.email})`, normalizedEmail)
+                    )
+                  )
+                  .limit(1);
+
+                if (existingMember[0]) {
+                  throw new Error("ALREADY_A_MEMBER");
+                }
+
                 const existing = await tx
                   .select({ id: invitation.id })
                   .from(invitation)
@@ -196,6 +225,15 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           }
         } catch (err) {
           const pgCode = (err as { code?: string } | null)?.code;
+          if (
+            err instanceof Error &&
+            err.message === "ALREADY_A_MEMBER"
+          ) {
+            return reply.status(409).send({
+              success: false as const,
+              message: "User is already a member of this organization.",
+            });
+          }
           if (
             (err instanceof Error &&
               err.message === "DUPLICATE_PENDING_INVITATION") ||
