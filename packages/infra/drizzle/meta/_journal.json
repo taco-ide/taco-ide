@@ -29,20 +29,6 @@
       "when": 1778114314918,
       "tag": "0003_work_session_user_challenge_unique",
       "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1778974670065,
-      "tag": "0004_parched_chat",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1779570000000,
-      "tag": "0005_cap_email_domain_admin_role",
-      "breakpoints": true
     }
   ]
 }
