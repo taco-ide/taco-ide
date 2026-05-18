@@ -3,10 +3,12 @@ interface TeachingAssistantPromptContext {
   targetAudience: string;
   challengeTitle: string;
   challengeDescription: string;
+  // Pre-formatted human-readable text. Use formatSupportMaterials() in agents/support-materials.ts.
   supportMaterials: string;
   kbContext?: string;
   currentCode: string;
   stdout: string;
+  detectedLanguage?: string;
 }
 
 export function buildTeachingAssistantPrompt(context: TeachingAssistantPromptContext): string {
@@ -55,6 +57,9 @@ pretend incorrect code is correct.
 
 ## Language
 
-Respond in the same language the student uses. If they write in Portuguese, \
-respond in Portuguese. If they write in English, respond in English.`;
+${
+  context.detectedLanguage
+    ? `IMPORTANT: Respond ONLY in ${context.detectedLanguage}. Do not switch languages mid-response.`
+    : "Respond in the same language the student uses. If they write in Portuguese, respond in Portuguese. If they write in English, respond in English."
+}`;
 }

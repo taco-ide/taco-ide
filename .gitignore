@@ -48,4 +48,4 @@ uploads/
 # Misc
 .DS_Store
 *.pem
-
+.claude/history/

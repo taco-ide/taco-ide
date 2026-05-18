@@ -91,14 +91,26 @@ export const runCode = tool(
   },
 );
 
+const ChallengeContextSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  supportMaterials: z.string(),
+});
+
 export const getChallengeInfo = tool(
   async (_input, config) => {
-    const ctx = config.configurable?.challengeContext ?? {};
-    return JSON.stringify({
-      title: ctx.title ?? "",
-      description: ctx.description ?? "",
-      supportMaterials: ctx.supportMaterials ?? "",
-    });
+    const parsed = ChallengeContextSchema.safeParse(
+      config.configurable?.challengeContext
+    );
+    if (!parsed.success) {
+      return JSON.stringify({
+        error: "Challenge context not available",
+        title: "",
+        description: "",
+        supportMaterials: "",
+      });
+    }
+    return JSON.stringify(parsed.data);
   },
   {
     name: "getChallengeInfo",

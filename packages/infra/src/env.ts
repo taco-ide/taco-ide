@@ -37,7 +37,8 @@ const envSchema = z.object({
     .string()
     .url()
     .default("https://taco-ide-resource.openai.azure.com/openai/v1/"),
-  LLM_MODEL_NAME: z.string().default("gpt-5.2-chat"),
+  // Azure OpenAI deployment name — must match a deployed model in the Azure resource
+  LLM_MODEL_NAME: z.string().default("gpt-4o-mini"),
   LLM_API_KEY: z.string(),
   CODE_EXEC_API_URL: z
     .string()

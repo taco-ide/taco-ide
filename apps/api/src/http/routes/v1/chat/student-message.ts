@@ -23,6 +23,8 @@ import { getLangfuseCallback } from "../../../../agents/langfuse";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
 import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
 import { formatSSEEvent } from "../../../../agents/sse-events";
+import { formatSupportMaterials } from "../../../../agents/support-materials";
+import { detectLanguageHint } from "../../../../agents/language-detect";
 
 // ==================== SCHEMAS ====================
 
@@ -109,28 +111,27 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         }
       }
 
+      const formattedSupportMaterials = formatSupportMaterials(
+        ch[0]?.supportMaterials
+      );
+
       // Build system prompt
       const systemPrompt = buildTeachingAssistantPrompt({
         systemPrompt: ta[0]?.systemPrompt ?? "",
         targetAudience: ta[0]?.targetAudience ?? "",
         challengeTitle: ch[0]?.title ?? "",
         challengeDescription: ch[0]?.description ?? "",
-        supportMaterials:
-          typeof ch[0]?.supportMaterials === "string"
-            ? ch[0].supportMaterials
-            : JSON.stringify(ch[0]?.supportMaterials ?? null),
+        supportMaterials: formattedSupportMaterials,
         currentCode: currentCode ?? "",
         stdout: stdout ?? "",
+        detectedLanguage: detectLanguageHint(message),
       });
 
       // Challenge context for tools
       const challengeContext = {
         title: ch[0]?.title ?? "",
         description: ch[0]?.description ?? "",
-        supportMaterials:
-          typeof ch[0]?.supportMaterials === "string"
-            ? ch[0].supportMaterials
-            : JSON.stringify(ch[0]?.supportMaterials ?? null),
+        supportMaterials: formattedSupportMaterials,
       };
 
       // HTTP status is committed here — all subsequent errors must use the SSE error event type
