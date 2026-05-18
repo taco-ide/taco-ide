@@ -9,7 +9,10 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { workSession } from "@repo/infra/db/schema";
+import {
+  workSession,
+  teachingAssistantEvaluation,
+} from "@repo/infra/db/schema";
 import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
@@ -17,6 +20,10 @@ import {
 
 const WorkSessionParamsSchema = z.object({
   id: z.string().uuid(),
+});
+
+const SubmitWorkSessionBodySchema = z.object({
+  taGrade: z.number().int().min(1).max(5).optional(),
 });
 
 const SubmitWorkSessionResponseSchema = ResponseSchema200.extend({
@@ -29,6 +36,7 @@ const SubmitWorkSessionResponseSchema = ResponseSchema200.extend({
 export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
   app.post<{
     Params: z.infer<typeof WorkSessionParamsSchema>;
+    Body: z.infer<typeof SubmitWorkSessionBodySchema>;
   }>(
     "/:id/submit",
     {
@@ -36,8 +44,9 @@ export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
         tags: ["work-sessions"],
         summary: "Submit work session",
         description:
-          "Marks the work session as submitted (sets endedAt). Only the session owner can submit.",
+          "Marks the work session as submitted (sets endedAt). Optionally records an anonymous 1–5 rating for the teaching assistant — only the TA id, grade and timestamp are stored. Only the session owner can submit.",
         params: WorkSessionParamsSchema,
+        body: SubmitWorkSessionBodySchema,
         response: {
           200: SubmitWorkSessionResponseSchema,
           400: ResponseSchema400,
@@ -113,6 +122,25 @@ export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
           success: false as const,
           message: "Could not submit work session",
         });
+      }
+
+      const taGrade = request.body?.taGrade;
+      if (typeof taGrade === "number") {
+        // Best-effort: a failed evaluation insert must not 500 a successful
+        // submission. The rating is anonymous and sparse; losing one is
+        // acceptable, blocking the student is not.
+        try {
+          await db.insert(teachingAssistantEvaluation).values({
+            id: crypto.randomUUID(),
+            teachingAssistantId: session.teachingAssistantId,
+            grade: taGrade,
+          });
+        } catch (err) {
+          request.log.error(
+            { err, teachingAssistantId: session.teachingAssistantId },
+            "Failed to persist teaching assistant evaluation"
+          );
+        }
       }
 
       return reply.status(200).send({

@@ -91,7 +91,7 @@ type ProblemContextValue = {
     stdin?: string;
     stdout?: string;
   }) => Promise<{ modelResponse: string }>;
-  submitWorkSession: () => Promise<void>;
+  submitWorkSession: (options?: { taGrade?: number }) => Promise<void>;
   reopenWorkSession: () => Promise<void>;
   resetWorkSession: () => Promise<void>;
 };
@@ -534,16 +534,26 @@ export function ProblemProvider({
     [challengeId, ensureWorkSession, chatMutation, saveSolution]
   );
 
-  const submitWorkSession = useCallback(async () => {
-    if (!workSession?.id || workSession.endedAt) return;
-    const { getCode, getInput, output, error } = useCodeEditorStore.getState();
-    await saveSolution({
-      code: getCode(),
-      stdin: getInput(),
-      stdout: error ?? output ?? undefined,
-    });
-    await submitMutation.mutateAsync({ id: workSession.id });
-  }, [workSession, saveSolution, submitMutation]);
+  const submitWorkSession = useCallback(
+    async (options?: { taGrade?: number }) => {
+      if (!workSession?.id || workSession.endedAt) return;
+      const { getCode, getInput, output, error } =
+        useCodeEditorStore.getState();
+      await saveSolution({
+        code: getCode(),
+        stdin: getInput(),
+        stdout: error ?? output ?? undefined,
+      });
+      await submitMutation.mutateAsync({
+        id: workSession.id,
+        data:
+          typeof options?.taGrade === "number"
+            ? { taGrade: options.taGrade }
+            : {},
+      });
+    },
+    [workSession, saveSolution, submitMutation]
+  );
 
   const reopenWorkSession = useCallback(async () => {
     if (!workSession?.id || !workSession.endedAt) return;

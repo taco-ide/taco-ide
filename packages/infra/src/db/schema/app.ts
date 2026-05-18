@@ -11,6 +11,7 @@ import {
   index,
   customType,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user, organization } from "./auth";
 
 // ==================== CUSTOM TYPES ====================
@@ -370,6 +371,31 @@ export const replayInteraction = pgTable("replay_interaction", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// ==================== TEACHING ASSISTANT EVALUATIONS ====================
+//
+// Anonymous student rating of the TA captured at submit time.
+// Privacy: only teachingAssistantId + grade + week are persisted; the
+// timestamp is truncated to the start of the ISO week so a rating cannot
+// be correlated with a specific work_session.ended_at to re-identify the
+// student.
+
+export const teachingAssistantEvaluation = pgTable(
+  "teaching_assistant_evaluation",
+  {
+    id: text("id").primaryKey(),
+    teachingAssistantId: text("teaching_assistant_id")
+      .notNull()
+      .references(() => teachingAssistant.id, { onDelete: "cascade" }),
+    grade: integer("grade").notNull(),
+    week: timestamp("week")
+      .notNull()
+      .default(sql`date_trunc('week', now())`),
+  },
+  (table) => [
+    index("teaching_assistant_evaluation_ta_idx").on(table.teachingAssistantId),
+  ]
+);
+
 // ==================== EXPORT TYPES ====================
 
 export type Classroom = typeof classroom.$inferSelect;
@@ -397,3 +423,7 @@ export type NewKnowledgeBaseDocument = typeof knowledgeBaseDocument.$inferInsert
 export type ChallengeKnowledgeBase = typeof challengeKnowledgeBase.$inferSelect;
 export type ConversationReplay = typeof conversationReplay.$inferSelect;
 export type ReplayInteraction = typeof replayInteraction.$inferSelect;
+export type TeachingAssistantEvaluation =
+  typeof teachingAssistantEvaluation.$inferSelect;
+export type NewTeachingAssistantEvaluation =
+  typeof teachingAssistantEvaluation.$inferInsert;
