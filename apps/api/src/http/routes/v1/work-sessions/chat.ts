@@ -33,6 +33,8 @@ import {
 } from "../../../services/work-session-access";
 import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
 import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
+import { formatSupportMaterials } from "../../../../agents/support-materials";
+import { detectLanguageHint } from "../../../../agents/language-detect";
 
 // ==================== SCHEMAS ====================
 
@@ -244,10 +246,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
         targetAudience: ta.targetAudience ?? "",
         challengeTitle: ch?.title ?? "",
         challengeDescription: ch?.description ?? "",
-        supportMaterials:
-          typeof ch?.supportMaterials === "string"
-            ? ch.supportMaterials
-            : JSON.stringify(ch?.supportMaterials ?? null),
+        supportMaterials: formattedSupportMaterials,
         kbContext: kbContext || undefined,
         currentCode: code ?? "",
         stdout: stdout ?? "",
@@ -257,10 +256,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const challengeContext = {
         title: ch?.title ?? "",
         description: ch?.description ?? "",
-        supportMaterials:
-          typeof ch?.supportMaterials === "string"
-            ? ch.supportMaterials
-            : JSON.stringify(ch?.supportMaterials ?? null),
+        supportMaterials: formattedSupportMaterials,
       };
 
       const langfuseCallback = getLangfuseCallback({
