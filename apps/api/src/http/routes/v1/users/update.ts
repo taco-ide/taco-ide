@@ -11,10 +11,12 @@ import { eq } from "drizzle-orm";
 
 // ==================== SCHEMAS ====================
 
-const UpdateUserBodySchema = z.object({
-  name: z.string().min(2).max(100).optional(),
-  image: z.string().url().nullable().optional(),
-});
+const UpdateUserBodySchema = z
+  .object({
+    name: z.string().min(2).max(100).optional(),
+    image: z.string().url().nullable().optional(),
+  })
+  .strict();
 
 const UserDataSchema = z.object({
   id: z.string(),

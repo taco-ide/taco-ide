@@ -57,8 +57,8 @@ export const postV1Classrooms403Schema = z.object({
 export const postV1ClassroomsMutationRequestSchema = z.object({
     "title": z.string().min(1).max(200),
 "description": z.string().max(2000).optional(),
-"organizationId": z.string().uuid(),
-"teacherUserId": z.string().uuid().nullable().nullish()
+"organizationId": z.string().min(1),
+"teacherUserId": z.string().min(1).nullable().nullish()
     })
 
 export const postV1ClassroomsMutationResponseSchema = z.lazy(() => postV1Classrooms201Schema)

@@ -6,7 +6,8 @@
 
 export type PostV1WorkSessionsIdInteractionsPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };

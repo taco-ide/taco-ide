@@ -6,8 +6,8 @@
 import { z } from "zod";
 
 export const deleteV1ChallengesChallengeidKnowledgeBasesKbidPathParamsSchema = z.object({
-    "challengeId": z.string().uuid(),
-"kbId": z.string().uuid()
+    "challengeId": z.string().min(1),
+"kbId": z.string().min(1)
     })
 
 /**

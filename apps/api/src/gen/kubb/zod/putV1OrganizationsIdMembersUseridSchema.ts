@@ -6,8 +6,8 @@
 import { z } from "zod";
 
 export const putV1OrganizationsIdMembersUseridPathParamsSchema = z.object({
-    "id": z.string().uuid(),
-"userId": z.string().uuid()
+    "id": z.string().min(1),
+"userId": z.string().min(1)
     })
 
 /**
@@ -64,6 +64,17 @@ export const putV1OrganizationsIdMembersUserid403Schema = z.object({
  * @description Default Response
  */
 export const putV1OrganizationsIdMembersUserid404Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const putV1OrganizationsIdMembersUserid409Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({

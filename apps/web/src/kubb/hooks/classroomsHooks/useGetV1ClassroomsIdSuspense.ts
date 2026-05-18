@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ClassroomsIdQueryResponse, GetV1ClassroomsIdPathParams, GetV1ClassroomsId401, GetV1ClassroomsId404 } from "../../../../../../packages/types/kubb/GetV1ClassroomsId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ClassroomsIdQueryResponse, GetV1ClassroomsIdPathParams, GetV1ClassroomsId401, GetV1ClassroomsId404 } from "../../../../../../packages/types/kubb/GetV1ClassroomsId.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ClassroomsIdSuspenseQueryKey = (id: GetV1ClassroomsIdPathParams["id"]) => [{ url: '/v1/classrooms/:id/', params: {id:id} }] as const

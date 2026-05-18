@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const getV1KnowledgeBasesQueryParamsSchema = z.object({
-    "classroomId": z.string().uuid(),
+    "classroomId": z.string().min(1),
 "page": z.coerce.number().min(1).default(1),
 "perPage": z.coerce.number().min(1).max(100).default(20)
     })

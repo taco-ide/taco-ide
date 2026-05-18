@@ -6,9 +6,31 @@
 
 export type GetV1OrganizationsIdMembersPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
+};
+
+export const getV1OrganizationsIdMembersQueryParamsRoleEnum = {
+    "student": "student",
+    "teacher": "teacher",
+    "coordinator": "coordinator",
+    "admin": "admin"
+} as const;
+
+export type GetV1OrganizationsIdMembersQueryParamsRoleEnum = (typeof getV1OrganizationsIdMembersQueryParamsRoleEnum)[keyof typeof getV1OrganizationsIdMembersQueryParamsRoleEnum];
+
+export type GetV1OrganizationsIdMembersQueryParams = {
+    /**
+     * @minLength 1
+     * @type string | undefined
+    */
+    q?: string;
+    /**
+     * @type string | undefined
+    */
+    role?: GetV1OrganizationsIdMembersQueryParamsRoleEnum;
 };
 
 export const getV1OrganizationsIdMembers200SuccessEnum = {
@@ -16,6 +38,14 @@ export const getV1OrganizationsIdMembers200SuccessEnum = {
 } as const;
 
 export type GetV1OrganizationsIdMembers200SuccessEnum = (typeof getV1OrganizationsIdMembers200SuccessEnum)[keyof typeof getV1OrganizationsIdMembers200SuccessEnum];
+
+export const dataJoinedViaEnum = {
+    "domain": "domain",
+    "manual": "manual",
+    "invitation": "invitation"
+} as const;
+
+export type DataJoinedViaEnum = (typeof dataJoinedViaEnum)[keyof typeof dataJoinedViaEnum];
 
 /**
  * @description Default Response
@@ -57,6 +87,14 @@ export type GetV1OrganizationsIdMembers200 = {
          * @type string
         */
         createdAt: string;
+        /**
+         * @type string
+        */
+        lastActiveAt: string | null;
+        /**
+         * @type string
+        */
+        joinedVia: DataJoinedViaEnum;
     }[];
     /**
      * @type object | undefined
@@ -164,5 +202,6 @@ export type GetV1OrganizationsIdMembersQueryResponse = GetV1OrganizationsIdMembe
 export type GetV1OrganizationsIdMembersQuery = {
     Response: GetV1OrganizationsIdMembers200;
     PathParams: GetV1OrganizationsIdMembersPathParams;
+    QueryParams: GetV1OrganizationsIdMembersQueryParams;
     Errors: GetV1OrganizationsIdMembers401 | GetV1OrganizationsIdMembers403 | GetV1OrganizationsIdMembers404;
 };

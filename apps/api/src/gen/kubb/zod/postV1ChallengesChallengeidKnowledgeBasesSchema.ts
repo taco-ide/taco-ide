@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const postV1ChallengesChallengeidKnowledgeBasesPathParamsSchema = z.object({
-    "challengeId": z.string().uuid()
+    "challengeId": z.string().min(1)
     })
 
 /**
@@ -78,7 +78,7 @@ export const postV1ChallengesChallengeidKnowledgeBases409Schema = z.object({
     })
 
 export const postV1ChallengesChallengeidKnowledgeBasesMutationRequestSchema = z.object({
-    "knowledgeBaseId": z.string().uuid()
+    "knowledgeBaseId": z.string().min(1)
     })
 
 export const postV1ChallengesChallengeidKnowledgeBasesMutationResponseSchema = z.lazy(() => postV1ChallengesChallengeidKnowledgeBases201Schema)

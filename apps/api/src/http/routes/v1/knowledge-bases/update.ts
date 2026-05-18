@@ -14,13 +14,15 @@ import { knowledgeBase } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const UpdateKnowledgeBaseParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
-const UpdateKnowledgeBaseBodySchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
-});
+const UpdateKnowledgeBaseBodySchema = z
+  .object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().optional(),
+  })
+  .strict();
 
 const KnowledgeBaseUpdatedSchema = z.object({
   id: z.string(),

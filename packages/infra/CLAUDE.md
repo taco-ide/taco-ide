@@ -73,6 +73,17 @@ BETTER_AUTH_URL=http://localhost:3344
 RESEND_API_KEY=re_xxxxxxxxxxxxx  # For email sending
 ```
 
+Optional platform admin envs (consumed by `npm run db:seed`):
+
+```env
+PLATFORM_ADMIN_EMAIL=admin@example.com
+PLATFORM_ADMIN_PASSWORD=at-least-12-chars
+PLATFORM_ADMIN_NAME=Platform Admin
+```
+
+If any of the three is missing, the seed logs a warning and skips the
+admin step without raising.
+
 Environment files are loaded from:
 - `apps/api/.env.development`
 - `apps/web/.env.local`
@@ -124,6 +135,39 @@ PostgreSQL runs in a Docker container configured in `docker/compose.yaml`:
 - **Database**: taco_dev
 - **User**: postgres
 - **Password**: postgres
+
+## Seeds
+
+Seed entry points live in `src/db/seeds/`:
+
+- `base.ts` — structural data shared across environments (default model and
+  teaching assistant). Also calls `seedPlatformAdmin()` when the
+  `PLATFORM_ADMIN_*` envs are present (skipped with a warning otherwise).
+- `dev.ts` — fake organization, users (teacher/student/coordinator),
+  classrooms and challenges. Refuses to run with `NODE_ENV=production`.
+- `prod.ts` — production-safe seed (no fake data).
+- `admin.ts` — idempotent platform admin seed. Upserts the user marked
+  with `is_platform_admin=true`, `email_verified=true`, `is_active=true`
+  and the matching `account` credential (password hashed via
+  `better-auth/crypto`). Re-running rotates the password if the env
+  changes.
+
+Run with `npm run db:seed` (base + admin), `npm run db:seed:dev` or
+`npm run db:seed:prod`.
+
+## Schema additions
+
+Two cross-cutting concepts are part of the auth schema:
+
+- `user.is_platform_admin: boolean` — cross-organization admin role,
+  separate from `member.role`. Declared as a Better Auth additional field
+  with `input: false` so clients cannot self-promote.
+- `organization.is_active: boolean` and `organization.updated_at` — soft
+  deactivation and write tracking for orgs.
+- `member` has `UNIQUE(organization_id, user_id)` and `INDEX(user_id)`.
+- `organization_email_domain (id, organization_id, domain, role,
+  created_at)` — auto-link rules for new sign-ups; `UNIQUE(domain, role)`
+  is global so a `(domain, role)` pair can only point to one org.
 
 ## Important Notes
 

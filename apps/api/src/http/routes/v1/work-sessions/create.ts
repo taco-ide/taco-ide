@@ -22,11 +22,13 @@ import {
 
 // ==================== SCHEMAS ====================
 
-const CreateWorkSessionBodySchema = z.object({
-  challengeId: z.string().uuid(),
-  /** Se omitido, o servidor usa o TA predefinido ligado ao desafio em `challenge_teaching_assistant`. */
-  teachingAssistantId: z.string().uuid().optional(),
-});
+const CreateWorkSessionBodySchema = z
+  .object({
+    challengeId: z.string().uuid(),
+    /** Se omitido, o servidor usa o TA predefinido ligado ao desafio em `challenge_teaching_assistant`. */
+    teachingAssistantId: z.string().uuid().optional(),
+  })
+  .strict();
 
 const WorkSessionSchema = z.object({
   id: z.string(),

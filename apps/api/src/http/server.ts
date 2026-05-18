@@ -1,9 +1,12 @@
 import { fastify } from "fastify";
 import fastifyCors from "@fastify/cors";
+import { APIError } from "@repo/infra/auth";
 import {
   serializerCompiler,
   validatorCompiler,
   ZodTypeProvider,
+  hasZodFastifySchemaValidationErrors,
+  isResponseSerializationError,
 } from "fastify-type-provider-zod";
 import fastifyCookie from "@fastify/cookie";
 import fastifyMultipart from "@fastify/multipart";
@@ -31,6 +34,68 @@ const darkCss = theme.getBuffer(SwaggerThemeNameEnum.DARK);
 // IMPORTANT: Configure Zod compilers for validation and serialization
 app.setSerializerCompiler(serializerCompiler);
 app.setValidatorCompiler(validatorCompiler);
+
+// Map Zod request validation failures to the project's BaseErrorResponseSchema
+// shape ({ success: false, message, errors }). Without this, Fastify's default
+// 400 payload doesn't match ResponseSchema400 and the serializer turns the 400
+// into 500 FST_ERR_FAILED_ERROR_SERIALIZATION.
+app.setErrorHandler((error, request, reply) => {
+  if (hasZodFastifySchemaValidationErrors(error)) {
+    const errors: Record<string, string[]> = {};
+    for (const issue of error.validation) {
+      const path = issue.instancePath.replace(/^\//, "").replace(/\//g, ".") || "_";
+      (errors[path] ??= []).push(issue.message);
+    }
+    return reply.status(400).send({
+      success: false,
+      message: "Validation failed",
+      errors,
+    });
+  }
+
+  if (isResponseSerializationError(error)) {
+    request.log.error({ err: error }, "Response serialization failed");
+    return reply.status(500).send({
+      success: false,
+      message: "Response serialization failed",
+    });
+  }
+
+  // Better Auth throws APIError (extends Error) with .statusCode (number)
+  // and .status (numeric or string code). Map to a clean 4xx/5xx response
+  // before falling through to the generic handler.
+  if (error instanceof APIError) {
+    const apiErr = error as unknown as {
+      statusCode?: number;
+      status?: number | string;
+      message?: string;
+    };
+    const apiStatus =
+      typeof apiErr.statusCode === "number" && apiErr.statusCode >= 400
+        ? apiErr.statusCode
+        : typeof apiErr.status === "number" && apiErr.status >= 400
+          ? apiErr.status
+          : 400;
+    if (apiStatus >= 500) {
+      request.log.error({ err: error }, "Better Auth APIError (5xx)");
+    }
+    return reply.status(apiStatus).send({
+      success: false,
+      message: apiErr.message || "Authentication error",
+    });
+  }
+
+  const fastifyError = error as { statusCode?: number; message?: string };
+  const statusCode =
+    fastifyError.statusCode && fastifyError.statusCode >= 400 ? fastifyError.statusCode : 500;
+  if (statusCode >= 500) {
+    request.log.error({ err: error }, "Unhandled error");
+  }
+  return reply.status(statusCode).send({
+    success: false,
+    message: fastifyError.message || "Internal Server Error",
+  });
+});
 
 // CORS configuration
 const allowedOrigins = [env.FRONTEND_URL];

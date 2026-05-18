@@ -15,10 +15,12 @@ import { getLangfuseCallback } from "../../../../agents/langfuse";
 
 // ==================== SCHEMAS ====================
 
-const TeacherMessageBodySchema = z.object({
-  classroomId: z.string(),
-  message: z.string().min(1),
-});
+const TeacherMessageBodySchema = z
+  .object({
+    classroomId: z.string(),
+    message: z.string().min(1),
+  })
+  .strict();
 
 // ==================== ROUTE ====================
 

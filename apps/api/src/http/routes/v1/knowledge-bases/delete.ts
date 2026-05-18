@@ -14,7 +14,7 @@ import { knowledgeBase } from "@repo/infra/db/schema";
 // ==================== SCHEMAS ====================
 
 const DeleteKnowledgeBaseParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 // ==================== ROUTE ====================

@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const getV1WorkSessionsByChallengeQueryParamsSchema = z.object({
-    "challengeId": z.string().uuid()
+    "challengeId": z.string().min(1)
     })
 
 /**
@@ -36,6 +36,17 @@ export const getV1WorkSessionsByChallenge200Schema = z.object({
  * @description Default Response
  */
 export const getV1WorkSessionsByChallenge401Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const getV1WorkSessionsByChallenge403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({

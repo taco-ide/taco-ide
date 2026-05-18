@@ -16,9 +16,11 @@ import {
 
 // ==================== SCHEMAS ====================
 
-const GetByChallengeQuerySchema = z.object({
-  challengeId: z.string().uuid(),
-});
+const GetByChallengeQuerySchema = z
+  .object({
+    challengeId: z.string().min(1),
+  })
+  .strict();
 
 const WorkSessionSchema = z.object({
   id: z.string(),

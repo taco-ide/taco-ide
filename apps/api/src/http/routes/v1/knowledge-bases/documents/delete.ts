@@ -20,8 +20,8 @@ import { deleteFile } from "../../../../../services/file-storage";
 // ==================== SCHEMAS ====================
 
 const DeleteDocumentParamsSchema = z.object({
-  kbId: z.string().uuid(),
-  docId: z.string().uuid(),
+  kbId: z.string().min(1),
+  docId: z.string().min(1),
 });
 
 // ==================== ROUTE ====================

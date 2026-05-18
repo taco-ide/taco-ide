@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const putV1ClassroomsIdPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
 
 /**
@@ -67,7 +67,7 @@ export const putV1ClassroomsId404Schema = z.object({
 export const putV1ClassroomsIdMutationRequestSchema = z.object({
     "title": z.string().min(1).max(200).optional(),
 "description": z.string().max(2000).nullable().nullish(),
-"teacherUserId": z.string().uuid().nullable().nullish()
+"teacherUserId": z.string().min(1).nullable().nullish()
     })
 
 export const putV1ClassroomsIdMutationResponseSchema = z.lazy(() => putV1ClassroomsId200Schema)

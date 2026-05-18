@@ -99,11 +99,17 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
         if (currentStep === 1) {
             const formData = methods.getValues();
+            if (!formData.classroomId) {
+                methods.setError("classroomId", {
+                    message: "Selecione uma turma",
+                });
+                return;
+            }
             const payload = {
                 title: formData.title,
                 description: formData.description,
                 difficulty: formData.difficulty,
-                classroomId: formData.classroomId || undefined,
+                classroomId: formData.classroomId,
                 tags: tags.length > 0 ? tags : undefined,
             };
 

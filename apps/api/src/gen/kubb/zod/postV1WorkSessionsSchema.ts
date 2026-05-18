@@ -45,7 +45,7 @@ export const postV1WorkSessions401Schema = z.object({
 /**
  * @description Default Response
  */
-export const postV1WorkSessions404Schema = z.object({
+export const postV1WorkSessions403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -56,7 +56,7 @@ export const postV1WorkSessions404Schema = z.object({
 /**
  * @description Default Response
  */
-export const postV1WorkSessions409Schema = z.object({
+export const postV1WorkSessions404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({

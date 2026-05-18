@@ -19,7 +19,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const ListChallengeKBsParamsSchema = z.object({
-  challengeId: z.string().uuid(),
+  challengeId: z.string().min(1),
 });
 
 const KnowledgeBaseItemSchema = z.object({

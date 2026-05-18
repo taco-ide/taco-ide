@@ -3,6 +3,8 @@ import {
   text,
   timestamp,
   boolean,
+  uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 // User table - required by Better Auth with custom fields
@@ -14,6 +16,7 @@ export const user = pgTable("user", {
   image: text("image"),
   // Custom fields
   isActive: boolean("is_active").notNull().default(true),
+  isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
@@ -70,21 +73,33 @@ export const organization = pgTable("organization", {
   slug: text("slug").notNull().unique(),
   logo: text("logo"),
   metadata: text("metadata"),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // Member table - Better Auth Organization plugin
-export const member = pgTable("member", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  role: text("role").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const member = pgTable(
+  "member",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    // Bumped by authMiddleware on each authenticated request (debounced 5min).
+    // Nullable: not all existing members have activity recorded yet.
+    lastActiveAt: timestamp("last_active_at"),
+  },
+  (table) => [
+    uniqueIndex("member_org_user_idx").on(table.organizationId, table.userId),
+    index("member_user_idx").on(table.userId),
+  ]
+);
 
 // Invitation table - Better Auth Organization plugin
 export const invitation = pgTable("invitation", {

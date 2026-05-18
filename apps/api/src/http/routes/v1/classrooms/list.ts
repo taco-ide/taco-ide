@@ -11,11 +11,13 @@ import {
 
 // ==================== SCHEMAS ====================
 
-const ListClassroomsQuerySchema = z.object({
-  scope: z.enum(["mine", "org", "all"]).default("all"),
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-});
+const ListClassroomsQuerySchema = z
+  .object({
+    scope: z.enum(["mine", "org", "all"]).default("all"),
+    page: z.coerce.number().min(1).default(1),
+    perPage: z.coerce.number().min(1).max(100).default(20),
+  })
+  .strict();
 
 const ClassroomItemSchema = z.object({
   id: z.string(),

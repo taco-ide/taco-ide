@@ -6,7 +6,8 @@
 
 export type GetV1WorkSessionsByChallengeQueryParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     challengeId: string;
 };
@@ -111,6 +112,32 @@ export type GetV1WorkSessionsByChallenge401 = {
     };
 };
 
+export const getV1WorkSessionsByChallenge403SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1WorkSessionsByChallenge403SuccessEnum = (typeof getV1WorkSessionsByChallenge403SuccessEnum)[keyof typeof getV1WorkSessionsByChallenge403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1WorkSessionsByChallenge403 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1WorkSessionsByChallenge403SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const getV1WorkSessionsByChallenge404SuccessEnum = {
     "false": false
 } as const;
@@ -142,5 +169,5 @@ export type GetV1WorkSessionsByChallengeQueryResponse = GetV1WorkSessionsByChall
 export type GetV1WorkSessionsByChallengeQuery = {
     Response: GetV1WorkSessionsByChallenge200;
     QueryParams: GetV1WorkSessionsByChallengeQueryParams;
-    Errors: GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404;
+    Errors: GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404;
 };

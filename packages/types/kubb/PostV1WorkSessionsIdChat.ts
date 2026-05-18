@@ -6,7 +6,8 @@
 
 export type PostV1WorkSessionsIdChatPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };
@@ -169,6 +170,32 @@ export type PostV1WorkSessionsIdChat404 = {
     };
 };
 
+export const postV1WorkSessionsIdChat429SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1WorkSessionsIdChat429SuccessEnum = (typeof postV1WorkSessionsIdChat429SuccessEnum)[keyof typeof postV1WorkSessionsIdChat429SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1WorkSessionsIdChat429 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1WorkSessionsIdChat429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1WorkSessionsIdChat503SuccessEnum = {
     "false": false
 } as const;
@@ -222,5 +249,5 @@ export type PostV1WorkSessionsIdChatMutation = {
     Response: PostV1WorkSessionsIdChat200;
     Request: PostV1WorkSessionsIdChatMutationRequest;
     PathParams: PostV1WorkSessionsIdChatPathParams;
-    Errors: PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat503;
+    Errors: PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat503;
 };

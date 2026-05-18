@@ -13,12 +13,14 @@ import { challengeSolution, challenge } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
-const UpsertSolutionBodySchema = z.object({
-  code: z.string().optional(),
-  stdin: z.string().optional(),
-  stdout: z.string().optional(),
-  chatHistory: z.unknown().optional(),
-});
+const UpsertSolutionBodySchema = z
+  .object({
+    code: z.string().optional(),
+    stdin: z.string().optional(),
+    stdout: z.string().optional(),
+    chatHistory: z.unknown().optional(),
+  })
+  .strict();
 
 const SolutionSchema = z.object({
   id: z.string(),
@@ -48,7 +50,7 @@ export async function upsertSolutionRoute(app: FastifyTypedInstance) {
         summary: "Create or update solution",
         description:
           "Creates or updates the user's solution state for a challenge",
-        params: z.object({ id: z.string().uuid() }),
+        params: z.object({ id: z.string().min(1) }),
         body: UpsertSolutionBodySchema,
         response: {
           200: ResponseSchema200.extend({ data: SolutionSchema }),

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge403, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1WorkSessionsByChallengeQueryKey = (params: GetV1WorkSessionsByChallengeQueryParams) => [{ url: '/v1/work-sessions/by-challenge' }, ...(params ? [params] : [])] as const
@@ -21,13 +21,13 @@ export type GetV1WorkSessionsByChallengeQueryKey = ReturnType<typeof getV1WorkSe
 export async function getV1WorkSessionsByChallenge(params: GetV1WorkSessionsByChallengeQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, unknown>({ method : "GET", url : `/v1/work-sessions/by-challenge`, params, ... requestConfig })  
+  const res = await request<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, unknown>({ method : "GET", url : `/v1/work-sessions/by-challenge`, params, ... requestConfig })  
   return res.data
 }
 
 export function getV1WorkSessionsByChallengeQueryOptions(params: GetV1WorkSessionsByChallengeQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1WorkSessionsByChallengeQueryKey(params)
-  return queryOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, GetV1WorkSessionsByChallengeQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, GetV1WorkSessionsByChallengeQueryResponse, typeof queryKey>({
    enabled: !!(params),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1WorkSessionsByChallengeQueryOptions(params: GetV1WorkSessio
  */
 export function useGetV1WorkSessionsByChallenge<TData = GetV1WorkSessionsByChallengeQueryResponse, TQueryData = GetV1WorkSessionsByChallengeQueryResponse, TQueryKey extends QueryKey = GetV1WorkSessionsByChallengeQueryKey>(params: GetV1WorkSessionsByChallengeQueryParams, options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1WorkSessionsByChallengeQueryResponse, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1WorkSessionsByChallenge<TData = GetV1WorkSessionsByChall
    ...getV1WorkSessionsByChallengeQueryOptions(params, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1WorkSessionsByChallenge401 | GetV1WorkSessionsByChallenge403 | GetV1WorkSessionsByChallenge404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

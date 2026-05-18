@@ -6,7 +6,8 @@
 
 export type PostV1ChallengesChallengeidKnowledgeBasesPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     challengeId: string;
 };
@@ -180,7 +181,8 @@ export type PostV1ChallengesChallengeidKnowledgeBases409 = {
 
 export type PostV1ChallengesChallengeidKnowledgeBasesMutationRequest = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     knowledgeBaseId: string;
 };

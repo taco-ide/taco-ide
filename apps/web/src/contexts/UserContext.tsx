@@ -23,6 +23,7 @@ export interface User {
   image: string | null;
   emailVerified: boolean;
   isActive: boolean;
+  isPlatformAdmin: boolean;
   activeOrganizationId: string | null;
   activeOrganizationName: string | null;
   role: string | null;
@@ -96,6 +97,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   /** Better Auth deixa `activeOrganizationId` null até `organization.setActive`; o seed só cria `member`. */
   const autoActiveOrgAttempted = useRef(false);
 
+  // `refetch` is read through a ref to keep the auto-active-org effect's deps
+  // stable — React Query returns a new function reference on every render, so
+  // including it in deps would cause the effect to re-run on every render.
+  const refetchRef = useRef(refetch);
+  refetchRef.current = refetch;
+
   useEffect(() => {
     if (is401 || !user) {
       autoActiveOrgAttempted.current = false;
@@ -109,18 +116,29 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     void (async () => {
       try {
-        const { data: orgs, error: listError } =
-          await authClient.organization.list();
-        if (listError || !orgs?.length) return;
-
-        const first = orgs[0];
+        // Use our own /organizations/mine endpoint instead of
+        // authClient.organization.list() because Better Auth's plugin doesn't
+        // expose our `is_active` flag and would happily return deactivated
+        // orgs — picking the first of those would loop back to a NULL active
+        // org once the auth middleware filters it out.
+        const res = await fetch(
+          `${
+            process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
+          }/v1/organizations/mine`,
+          { credentials: "include" }
+        );
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          data?: Array<{ id: string }>;
+        };
+        const first = body.data?.[0];
         if (!first?.id) return;
 
         const { error: setError } = await authClient.organization.setActive({
           organizationId: first.id,
         });
         if (!setError) {
-          await refetch();
+          await refetchRef.current();
         }
       } catch (e) {
         console.warn("Não foi possível definir organização ativa:", e);
@@ -132,7 +150,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     is401,
     user?.id,
     user?.activeOrganizationId,
-    refetch,
   ]);
 
   const fetchUser = async () => {

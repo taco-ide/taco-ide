@@ -6,7 +6,7 @@
 import { z } from "zod";
 
 export const putV1KnowledgeBasesKbidPathParamsSchema = z.object({
-    "kbId": z.string().uuid()
+    "kbId": z.string().min(1)
     })
 
 /**

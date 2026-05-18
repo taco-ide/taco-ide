@@ -51,6 +51,10 @@ export type GetV1UsersMe200 = {
         */
         isActive: boolean;
         /**
+         * @type boolean
+        */
+        isPlatformAdmin: boolean;
+        /**
          * @type string
         */
         createdAt: string;

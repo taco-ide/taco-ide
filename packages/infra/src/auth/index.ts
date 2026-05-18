@@ -1,10 +1,13 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
+import { and, asc, eq } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { env } from "../env";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email";
+import { sendInvitationEmail } from "./invitation-email";
 import {
   ac,
   studentRole,
@@ -28,6 +31,16 @@ export type {
   Action,
   Permission,
 } from "./permissions";
+
+// Re-export the Better Auth scrypt-based password hasher so consumers
+// (e.g. seeds, bulk import routes) can produce credentials compatible
+// with email/password sign-in without depending on `better-auth`
+// directly.
+export { hashPassword } from "better-auth/crypto";
+
+// Re-export APIError so the API can map Better Auth errors (401/403/...)
+// to clean HTTP responses without depending on `better-auth` directly.
+export { APIError } from "better-auth/api";
 
 // ==================== AUTH INSTANCE ====================
 
@@ -115,6 +128,14 @@ export const auth = betterAuth({
         type: "date",
         required: false,
       },
+      // input: false prevents clients from setting isPlatformAdmin during
+      // sign-up or self-update. Promotion is done server-side only.
+      isPlatformAdmin: {
+        type: "boolean",
+        defaultValue: false,
+        required: false,
+        input: false,
+      },
     },
   },
 
@@ -131,8 +152,115 @@ export const auth = betterAuth({
       },
       allowUserToCreateOrganization: true,
       creatorRole: "admin",
+      sendInvitationEmail: async (data) => {
+        try {
+          await sendInvitationEmail({
+            to: data.email,
+            organizationName: data.organization.name,
+            invitationId: data.id,
+            inviterName: data.inviter.user.name ?? undefined,
+            expiresAt: data.invitation.expiresAt,
+            role: data.role,
+          });
+        } catch (err) {
+          console.error(
+            "[organization.sendInvitationEmail] failed:",
+            err
+          );
+          // Swallow: the invitation row already exists; the user can be
+          // re-notified later. Throwing here would abort the create call.
+        }
+      },
     }),
   ],
+
+  // Database hooks run inside Better Auth's create/update transactions.
+  // Throwing here aborts the user creation, so we always swallow errors
+  // in the auto-assignment hook and prefer a successful sign-up over a
+  // brittle one-shot membership.
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (createdUser) => {
+          try {
+            const email = createdUser.email;
+            if (typeof email !== "string") return;
+            // Use lastIndexOf("@") to handle quoted local parts like
+            // `"user@name"@example.com` — split("@")[1] would return the
+            // wrong portion in that (rare, but valid per RFC 5321) case.
+            const atIndex = email.lastIndexOf("@");
+            if (atIndex === -1) return;
+            const domain = email.slice(atIndex + 1).toLowerCase().trim();
+            if (!domain) return;
+
+            // Pick the earliest active rule (createdAt ASC). Multiple rules
+            // for the same domain across different organizations are allowed
+            // by the global UNIQUE(domain, role) only when the role differs;
+            // we still tiebreak by createdAt for predictability.
+            const rules = await db
+              .select({
+                id: schema.organizationEmailDomain.id,
+                organizationId: schema.organizationEmailDomain.organizationId,
+                role: schema.organizationEmailDomain.role,
+                createdAt: schema.organizationEmailDomain.createdAt,
+              })
+              .from(schema.organizationEmailDomain)
+              .innerJoin(
+                schema.organization,
+                eq(
+                  schema.organization.id,
+                  schema.organizationEmailDomain.organizationId
+                )
+              )
+              .where(
+                and(
+                  eq(schema.organizationEmailDomain.domain, domain),
+                  eq(schema.organization.isActive, true)
+                )
+              )
+              .orderBy(asc(schema.organizationEmailDomain.createdAt))
+              .limit(1);
+
+            const rule = rules[0];
+            if (!rule) return;
+
+            // Defense-in-depth: cap the effective auto-link role at
+            // "teacher". Even if a legacy row in `organization_email_domain`
+            // still carries role="admin" (e.g. a seed predating the F10
+            // migration, or a manual SQL fixture), self-service sign-up must
+            // NEVER grant the real org `admin` role to a stranger whose
+            // only credential is owning an email at a matching domain.
+            // Body validation in
+            // apps/api/.../email-domains/create.ts already blocks new
+            // "admin" rules; migration 0005 downgrades existing ones.
+            // This cap is the last line of defense.
+            const effectiveRole: schema.OrganizationEmailDomain["role"] =
+              rule.role === "admin" ? "teacher" : rule.role;
+
+            // Insert the membership directly via Drizzle. Going through
+            // `auth.api.addMember` would enforce the org plugin's
+            // `membershipLimit` (default 100); we want auto-assignment to
+            // bypass that for new sign-ups.
+            await db.insert(schema.member).values({
+              id: randomUUID(),
+              userId: createdUser.id,
+              organizationId: rule.organizationId,
+              role: effectiveRole,
+              createdAt: new Date(),
+            });
+          } catch (err) {
+            console.error(
+              "[user.create.after] domain auto-assign failed:",
+              err
+            );
+            // Do NOT rethrow — failing the hook would roll back the user
+            // creation. Better: user signs up successfully, just without
+            // the auto-assignment.
+          }
+        },
+      },
+    },
+  },
 
   advanced: {
     useSecureCookies: env.NODE_ENV === "production",

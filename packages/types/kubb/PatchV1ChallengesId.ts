@@ -6,7 +6,8 @@
 
 export type PatchV1ChallengesIdPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
 };
@@ -175,7 +176,8 @@ export type PatchV1ChallengesId404 = {
 
 export type PatchV1ChallengesIdMutationRequest = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     classroomId: string | null;
 };

@@ -12,14 +12,16 @@ import {
 
 // ==================== SCHEMAS ====================
 
-const ListChallengesQuerySchema = z.object({
-  scope: z.enum(["mine", "public", "all"]).default("all"),
-  classroomId: z.string().uuid().optional(),
-  difficulty: z.enum(["easy", "medium", "hard"]).optional(),
-  tags: z.string().optional(),
-  page: z.coerce.number().min(1).default(1),
-  perPage: z.coerce.number().min(1).max(100).default(20),
-});
+const ListChallengesQuerySchema = z
+  .object({
+    scope: z.enum(["mine", "public", "all"]).default("all"),
+    classroomId: z.string().min(1).optional(),
+    difficulty: z.enum(["easy", "medium", "hard"]).optional(),
+    tags: z.string().optional(),
+    page: z.coerce.number().min(1).default(1),
+    perPage: z.coerce.number().min(1).max(100).default(20),
+  })
+  .strict();
 
 const ChallengeItemSchema = z.object({
   id: z.string(),

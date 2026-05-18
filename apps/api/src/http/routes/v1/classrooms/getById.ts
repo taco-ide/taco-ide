@@ -17,7 +17,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const ClassroomParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
 const EnrollmentItemSchema = z.object({

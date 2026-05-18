@@ -6,7 +6,8 @@
 
 export type PostV1KnowledgeBasesKbidDocumentsPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     kbId: string;
 };

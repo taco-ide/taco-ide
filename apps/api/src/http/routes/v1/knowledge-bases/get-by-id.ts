@@ -16,7 +16,7 @@ import {
 // ==================== SCHEMAS ====================
 
 const GetKnowledgeBaseParamsSchema = z.object({
-  kbId: z.string().uuid(),
+  kbId: z.string().min(1),
 });
 
 const DocumentItemSchema = z.object({

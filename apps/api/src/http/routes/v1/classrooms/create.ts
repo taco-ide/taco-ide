@@ -14,12 +14,14 @@ import { roleHasPermission } from "@repo/infra/auth";
 
 // ==================== SCHEMAS ====================
 
-const CreateClassroomBodySchema = z.object({
-  title: z.string().min(1).max(200),
-  description: z.string().max(2000).optional(),
-  organizationId: z.string().uuid(),
-  teacherUserId: z.string().uuid().nullable().optional(),
-});
+const CreateClassroomBodySchema = z
+  .object({
+    title: z.string().min(1).max(200),
+    description: z.string().max(2000).optional(),
+    organizationId: z.string().min(1),
+    teacherUserId: z.string().min(1).nullable().optional(),
+  })
+  .strict();
 
 const ClassroomSchema = z.object({
   id: z.string(),

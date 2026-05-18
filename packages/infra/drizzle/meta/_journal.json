@@ -36,6 +36,13 @@
       "when": 1778803669749,
       "tag": "0004_curly_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779147136357,
+      "tag": "0005_admin_full_integration",
+      "breakpoints": true
     }
   ]
 }

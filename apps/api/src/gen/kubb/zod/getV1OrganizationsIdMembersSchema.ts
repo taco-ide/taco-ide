@@ -6,8 +6,13 @@
 import { z } from "zod";
 
 export const getV1OrganizationsIdMembersPathParamsSchema = z.object({
-    "id": z.string().uuid()
+    "id": z.string().min(1)
     })
+
+export const getV1OrganizationsIdMembersQueryParamsSchema = z.object({
+    "q": z.string().min(1).optional(),
+"role": z.enum(["student", "teacher", "coordinator", "admin"]).optional()
+    }).optional()
 
 /**
  * @description Default Response
@@ -21,7 +26,9 @@ export const getV1OrganizationsIdMembers200Schema = z.object({
 "name": z.string(),
 "email": z.string(),
 "role": z.string(),
-"createdAt": z.string()
+"createdAt": z.string(),
+"lastActiveAt": z.string().nullable(),
+"joinedVia": z.enum(["domain", "manual", "invitation"])
     })),
 "pagination": z.object({
     "total": z.number(),

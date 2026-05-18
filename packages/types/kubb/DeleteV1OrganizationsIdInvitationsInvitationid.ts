@@ -6,7 +6,8 @@
 
 export type DeleteV1OrganizationsIdInvitationsInvitationidPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     id: string;
     /**

@@ -22,17 +22,19 @@ import {
 // ==================== SCHEMAS ====================
 
 const AddInteractionParamsSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
 });
 
-const AddInteractionBodySchema = z.object({
-  interactionType: z.enum(["chat", "code_run"]),
-  userPrompt: z.string().default(""),
-  modelResponse: z.string().default(""),
-  code: z.string().optional(),
-  stdin: z.string().optional(),
-  stdout: z.string().optional(),
-});
+const AddInteractionBodySchema = z
+  .object({
+    interactionType: z.enum(["chat", "code_run"]),
+    userPrompt: z.string().default(""),
+    modelResponse: z.string().default(""),
+    code: z.string().optional(),
+    stdin: z.string().optional(),
+    stdout: z.string().optional(),
+  })
+  .strict();
 
 const InteractionSchema = z.object({
   id: z.string(),

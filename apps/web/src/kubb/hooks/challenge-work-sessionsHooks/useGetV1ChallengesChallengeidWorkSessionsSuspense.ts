@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ChallengesChallengeidWorkSessionsQueryResponse, GetV1ChallengesChallengeidWorkSessionsPathParams, GetV1ChallengesChallengeidWorkSessionsQueryParams, GetV1ChallengesChallengeidWorkSessions401, GetV1ChallengesChallengeidWorkSessions403, GetV1ChallengesChallengeidWorkSessions404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidWorkSessions.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesChallengeidWorkSessionsQueryResponse, GetV1ChallengesChallengeidWorkSessionsPathParams, GetV1ChallengesChallengeidWorkSessionsQueryParams, GetV1ChallengesChallengeidWorkSessions401, GetV1ChallengesChallengeidWorkSessions403, GetV1ChallengesChallengeidWorkSessions404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidWorkSessions.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesChallengeidWorkSessionsSuspenseQueryKey = (challengeId: GetV1ChallengesChallengeidWorkSessionsPathParams["challengeId"], params?: GetV1ChallengesChallengeidWorkSessionsQueryParams) => [{ url: '/v1/challenges/:challengeId/work-sessions/', params: {challengeId:challengeId} }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1ChallengesChallengeidWorkSessionsSuspenseQueryKey = (challenge
 export type GetV1ChallengesChallengeidWorkSessionsSuspenseQueryKey = ReturnType<typeof getV1ChallengesChallengeidWorkSessionsSuspenseQueryKey>
 
 /**
- * @description Paginated list of student work sessions for a challenge. Teachers: own challenges only. Coordinators/admins: any.
+ * @description Paginated list of student work sessions for a challenge. Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
  * @summary List work sessions for challenge (staff)
  * {@link /v1/challenges/:challengeId/work-sessions/}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesChallengeidWorkSessionsSuspenseQueryOptions(chall
 }
 
 /**
- * @description Paginated list of student work sessions for a challenge. Teachers: own challenges only. Coordinators/admins: any.
+ * @description Paginated list of student work sessions for a challenge. Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
  * @summary List work sessions for challenge (staff)
  * {@link /v1/challenges/:challengeId/work-sessions/}
  */

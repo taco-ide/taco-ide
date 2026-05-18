@@ -9,6 +9,7 @@ interface AuthUser {
   image: string | null;
   emailVerified: boolean;
   isActive: boolean;
+  isPlatformAdmin: boolean;
   createdAt: Date;
   updatedAt: Date;
   activeOrganizationId: string | null;

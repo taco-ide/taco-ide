@@ -6,11 +6,13 @@
 
 export type DeleteV1ChallengesChallengeidKnowledgeBasesKbidPathParams = {
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     challengeId: string;
     /**
-     * @type string, uuid
+     * @minLength 1
+     * @type string
     */
     kbId: string;
 };

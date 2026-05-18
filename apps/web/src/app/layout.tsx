@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google"
+import { Toaster } from "sonner";
 import "./globals.css";
 import { QueryProvider } from "@/lib/query-provider";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         className={`antialiased ${jetbrains.className} text-white bg-slate-900`}
       >
         <QueryProvider>{children}</QueryProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

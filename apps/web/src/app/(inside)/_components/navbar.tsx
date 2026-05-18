@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useUser } from "@/contexts/UserContext";
 import { useState, useRef, useEffect } from "react";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
+import { PlatformAdminGuard } from "@/components/guards/PlatformAdminGuard";
 
 const Navbar = () => {
   const { user, getFirstName, logout } = useUser();
@@ -66,6 +67,14 @@ const Navbar = () => {
                 Criar
               </Link>
             </PermissionGuard>
+            <PlatformAdminGuard>
+              <Link
+                href="/admin"
+                className="px-3 py-1.5 text-sm text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 rounded-md transition-colors"
+              >
+                Admin
+              </Link>
+            </PlatformAdminGuard>
           </nav>
           {user ? (
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>

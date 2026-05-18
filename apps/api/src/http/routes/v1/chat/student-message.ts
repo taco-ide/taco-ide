@@ -21,12 +21,14 @@ import { getLangfuseCallback } from "../../../../agents/langfuse";
 
 // ==================== SCHEMAS ====================
 
-const StudentMessageBodySchema = z.object({
-  workSessionId: z.string(),
-  message: z.string().min(1),
-  currentCode: z.string().optional(),
-  stdout: z.string().optional(),
-});
+const StudentMessageBodySchema = z
+  .object({
+    workSessionId: z.string(),
+    message: z.string().min(1),
+    currentCode: z.string().optional(),
+    stdout: z.string().optional(),
+  })
+  .strict();
 
 // ==================== ROUTE ====================
 
