@@ -32,6 +32,7 @@ const UpdateOrganizationBodySchema = z
       .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i, {
         message: "Slug must be alphanumeric with optional hyphens",
       })
+      .transform((v) => v.toLowerCase())
       .optional(),
     logo: z.string().url().nullable().optional(),
     metadata: z.string().nullable().optional(),
