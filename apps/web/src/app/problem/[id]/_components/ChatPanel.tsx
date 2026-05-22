@@ -1,7 +1,7 @@
 "use client";
 
 import { CopyIcon, CornerDownLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRemarkSync } from "react-remark";
 import { useProblem } from "@/contexts/ProblemContext";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
@@ -30,7 +30,7 @@ function AssistantMessageContent({ content }: { content: string }) {
     normalizeAssistantMarkdown(content || "") || "(Aguardando resposta...)";
   const md = useRemarkSync(trimmed);
   return (
-    <div className="prose prose-sm prose-invert max-w-none prose-p:text-zinc-300 prose-p:my-0.5 prose-headings:text-zinc-100 prose-headings:my-1.5 prose-li:my-0 prose-li:text-zinc-300 prose-code:text-amber-400 prose-code:bg-zinc-700/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-600/50 prose-pre:text-zinc-300 prose-pre:text-xs prose-pre:my-1.5 prose-ul:my-1 prose-ol:my-1">
+    <div className="prose prose-sm prose-invert max-w-none whitespace-normal prose-p:text-zinc-300 prose-p:my-1 prose-headings:text-zinc-100 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-li:text-zinc-300 prose-code:text-amber-400 prose-code:bg-zinc-700/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-600/50 prose-pre:text-zinc-300 prose-pre:text-xs prose-pre:my-2">
       {md}
     </div>
   );
@@ -44,21 +44,39 @@ function ChatPanel() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [optimisticUserMessage, setOptimisticUserMessage] = useState<string | null>(null);
 
-  const messages: Array<{ role: string; content: string }> = [];
-  if (workSession?.interactions) {
-    for (const i of workSession.interactions) {
-      if (i.interactionType === "chat") {
-        if (i.userPrompt) messages.push({ role: "user", content: i.userPrompt });
-        messages.push({
-          role: "assistant",
-          content: i.modelResponse || "(Aguardando resposta...)",
-        });
+  const messages = useMemo(() => {
+    const arr: Array<{
+      role: string;
+      content: string;
+      key: string;
+    }> = [];
+    if (workSession?.interactions) {
+      for (const i of workSession.interactions) {
+        if (i.interactionType === "chat") {
+          if (i.userPrompt) {
+            arr.push({
+              role: "user",
+              content: i.userPrompt,
+              key: `${i.id}-user`,
+            });
+          }
+          arr.push({
+            role: "assistant",
+            content: i.modelResponse || "(Aguardando resposta...)",
+            key: `${i.id}-assistant`,
+          });
+        }
       }
     }
-  }
-  if (optimisticUserMessage) {
-    messages.push({ role: "user", content: optimisticUserMessage });
-  }
+    if (optimisticUserMessage) {
+      arr.push({
+        role: "user",
+        content: optimisticUserMessage,
+        key: "optimistic",
+      });
+    }
+    return arr;
+  }, [workSession?.interactions, optimisticUserMessage]);
 
   const submitMessage = async () => {
     if (isSessionEnded || !input.trim() || isGenerating) return;
@@ -77,12 +95,10 @@ function ChatPanel() {
         stdout: error || output || undefined,
       });
     } catch (err) {
-      setChatError(
-        err instanceof Error ? err.message : "Erro ao enviar mensagem"
-      );
+      setChatError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
     } finally {
-      setIsGenerating(false);
       setOptimisticUserMessage(null);
+      setIsGenerating(false);
     }
   };
 
@@ -102,7 +118,11 @@ function ChatPanel() {
     if (action === "Copy") {
       const message = messages[messageIndex];
       if (message?.role === "assistant") {
-        navigator.clipboard.writeText(message.content);
+        navigator.clipboard
+          .writeText(message.content)
+          .catch((clipErr) => {
+            console.warn("Failed to copy to clipboard:", clipErr);
+          });
       }
     }
   };
@@ -136,7 +156,7 @@ function ChatPanel() {
 
           {messages.map((message, index) => (
             <ChatBubble
-              key={index}
+              key={message.key}
               variant={message.role === "user" ? "sent" : "received"}
             >
               <ChatBubbleAvatar

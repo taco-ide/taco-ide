@@ -3,29 +3,79 @@ import { z } from "zod";
 import { env } from "@repo/infra/env";
 import { searchChallengeKnowledgeBases } from "../../services/knowledge-base-search";
 
+const RUN_CODE_TIMEOUT_MS = 30000; // 30 seconds per tool execution
+
 export const runCode = tool(
-  async ({ code, stdin }) => {
-    const response = await fetch(env.CODE_EXEC_API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        language: "python",
-        version: "3.12.0",
-        files: [{ content: code }],
-        stdin: stdin ?? "",
-      }),
-    });
+  async ({ code, stdin }, config) => {
+    try {
+      // Create a local timeout controller, independently from the agent-level timeout
+      const localController = new AbortController();
+      const localTimeout = setTimeout(
+        () => localController.abort(),
+        RUN_CODE_TIMEOUT_MS
+      );
 
-    const data = (await response.json()) as {
-      run?: { stdout?: string; stderr?: string; code?: number };
-    };
-    const run = data.run ?? {};
+      // If the parent signal aborts, also abort the local controller
+      const parentSignal = config?.signal;
+      if (parentSignal) {
+        if (parentSignal.aborted) {
+          localController.abort();
+        } else {
+          parentSignal.addEventListener("abort", () => localController.abort(), { once: true });
+        }
+      }
 
-    return JSON.stringify({
-      stdout: run.stdout ?? "",
-      stderr: run.stderr ?? "",
-      exitCode: run.code ?? -1,
-    });
+      try {
+        const response = await fetch(env.CODE_EXEC_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language: "python",
+            version: "3.12.0",
+            files: [{ content: code }],
+            stdin: stdin ?? "",
+          }),
+          signal: localController.signal,
+        });
+
+        if (!response.ok) {
+          const body = await response.text().catch(() => "");
+          throw new Error(
+            `Code execution API returned ${response.status}: ${body.slice(0, 200)}`
+          );
+        }
+
+        const data = (await response.json()) as {
+          run?: { stdout?: string; stderr?: string; code?: number };
+        };
+        const run = data.run ?? {};
+
+        return JSON.stringify({
+          stdout: run.stdout ?? "",
+          stderr: run.stderr ?? "",
+          exitCode: run.code ?? -1,
+        });
+      } finally {
+        clearTimeout(localTimeout);
+      }
+    } catch (err) {
+      let errorMessage: string;
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          errorMessage = "Code execution aborted due to timeout or agent cancellation";
+        } else {
+          errorMessage = err.message;
+        }
+      } else {
+        errorMessage = "Unknown code execution error";
+      }
+      return JSON.stringify({
+        error: errorMessage,
+        stdout: "",
+        stderr: "",
+        exitCode: -1,
+      });
+    }
   },
   {
     name: "runCode",
@@ -41,14 +91,26 @@ export const runCode = tool(
   },
 );
 
+const ChallengeContextSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  supportMaterials: z.string(),
+});
+
 export const getChallengeInfo = tool(
   async (_input, config) => {
-    const ctx = config.configurable?.challengeContext ?? {};
-    return JSON.stringify({
-      title: ctx.title ?? "",
-      description: ctx.description ?? "",
-      supportMaterials: ctx.supportMaterials ?? "",
-    });
+    const parsed = ChallengeContextSchema.safeParse(
+      config.configurable?.challengeContext
+    );
+    if (!parsed.success) {
+      return JSON.stringify({
+        error: "Challenge context not available",
+        title: "",
+        description: "",
+        supportMaterials: "",
+      });
+    }
+    return JSON.stringify(parsed.data);
   },
   {
     name: "getChallengeInfo",
@@ -60,25 +122,35 @@ export const getChallengeInfo = tool(
 
 export const searchKnowledgeBase = tool(
   async ({ query }, config) => {
-    const challengeId = config.configurable?.challengeId as string | undefined;
-    if (!challengeId) {
-      return JSON.stringify({ results: [] });
+    try {
+      const challengeId = config.configurable?.challengeId as string | undefined;
+      if (!challengeId) {
+        return JSON.stringify({ results: [] });
+      }
+
+      const results = await searchChallengeKnowledgeBases({
+        challengeId,
+        query,
+        limit: 5,
+      });
+
+      return JSON.stringify({
+        results: results.map((r) => ({
+          content: r.content,
+          similarity: r.similarity,
+          source: r.metadata?.documentFilename ?? "manual entry",
+          hierarchy: r.metadata?.titleHierarchy ?? [],
+        })),
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown knowledge base search error";
+      console.warn("Knowledge base search failed:", errorMessage);
+      return JSON.stringify({
+        results: [],
+        error: errorMessage,
+      });
     }
-
-    const results = await searchChallengeKnowledgeBases({
-      challengeId,
-      query,
-      limit: 5,
-    });
-
-    return JSON.stringify({
-      results: results.map((r) => ({
-        content: r.content,
-        similarity: r.similarity,
-        source: r.metadata?.documentFilename ?? "manual entry",
-        hierarchy: r.metadata?.titleHierarchy ?? [],
-      })),
-    });
   },
   {
     name: "searchKnowledgeBase",

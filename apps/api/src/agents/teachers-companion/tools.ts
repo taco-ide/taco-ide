@@ -1,4 +1,5 @@
 import { tool } from "@langchain/core/tools";
+import { HumanMessage } from "@langchain/core/messages";
 import { z } from "zod";
 import { db } from "@repo/infra/db";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@repo/infra/db/schema";
 import { user } from "@repo/infra/db/schema";
 import { eq, asc } from "drizzle-orm";
+import { createLlm } from "../llm-factory";
 
 export const createChallengeDraft = tool(
   async ({ title, description, difficulty, testCases, solution }) => {
@@ -42,7 +44,9 @@ export const createChallengeDraft = tool(
 );
 
 export const listSubmissions = tool(
-  async ({ challengeId }) => {
+  async ({ challengeId, limit, offset }) => {
+    const effectiveLimit = limit ?? 50;
+    const effectiveOffset = offset ?? 0;
     const rows = await db
       .select({
         id: challengeSolution.id,
@@ -55,7 +59,8 @@ export const listSubmissions = tool(
       .from(challengeSolution)
       .innerJoin(user, eq(user.id, challengeSolution.userId))
       .where(eq(challengeSolution.challengeId, challengeId))
-      .limit(50);
+      .limit(effectiveLimit)
+      .offset(effectiveOffset);
 
     return JSON.stringify({
       submissions: rows.map((r) => ({
@@ -65,22 +70,41 @@ export const listSubmissions = tool(
         stdout: r.stdout,
         updatedAt: r.updatedAt?.toISOString() ?? null,
       })),
+      limit: effectiveLimit,
+      offset: effectiveOffset,
+      hasMore: rows.length === effectiveLimit,
     });
   },
   {
     name: "listSubmissions",
     description:
-      "List student submissions for a given challenge, including student name and code.",
+      "List student submissions for a given challenge, including student name and code. " +
+      "Supports pagination via limit (default 50, max 100) and offset (default 0).",
     schema: z.object({
       challengeId: z
         .string()
         .describe("The ID of the challenge to list submissions for"),
+      limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(100)
+        .optional()
+        .describe("Maximum number of submissions to return (default 50, max 100)"),
+      offset: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe("Offset for pagination (default 0)"),
     }),
   },
 );
 
 export const evaluateSubmission = tool(
-  async ({ submissionId }) => {
+  async ({ submissionId, interactionLimit, interactionOffset }) => {
+    const effectiveLimit = interactionLimit ?? 100;
+    const effectiveOffset = interactionOffset ?? 0;
     const solutions = await db
       .select({
         id: challengeSolution.id,
@@ -114,7 +138,8 @@ export const evaluateSubmission = tool(
         eq(userInteractionOnChallenge.challengeId, solution.challengeId),
       )
       .orderBy(asc(userInteractionOnChallenge.createdAt))
-      .limit(100);
+      .limit(effectiveLimit)
+      .offset(effectiveOffset);
 
     return JSON.stringify({
       submission: {
@@ -130,36 +155,112 @@ export const evaluateSubmission = tool(
         stdout: i.stdout,
         createdAt: i.createdAt?.toISOString() ?? null,
       })),
+      interactionLimit: effectiveLimit,
+      interactionOffset: effectiveOffset,
+      hasMoreInteractions: interactions.length === effectiveLimit,
     });
   },
   {
     name: "evaluateSubmission",
     description:
       "Load a student submission and its interaction history for evaluation. " +
-      "Returns the code, output, and full chat history.",
+      "Returns the code, output, and full chat history. " +
+      "Interaction history supports pagination via interactionLimit (default 100, max 200) and interactionOffset (default 0).",
     schema: z.object({
       submissionId: z
         .string()
         .describe("The ID of the challenge_solution to evaluate"),
+      interactionLimit: z
+        .number()
+        .int()
+        .min(1)
+        .max(200)
+        .optional()
+        .describe("Maximum number of interactions to return (default 100, max 200)"),
+      interactionOffset: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe("Offset for paginating the interaction history (default 0)"),
     }),
   },
 );
 
+const SuggestedTestCaseSchema = z.object({
+  input: z.string(),
+  expectedOutput: z.string(),
+  label: z.string(),
+  rationale: z.string().optional(),
+});
+
+const SuggestTestCasesPayloadSchema = z.object({
+  testCases: z.array(SuggestedTestCaseSchema),
+});
+
 export const suggestTestCases = tool(
   async ({ problemDescription, solution }) => {
-    return JSON.stringify({
-      instruction:
-        "Based on the problem description and reference solution below, " +
-        "suggest comprehensive test cases covering: edge cases, boundary " +
-        "values, typical inputs, and error cases.",
-      problemDescription,
-      solution,
-    });
+    try {
+      // Nested LLM call: sub-chain that returns structured test cases.
+      // Uses a fresh ChatOpenAI instance so it does not pollute the agent's thread.
+      const llm = createLlm({ temperature: 0.2 });
+      const prompt = `You are generating Python test cases for an educational challenge.
+
+Problem description:
+${problemDescription}
+
+Reference solution (Python):
+\`\`\`python
+${solution}
+\`\`\`
+
+Generate 6 to 10 comprehensive test cases covering: edge cases, boundary values, typical inputs, and error cases.
+Return ONLY a JSON object (no markdown, no commentary) of the shape:
+{
+  "testCases": [
+    { "input": "<stdin string>", "expectedOutput": "<stdout string>", "label": "<short label>", "rationale": "<one-line reasoning>" }
+  ]
+}`;
+
+      const response = await llm.invoke([new HumanMessage(prompt)]);
+      const raw =
+        typeof response.content === "string"
+          ? response.content
+          : JSON.stringify(response.content);
+
+      // Strip fenced code blocks defensively
+      const cleaned = raw
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
+        .trim();
+
+      const parsed = SuggestTestCasesPayloadSchema.safeParse(
+        JSON.parse(cleaned)
+      );
+
+      if (!parsed.success) {
+        return JSON.stringify({
+          testCases: [],
+          error: "LLM output did not match expected schema",
+        });
+      }
+
+      return JSON.stringify(parsed.data);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error generating test cases";
+      return JSON.stringify({
+        testCases: [],
+        error: `Failed to generate test cases: ${errorMessage}`,
+      });
+    }
   },
   {
     name: "suggestTestCases",
     description:
-      "Provide problem context for the LLM to reason about and suggest test cases.",
+      "Generate a comprehensive list of structured test cases for a programming challenge, " +
+      "given the problem description and reference solution. Each test case includes input, " +
+      "expected output, a short label, and a rationale.",
     schema: z.object({
       problemDescription: z
         .string()
@@ -169,14 +270,26 @@ export const suggestTestCases = tool(
   },
 );
 
+const ClassroomContextSchema = z.object({
+  classroomId: z.string(),
+  classroomName: z.string(),
+  classroomDescription: z.string(),
+});
+
 export const getClassroomInfo = tool(
   async (_input, config) => {
-    const ctx = config.configurable?.classroomContext ?? {};
-    return JSON.stringify({
-      classroomId: ctx.classroomId ?? "",
-      classroomName: ctx.classroomName ?? "",
-      classroomDescription: ctx.classroomDescription ?? "",
-    });
+    const parsed = ClassroomContextSchema.safeParse(
+      config.configurable?.classroomContext
+    );
+    if (!parsed.success) {
+      return JSON.stringify({
+        error: "Classroom context not available",
+        classroomId: "",
+        classroomName: "",
+        classroomDescription: "",
+      });
+    }
+    return JSON.stringify(parsed.data);
   },
   {
     name: "getClassroomInfo",

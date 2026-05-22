@@ -2,6 +2,7 @@ import { z } from "zod";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
   ResponseSchema500,
 } from "../../_responses/types";
@@ -9,9 +10,12 @@ import { db } from "@repo/infra/db";
 import { classroom, member } from "@repo/infra/db/schema";
 import { eq, and } from "drizzle-orm";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { teachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
+import { buildTeachersCompanionAgent } from "../../../../agents/teachers-companion/agent";
 import { buildTeachersCompanionPrompt } from "../../../../agents/teachers-companion/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
+import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
+import { formatSSEEvent } from "../../../../agents/sse-events";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -37,6 +41,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         body: TeacherMessageBodySchema,
         response: {
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
           500: ResponseSchema500,
         },
@@ -78,7 +83,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       if (!membership[0]) {
-        return reply.status(401).send({
+        return reply.status(403).send({
           success: false as const,
           message: "Not a member of this organization",
         });
@@ -105,6 +110,8 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         "X-Accel-Buffering": "no",
       });
 
+      let fullResponse = "";
+
       const langfuseCallback = getLangfuseCallback({
         userId: user.id,
         sessionId: `teacher-${classroomId}-${user.id}`,
@@ -113,51 +120,78 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
       });
 
       try {
+        // Create LLM instance with default parameters
+        const llmInstance = createLlm();
+        const agent = buildTeachersCompanionAgent(llmInstance);
+
+
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
-        const stream = teachersCompanionAgent.streamEvents(
-          {
-            messages: [
-              new SystemMessage(systemPrompt),
-              new HumanMessage(message),
-            ],
-          },
-          {
-            configurable: {
-              thread_id: `teacher-${classroomId}-${user.id}`,
-              classroomContext,
-            },
-            streamMode: "messages",
-            version: "v2",
-            callbacks,
-          },
+        // Use AbortController to enforce timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(
+          () => controller.abort(),
+          AGENT_TIMEOUT_MS,
         );
 
-        for await (const event of stream) {
-          if (
-            event.event === "on_chat_model_stream" &&
-            event.data?.chunk?.content
-          ) {
-            const content =
-              typeof event.data.chunk.content === "string"
-                ? event.data.chunk.content
-                : "";
+        try {
+          const stream = agent.streamEvents(
+            {
+              messages: [
+                new SystemMessage(systemPrompt),
+                new HumanMessage(message),
+              ],
+            },
+            {
+              configurable: {
+                thread_id: `teacher-${classroomId}-${user.id}`,
+                classroomContext,
+              },
+              streamMode: "messages",
+              version: "v2",
+              signal: controller.signal,
+              recursionLimit: 25,
+              callbacks,
+            },
+          );
 
-            if (content) {
-              const data = JSON.stringify({ type: "text", content });
-              reply.raw.write(`data: ${data}\n\n`);
+          for await (const event of stream) {
+            if (
+              event.event === "on_chat_model_stream" &&
+              event.data?.chunk?.content
+            ) {
+              const content =
+                typeof event.data.chunk.content === "string"
+                  ? event.data.chunk.content
+                  : "";
+
+              if (content) {
+                fullResponse += content;
+                reply.raw.write(formatSSEEvent({ type: "text", content }));
+              }
             }
           }
-        }
 
-        // Send done event
-        const doneData = JSON.stringify({ type: "done" });
-        reply.raw.write(`data: ${doneData}\n\n`);
+          // If the agent returned nothing (e.g. guardrail triggered), send a fallback
+          if (!fullResponse) {
+            fullResponse = AGENT_FALLBACK_RESPONSE;
+            reply.raw.write(formatSSEEvent({ type: "text", content: fullResponse }));
+          }
+
+          // Send done event with accumulated full response
+          reply.raw.write(formatSSEEvent({ type: "done", full_response: fullResponse }));
+        } finally {
+          clearTimeout(timeout);
+        }
       } catch (err) {
-        const errorMsg =
-          err instanceof Error ? err.message : "Agent invocation failed";
-        const errorData = JSON.stringify({ type: "error", content: errorMsg });
-        reply.raw.write(`data: ${errorData}\n\n`);
+        request.log.error({ err }, "Teaching assistant agent error");
+        const isTimeout =
+          err instanceof AgentTimeoutError ||
+          (err instanceof Error && err.name === "AbortError");
+        const errorMsg = isTimeout
+          ? "AI response timed out, please try again"
+          : "Agent invocation failed";
+        reply.raw.write(formatSSEEvent({ type: "error", content: errorMsg }));
       } finally {
         if (langfuseCallback) {
           await langfuseCallback.flushAsync();
