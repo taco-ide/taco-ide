@@ -2,6 +2,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
+  ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
@@ -15,7 +16,7 @@ import {
   model,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
@@ -28,14 +29,12 @@ import { detectLanguageHint } from "../../../../agents/language-detect";
 
 // ==================== SCHEMAS ====================
 
-const StudentMessageBodySchema = z
-  .object({
-    workSessionId: z.string(),
-    message: z.string().min(1),
-    currentCode: z.string().optional(),
-    stdout: z.string().optional(),
-  })
-  .strict();
+const StudentMessageBodySchema = z.object({
+  workSessionId: z.string().uuid(),
+  message: z.string().min(1).max(10000),
+  currentCode: z.string().max(65536).optional(),
+  stdout: z.string().max(65536).optional(),
+});
 
 // ==================== ROUTE ====================
 
@@ -51,6 +50,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           "Persists the interaction to the database on completion.",
         body: StudentMessageBodySchema,
         response: {
+          400: ResponseSchema400,
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
@@ -87,12 +87,24 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           .send({ success: false as const, message: "Not authorized" });
       }
 
+      if (ws[0].endedAt != null) {
+        return reply
+          .status(400)
+          .send({ success: false as const, message: "Work session has ended" });
+      }
+
       // Load challenge
       const ch = await db
         .select()
         .from(challenge)
-        .where(eq(challenge.id, ws[0].challengeId))
+        .where(and(eq(challenge.id, ws[0].challengeId), isNull(challenge.deletedAt)))
         .limit(1);
+
+      if (!ch[0]) {
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      }
 
       // Load teaching assistant + model
       const ta = await db
@@ -145,6 +157,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       });
 
       let fullResponse = "";
+      let streamErrored = false;
 
       const langfuseCallback = getLangfuseCallback({
         userId: user.id,
@@ -245,6 +258,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
       } catch (err) {
+        streamErrored = true;
         request.log.error({ err }, "Teaching assistant agent error");
         const isTimeout =
           err instanceof AgentTimeoutError ||
@@ -259,8 +273,8 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         }
       }
 
-      // Persist interaction to DB (skip if the model output was the fallback response)
-      if (fullResponse && fullResponse !== AGENT_FALLBACK_RESPONSE) {
+      // Persist interaction to DB (skip if fallback response or stream errored mid-flight)
+      if (fullResponse && fullResponse !== AGENT_FALLBACK_RESPONSE && !streamErrored) {
         const interactionId = randomUUID();
         await db.insert(userInteractionOnChallenge).values({
           id: interactionId,

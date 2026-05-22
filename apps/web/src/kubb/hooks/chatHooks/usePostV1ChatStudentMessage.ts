@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChatStudentMessageMutationRequest, PostV1ChatStudentMessageMutationResponse, PostV1ChatStudentMessage401, PostV1ChatStudentMessage404, PostV1ChatStudentMessage500 } from "../../../../../../packages/types/kubb/PostV1ChatStudentMessage.ts";
+import type { PostV1ChatStudentMessageMutationRequest, PostV1ChatStudentMessageMutationResponse, PostV1ChatStudentMessage400, PostV1ChatStudentMessage401, PostV1ChatStudentMessage403, PostV1ChatStudentMessage404, PostV1ChatStudentMessage500 } from "../../../../../../packages/types/kubb/PostV1ChatStudentMessage.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export async function postV1ChatStudentMessage(data: PostV1ChatStudentMessageMut
   
   const requestData = data  
   
-  const res = await request<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage401 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, PostV1ChatStudentMessageMutationRequest>({ method : "POST", url : `/v1/chat/student/message`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, PostV1ChatStudentMessageMutationRequest>({ method : "POST", url : `/v1/chat/student/message`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function postV1ChatStudentMessage(data: PostV1ChatStudentMessageMut
  */
 export function usePostV1ChatStudentMessage<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage401 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, {data: PostV1ChatStudentMessageMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, {data: PostV1ChatStudentMessageMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1ChatStudentMessageMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1ChatStudentMessage<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1ChatStudentMessageMutationKey()
 
-  return useMutation<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage401 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, {data: PostV1ChatStudentMessageMutationRequest}, TContext>({
+  return useMutation<PostV1ChatStudentMessageMutationResponse, ResponseErrorConfig<PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500>, {data: PostV1ChatStudentMessageMutationRequest}, TContext>({
     mutationFn: async({ data }) => {
       return postV1ChatStudentMessage(data, config)
     },

@@ -81,7 +81,7 @@ Uses Drizzle adapter with PostgreSQL tables:
 Required:
 ```env
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3344
+BETTER_AUTH_URL=http://localhost:4000
 RESEND_API_KEY=re_xxxxxxxxxxxxx
 ```
 

@@ -196,6 +196,32 @@ export type PostV1WorkSessionsIdChat429 = {
     };
 };
 
+export const postV1WorkSessionsIdChat500SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1WorkSessionsIdChat500SuccessEnum = (typeof postV1WorkSessionsIdChat500SuccessEnum)[keyof typeof postV1WorkSessionsIdChat500SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1WorkSessionsIdChat500 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1WorkSessionsIdChat500SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1WorkSessionsIdChat503SuccessEnum = {
     "false": false
 } as const;
@@ -249,5 +275,5 @@ export type PostV1WorkSessionsIdChatMutation = {
     Response: PostV1WorkSessionsIdChat200;
     Request: PostV1WorkSessionsIdChatMutationRequest;
     PathParams: PostV1WorkSessionsIdChatPathParams;
-    Errors: PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat503;
+    Errors: PostV1WorkSessionsIdChat400 | PostV1WorkSessionsIdChat401 | PostV1WorkSessionsIdChat403 | PostV1WorkSessionsIdChat404 | PostV1WorkSessionsIdChat429 | PostV1WorkSessionsIdChat500 | PostV1WorkSessionsIdChat503;
 };

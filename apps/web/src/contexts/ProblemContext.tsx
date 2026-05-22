@@ -279,9 +279,7 @@ export function ProblemProvider({
       }
     : null;
 
-  const rawSolution = solutionQuery.isError && is404(solutionQuery.error)
-    ? null
-    : (solutionQuery.data?.data ?? null);
+  const rawSolution = solutionQuery.data?.data ?? null;
   const solution: Solution | null = rawSolution
     ? {
         ...rawSolution,

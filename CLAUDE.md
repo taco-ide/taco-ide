@@ -11,8 +11,8 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 ```
 taco-ide/
 ├── apps/
-│   ├── api/          # Fastify backend API (port 3344)
-│   └── web/          # Next.js frontend (port 3000)
+│   ├── api/          # Fastify backend API (port 4000, override via PORT env)
+│   └── web/          # Next.js frontend (port 4001)
 ├── packages/
 │   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
 │   ├── types/        # Generated TypeScript types (Kubb)
@@ -50,8 +50,12 @@ npm run services:up
 # Apply database schema (no migrations)
 npm run db:push
 
-# Seed initial data
+# Seed structural data (model + default teaching assistant)
 npm run db:seed
+
+# Seed development fixtures (demo org, users, classrooms, challenges)
+# Required for `professor@taco-demo.local` / `aluno@taco-demo.local` to exist
+npm run db:seed:dev
 
 # Optional: Open Drizzle Studio
 npm run db:studio
@@ -67,10 +71,10 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 
 # Better Auth
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3344
+BETTER_AUTH_URL=http://localhost:4000
 
 # Frontend (apps/web/.env.local)
-NEXT_PUBLIC_API_URL=http://localhost:3344
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ### Running the Application
@@ -80,8 +84,8 @@ NEXT_PUBLIC_API_URL=http://localhost:3344
 npm run dev
 
 # Or start individually:
-cd apps/api && npm run dev    # API on :3344
-cd apps/web && npm run dev    # Web on :3000
+cd apps/api && npm run dev    # API on :4000
+cd apps/web && npm run dev    # Web on :4001
 ```
 
 ## Common Development Commands
@@ -104,7 +108,9 @@ cd apps/web && npm run dev    # Web on :3000
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:push` | Push schema (no migration files) |
 | `npm run db:studio` | Open Drizzle Studio UI |
-| `npm run db:seed` | Seed database with initial data |
+| `npm run db:seed` | Seed structural data only (model + default TA) |
+| `npm run db:seed:dev` | Seed development fixtures (demo org, users, classrooms, challenges) |
+| `npm run db:reset` | Reset DB, run migrations, seed dev fixtures |
 
 ### API (apps/api)
 | Command | Description |
@@ -171,8 +177,8 @@ Knowledge Base is a **container entity** linked to a classroom (not directly to 
 ## API Documentation
 
 When API is running:
-- Swagger UI: http://localhost:3344/docs
-- OpenAPI JSON: http://localhost:3344/docs/json
+- Swagger UI: http://localhost:4000/docs
+- OpenAPI JSON: http://localhost:4000/docs/json
 - OpenAPI YAML: `apps/api/src/swagger.yaml` (auto-generated)
 
 ## MCP Server Configuration

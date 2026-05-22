@@ -39,8 +39,19 @@ export const getV1WorkSessionsByChallenge401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
-    
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+
+}).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const getV1WorkSessionsByChallenge403Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+
+}).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
 /**
@@ -61,8 +72,8 @@ export const getV1WorkSessionsByChallenge404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
-    
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+
+}).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
 export const getV1WorkSessionsByChallengeQueryResponseSchema = z.lazy(() => getV1WorkSessionsByChallenge200Schema)

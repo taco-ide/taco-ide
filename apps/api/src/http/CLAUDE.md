@@ -173,7 +173,7 @@ The entire HTTP layer is type-safe:
 ## CORS Configuration
 
 Configured in `server.ts` for local development:
-- Origin: `http://localhost:3000` (Next.js frontend)
+- Origin: `http://localhost:4001` (Next.js frontend)
 - Credentials: `true` (allow cookies)
 - Methods: `GET, POST, PUT, DELETE, PATCH, OPTIONS`
 

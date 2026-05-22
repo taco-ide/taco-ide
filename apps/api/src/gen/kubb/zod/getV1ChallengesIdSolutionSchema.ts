@@ -22,7 +22,7 @@ export const getV1ChallengesIdSolution200Schema = z.object({
 "stdout": z.string().nullable(),
 "chatHistory": z.any().nullish(),
 "updatedAt": z.string()
-    }),
+    }).nullable(),
 "pagination": z.object({
     "total": z.number(),
 "page": z.number(),

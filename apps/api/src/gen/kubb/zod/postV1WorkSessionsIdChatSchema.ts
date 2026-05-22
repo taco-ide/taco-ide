@@ -85,6 +85,17 @@ export const postV1WorkSessionsIdChat429Schema = z.object({
 /**
  * @description Default Response
  */
+export const postV1WorkSessionsIdChat500Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const postV1WorkSessionsIdChat503Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),

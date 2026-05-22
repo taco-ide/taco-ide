@@ -7,7 +7,8 @@ import {
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
 import { user } from "@repo/infra/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
+import { workSession } from "@repo/infra/db/schema";
 import { createLlm } from "../llm-factory";
 
 export const createChallengeDraft = tool(
@@ -134,8 +135,12 @@ export const evaluateSubmission = tool(
         createdAt: userInteractionOnChallenge.createdAt,
       })
       .from(userInteractionOnChallenge)
+      .innerJoin(workSession, eq(userInteractionOnChallenge.workSessionId, workSession.id))
       .where(
-        eq(userInteractionOnChallenge.challengeId, solution.challengeId),
+        and(
+          eq(userInteractionOnChallenge.challengeId, solution.challengeId),
+          eq(workSession.userId, solution.userId),
+        ),
       )
       .orderBy(asc(userInteractionOnChallenge.createdAt))
       .limit(effectiveLimit)

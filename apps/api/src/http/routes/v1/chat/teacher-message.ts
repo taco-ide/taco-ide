@@ -89,6 +89,13 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
         });
       }
 
+      if (!["teacher", "coordinator", "owner"].includes(membership[0].role)) {
+        return reply.status(403).send({
+          success: false as const,
+          message: "Only teachers can access this resource",
+        });
+      }
+
       // Build system prompt
       const systemPrompt = buildTeachersCompanionPrompt({
         classroomName: cr[0].title,
