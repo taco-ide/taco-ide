@@ -84,6 +84,19 @@ PLATFORM_ADMIN_NAME=Platform Admin
 If any of the three is missing, the seed logs a warning and skips the
 admin step without raising.
 
+Optional platform professor envs (consumed by `npm run db:seed`):
+
+```env
+PLATFORM_PROFESSOR_EMAIL=professor@example.com
+PLATFORM_PROFESSOR_PASSWORD=at-least-12-chars
+PLATFORM_PROFESSOR_NAME=Platform Professor
+PLATFORM_PROFESSOR_ORG_SLUG=my-org  # optional: links the professor as a teacher to the org
+```
+
+If any of the three required fields is missing, the seed logs a warning and skips the
+professor step. If `PLATFORM_PROFESSOR_ORG_SLUG` is set but the org is not found,
+logs a warning and skips membership without throwing.
+
 Environment files are loaded from:
 - `apps/api/.env.development`
 - `apps/web/.env.local`
@@ -168,6 +181,12 @@ Two cross-cutting concepts are part of the auth schema:
 - `organization_email_domain (id, organization_id, domain, role,
   created_at)` — auto-link rules for new sign-ups; `UNIQUE(domain, role)`
   is global so a `(domain, role)` pair can only point to one org.
+
+## Teaching Assistants
+
+Teaching assistants are scoped to an organization (`createdByOrganizationId`). 
+Any teacher or coordinator in the organization can use any active TA in that 
+organization — there is no per-user filtering of available TAs.
 
 ## Important Notes
 

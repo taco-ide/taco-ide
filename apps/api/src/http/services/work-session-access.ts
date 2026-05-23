@@ -256,13 +256,6 @@ export async function assertCanListChallengeWorkSessions(
   ctx: ChallengeCtx
 ): Promise<AccessOk | AccessDenied> {
   if (!ctx.classroomId || !ctx.organizationId) {
-    if (ctx.createdByUserId !== usr.id) {
-      return {
-        ok: false,
-        status: 403,
-        message: "You can only view work sessions for your own challenges",
-      };
-    }
     if (!usr.activeOrganizationId) {
       return {
         ok: false,
@@ -281,6 +274,18 @@ export async function assertCanListChallengeWorkSessions(
         message: "Insufficient permissions",
       };
     }
+    // For coordinators and admins, bypass the creator check
+    if (activeOrgRole === "coordinator" || activeOrgRole === "admin") {
+      return { ok: true };
+    }
+    // For teachers, require creator or classroom lead check
+    if (ctx.createdByUserId !== usr.id) {
+      return {
+        ok: false,
+        status: 403,
+        message: "You can only view work sessions for your own challenges",
+      };
+    }
     return { ok: true };
   }
 
@@ -294,7 +299,10 @@ export async function assertCanListChallengeWorkSessions(
   }
 
   if (orgRole === "teacher") {
-    if (ctx.createdByUserId !== usr.id) {
+    const isLead =
+      ctx.createdByUserId === usr.id ||
+      ctx.classroomTeacherUserId === usr.id;
+    if (!isLead) {
       return {
         ok: false,
         status: 403,
