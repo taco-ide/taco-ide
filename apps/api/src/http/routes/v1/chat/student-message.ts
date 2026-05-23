@@ -174,7 +174,12 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         const historyRows = await db
           .select()
           .from(userInteractionOnChallenge)
-          .where(eq(userInteractionOnChallenge.workSessionId, workSessionId))
+          .where(
+            and(
+              eq(userInteractionOnChallenge.workSessionId, workSessionId),
+              eq(userInteractionOnChallenge.interactionType, "chat"),
+            ),
+          )
           .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
           .limit(TA_HISTORY_TURN_CAP);
 

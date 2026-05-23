@@ -29,7 +29,7 @@ function HeaderProfileBtn() {
         aria-expanded={open}
       >
         <User className="w-5 h-5 text-gray-300" />
-        <span className="text-sm font-medium text-gray-300">Profile</span>
+        <span className="text-sm font-medium text-gray-300">Perfil</span>
       </button>
 
       {open && (

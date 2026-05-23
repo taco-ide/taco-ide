@@ -20,7 +20,7 @@ export function stripMarkdown(input: string): string {
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1") // images -> alt text
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // links -> label
     .replace(/(\*\*|__)(.*?)\1/g, "$2") // bold
-    .replace(/(\*|_)(.*?)\1/g, "$2") // italic
+    .replace(/(?<!\w)([*_])(.*?)\1(?!\w)/g, "$2") // italic (avoid mangling snake_case)
     .replace(/~~(.*?)~~/g, "$1") // strikethrough
     .replace(/\s+/g, " ")
     .trim();
