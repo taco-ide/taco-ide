@@ -1,84 +1,75 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { User } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
 function HeaderProfileBtn() {
-  const { user, logout } = useUser();
+  const { user, getFirstName, logout } = useUser();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
 
   return (
     <div className="relative" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 p-2 rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50 hover:ring-gray-700/50 transition-all"
-        aria-haspopup="menu"
+        className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-zinc-800/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+        aria-label="Menu do utilizador"
         aria-expanded={open}
       >
-        <User className="w-5 h-5 text-gray-300" />
-        <span className="text-sm font-medium text-gray-300">Perfil</span>
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center text-zinc-900 font-bold text-sm select-none">
+          {initial}
+        </div>
+        {user && (
+          <span className="hidden sm:block text-sm font-medium text-gray-300 max-w-[100px] truncate">
+            {getFirstName()}
+          </span>
+        )}
       </button>
 
       {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-full mt-2 w-48 bg-[#1a1f2e] border border-white/10 rounded-md shadow-lg z-50"
-        >
+        <div className="absolute right-0 top-full mt-2 w-44 bg-zinc-900 border border-zinc-700 rounded-md shadow-xl z-50">
           <div className="py-1">
-            {user ? (
-              <>
-                <Link
-                  href="/profile"
-                  className="block px-4 py-2 text-sm text-white hover:bg-white/10"
-                  onClick={() => setOpen(false)}
-                >
-                  Perfil
-                </Link>
-                <Link
-                  href="/explore"
-                  className="block px-4 py-2 text-sm text-white hover:bg-white/10"
-                  onClick={() => setOpen(false)}
-                >
-                  Explorar
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    void logout();
-                  }}
-                  className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10"
-                >
-                  Sair
-                </button>
-              </>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="block px-4 py-2 text-sm text-white hover:bg-white/10"
-                onClick={() => setOpen(false)}
-              >
-                Entrar
-              </Link>
-            )}
+            <Link
+              href="/profile"
+              className="block px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              Perfil
+            </Link>
+            <Link
+              href="/explore"
+              className="block px-4 py-2 text-sm text-zinc-200 hover:bg-zinc-800 transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              Explorar
+            </Link>
+            <div className="border-t border-zinc-700 my-1" />
+            <button
+              type="button"
+              onClick={() => { setOpen(false); void logout(); }}
+              className="block w-full text-left px-4 py-2 text-sm text-rose-400 hover:bg-zinc-800 transition-colors"
+            >
+              Sair
+            </button>
           </div>
         </div>
       )}
     </div>
   );
 }
+
 export default HeaderProfileBtn;
