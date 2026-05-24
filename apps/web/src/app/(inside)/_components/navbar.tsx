@@ -78,16 +78,19 @@ const Navbar = () => {
           </nav>
           {user ? (
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>
-              <div className="text-white">
-                <span className="text-sm text-gray-300">Olá, </span>
-                <span className="font-medium">{getFirstName()}</span>
-              </div>
               <button
+                type="button"
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="btn btn-ghost btn-circle"
+                className="flex items-center gap-3 p-1 pr-2 rounded-full hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                aria-label="Menu do utilizador"
+                aria-expanded={showDropdown}
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FFA000] flex items-center justify-center text-black font-bold">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                </div>
+                <div className="text-white pr-1">
+                  <span className="text-sm text-gray-300">Olá, </span>
+                  <span className="font-medium">{getFirstName()}</span>
                 </div>
               </button>
 
