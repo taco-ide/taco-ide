@@ -49,3 +49,4 @@ uploads/
 .DS_Store
 *.pem
 .claude/history/
+.playwright-cli/
