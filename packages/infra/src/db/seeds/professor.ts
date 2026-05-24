@@ -67,6 +67,8 @@ export async function seedPlatformProfessor() {
     where: eq(user.email, email),
   });
 
+  const userId = existing?.id ?? randomUUID();
+
   if (existing) {
     await db
       .update(user)
@@ -76,56 +78,22 @@ export async function seedPlatformProfessor() {
         isActive: true,
         updatedAt: new Date(),
       })
-      .where(eq(user.id, existing.id));
-    await upsertCredential(existing.id, email, PLATFORM_PROFESSOR_PASSWORD);
-    console.log(`[seed:professor] Updated existing platform professor: ${email}`);
-
-    // Handle org membership if slug is provided
-    if (PLATFORM_PROFESSOR_ORG_SLUG) {
-      const [org] = await db
-        .select({ id: organization.id })
-        .from(organization)
-        .where(eq(organization.slug, PLATFORM_PROFESSOR_ORG_SLUG))
-        .limit(1);
-
-      if (org) {
-        await db
-          .insert(member)
-          .values({
-            id: randomUUID(),
-            organizationId: org.id,
-            userId: existing.id,
-            role: "teacher",
-          })
-          .onConflictDoUpdate({
-            target: [member.organizationId, member.userId],
-            set: { role: "teacher" },
-          });
-        console.log(
-          `[seed:professor] Linked professor to org: ${PLATFORM_PROFESSOR_ORG_SLUG}`
-        );
-      } else {
-        console.warn(
-          `[seed:professor] Organization not found: ${PLATFORM_PROFESSOR_ORG_SLUG}`
-        );
-      }
-    }
-
-    return;
+      .where(eq(user.id, userId));
+  } else {
+    await db.insert(user).values({
+      id: userId,
+      name: PLATFORM_PROFESSOR_NAME,
+      email,
+      emailVerified: true,
+      isActive: true,
+    });
   }
 
-  const userId = randomUUID();
-  await db.insert(user).values({
-    id: userId,
-    name: PLATFORM_PROFESSOR_NAME,
-    email,
-    emailVerified: true,
-    isActive: true,
-  });
   await upsertCredential(userId, email, PLATFORM_PROFESSOR_PASSWORD);
-  console.log(`[seed:professor] Created platform professor: ${email}`);
+  console.log(
+    `[seed:professor] ${existing ? "Updated existing" : "Created"} platform professor: ${email}`
+  );
 
-  // Handle org membership if slug is provided
   if (PLATFORM_PROFESSOR_ORG_SLUG) {
     const [org] = await db
       .select({ id: organization.id })
