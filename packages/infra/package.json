@@ -28,6 +28,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "better-auth": "^1.4.13",
     "dotenv-cli": "^11.0.0",
     "drizzle-orm": "^0.45.1",
