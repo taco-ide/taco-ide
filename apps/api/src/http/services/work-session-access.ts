@@ -274,11 +274,8 @@ export async function assertCanListChallengeWorkSessions(
         message: "Insufficient permissions",
       };
     }
-    // For coordinators and admins, bypass the creator check
-    if (activeOrgRole === "coordinator" || activeOrgRole === "admin") {
-      return { ok: true };
-    }
-    // For teachers, require creator or classroom lead check
+    // Unclassified challenges have no org binding, so coordinators/admins
+    // cannot inherit access from their active org — only the creator may list.
     if (ctx.createdByUserId !== usr.id) {
       return {
         ok: false,

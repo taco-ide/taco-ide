@@ -134,12 +134,18 @@ export async function seedPlatformProfessor() {
       .limit(1);
 
     if (org) {
-      await db.insert(member).values({
-        id: randomUUID(),
-        organizationId: org.id,
-        userId,
-        role: "teacher",
-      });
+      await db
+        .insert(member)
+        .values({
+          id: randomUUID(),
+          organizationId: org.id,
+          userId,
+          role: "teacher",
+        })
+        .onConflictDoUpdate({
+          target: [member.organizationId, member.userId],
+          set: { role: "teacher" },
+        });
       console.log(
         `[seed:professor] Linked professor to org: ${PLATFORM_PROFESSOR_ORG_SLUG}`
       );
