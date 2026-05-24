@@ -5,25 +5,23 @@
 
 import { z } from "zod";
 
-export const patchV1ChallengesIdPathParamsSchema = z.object({
-    "id": z.string().min(1)
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGradePathParamsSchema = z.object({
+    "challengeId": z.string().uuid(),
+"submissionId": z.string().min(1)
     })
 
 /**
  * @description Default Response
  */
-export const patchV1ChallengesId200Schema = z.object({
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGrade200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
-    "id": z.string(),
-"classroomId": z.string().nullable(),
-"title": z.string().nullable(),
-"description": z.string().nullable(),
-"difficulty": z.string().nullable(),
-"tags": z.array(z.string()).nullable(),
-"possibleSolutions": z.string().nullable(),
-"message": z.string()
+    "submissionId": z.string(),
+"grade": z.string().nullable(),
+"gradingComment": z.string().nullable(),
+"gradedByUserId": z.string().nullable(),
+"gradedAt": z.string().nullable()
     }),
 "pagination": z.object({
     "total": z.number(),
@@ -36,7 +34,7 @@ export const patchV1ChallengesId200Schema = z.object({
 /**
  * @description Default Response
  */
-export const patchV1ChallengesId400Schema = z.object({
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGrade400Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -47,7 +45,7 @@ export const patchV1ChallengesId400Schema = z.object({
 /**
  * @description Default Response
  */
-export const patchV1ChallengesId401Schema = z.object({
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGrade401Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -58,7 +56,7 @@ export const patchV1ChallengesId401Schema = z.object({
 /**
  * @description Default Response
  */
-export const patchV1ChallengesId403Schema = z.object({
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGrade403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -69,7 +67,7 @@ export const patchV1ChallengesId403Schema = z.object({
 /**
  * @description Default Response
  */
-export const patchV1ChallengesId404Schema = z.object({
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGrade404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -77,13 +75,9 @@ export const patchV1ChallengesId404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const patchV1ChallengesIdMutationRequestSchema = z.object({
-    "title": z.string().min(1).max(200).optional(),
-"description": z.string().nullable().nullish(),
-"difficulty": z.enum(["easy", "medium", "hard"]).nullable().nullish(),
-"tags": z.array(z.string()).nullable().nullish(),
-"possibleSolutions": z.string().nullable().nullish(),
-"classroomId": z.string().min(1).nullable().nullish()
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationRequestSchema = z.object({
+    "grade": z.string().min(1).max(10),
+"comment": z.string().nullable().nullish()
     })
 
-export const patchV1ChallengesIdMutationResponseSchema = z.lazy(() => patchV1ChallengesId200Schema)
+export const putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationResponseSchema = z.lazy(() => putV1ChallengesChallengeidSubmissionsSubmissionidGrade200Schema)

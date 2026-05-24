@@ -99,7 +99,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
         if (currentStep === 1) {
             const formData = methods.getValues();
-            if (!formData.classroomId) {
+            if (mode === "create" && !formData.classroomId) {
                 methods.setError("classroomId", {
                     message: "Selecione uma turma",
                 });
@@ -118,7 +118,12 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             } else if (challengeId) {
                 updateMutation.mutate({
                     id: challengeId,
-                    data: { classroomId: formData.classroomId ?? null },
+                    data: {
+                        title: formData.title,
+                        description: formData.description ?? null,
+                        difficulty: formData.difficulty,
+                        tags: tags.length > 0 ? tags : null,
+                    },
                 });
             }
             return;

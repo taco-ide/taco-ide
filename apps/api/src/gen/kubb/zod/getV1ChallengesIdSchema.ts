@@ -22,6 +22,7 @@ export const getV1ChallengesId200Schema = z.object({
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
 "supportMaterials": z.any().nullish(),
+"possibleSolutions": z.string().nullable(),
 "author": z.string().nullable(),
 "classroomTitle": z.string().nullable(),
 "createdByUserId": z.string().nullable(),

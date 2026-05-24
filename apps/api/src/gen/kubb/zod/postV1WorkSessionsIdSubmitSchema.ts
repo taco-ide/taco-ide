@@ -17,7 +17,8 @@ export const postV1WorkSessionsIdSubmit200Schema = z.object({
 "message": z.string().optional(),
 "data": z.object({
     "id": z.string(),
-"endedAt": z.string()
+"endedAt": z.string(),
+"submissionId": z.string().nullable()
     }),
 "pagination": z.object({
     "total": z.number(),

@@ -35,6 +35,7 @@ const GetChallengeResponseSchema = ResponseSchema200.extend({
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
     supportMaterials: z.unknown().nullable(),
+    possibleSolutions: z.string().nullable(),
     author: z.string().nullable(),
     classroomTitle: z.string().nullable(),
     /** Para o cliente decidir landing (ex.: lista de sessões vs IDE do aluno). */
@@ -85,6 +86,7 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           difficulty: challenge.difficulty,
           tags: challenge.tags,
           supportMaterials: challenge.supportMaterials,
+          possibleSolutions: challenge.possibleSolutions,
           createdAt: challenge.createdAt,
           authorName: user.name,
           classroomTitle: classroom.title,
@@ -129,6 +131,12 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           difficulty: ch.difficulty,
           tags: ch.tags ?? [],
           supportMaterials: ch.supportMaterials ?? null,
+          possibleSolutions:
+            ch.possibleSolutions === null || ch.possibleSolutions === undefined
+              ? null
+              : typeof ch.possibleSolutions === "string"
+                ? ch.possibleSolutions
+                : JSON.stringify(ch.possibleSolutions),
           author: ch.authorName ?? null,
           classroomTitle: ch.classroomTitle ?? null,
           createdByUserId: ch.createdByUserId ?? null,

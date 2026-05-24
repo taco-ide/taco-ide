@@ -58,6 +58,10 @@ export type GetV1ChallengesId200 = {
         /**
          * @type string
         */
+        possibleSolutions: string | null;
+        /**
+         * @type string
+        */
         author: string | null;
         /**
          * @type string

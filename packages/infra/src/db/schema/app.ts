@@ -396,6 +396,47 @@ export const teachingAssistantEvaluation = pgTable(
   ]
 );
 
+// ==================== SUBMISSIONS ====================
+//
+// Canonical "final submit" record created at submit time. One row per
+// work session (enforced by uniqueIndex on workSessionId). Stores a
+// snapshot of the student's code at submit time so the row is immutable
+// even if the student keeps editing challengeSolution afterward.
+
+export const submission = pgTable(
+  "submission",
+  {
+    id: text("id").primaryKey(),
+    workSessionId: text("work_session_id")
+      .notNull()
+      .references(() => workSession.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenge.id, { onDelete: "cascade" }),
+    studentUserId: text("student_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    code: text("code"),
+    stdin: text("stdin"),
+    stdout: text("stdout"),
+    submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+    // Grading fields
+    grade: varchar("grade", { length: 10 }),
+    gradingComment: text("grading_comment"),
+    gradedByUserId: text("graded_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    gradedAt: timestamp("graded_at"),
+    // Automated review from the teacher's companion agent
+    autoReview: text("auto_review"),
+    autoReviewAt: timestamp("auto_review_at"),
+  },
+  (table) => [
+    uniqueIndex("submission_work_session_idx").on(table.workSessionId),
+    index("submission_challenge_idx").on(table.challengeId),
+  ]
+);
+
 // ==================== EXPORT TYPES ====================
 
 export type Classroom = typeof classroom.$inferSelect;
@@ -427,3 +468,5 @@ export type TeachingAssistantEvaluation =
   typeof teachingAssistantEvaluation.$inferSelect;
 export type NewTeachingAssistantEvaluation =
   typeof teachingAssistantEvaluation.$inferInsert;
+export type Submission = typeof submission.$inferSelect;
+export type NewSubmission = typeof submission.$inferInsert;

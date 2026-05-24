@@ -74,6 +74,11 @@ export type { GetV1ChallengesIdSolutionSuspenseQueryKey } from "./solutionsHooks
 export type { PutV1ChallengesIdSolutionMutationKey } from "./solutionsHooks/usePutV1ChallengesIdSolution.ts";
 export type { GetV1StatusQueryKey } from "./statusHooks/useGetV1Status.ts";
 export type { GetV1StatusSuspenseQueryKey } from "./statusHooks/useGetV1StatusSuspense.ts";
+export type { GetV1ChallengesChallengeidSubmissionsQueryKey } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissions.ts";
+export type { GetV1ChallengesChallengeidSubmissionsSubmissionidQueryKey } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSubmissionid.ts";
+export type { GetV1ChallengesChallengeidSubmissionsSubmissionidSuspenseQueryKey } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSubmissionidSuspense.ts";
+export type { GetV1ChallengesChallengeidSubmissionsSuspenseQueryKey } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSuspense.ts";
+export type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export type { GetV1UsersQueryKey } from "./usersHooks/useGetV1Users.ts";
 export type { GetV1UsersMeQueryKey } from "./usersHooks/useGetV1UsersMe.ts";
 export type { GetV1UsersMeSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeSuspense.ts";
@@ -166,6 +171,11 @@ export { getV1ChallengesIdSolutionSuspenseQueryKey, getV1ChallengesIdSolutionSus
 export { putV1ChallengesIdSolutionMutationKey, putV1ChallengesIdSolution, usePutV1ChallengesIdSolution } from "./solutionsHooks/usePutV1ChallengesIdSolution.ts";
 export { getV1StatusQueryKey, getV1Status, getV1StatusQueryOptions, useGetV1Status } from "./statusHooks/useGetV1Status.ts";
 export { getV1StatusSuspenseQueryKey, getV1StatusSuspense, getV1StatusSuspenseQueryOptions, useGetV1StatusSuspense } from "./statusHooks/useGetV1StatusSuspense.ts";
+export { getV1ChallengesChallengeidSubmissionsQueryKey, getV1ChallengesChallengeidSubmissions, getV1ChallengesChallengeidSubmissionsQueryOptions, useGetV1ChallengesChallengeidSubmissions } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissions.ts";
+export { getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey, getV1ChallengesChallengeidSubmissionsSubmissionid, getV1ChallengesChallengeidSubmissionsSubmissionidQueryOptions, useGetV1ChallengesChallengeidSubmissionsSubmissionid } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSubmissionid.ts";
+export { getV1ChallengesChallengeidSubmissionsSubmissionidSuspenseQueryKey, getV1ChallengesChallengeidSubmissionsSubmissionidSuspense, getV1ChallengesChallengeidSubmissionsSubmissionidSuspenseQueryOptions, useGetV1ChallengesChallengeidSubmissionsSubmissionidSuspense } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSubmissionidSuspense.ts";
+export { getV1ChallengesChallengeidSubmissionsSuspenseQueryKey, getV1ChallengesChallengeidSubmissionsSuspense, getV1ChallengesChallengeidSubmissionsSuspenseQueryOptions, useGetV1ChallengesChallengeidSubmissionsSuspense } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSuspense.ts";
+export { putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey, putV1ChallengesChallengeidSubmissionsSubmissionidGrade, usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export { getV1UsersQueryKey, getV1Users, getV1UsersQueryOptions, useGetV1Users } from "./usersHooks/useGetV1Users.ts";
 export { getV1UsersMeQueryKey, getV1UsersMe, getV1UsersMeQueryOptions, useGetV1UsersMe } from "./usersHooks/useGetV1UsersMe.ts";
 export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspenseQueryOptions, useGetV1UsersMeSuspense } from "./usersHooks/useGetV1UsersMeSuspense.ts";
