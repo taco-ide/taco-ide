@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "kubb": "dotenv -e ../../.env -- kubb generate",
     "kubb:clean": "tsx cleanKubb.ts",
-    "lint": "echo 'no lint configured for @repo/api'",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
