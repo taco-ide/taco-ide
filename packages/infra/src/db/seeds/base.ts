@@ -10,7 +10,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../index";
 import { model, teachingAssistant } from "../schema";
 import { seedPlatformAdmin } from "./admin";
-import { seedPlatformProfessor } from "./professor";
 
 // --- IDs fixos (reprodutiveis) ---
 export const SEED_MODEL_ID = "00000000-0000-0000-0000-000000000001";
@@ -76,7 +75,6 @@ export async function seedBase({ organizationId }: SeedBaseOptions = {}) {
   console.log("[base] Structural data seeded.");
 
   await seedPlatformAdmin();
-  await seedPlatformProfessor();
 }
 
 // --- Standalone execution ---
