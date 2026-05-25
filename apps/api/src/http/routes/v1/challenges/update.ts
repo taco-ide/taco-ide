@@ -225,7 +225,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         }
       }
 
-      const setValues: Record<string, unknown> = {
+      const setValues: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
       };
       if (wantsClassroomChange) setValues.classroomId = classroomId;

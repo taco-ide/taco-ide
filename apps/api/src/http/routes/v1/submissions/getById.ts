@@ -24,8 +24,8 @@ const SubmissionDetailSchema = z.object({
   submissionId: z.string(),
   workSessionId: z.string(),
   challengeId: z.string(),
-  studentUserId: z.string(),
-  studentName: z.string(),
+  studentUserId: z.string().nullable(),
+  studentName: z.string().nullable(),
   code: z.string().nullable(),
   stdin: z.string().nullable(),
   stdout: z.string().nullable(),
@@ -109,7 +109,7 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           autoReviewAt: submission.autoReviewAt,
         })
         .from(submission)
-        .innerJoin(user, eq(submission.studentUserId, user.id))
+        .leftJoin(user, eq(submission.studentUserId, user.id))
         .where(
           and(
             eq(submission.id, submissionId),
@@ -131,8 +131,8 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           submissionId: row.submissionId,
           workSessionId: row.workSessionId,
           challengeId: row.challengeId,
-          studentUserId: row.studentUserId,
-          studentName: row.studentName,
+          studentUserId: row.studentUserId ?? null,
+          studentName: row.studentName ?? null,
           code: row.code ?? null,
           stdin: row.stdin ?? null,
           stdout: row.stdout ?? null,

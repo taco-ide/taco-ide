@@ -6,7 +6,11 @@ import {
   challenge,
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
-import { createLlm } from "../llm-factory";
+import {
+  createLlm,
+  AGENT_TIMEOUT_MS,
+  AgentTimeoutError,
+} from "../llm-factory";
 
 const REVIEW_PROMPT = `\
 You are an AI assistant for a programming teacher. Evaluate a student's \
@@ -113,11 +117,21 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .filter(Boolean)
       .join("\n");
 
-    const llm = createLlm({ temperature: 0.2 });
-    const response = await llm.invoke([
-      new SystemMessage(REVIEW_PROMPT),
-      new HumanMessage(humanMessage),
-    ]);
+    const llm = createLlm({ temperature: 0.2, max_tokens: 2048 });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort(new AgentTimeoutError(AGENT_TIMEOUT_MS));
+    }, AGENT_TIMEOUT_MS);
+
+    let response;
+    try {
+      response = await llm.invoke(
+        [new SystemMessage(REVIEW_PROMPT), new HumanMessage(humanMessage)],
+        { signal: controller.signal }
+      );
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const reviewText =
       typeof response.content === "string"

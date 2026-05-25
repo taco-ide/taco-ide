@@ -120,7 +120,7 @@ function SubmissionsListContent() {
                       className="border-slate-700 hover:bg-slate-800/60"
                     >
                       <TableCell className="text-slate-200 font-medium">
-                        {row.studentName}
+                        {row.studentName ?? "(usuário removido)"}
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
                         {formatDt(row.submittedAt)}

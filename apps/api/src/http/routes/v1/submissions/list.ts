@@ -27,8 +27,8 @@ const ListSubmissionsQuerySchema = z.object({
 const SubmissionRowSchema = z.object({
   submissionId: z.string(),
   workSessionId: z.string(),
-  studentUserId: z.string(),
-  studentName: z.string(),
+  studentUserId: z.string().nullable(),
+  studentName: z.string().nullable(),
   submittedAt: z.string(),
   grade: z.string().nullable(),
   autoReview: z.string().nullable(),
@@ -123,7 +123,7 @@ export async function listSubmissionsRoute(app: FastifyTypedInstance) {
           gradedAt: submission.gradedAt,
         })
         .from(submission)
-        .innerJoin(user, eq(submission.studentUserId, user.id))
+        .leftJoin(user, eq(submission.studentUserId, user.id))
         .where(whereSub)
         .orderBy(desc(submission.submittedAt))
         .limit(perPage)
@@ -134,8 +134,8 @@ export async function listSubmissionsRoute(app: FastifyTypedInstance) {
         data: rows.map((r) => ({
           submissionId: r.submissionId,
           workSessionId: r.workSessionId,
-          studentUserId: r.studentUserId,
-          studentName: r.studentName,
+          studentUserId: r.studentUserId ?? null,
+          studentName: r.studentName ?? null,
           submittedAt: r.submittedAt.toISOString(),
           grade: r.grade ?? null,
           autoReview:

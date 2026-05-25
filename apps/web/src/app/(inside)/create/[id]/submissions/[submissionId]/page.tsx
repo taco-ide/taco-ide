@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRemarkSync } from "react-remark";
 import { ArrowLeft, Loader2, Play, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,15 @@ function formatDt(iso: string | null) {
   } catch {
     return iso;
   }
+}
+
+function AutoReviewMarkdown({ content }: { content: string }) {
+  const md = useRemarkSync(content);
+  return (
+    <div className="prose prose-sm prose-invert max-w-none prose-p:text-slate-200 prose-p:leading-relaxed prose-headings:text-slate-100 prose-strong:text-slate-100 prose-li:text-slate-200 prose-code:text-amber-400 prose-code:bg-slate-900/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-700">
+      {md}
+    </div>
+  );
 }
 
 function AccessDenied() {
@@ -138,7 +148,7 @@ function SubmissionDetailContent() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              Submissão de {submission.studentName}
+              Submissão de {submission.studentName ?? "(usuário removido)"}
             </h1>
             <p className="text-slate-400 text-sm">
               Enviada em {formatDt(submission.submittedAt)}
@@ -207,9 +217,7 @@ function SubmissionDetailContent() {
                 <p className="text-slate-500 text-xs mb-2">
                   Gerada em {formatDt(submission.autoReviewAt)}
                 </p>
-                <div className="whitespace-pre-wrap text-slate-200 text-sm leading-relaxed">
-                  {submission.autoReview}
-                </div>
+                <AutoReviewMarkdown content={submission.autoReview} />
               </>
             ) : (
               <p className="text-amber-400/90 text-sm">
