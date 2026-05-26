@@ -140,7 +140,7 @@ export async function listSubmissionsRoute(app: FastifyTypedInstance) {
           grade: r.grade ?? null,
           autoReview:
             r.autoReview && r.autoReview.length > AUTO_REVIEW_PREVIEW_CHARS
-              ? r.autoReview.slice(0, AUTO_REVIEW_PREVIEW_CHARS)
+              ? `${r.autoReview.slice(0, AUTO_REVIEW_PREVIEW_CHARS)}...`
               : (r.autoReview ?? null),
           autoReviewAt: r.autoReviewAt?.toISOString() ?? null,
           gradedAt: r.gradedAt?.toISOString() ?? null,

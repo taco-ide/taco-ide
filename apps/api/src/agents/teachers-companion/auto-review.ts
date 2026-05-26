@@ -166,8 +166,8 @@ export async function runAutoReview(submissionId: string): Promise<void> {
               .map((part) =>
                 typeof part === "string"
                   ? part
-                  : "text" in part && typeof part.text === "string"
-                    ? part.text
+                  : typeof (part as any)?.text === "string"
+                    ? (part as any).text
                     : ""
               )
               .join("")

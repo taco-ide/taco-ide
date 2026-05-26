@@ -42,6 +42,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
     const [currentStep, setCurrentStep] = useState(0);
     const [tags, setTags] = useState<string[]>(initialTags ?? []);
     const [resolvedChallengeId, setResolvedChallengeId] = useState<string | null>(challengeId ?? null);
+    const [hasSavedRefStep, setHasSavedRefStep] = useState(false);
     const [feedback, setFeedback] = useState<{
         type: "success" | "error";
         message: string;
@@ -62,7 +63,14 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             onSuccess: (res) => {
                 queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                 setResolvedChallengeId(res.data.id);
-                setCurrentStep(2);  // Move to Step 3 (reference solutions)
+                setHasSavedRefStep(true);
+                // Clear isDirty so a second "Próximo" click just advances.
+                methods.reset(methods.getValues());
+                setFeedback({
+                    type: "success",
+                    message:
+                        "Desafio salvo. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa.",
+                });
             },
             onError: (err) => {
                 setFeedback({
@@ -80,7 +88,16 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesIdQueryKey(challengeId) });
                 }
-                setCurrentStep(2);  // Move to Step 3 (reference solutions)
+                setHasSavedRefStep(true);
+                const willGenerate =
+                    methods.getValues("generateReferenceSolutions") === true;
+                methods.reset(methods.getValues());
+                setFeedback({
+                    type: "success",
+                    message: willGenerate
+                        ? "Alterações salvas. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa."
+                        : "Alterações salvas. Você pode avançar para a próxima etapa.",
+                });
             },
             onError: (err) => {
                 setFeedback({
@@ -111,6 +128,19 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         }
 
         if (currentStep === 2) {
+            // Two-phase Próximo on step 2: first click saves, second click
+            // advances. Generation status is shown in StepReferenceSolutions
+            // and never blocks moving forward — KB doesn't depend on it.
+            const savedChallengeId = resolvedChallengeId ?? challengeId;
+            if (
+                hasSavedRefStep &&
+                !methods.formState.isDirty &&
+                savedChallengeId
+            ) {
+                setCurrentStep(3);
+                return;
+            }
+
             const formData = methods.getValues();
             if (mode === "create" && !formData.classroomId) {
                 methods.setError("classroomId", {
@@ -210,6 +240,11 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
     const effectiveChallengeId = resolvedChallengeId ?? challengeId;
 
+    // Destructure to subscribe react-hook-form's formState proxy.
+    const { isDirty } = methods.formState;
+    const showAdvanceLabelOnStep2 =
+        currentStep === 2 && hasSavedRefStep && !isDirty && !!effectiveChallengeId;
+
     return (
         <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
             <div className="container mx-auto px-4 py-8">
@@ -299,7 +334,9 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                                 ) : (
                                     <ArrowRight className="w-4 h-4" />
                                 )}
-                                Próximo
+                                {showAdvanceLabelOnStep2
+                                    ? "Continuar para Knowledge Base"
+                                    : "Próximo"}
                             </Button>
                         )}
                     </div>

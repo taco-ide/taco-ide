@@ -109,7 +109,7 @@ async function runOneKind(
         ? result.content
         : Array.isArray(result.content)
           ? result.content
-              .map((c) => (typeof c === "string" ? c : (c as any).text ?? ""))
+              .map((c) => (typeof c === "string" ? c : (c as any)?.text ?? ""))
               .join("")
           : "";
 
