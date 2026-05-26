@@ -9,7 +9,7 @@ import {
 } from "../../_responses/types";
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { submission, user } from "@repo/infra/db/schema";
+import { submission, user, autoReviewStatusEnum } from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -36,6 +36,8 @@ const SubmissionDetailSchema = z.object({
   gradedAt: z.string().nullable(),
   autoReview: z.string().nullable(),
   autoReviewAt: z.string().nullable(),
+  autoReviewStatus: z.enum(autoReviewStatusEnum),
+  autoReviewError: z.string().nullable(),
 });
 
 const GetSubmissionResponseSchema = ResponseSchema200.extend({
@@ -107,6 +109,8 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           gradedAt: submission.gradedAt,
           autoReview: submission.autoReview,
           autoReviewAt: submission.autoReviewAt,
+          autoReviewStatus: submission.autoReviewStatus,
+          autoReviewError: submission.autoReviewError,
         })
         .from(submission)
         .leftJoin(user, eq(submission.studentUserId, user.id))
@@ -143,6 +147,8 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           gradedAt: row.gradedAt?.toISOString() ?? null,
           autoReview: row.autoReview ?? null,
           autoReviewAt: row.autoReviewAt?.toISOString() ?? null,
+          autoReviewStatus: row.autoReviewStatus,
+          autoReviewError: row.autoReviewError ?? null,
         },
       });
     }

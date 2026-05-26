@@ -60,11 +60,11 @@ export type GetV1ChallengesChallengeidSubmissions200 = {
         /**
          * @type string
         */
-        studentUserId: string;
+        studentUserId: string | null;
         /**
          * @type string
         */
-        studentName: string;
+        studentName: string | null;
         /**
          * @type string
         */

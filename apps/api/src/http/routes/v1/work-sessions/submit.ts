@@ -179,6 +179,7 @@ export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
             code: latestSolution?.code ?? null,
             stdin: latestSolution?.stdin ?? null,
             stdout: latestSolution?.stdout ?? null,
+            autoReviewStatus: "pending",
           })
           .returning({ id: submission.id });
         submissionId = insertedSubmission?.id ?? null;

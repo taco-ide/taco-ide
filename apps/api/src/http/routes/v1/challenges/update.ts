@@ -11,6 +11,7 @@ import {
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challenge, classroom, member } from "@repo/infra/db/schema";
+import { generateReferenceSolutions } from "../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 
@@ -26,6 +27,7 @@ const UpdateChallengeBodySchema = z
     tags: z.array(z.string()).nullable().optional(),
     possibleSolutions: z.string().nullable().optional(),
     classroomId: z.string().min(1).nullable().optional(),
+    generateReferenceSolutions: z.boolean().optional(),
   })
   .strict();
 
@@ -256,6 +258,11 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           success: false as const,
           message: "Failed to update challenge",
         });
+      }
+
+      // Fire and forget reference solution generation if explicitly requested
+      if (body.generateReferenceSolutions === true) {
+        void generateReferenceSolutions(challengeId);
       }
 
       const possibleSolutionsOut =

@@ -1,10 +1,11 @@
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { db } from "@repo/infra/db";
 import {
   submission,
   challenge,
   userInteractionOnChallenge,
+  challengeReferenceSolution,
 } from "@repo/infra/db/schema";
 import {
   createLlm,
@@ -58,11 +59,16 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       return;
     }
 
+    // Mark as running
+    await db
+      .update(submission)
+      .set({ autoReviewStatus: "running" })
+      .where(eq(submission.id, submissionId));
+
     const [ch] = await db
       .select({
         title: challenge.title,
         description: challenge.description,
-        possibleSolutions: challenge.possibleSolutions,
       })
       .from(challenge)
       .where(eq(challenge.id, sub.challengeId))
@@ -79,12 +85,28 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .orderBy(asc(userInteractionOnChallenge.createdAt))
       .limit(MAX_INTERACTIONS_FOR_REVIEW);
 
-    const possibleSolutionsText =
-      ch?.possibleSolutions === null || ch?.possibleSolutions === undefined
-        ? ""
-        : typeof ch.possibleSolutions === "string"
-          ? ch.possibleSolutions
-          : JSON.stringify(ch.possibleSolutions);
+    const refRows = await db
+      .select({
+        kind: challengeReferenceSolution.kind,
+        code: challengeReferenceSolution.code,
+      })
+      .from(challengeReferenceSolution)
+      .where(
+        and(
+          eq(challengeReferenceSolution.challengeId, sub.challengeId),
+          eq(challengeReferenceSolution.status, "complete"),
+        ),
+      );
+
+    const referenceSolutionsBlock =
+      refRows.length === 0
+        ? "(não fornecidas)"
+        : refRows
+            .map(
+              (r) =>
+                `### Solução de referência — ${r.kind}\n\`\`\`python\n${r.code ?? ""}\n\`\`\``,
+            )
+            .join("\n\n");
 
     const conversation = interactions
       .map((i, idx) => {
@@ -97,9 +119,7 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       `# Desafio`,
       `Título: ${ch?.title ?? "(desconhecido)"}`,
       `Enunciado: ${ch?.description ?? "(sem enunciado)"}`,
-      possibleSolutionsText
-        ? `Soluções de referência:\n${possibleSolutionsText}`
-        : "Soluções de referência: (não fornecidas)",
+      `Soluções de referência:\n${referenceSolutionsBlock}`,
       ``,
       `# Submissão do aluno`,
       `## Código`,
@@ -117,7 +137,7 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .filter(Boolean)
       .join("\n");
 
-    const llm = createLlm({ temperature: 0.2, max_tokens: 2048 });
+    const llm = createLlm({ max_tokens: 2048 });
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort(new AgentTimeoutError(AGENT_TIMEOUT_MS));
@@ -150,6 +170,19 @@ export async function runAutoReview(submissionId: string): Promise<void> {
 
     if (!reviewText) {
       console.warn(`[auto-review] empty LLM response for ${submissionId}`);
+      await db
+        .update(submission)
+        .set({
+          autoReviewStatus: "failed",
+          autoReviewError: "O agente retornou uma resposta vazia.",
+        })
+        .where(eq(submission.id, submissionId))
+        .catch((dbErr) =>
+          console.error(
+            `[auto-review] failed to persist empty-response status for ${submissionId}:`,
+            dbErr
+          )
+        );
       return;
     }
 
@@ -158,9 +191,25 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .set({
         autoReview: reviewText,
         autoReviewAt: new Date(),
+        autoReviewStatus: "complete",
+        autoReviewError: null,
       })
       .where(eq(submission.id, submissionId));
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await db
+      .update(submission)
+      .set({
+        autoReviewStatus: "failed",
+        autoReviewError: message,
+      })
+      .where(eq(submission.id, submissionId))
+      .catch((dbErr) =>
+        console.error(
+          `[auto-review] failed to persist error status for ${submissionId}:`,
+          dbErr
+        )
+      );
     console.error(`[auto-review] failed for ${submissionId}:`, err);
   }
 }

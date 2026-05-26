@@ -23,8 +23,8 @@ export const getV1ChallengesChallengeidSubmissions200Schema = z.object({
 "data": z.array(z.object({
     "submissionId": z.string(),
 "workSessionId": z.string(),
-"studentUserId": z.string(),
-"studentName": z.string(),
+"studentUserId": z.string().nullable(),
+"studentName": z.string().nullable(),
 "submittedAt": z.string(),
 "grade": z.string().nullable(),
 "autoReview": z.string().nullable(),

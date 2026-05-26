@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRemarkSync } from "react-remark";
-import { ArrowLeft, Loader2, Play, Save } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle, Loader2, Play, RefreshCw, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
   useGetV1ChallengesChallengeidSubmissionsSubmissionid,
   useGetV1ChallengesId,
   usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade,
+  usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview,
   getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey,
   getV1ChallengesChallengeidSubmissionsQueryKey,
 } from "@/kubb/hooks";
@@ -60,6 +61,10 @@ function SubmissionDetailContent() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [autoReviewFeedback, setAutoReviewFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const { data: submissionData, isLoading: loadingSub } =
     useGetV1ChallengesChallengeidSubmissionsSubmissionid(
@@ -81,6 +86,55 @@ function SubmissionDetailContent() {
       setCommentInput(submission.gradingComment ?? "");
     }
   }, [submission]);
+
+  const rerunMutation = usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview({
+    mutation: {
+      onSuccess: (resp) => {
+        const generated = resp?.data?.generated;
+        setAutoReviewFeedback(
+          generated
+            ? { type: "success", message: "Avaliação regenerada" }
+            : {
+                type: "error",
+                message:
+                  "O agente não retornou avaliação — verifique os logs do servidor.",
+              }
+        );
+        queryClient.invalidateQueries({
+          queryKey: getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey(
+            challengeId,
+            submissionId
+          ),
+        });
+      },
+      onError: (err: unknown) => {
+        // err from Kubb hooks is an ApiError with status and message
+        const status = (err as { status?: number })?.status;
+        const message = (err as { message?: string })?.message;
+
+        if (status === 429 && message) {
+          // Already includes "Aguarde Xs antes de tentar novamente"
+          setAutoReviewFeedback({ type: "error", message });
+        } else if (status === 409) {
+          setAutoReviewFeedback({
+            type: "error",
+            message: "Avaliação já em execução — aguarde.",
+          });
+        } else {
+          setAutoReviewFeedback({
+            type: "error",
+            message:
+              message ?? "Falha ao re-executar avaliação",
+          });
+        }
+      },
+    },
+  });
+
+  const handleRerunAutoReview = () => {
+    setAutoReviewFeedback(null);
+    rerunMutation.mutate({ challengeId, submissionId });
+  };
 
   const gradeMutation = usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade({
     mutation: {
@@ -209,20 +263,74 @@ function SubmissionDetailContent() {
           </section>
 
           <section className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 lg:col-span-1">
-            <h2 className="text-slate-100 font-semibold mb-3">
-              Avaliação automática
-            </h2>
-            {submission.autoReview ? (
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <h2 className="text-slate-100 font-semibold">Avaliação automática</h2>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-slate-600 bg-slate-800 text-slate-200"
+                onClick={handleRerunAutoReview}
+                disabled={
+                  submission.autoReviewStatus === "running" || rerunMutation.isPending
+                }
+                title={
+                  submission.autoReviewStatus === "complete"
+                    ? "Re-executar avaliação automática"
+                    : "Executar avaliação automática"
+                }
+              >
+                {rerunMutation.isPending || submission.autoReviewStatus === "running" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                <span className="ml-1.5">
+                  {submission.autoReviewStatus === "complete" ? "Re-executar" : "Executar"}
+                </span>
+              </Button>
+            </div>
+
+            {/* Mutation / 429 feedback */}
+            {autoReviewFeedback ? (
+              <Alert
+                className={
+                  autoReviewFeedback.type === "success"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300 mb-3"
+                    : "border-rose-500/30 bg-rose-500/10 text-rose-300 mb-3"
+                }
+              >
+                <AlertDescription>{autoReviewFeedback.message}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            {/* State-driven body */}
+            {submission.autoReviewStatus === "running" || rerunMutation.isPending ? (
+              <div className="flex items-center gap-2 text-slate-400 text-sm italic">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Em execução…
+              </div>
+            ) : submission.autoReviewStatus === "complete" && submission.autoReview ? (
               <>
                 <p className="text-slate-500 text-xs mb-2">
                   Gerada em {formatDt(submission.autoReviewAt)}
                 </p>
                 <AutoReviewMarkdown content={submission.autoReview} />
               </>
+            ) : submission.autoReviewStatus === "failed" ? (
+              <Alert className="border-rose-500/30 bg-rose-500/10 text-rose-300">
+                <AlertCircle className="w-4 h-4" />
+                <AlertDescription>
+                  <span className="font-medium">Falha na avaliação.</span>{" "}
+                  {submission.autoReviewError
+                    ? submission.autoReviewError.slice(0, 200)
+                    : "Erro desconhecido."}
+                </AlertDescription>
+              </Alert>
             ) : (
+              /* pending */
               <p className="text-amber-400/90 text-sm">
-                Pendente — a avaliação aparece aqui assim que o agente do
-                professor terminar de processar.
+                Pendente — use o botão Executar para gerar a avaliação agora.
               </p>
             )}
           </section>
@@ -232,15 +340,9 @@ function SubmissionDetailContent() {
               <h2 className="text-slate-100 font-semibold mb-2">
                 Soluções de referência
               </h2>
-              {challenge?.possibleSolutions ? (
-                <pre className="bg-slate-950 rounded p-3 text-slate-200 text-xs overflow-auto max-h-40 whitespace-pre-wrap">
-                  {challenge.possibleSolutions}
-                </pre>
-              ) : (
-                <p className="text-slate-500 text-sm">
-                  Nenhuma solução de referência cadastrada.
-                </p>
-              )}
+              <p className="text-slate-500 text-sm">
+                Nenhuma solução de referência cadastrada. (As soluções são gerenciadas na tela de edição do desafio.)
+              </p>
             </div>
 
             <div>

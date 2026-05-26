@@ -129,6 +129,7 @@ export const challenge = pgTable("challenge", {
   difficulty: varchar("difficulty", { length: 20 }),
   tags: jsonb("tags").$type<string[]>(),
   supportMaterials: jsonb("support_materials"),
+  /** @deprecated — see `challenge_reference_solution`. Remove in a future PR. */
   possibleSolutions: jsonb("possible_solutions"),
   createdByUserId: text("created_by_user_id").references(() => user.id, {
     onDelete: "set null",
@@ -191,6 +192,27 @@ export const workSession = pgTable(
 // ==================== INTERACTION TYPES ====================
 
 export const interactionTypeEnum = ["chat", "code_run"] as const;
+
+// ==================== AUTO REVIEW STATUS ====================
+
+export const autoReviewStatusEnum = [
+  "pending",
+  "running",
+  "complete",
+  "failed",
+] as const;
+
+// ==================== REFERENCE SOLUTION STATUS ====================
+
+export const referenceSolutionKindEnum = ["brute_force", "refined"] as const;
+export const referenceSolutionLanguageEnum = ["python"] as const;
+export const referenceSolutionStatusEnum = [
+  "pending",
+  "running",
+  "complete",
+  "failed",
+] as const;
+export const referenceSolutionCreatedByEnum = ["ai", "manual"] as const;
 
 // ==================== USER INTERACTIONS ON CHALLENGES ====================
 
@@ -430,11 +452,60 @@ export const submission = pgTable(
     // Automated review from the teacher's companion agent
     autoReview: text("auto_review"),
     autoReviewAt: timestamp("auto_review_at"),
+    autoReviewStatus: varchar("auto_review_status", { length: 16 })
+      .notNull()
+      .default("pending")
+      .$type<(typeof autoReviewStatusEnum)[number]>(),
+    autoReviewError: text("auto_review_error"),
   },
   (table) => [
     uniqueIndex("submission_work_session_idx").on(table.workSessionId),
     index("submission_challenge_idx").on(table.challengeId),
   ]
+);
+
+// ==================== CHALLENGE REFERENCE SOLUTIONS ====================
+
+export const challengeReferenceSolution = pgTable(
+  "challenge_reference_solution",
+  {
+    id: text("id").primaryKey(),
+    challengeId: text("challenge_id")
+      .notNull()
+      .references(() => challenge.id, { onDelete: "cascade" }),
+    kind: varchar("kind", { length: 16, enum: referenceSolutionKindEnum })
+      .notNull(),
+    language: varchar("language", {
+      length: 16,
+      enum: referenceSolutionLanguageEnum,
+    })
+      .notNull()
+      .default("python"),
+    code: text("code"),
+    status: varchar("status", {
+      length: 16,
+      enum: referenceSolutionStatusEnum,
+    })
+      .notNull()
+      .default("pending")
+      .$type<(typeof referenceSolutionStatusEnum)[number]>(),
+    error: text("error"),
+    createdBy: varchar("created_by", {
+      length: 8,
+      enum: referenceSolutionCreatedByEnum,
+    })
+      .notNull()
+      .default("ai"),
+    generatedAt: timestamp("generated_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("challenge_reference_solution_challenge_kind_uq").on(
+      t.challengeId,
+      t.kind,
+    ),
+  ],
 );
 
 // ==================== EXPORT TYPES ====================
@@ -470,3 +541,7 @@ export type NewTeachingAssistantEvaluation =
   typeof teachingAssistantEvaluation.$inferInsert;
 export type Submission = typeof submission.$inferSelect;
 export type NewSubmission = typeof submission.$inferInsert;
+export type ChallengeReferenceSolution =
+  typeof challengeReferenceSolution.$inferSelect;
+export type NewChallengeReferenceSolution =
+  typeof challengeReferenceSolution.$inferInsert;

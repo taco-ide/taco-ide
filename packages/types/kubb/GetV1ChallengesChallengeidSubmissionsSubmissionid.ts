@@ -22,6 +22,15 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum = {
 
 export type GetV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum = (typeof getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum)[keyof typeof getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum];
 
+export const dataAutoReviewStatusEnum = {
+    "pending": "pending",
+    "running": "running",
+    "complete": "complete",
+    "failed": "failed"
+} as const;
+
+export type DataAutoReviewStatusEnum = (typeof dataAutoReviewStatusEnum)[keyof typeof dataAutoReviewStatusEnum];
+
 /**
  * @description Default Response
 */
@@ -53,11 +62,11 @@ export type GetV1ChallengesChallengeidSubmissionsSubmissionid200 = {
         /**
          * @type string
         */
-        studentUserId: string;
+        studentUserId: string | null;
         /**
          * @type string
         */
-        studentName: string;
+        studentName: string | null;
         /**
          * @type string
         */
@@ -98,6 +107,14 @@ export type GetV1ChallengesChallengeidSubmissionsSubmissionid200 = {
          * @type string
         */
         autoReviewAt: string | null;
+        /**
+         * @type string
+        */
+        autoReviewStatus: DataAutoReviewStatusEnum;
+        /**
+         * @type string
+        */
+        autoReviewError: string | null;
     };
     /**
      * @type object | undefined

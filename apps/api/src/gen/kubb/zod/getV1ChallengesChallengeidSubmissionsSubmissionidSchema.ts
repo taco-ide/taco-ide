@@ -20,8 +20,8 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200Schema = z.obje
     "submissionId": z.string(),
 "workSessionId": z.string(),
 "challengeId": z.string(),
-"studentUserId": z.string(),
-"studentName": z.string(),
+"studentUserId": z.string().nullable(),
+"studentName": z.string().nullable(),
 "code": z.string().nullable(),
 "stdin": z.string().nullable(),
 "stdout": z.string().nullable(),
@@ -31,7 +31,9 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200Schema = z.obje
 "gradedByUserId": z.string().nullable(),
 "gradedAt": z.string().nullable(),
 "autoReview": z.string().nullable(),
-"autoReviewAt": z.string().nullable()
+"autoReviewAt": z.string().nullable(),
+"autoReviewStatus": z.enum(["pending", "running", "complete", "failed"]),
+"autoReviewError": z.string().nullable()
     }),
 "pagination": z.object({
     "total": z.number(),

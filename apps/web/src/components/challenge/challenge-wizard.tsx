@@ -18,11 +18,13 @@ import { challengeFormSchema, type ChallengeFormData } from "@/components/challe
 import { WizardStepper } from "@/components/challenge/wizard-stepper";
 import { StepBasicInfo } from "@/components/challenge/steps/step-basic-info";
 import { StepDescription } from "@/components/challenge/steps/step-description";
+import { StepReferenceSolutions } from "@/components/challenge/steps/step-reference-solutions";
 import { StepKnowledgeBase } from "@/components/challenge/steps/step-knowledge-base";
 
 const WIZARD_STEPS = [
     { label: "Informacoes Basicas" },
     { label: "Enunciado" },
+    { label: "Soluções de referência" },
     { label: "Knowledge Base" },
 ];
 
@@ -50,6 +52,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             title: "",
             description: "",
             tags: [],
+            generateReferenceSolutions: mode === "create" ? true : false,
         },
     });
 
@@ -58,7 +61,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             onSuccess: (res) => {
                 queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                 setResolvedChallengeId(res.data.id);
-                setCurrentStep(2);
+                setCurrentStep(2);  // Move to Step 3 (reference solutions)
             },
             onError: (err) => {
                 setFeedback({
@@ -76,7 +79,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesIdQueryKey(challengeId) });
                 }
-                setCurrentStep(2);
+                setCurrentStep(2);  // Move to Step 3 (reference solutions)
             },
             onError: (err) => {
                 setFeedback({
@@ -111,19 +114,24 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 difficulty: formData.difficulty,
                 classroomId: formData.classroomId,
                 tags: tags.length > 0 ? tags : undefined,
+                generateReferenceSolutions: formData.generateReferenceSolutions !== false ? true : undefined,
             };
 
             if (mode === "create") {
                 createMutation.mutate({ data: payload });
             } else if (challengeId) {
+                const patchData: any = {
+                    title: formData.title,
+                    description: formData.description ?? null,
+                    difficulty: formData.difficulty,
+                    tags: tags.length > 0 ? tags : null,
+                };
+                if (formData.generateReferenceSolutions === true) {
+                    patchData.generateReferenceSolutions = true;
+                }
                 updateMutation.mutate({
                     id: challengeId,
-                    data: {
-                        title: formData.title,
-                        description: formData.description ?? null,
-                        difficulty: formData.difficulty,
-                        tags: tags.length > 0 ? tags : null,
-                    },
+                    data: patchData,
                 });
             }
             return;
@@ -177,6 +185,12 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                         )}
                         {currentStep === 1 && <StepDescription />}
                         {currentStep === 2 && effectiveChallengeId && (
+                            <StepReferenceSolutions
+                                challengeId={effectiveChallengeId}
+                                mode={mode}
+                            />
+                        )}
+                        {currentStep === 3 && effectiveChallengeId && (
                             <StepKnowledgeBase
                                 challengeId={effectiveChallengeId}
                                 classroomId={methods.getValues("classroomId")}
