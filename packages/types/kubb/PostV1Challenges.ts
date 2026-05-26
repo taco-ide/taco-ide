@@ -195,6 +195,11 @@ export type PostV1ChallengesMutationRequest = {
     tags?: string[];
     supportMaterials?: any;
     possibleSolutions?: any;
+    /**
+     * @default true
+     * @type boolean | undefined
+    */
+    generateReferenceSolutions?: boolean;
 };
 
 export type PostV1ChallengesMutationResponse = PostV1Challenges201;

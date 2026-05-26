@@ -11,7 +11,7 @@ import {
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challenge, classroom, member } from "@repo/infra/db/schema";
-import { generateReferenceSolutions } from "../../../agents/teachers-companion/reference-solution";
+import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 

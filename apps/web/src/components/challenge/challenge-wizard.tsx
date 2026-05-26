@@ -13,6 +13,7 @@ import {
     usePatchV1ChallengesId,
     getV1ChallengesQueryKey,
     getV1ChallengesIdQueryKey,
+    getV1ChallengesChallengeidReferenceSolutionsQueryKey,
 } from "@/kubb/hooks";
 import { challengeFormSchema, type ChallengeFormData } from "@/components/challenge/schema";
 import { WizardStepper } from "@/components/challenge/wizard-stepper";
@@ -52,7 +53,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             title: "",
             description: "",
             tags: [],
-            generateReferenceSolutions: mode === "create" ? true : false,
+            generateReferenceSolutions: true,
         },
     });
 
@@ -108,6 +109,32 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 });
                 return;
             }
+
+            // Check for manual override confirmation guard in edit mode
+            if (
+                mode === "edit" &&
+                formData.generateReferenceSolutions === true &&
+                effectiveChallengeId
+            ) {
+                const cachedData = queryClient.getQueryData(
+                    getV1ChallengesChallengeidReferenceSolutionsQueryKey(
+                        effectiveChallengeId
+                    )
+                ) as any;
+                const existingRefs = cachedData?.data ?? [];
+                const hasManualRefs = existingRefs.some(
+                    (r: any) => r.createdBy === "manual"
+                );
+                if (
+                    hasManualRefs &&
+                    !window.confirm(
+                        "Isso vai substituir soluções editadas manualmente. Continuar?"
+                    )
+                ) {
+                    return;
+                }
+            }
+
             const payload = {
                 title: formData.title,
                 description: formData.description,

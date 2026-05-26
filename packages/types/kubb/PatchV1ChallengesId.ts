@@ -230,6 +230,10 @@ export type PatchV1ChallengesIdMutationRequest = {
      * @type string
     */
     classroomId?: string | null;
+    /**
+     * @type boolean | undefined
+    */
+    generateReferenceSolutions?: boolean;
 };
 
 export type PatchV1ChallengesIdMutationResponse = PatchV1ChallengesId200;

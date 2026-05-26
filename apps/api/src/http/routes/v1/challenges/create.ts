@@ -17,7 +17,7 @@ import {
   teachingAssistant,
   challengeTeachingAssistant,
 } from "@repo/infra/db/schema";
-import { generateReferenceSolutions } from "../../../agents/teachers-companion/reference-solution";
+import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 

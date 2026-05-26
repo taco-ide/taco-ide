@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleGuard } from "@/components/guards/RoleGuard";
+import { ReferenceSolutionsPanel } from "@/components/challenge/_components/ReferenceSolutionsPanel";
 import {
   useGetV1ChallengesChallengeidSubmissionsSubmissionid,
   useGetV1ChallengesId,
@@ -336,14 +338,7 @@ function SubmissionDetailContent() {
           </section>
 
           <section className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 lg:col-span-1 space-y-4">
-            <div>
-              <h2 className="text-slate-100 font-semibold mb-2">
-                Soluções de referência
-              </h2>
-              <p className="text-slate-500 text-sm">
-                Nenhuma solução de referência cadastrada. (As soluções são gerenciadas na tela de edição do desafio.)
-              </p>
-            </div>
+            <ReferenceSolutionsPanel challengeId={challengeId} />
 
             <div>
               <h2 className="text-slate-100 font-semibold mb-3">Nota</h2>

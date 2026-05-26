@@ -83,7 +83,8 @@ export const patchV1ChallengesIdMutationRequestSchema = z.object({
 "difficulty": z.enum(["easy", "medium", "hard"]).nullable().nullish(),
 "tags": z.array(z.string()).nullable().nullish(),
 "possibleSolutions": z.string().nullable().nullish(),
-"classroomId": z.string().min(1).nullable().nullish()
+"classroomId": z.string().min(1).nullable().nullish(),
+"generateReferenceSolutions": z.boolean().optional()
     })
 
 export const patchV1ChallengesIdMutationResponseSchema = z.lazy(() => patchV1ChallengesId200Schema)
