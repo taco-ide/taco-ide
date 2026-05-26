@@ -18,7 +18,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 
 interface StepReferenceSolutionsProps {
-  challengeId: string;
+  challengeId: string | undefined;
   mode: "create" | "edit";
 }
 
@@ -394,21 +394,16 @@ export function StepReferenceSolutions({
   challengeId,
   mode,
 }: StepReferenceSolutionsProps) {
-  const { register, getValues } = useFormContext();
-  const queryClient = useQueryClient();
-  const generateReferenceSolutions = useWatch({
-    name: "generateReferenceSolutions",
-  });
-
-  const isChecked = generateReferenceSolutions ?? true;
+  const { register } = useFormContext();
 
   const { data: refSolsData, isLoading: refSolsLoading } =
-    useGetV1ChallengesChallengeidReferenceSolutions(challengeId, {
+    useGetV1ChallengesChallengeidReferenceSolutions(challengeId ?? "", {
       query: {
-        enabled: mode === "edit",
-        refetchInterval: (data: any) => {
-          const hasRunning = data?.data?.some((r: any) => r.status === "running");
-          return hasRunning ? 3000 : false;
+        enabled: mode === "edit" && !!challengeId,
+        refetchInterval: (query) => {
+          const list = query.state.data?.data;
+          if (!Array.isArray(list)) return false;
+          return list.some((r) => r.status === "running") ? 3000 : false;
         },
       },
     });
@@ -416,7 +411,7 @@ export function StepReferenceSolutions({
   const refSolutions = refSolsData?.data ?? [];
   const refSolsMap = Object.fromEntries(
     refSolutions.map((r) => [r.kind, r])
-  ) as Record<Kind | string, any>;
+  );
 
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-6 space-y-4">
@@ -427,14 +422,14 @@ export function StepReferenceSolutions({
         <p className="text-slate-400">
           {mode === "create"
             ? "Gere automaticamente soluções de referência para este desafio"
-            : "Regenere as soluções de referência para este desafio"}
+            : "Gerencie as soluções de referência deste desafio"}
         </p>
       </div>
 
       <div className="flex flex-row items-start space-x-3 rounded-md border border-slate-700 p-4">
         <input
           type="checkbox"
-          defaultValue={isChecked ? "on" : "off"}
+          defaultChecked
           {...register("generateReferenceSolutions")}
           className="mt-1 w-4 h-4 cursor-pointer"
         />
@@ -447,7 +442,7 @@ export function StepReferenceSolutions({
           <p className="text-xs text-slate-400">
             {mode === "create"
               ? "Gera 2 soluções — uma simples (brute force) e uma refinada — usadas pela avaliação automática."
-              : "Marque se você alterou o enunciado e quer que as soluções sejam regeneradas ao salvar. Gera 2 soluções."}
+              : "Soluções serão regeneradas ao salvar. Desmarque para preservar as atuais. Gera 2 soluções."}
           </p>
         </div>
       </div>
@@ -462,7 +457,7 @@ export function StepReferenceSolutions({
         </Alert>
       )}
 
-      {mode === "edit" && (
+      {mode === "edit" && challengeId && (
         <div className="space-y-4">
           <h3 className="text-slate-300 font-semibold text-sm">
             Soluções por tipo

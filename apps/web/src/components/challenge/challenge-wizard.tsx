@@ -13,7 +13,7 @@ import {
     usePatchV1ChallengesId,
     getV1ChallengesQueryKey,
     getV1ChallengesIdQueryKey,
-    getV1ChallengesChallengeidReferenceSolutionsQueryKey,
+    getV1ChallengesChallengeidReferenceSolutionsQueryOptions,
 } from "@/kubb/hooks";
 import { challengeFormSchema, type ChallengeFormData } from "@/components/challenge/schema";
 import { WizardStepper } from "@/components/challenge/wizard-stepper";
@@ -102,36 +102,55 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         }
 
         if (currentStep === 1) {
+            const valid = await methods.trigger(["description"]);
+            if (!valid) return;
+            // Save happens on step 2 so the user can toggle
+            // generateReferenceSolutions before the mutation fires.
+            setCurrentStep(2);
+            return;
+        }
+
+        if (currentStep === 2) {
             const formData = methods.getValues();
             if (mode === "create" && !formData.classroomId) {
                 methods.setError("classroomId", {
                     message: "Selecione uma turma",
                 });
+                setCurrentStep(0);
                 return;
             }
 
-            // Check for manual override confirmation guard in edit mode
+            // Manual-override confirmation guard. fetchQuery (not
+            // getQueryData) so a slow first-load doesn't silently bypass
+            // the dialog and clobber a teacher's manual edits.
             if (
                 mode === "edit" &&
                 formData.generateReferenceSolutions === true &&
                 effectiveChallengeId
             ) {
-                const cachedData = queryClient.getQueryData(
-                    getV1ChallengesChallengeidReferenceSolutionsQueryKey(
-                        effectiveChallengeId
-                    )
-                ) as any;
-                const existingRefs = cachedData?.data ?? [];
-                const hasManualRefs = existingRefs.some(
-                    (r: any) => r.createdBy === "manual"
-                );
-                if (
-                    hasManualRefs &&
-                    !window.confirm(
-                        "Isso vai substituir soluções editadas manualmente. Continuar?"
-                    )
-                ) {
-                    return;
+                try {
+                    const fresh = await queryClient.fetchQuery(
+                        getV1ChallengesChallengeidReferenceSolutionsQueryOptions(
+                            effectiveChallengeId
+                        )
+                    );
+                    const existingRefs =
+                        (fresh as { data?: { createdBy?: string }[] } | undefined)
+                            ?.data ?? [];
+                    const hasManualRefs = existingRefs.some(
+                        (r) => r.createdBy === "manual"
+                    );
+                    if (
+                        hasManualRefs &&
+                        !window.confirm(
+                            "Isso vai substituir soluções editadas manualmente. Continuar?"
+                        )
+                    ) {
+                        return;
+                    }
+                } catch {
+                    // If we can't read current refs, fall through and save —
+                    // the server still enforces auth + cooldown.
                 }
             }
 
@@ -211,9 +230,9 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                             <StepBasicInfo tags={tags} setTags={setTags} />
                         )}
                         {currentStep === 1 && <StepDescription />}
-                        {currentStep === 2 && effectiveChallengeId && (
+                        {currentStep === 2 && (
                             <StepReferenceSolutions
-                                challengeId={effectiveChallengeId}
+                                challengeId={effectiveChallengeId ?? undefined}
                                 mode={mode}
                             />
                         )}
