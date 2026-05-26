@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWatch, useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,6 +109,15 @@ function ReferenceKindCard({
     type: "success" | "error";
     message: string;
   } | null>(null);
+
+  // Sync the editor buffer with the latest code when not actively editing,
+  // so a background regeneration that arrives via polling doesn't get
+  // silently overwritten the next time the user clicks "Editar".
+  useEffect(() => {
+    if (!editingCode) {
+      setEditCode(data?.code ?? "");
+    }
+  }, [data?.code, editingCode]);
 
   const regenerateMutation =
     usePostV1ChallengesChallengeidReferenceSolutionsKindRegenerate({

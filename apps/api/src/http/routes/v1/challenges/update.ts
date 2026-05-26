@@ -111,7 +111,8 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         body.description !== undefined ||
         body.difficulty !== undefined ||
         body.tags !== undefined ||
-        body.possibleSolutions !== undefined;
+        body.possibleSolutions !== undefined ||
+        body.generateReferenceSolutions !== undefined;
 
       if (
         isContentEdit &&

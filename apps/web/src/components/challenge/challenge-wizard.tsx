@@ -23,7 +23,7 @@ import { StepReferenceSolutions } from "@/components/challenge/steps/step-refere
 import { StepKnowledgeBase } from "@/components/challenge/steps/step-knowledge-base";
 
 const WIZARD_STEPS = [
-    { label: "Informacoes Basicas" },
+    { label: "Informações Básicas" },
     { label: "Enunciado" },
     { label: "Soluções de referência" },
     { label: "Knowledge Base" },
@@ -193,6 +193,12 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
     const handleStepClick = (step: number) => {
         setFeedback(null);
+        // In create mode, KB (step 3) is unreachable until the challenge
+        // has been saved on step 2 (resolvedChallengeId is set). Block
+        // forward jumps that would skip the save step entirely.
+        if (mode === "create" && step > 2 && !resolvedChallengeId) {
+            return;
+        }
         setCurrentStep(step);
     };
 
@@ -293,7 +299,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                                 ) : (
                                     <ArrowRight className="w-4 h-4" />
                                 )}
-                                Proximo
+                                Próximo
                             </Button>
                         )}
                     </div>
