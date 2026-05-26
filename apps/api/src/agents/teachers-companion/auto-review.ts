@@ -7,6 +7,7 @@ import {
   userInteractionOnChallenge,
   challengeReferenceSolution,
 } from "@repo/infra/db/schema";
+import { env } from "@repo/infra/env";
 import {
   createLlm,
   AGENT_TIMEOUT_MS,
@@ -137,7 +138,11 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .filter(Boolean)
       .join("\n");
 
-    const llm = createLlm({ max_tokens: 2048 });
+    const llm = createLlm({
+      model: env.LLM_DETERMINISTIC_MODEL_NAME,
+      temperature: 0.2,
+      max_tokens: 2048,
+    });
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort(new AgentTimeoutError(AGENT_TIMEOUT_MS));

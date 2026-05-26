@@ -4,6 +4,7 @@ import {
   challenge,
   challengeReferenceSolution,
 } from "@repo/infra/db/schema";
+import { env } from "@repo/infra/env";
 import { createLlm } from "../llm-factory";
 import { randomUUID } from "node:crypto";
 
@@ -96,7 +97,11 @@ async function runOneKind(
     });
 
   try {
-    const llm = createLlm({ max_tokens: 1024 });
+    const llm = createLlm({
+      model: env.LLM_DETERMINISTIC_MODEL_NAME,
+      temperature: 0.2,
+      max_tokens: 1024,
+    });
     const prompt = prompts[kind](chal.title, chal.description ?? "");
     const result = await llm.invoke(prompt);
     const text =
