@@ -25,9 +25,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/admin/empty-state";
-import { RoleBadge } from "@/components/admin/role-badge";
+import { RoleBadge , isAdminRole } from "@/components/admin/role-badge";
 import type { AdminRole } from "@/components/admin/role-badge";
-import { isAdminRole } from "@/components/admin/role-badge";
 import { useDeleteV1OrganizationsIdEmailDomainsDomainid } from "@/kubb/hooks/organizationsHooks/useDeleteV1OrganizationsIdEmailDomainsDomainid";
 import { getV1OrganizationsIdEmailDomainsQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdEmailDomains";
 

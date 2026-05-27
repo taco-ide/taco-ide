@@ -6,6 +6,15 @@ import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 import globals from "globals";
 
+// eslint-config-next surfaces accessibility issues as warnings, not errors.
+// Mirror that convention so a11y findings stay visible without blocking lint.
+const jsxA11yWarnings = Object.fromEntries(
+  Object.keys(jsxA11yPlugin.configs.recommended.rules).map((rule) => [
+    rule,
+    "warn",
+  ]),
+);
+
 export default [
   {
     ignores: [
@@ -31,6 +40,12 @@ export default [
     },
     settings: {
       react: { version: "detect" },
+      "import/resolver": {
+        typescript: {
+          project: "./tsconfig.json",
+        },
+        node: true,
+      },
     },
     plugins: {
       "@next/next": nextPlugin,
@@ -42,6 +57,8 @@ export default [
     rules: {
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
+      ...jsxA11yWarnings,
+      ...importPlugin.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
       "react/react-in-jsx-scope": "off",
