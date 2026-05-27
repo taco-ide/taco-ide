@@ -24,7 +24,7 @@ const EnrollmentItemSchema = z.object({
   userId: z.string(),
   name: z.string(),
   email: z.string(),
-  enrolledAt: z.string(),
+  enrolledAt: z.string().nullable(),
 });
 
 const GetClassroomResponseSchema = ResponseSchema200.extend({
@@ -129,7 +129,7 @@ export async function getClassroomByIdRoute(app: FastifyTypedInstance) {
             userId: e.userId,
             name: e.name ?? "",
             email: e.email,
-            enrolledAt: e.enrolledAt.toISOString(),
+            enrolledAt: e.enrolledAt?.toISOString() ?? null,
           })),
           createdAt: c.createdAt.toISOString(),
           updatedAt: c.updatedAt.toISOString(),

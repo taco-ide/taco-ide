@@ -1,5 +1,4 @@
-import { FC } from "react";
-import React from "react";
+import React, { FC } from "react";
 
 interface FeatureCard {
   title: string;

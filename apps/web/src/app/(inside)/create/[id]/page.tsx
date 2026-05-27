@@ -1,8 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ShieldAlert, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { ChallengeWizard } from "@/components/challenge/challenge-wizard";

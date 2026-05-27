@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
+import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembersQueryParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
