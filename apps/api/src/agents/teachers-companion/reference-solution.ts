@@ -4,7 +4,6 @@ import {
   challenge,
   challengeReferenceSolution,
 } from "@repo/infra/db/schema";
-import { env } from "@repo/infra/env";
 import { createLlm } from "../llm-factory";
 import { randomUUID } from "node:crypto";
 
@@ -97,11 +96,13 @@ async function runOneKind(
     });
 
   try {
-    const llm = createLlm({
-      model: env.LLM_DETERMINISTIC_MODEL_NAME,
-      temperature: 0.2,
-      max_tokens: 1024,
-    });
+    // TEMP(no-4o-mini): The only Azure deployment in this resource is
+    // gpt-5.2-chat, which rejects custom `temperature` and `max_tokens`. Fall
+    // back to the default chat model with no overrides until a non-reasoning
+    // deterministic model (e.g. gpt-4o-mini) is deployed. Revert to
+    // `createLlm({ model: env.LLM_DETERMINISTIC_MODEL_NAME, temperature: 0.2,
+    // max_tokens: 1024 })` once that deployment exists.
+    const llm = createLlm();
     const prompt = prompts[kind](chal.title, chal.description ?? "");
     const result = await llm.invoke(prompt);
     const text =

@@ -7,7 +7,6 @@ import {
   userInteractionOnChallenge,
   challengeReferenceSolution,
 } from "@repo/infra/db/schema";
-import { env } from "@repo/infra/env";
 import {
   createLlm,
   AGENT_TIMEOUT_MS,
@@ -138,11 +137,13 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .filter(Boolean)
       .join("\n");
 
-    const llm = createLlm({
-      model: env.LLM_DETERMINISTIC_MODEL_NAME,
-      temperature: 0.2,
-      max_tokens: 2048,
-    });
+    // TEMP(no-4o-mini): The only Azure deployment in this resource is
+    // gpt-5.2-chat, which rejects custom `temperature` and `max_tokens`. Fall
+    // back to the default chat model with no overrides until a non-reasoning
+    // deterministic model (e.g. gpt-4o-mini) is deployed. Revert to
+    // `createLlm({ model: env.LLM_DETERMINISTIC_MODEL_NAME, temperature: 0.2,
+    // max_tokens: 2048 })` once that deployment exists.
+    const llm = createLlm();
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort(new AgentTimeoutError(AGENT_TIMEOUT_MS));
