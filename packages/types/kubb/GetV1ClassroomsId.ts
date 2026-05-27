@@ -81,7 +81,7 @@ export type GetV1ClassroomsId200 = {
             /**
              * @type string
             */
-            enrolledAt: string;
+            enrolledAt: string | null;
         }[];
         /**
          * @type string

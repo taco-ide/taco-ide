@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
+import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404, PutV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";

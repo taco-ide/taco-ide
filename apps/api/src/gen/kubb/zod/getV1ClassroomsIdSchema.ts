@@ -27,7 +27,7 @@ export const getV1ClassroomsId200Schema = z.object({
     "userId": z.string(),
 "name": z.string(),
 "email": z.string(),
-"enrolledAt": z.string()
+"enrolledAt": z.string().nullable()
     })),
 "createdAt": z.string(),
 "updatedAt": z.string()
