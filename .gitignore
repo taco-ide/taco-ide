@@ -50,3 +50,7 @@ uploads/
 *.pem
 .claude/history/
 .playwright-cli/
+.understand-anything/
+
+# Playwright test artifacts (screenshots are gisted into PR descriptions, not committed)
+test-results/
