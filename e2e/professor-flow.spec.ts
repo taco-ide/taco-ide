@@ -20,6 +20,7 @@ import {
   seedSubmissionForGrading,
   resetSubmissionGrade,
 } from "./helpers/seed";
+import { makeShooter } from "./helpers/screenshots";
 
 let submissionId: string;
 
@@ -30,7 +31,9 @@ test.beforeAll(async () => {
 });
 
 test.describe("Professor workflow", () => {
-  test("professor can login, view a submission, and grade it", async ({ page }) => {
+  test("professor can login, view a submission, and grade it", async ({ page }, testInfo) => {
+    const shot = makeShooter(page, testInfo);
+
     // ---- 1. Login ----
     await page.goto("/auth/login");
     await page.getByLabel(/email/i).fill(PROFESSOR.email);
@@ -49,6 +52,7 @@ test.describe("Professor workflow", () => {
     // The seeded submission exists, so we expect at least one row.
     const studentCell = page.getByText("Aluno Demo").first();
     await expect(studentCell).toBeVisible({ timeout: 15_000 });
+    await shot("submissions-list");
 
     // ---- 3. Open the submission detail ----
     await page.goto(
@@ -58,6 +62,7 @@ test.describe("Professor workflow", () => {
       page.getByRole("heading", { name: /Submissão de Aluno Demo/i })
     ).toBeVisible();
     await expect(page.getByText(/print\('hello world'\)/)).toBeVisible();
+    await shot("submission-detail");
 
     // ---- 4. Enter a grade and save ----
     const gradeInput = page.getByLabel(/nota \(ex/i);
@@ -73,6 +78,7 @@ test.describe("Professor workflow", () => {
     await expect(page.getByText("Nota salva", { exact: true })).toBeVisible({
       timeout: 10_000,
     });
+    await shot("grade-saved");
 
     // ---- 5. Reload and confirm persistence ----
     await page.reload();
@@ -84,5 +90,6 @@ test.describe("Professor workflow", () => {
     // The grade should also appear in the list view.
     await page.goto(`/create/${SEED_CHALLENGE_ID}/submissions`);
     await expect(page.getByText("9.5")).toBeVisible({ timeout: 10_000 });
+    await shot("grade-persisted-in-list");
   });
 });

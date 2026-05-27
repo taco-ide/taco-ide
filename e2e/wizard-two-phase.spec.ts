@@ -14,9 +14,12 @@
  */
 import { test, expect } from "@playwright/test";
 import { PROFESSOR } from "./helpers/seed";
+import { makeShooter } from "./helpers/screenshots";
 
 test.describe("Challenge wizard — two-phase Próximo on step 2", () => {
-  test("save shows success alert, second click advances to KB step", async ({ page }) => {
+  test("save shows success alert, second click advances to KB step", async ({ page }, testInfo) => {
+    const shot = makeShooter(page, testInfo);
+
     // ---- 1. Login ----
     await page.goto("/auth/login");
     await page.getByLabel(/email/i).fill(PROFESSOR.email);
@@ -72,6 +75,7 @@ test.describe("Challenge wizard — two-phase Próximo on step 2", () => {
     await expect(
       page.getByRole("button", { name: /continuar para knowledge base/i })
     ).toBeVisible({ timeout: 5_000 });
+    await shot("step2-saved-success-alert");
 
     // ---- 6. Second click — advance to KB step ----
     await page.getByRole("button", { name: /continuar para knowledge base/i }).click();
@@ -85,6 +89,6 @@ test.describe("Challenge wizard — two-phase Próximo on step 2", () => {
     await expect(page.getByRole("button", { name: /continuar para knowledge base/i })).not.toBeVisible();
 
     // Capture final state
-    await page.screenshot({ path: "test-results/wizard-step3-kb.png", fullPage: false });
+    await shot("step3-knowledge-base");
   });
 });

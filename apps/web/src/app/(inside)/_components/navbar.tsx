@@ -33,7 +33,7 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 shrink-0 backdrop-blur-md bg-[#1a1f2e]/80 border-b border-white/10">
-      <div className="container mx-auto p-4 flex justify-between items-center">
+      <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Link
             href="/explore"
@@ -46,7 +46,7 @@ const Navbar = () => {
               width={220}
               height={56}
               priority
-              className="h-14 w-auto max-h-14 object-contain object-left transform hover:scale-110 transition-transform duration-300"
+              className="h-9 w-auto max-h-9 object-contain object-left transform hover:scale-110 transition-transform duration-300"
             />
           </Link>
         </div>
@@ -85,7 +85,7 @@ const Navbar = () => {
                 aria-label="Menu do utilizador"
                 aria-expanded={showDropdown}
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FFA000] flex items-center justify-center text-black font-bold">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FFA000] flex items-center justify-center text-sm text-black font-bold">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div className="text-white pr-1">

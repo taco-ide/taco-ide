@@ -424,35 +424,37 @@ export function StepReferenceSolutions({
 
   return (
     <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-6 space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-100 mb-2">
-          Soluções de referência
-        </h2>
-        <p className="text-slate-400">
-          {mode === "create"
-            ? "Gere automaticamente soluções de referência para este desafio"
-            : "Gerencie as soluções de referência deste desafio"}
-        </p>
-      </div>
-
-      <div className="flex flex-row items-start space-x-3 rounded-md border border-slate-700 p-4">
-        <input
-          type="checkbox"
-          defaultChecked
-          {...register("generateReferenceSolutions")}
-          className="mt-1 w-4 h-4 cursor-pointer"
-        />
-        <div className="space-y-1 flex-1">
-          <Label className="text-slate-200 block">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-100 mb-2">
+            Soluções de referência
+          </h2>
+          <p className="text-slate-400">
             {mode === "create"
-              ? "Gerar soluções de referência automaticamente ao salvar (recomendado)"
-              : "Regenerar soluções de referência ao salvar"}
-          </Label>
-          <p className="text-xs text-slate-400">
-            {mode === "create"
-              ? "Gera 2 soluções — uma simples (brute force) e uma refinada — usadas pela avaliação automática."
-              : "Soluções serão regeneradas ao salvar. Desmarque para preservar as atuais. Gera 2 soluções."}
+              ? "Gere automaticamente soluções de referência para este desafio"
+              : "Gerencie as soluções de referência deste desafio"}
           </p>
+        </div>
+
+        <div className="flex flex-row items-start space-x-3 rounded-md border border-slate-700 p-4 lg:max-w-md">
+          <input
+            type="checkbox"
+            defaultChecked
+            {...register("generateReferenceSolutions")}
+            className="mt-1 w-4 h-4 cursor-pointer"
+          />
+          <div className="space-y-1 flex-1">
+            <Label className="text-slate-200 block">
+              {mode === "create"
+                ? "Gerar soluções de referência automaticamente ao salvar (recomendado)"
+                : "Regenerar soluções de referência ao salvar"}
+            </Label>
+            <p className="text-xs text-slate-400">
+              {mode === "create"
+                ? "Gera 2 soluções — uma simples (brute force) e uma refinada — usadas pela avaliação automática."
+                : "Soluções serão regeneradas ao salvar. Desmarque para preservar as atuais. Gera 2 soluções."}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -471,15 +473,17 @@ export function StepReferenceSolutions({
           <h3 className="text-slate-300 font-semibold text-sm">
             Soluções por tipo
           </h3>
-          {KINDS.map((kind) => (
-            <ReferenceKindCard
-              key={kind}
-              kind={kind}
-              challengeId={challengeId}
-              data={refSolsMap[kind]}
-              isLoading={refSolsLoading}
-            />
-          ))}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {KINDS.map((kind) => (
+              <ReferenceKindCard
+                key={kind}
+                kind={kind}
+                challengeId={challengeId}
+                data={refSolsMap[kind]}
+                isLoading={refSolsLoading}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

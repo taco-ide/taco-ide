@@ -246,7 +246,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         currentStep === 2 && hasSavedRefStep && !isDirty && !!effectiveChallengeId;
 
     return (
-        <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
+        <div className="min-h-full bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-12 text-center">
                     <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-3">

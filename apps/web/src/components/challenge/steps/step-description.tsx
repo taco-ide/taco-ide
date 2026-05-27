@@ -37,46 +37,42 @@ export function StepDescription() {
     const { onChange: rhfOnChange, ...restRegister } = register("description");
 
     return (
-        <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-6">
-                <Card className="p-6 bg-slate-800 border-slate-700">
-                    <div className="space-y-4">
-                        <Label className="text-slate-200">Problem Description</Label>
-                        <Textarea
-                            {...restRegister}
-                            placeholder="Type the problem text here... Markdown supported"
-                            className="min-h-[500px] bg-slate-900 border-slate-700 text-slate-200"
-                            onChange={(e) => {
-                                rhfOnChange(e);
-                                handleMarkdownChange(e.currentTarget.value);
-                            }}
-                        />
-                    </div>
-                </Card>
-            </div>
-            <div>
-                <Card className="bg-[#1a1f2e] text-white flex flex-col h-full">
-                    <CardHeader>
-                        <CardTitle>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center justify-center rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
-                                        <Text className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                    <span className="text-sm font-medium text-gray-300">Problem Description Preview</span>
+        <div className="grid grid-cols-2 gap-6 items-stretch h-[360px]">
+            <Card className="p-6 bg-slate-800 border-slate-700 flex flex-col h-full">
+                <div className="flex flex-col flex-1 min-h-0 space-y-2">
+                    <Label className="text-slate-200">Problem Description</Label>
+                    <Textarea
+                        {...restRegister}
+                        placeholder="Type the problem text here... Markdown supported"
+                        className="flex-1 min-h-0 resize-none bg-slate-900 border-slate-700 text-slate-200"
+                        onChange={(e) => {
+                            rhfOnChange(e);
+                            handleMarkdownChange(e.currentTarget.value);
+                        }}
+                    />
+                </div>
+            </Card>
+            <Card className="bg-[#1a1f2e] text-white flex flex-col h-full min-h-0">
+                <CardHeader className="py-3">
+                    <CardTitle>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
+                                    <Text className="w-4 h-4 text-blue-400" />
                                 </div>
+                                <span className="text-sm font-medium text-gray-300">Problem Description Preview</span>
                             </div>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ScrollArea className="w-full h-[60vh]">
-                            <div className="prose prose-sm prose-invert animate-fade-in">
-                                {reactContent}
-                            </div>
-                        </ScrollArea>
-                    </CardContent>
-                </Card>
-            </div>
+                        </div>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 min-h-0">
+                    <ScrollArea className="w-full h-full">
+                        <div className="prose prose-sm prose-invert animate-fade-in">
+                            {reactContent}
+                        </div>
+                    </ScrollArea>
+                </CardContent>
+            </Card>
         </div>
     );
 }
