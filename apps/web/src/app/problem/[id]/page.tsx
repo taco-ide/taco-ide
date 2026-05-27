@@ -9,7 +9,7 @@ import IoPanel from "./_components/IoPanel";
 import ProblemDescription from "./_components/ProblemDescription";
 import ChatPanel from "./_components/ChatPanel";
 import { ProblemProvider, useProblem } from "@/contexts/ProblemContext";
-import { Loader2 , FileText, Terminal, MessageCircle } from "lucide-react";
+import { Loader2, FileText, Terminal, MessageCircle } from "lucide-react";
 import {
   ResizablePanelGroup,
   ResizablePanel,

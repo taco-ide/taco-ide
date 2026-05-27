@@ -3,9 +3,9 @@ declare module "pdf-parse" {
     text: string;
     numpages: number;
     numrender: number;
-    info: Record<string, unknown>;
+    info: Record<string, unknown> | null;
     metadata: unknown;
-    version: string;
+    version: string | null;
   }
 
   function pdfParse(
