@@ -4,7 +4,6 @@
  * submit tests don't hit the real LLM.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
-import type { FastifyInstance } from "fastify";
 import { eq } from "drizzle-orm";
 import { db } from "@repo/infra/db";
 import { submission } from "@repo/infra/db/schema";
@@ -31,7 +30,7 @@ vi.mock("../../../../../agents/teachers-companion/auto-review", () => ({
 }));
 
 describe("submission lifecycle", () => {
-  let app: FastifyInstance;
+  let app: Awaited<ReturnType<typeof getApp>>;
   let org: Awaited<ReturnType<typeof createOrg>>;
   let teacher: Awaited<ReturnType<typeof createUser>>;
   let student: Awaited<ReturnType<typeof createUser>>;

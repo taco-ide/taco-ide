@@ -11,9 +11,12 @@ import appInstance from "../../http/server";
 
 let readyPromise: Promise<typeof appInstance> | null = null;
 
-export function getApp() {
+export function getApp(): Promise<typeof appInstance> {
   if (!readyPromise) {
-    readyPromise = appInstance.ready().then(() => appInstance);
+    readyPromise = (async () => {
+      await appInstance.ready();
+      return appInstance;
+    })();
   }
   return readyPromise;
 }

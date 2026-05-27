@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import type { FastifyInstance } from "fastify";
 import { getApp } from "../../../../../test/helpers/app";
 import { loginAs } from "../../../../../test/helpers/auth";
 import {
@@ -12,7 +11,7 @@ import {
 } from "../../../../../test/helpers/factories";
 
 describe("PATCH /v1/challenges/:id", () => {
-  let app: FastifyInstance;
+  let app: Awaited<ReturnType<typeof getApp>>;
   let org: Awaited<ReturnType<typeof createOrg>>;
   let teacherA: Awaited<ReturnType<typeof createUser>>;
   let teacherB: Awaited<ReturnType<typeof createUser>>;

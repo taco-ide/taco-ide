@@ -3,13 +3,10 @@
  * POST regenerate with 409/429 guards, and DELETE.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
-import type { FastifyInstance } from "fastify";
+import { randomUUID } from "node:crypto";
 import { eq, and } from "drizzle-orm";
 import { db } from "@repo/infra/db";
-import {
-  challengeReferenceSolution,
-  challenge,
-} from "@repo/infra/db/schema";
+import { challengeReferenceSolution } from "@repo/infra/db/schema";
 import { getApp } from "../../../../../test/helpers/app";
 import { loginAs } from "../../../../../test/helpers/auth";
 import {
@@ -23,34 +20,42 @@ import {
 
 // Mock the LLM so regenerate doesn't hit a real service
 vi.mock("../../../../../agents/teachers-companion/reference-solution", () => {
-  const realModule = vi.importActual(
-    "../../../../../agents/teachers-companion/reference-solution",
-  );
   return {
     generateReferenceSolutions: vi.fn(async (challengeId, kinds) => {
-      // Simulate completion without calling LLM
+      // Simulate completion without calling LLM. Upsert so it mirrors the real
+      // generator, which creates the row when one does not exist yet.
       for (const kind of kinds || ["brute_force", "refined"]) {
         await db
-          .update(challengeReferenceSolution)
-          .set({
+          .insert(challengeReferenceSolution)
+          .values({
+            id: randomUUID(),
+            challengeId,
+            kind,
+            language: "python",
             code: `# mock code for ${kind}`,
             status: "complete",
+            createdBy: "ai",
             generatedAt: new Date(),
-            updatedAt: new Date(),
           })
-          .where(
-            and(
-              eq(challengeReferenceSolution.challengeId, challengeId),
-              eq(challengeReferenceSolution.kind, kind),
-            ),
-          );
+          .onConflictDoUpdate({
+            target: [
+              challengeReferenceSolution.challengeId,
+              challengeReferenceSolution.kind,
+            ],
+            set: {
+              code: `# mock code for ${kind}`,
+              status: "complete",
+              generatedAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
       }
     }),
   };
 });
 
 describe("reference solutions", () => {
-  let app: FastifyInstance;
+  let app: Awaited<ReturnType<typeof getApp>>;
   let org: Awaited<ReturnType<typeof createOrg>>;
   let teacher: Awaited<ReturnType<typeof createUser>>;
   let classroom: Awaited<ReturnType<typeof createClassroom>>;
