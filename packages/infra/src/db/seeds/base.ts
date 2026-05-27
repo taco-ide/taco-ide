@@ -6,6 +6,7 @@
  * Idempotente via safeInsert (ignora conflitos).
  * Pode ser rodado standalone: npm run db:seed
  */
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../index";
 import { model, teachingAssistant } from "../schema";
 import { seedPlatformAdmin } from "./admin";
@@ -53,6 +54,24 @@ export async function seedBase({ organizationId }: SeedBaseOptions = {}) {
       ...(organizationId ? { createdByOrganizationId: organizationId } : {}),
     })
   );
+
+  // If the row already existed without an org binding (e.g., base seed ran
+  // before the dev seed), bind it to the supplied org so org-scoped lookups
+  // in the API can resolve a TA.
+  // The isNull guard prevents overwriting an already-bound org on repeated invocations.
+  if (organizationId) {
+    await safeInsert("teachingAssistant org backfill", () =>
+      db
+        .update(teachingAssistant)
+        .set({ createdByOrganizationId: organizationId })
+        .where(
+          and(
+            eq(teachingAssistant.id, SEED_TA_ID),
+            isNull(teachingAssistant.createdByOrganizationId)
+          )
+        )
+    );
+  }
 
   console.log("[base] Structural data seeded.");
 

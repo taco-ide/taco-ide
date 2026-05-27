@@ -37,6 +37,7 @@ import { ArrowLeft, ArrowRight, Loader2, Pencil, Plus, Trash2 } from "lucide-rea
 import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey, useGetV1Classrooms } from "@/kubb/hooks";
 import { useUser } from "@/contexts/UserContext";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
+import { stripMarkdown } from "@/lib/utils";
 
 const problemsPerPage = 10;
 
@@ -163,7 +164,7 @@ export default function ExplorePage() {
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-400">
-                            {problem.description ?? ""}
+                            {stripMarkdown(problem.description ?? "")}
                           </p>
                           <div className="flex flex-wrap gap-2 mt-auto">
                             {(problem.tags ?? []).map((tag) => (
@@ -275,9 +276,10 @@ export default function ExplorePage() {
                             {problem.title}
                           </TableCell>
                           <TableCell className="text-slate-300">
-                            {(problem.description ?? "").length > 30
-                              ? (problem.description ?? "").substring(0, 30) + "..."
-                              : problem.description ?? ""}
+                            {(() => {
+                              const text = stripMarkdown(problem.description ?? "");
+                              return text.length > 30 ? text.substring(0, 30) + "..." : text;
+                            })()}
                           </TableCell>
                           <TableCell>
                             <Badge

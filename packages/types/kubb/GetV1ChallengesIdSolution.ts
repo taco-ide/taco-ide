@@ -55,7 +55,7 @@ export type GetV1ChallengesIdSolution200 = {
          * @type string
         */
         updatedAt: string;
-    };
+    } | null;
     /**
      * @type object | undefined
     */

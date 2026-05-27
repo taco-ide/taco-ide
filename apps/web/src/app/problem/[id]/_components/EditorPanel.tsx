@@ -42,6 +42,13 @@ function EditorPanel() {
 
     if (editor.getValue() !== nextCode) {
       editor.setValue(nextCode);
+      // Re-select all when we land on the default placeholder so the user's
+      // first keystroke replaces it. This fires after the solution query
+      // resolves, overriding any selection set in onMount.
+      if (nextCode === PYTHON_DEFAULT) {
+        const m = editor.getModel();
+        if (m) editor.setSelection(m.getFullModelRange());
+      }
     }
   }, [editor, solution?.code, challengeId]);
 
@@ -54,9 +61,26 @@ function EditorPanel() {
     preloadPyodide();
   }, [preloadPyodide]);
 
+  /**
+   * Select the entire editor contents so the next keystroke replaces them.
+   * Used after a reset / on first mount when the value still equals the
+   * default placeholder, so the user doesn't have to manually clear it.
+   */
+  const selectAll = () => {
+    if (!editor) return;
+    const model = editor.getModel();
+    if (!model) return;
+    const fullRange = model.getFullModelRange();
+    editor.setSelection(fullRange);
+    editor.focus();
+  };
+
   const handleRefresh = () => {
-    userEditedCodeRef.current = true;
-    if (editor) editor.setValue(PYTHON_DEFAULT);
+    userEditedCodeRef.current = false;
+    if (editor) {
+      editor.setValue(PYTHON_DEFAULT);
+      selectAll();
+    }
   };
 
   const handleFontSizeChange = (newSize: number) => {
@@ -127,9 +151,15 @@ function EditorPanel() {
           onChange={() => {
             userEditedCodeRef.current = true;
           }}
-          onMount={(editor: MonacoEditor.IStandaloneCodeEditor) =>
-            setEditor(editor)
-          }
+          onMount={(editor: MonacoEditor.IStandaloneCodeEditor) => {
+            setEditor(editor);
+            // If the initial content is the default placeholder, pre-select it
+            // so the student's first keystroke replaces it rather than appends.
+            const model = editor.getModel();
+            if (model && model.getValue() === PYTHON_DEFAULT) {
+              editor.setSelection(model.getFullModelRange());
+            }
+          }}
           options={{
             readOnly: isSessionEnded,
             minimap: { enabled: false },

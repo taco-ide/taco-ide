@@ -6,6 +6,9 @@ import {
   ResponseSchema401,
   ResponseSchema404,
 } from "../../_responses/types";
+
+// ResponseSchema404 is imported to keep the import consistent with other route
+// files; only the "Challenge not found" path uses it here.
 import { db } from "@repo/infra/db";
 import { challengeSolution, challenge } from "@repo/infra/db/schema";
 
@@ -22,7 +25,7 @@ const SolutionSchema = z.object({
 });
 
 const GetSolutionResponseSchema = ResponseSchema200.extend({
-  data: SolutionSchema,
+  data: SolutionSchema.nullable(),
 });
 
 // ==================== ROUTE ====================
@@ -41,7 +44,7 @@ export async function getSolutionRoute(app: FastifyTypedInstance) {
         response: {
           200: GetSolutionResponseSchema,
           401: ResponseSchema401,
-          404: ResponseSchema404,
+          404: ResponseSchema404, // challenge not found (solution absence is 200 + data: null)
         },
       },
     },
@@ -81,9 +84,9 @@ export async function getSolutionRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       if (!solution) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "No solution found for this challenge",
+        return reply.status(200).send({
+          success: true as const,
+          data: null,
         });
       }
 

@@ -37,7 +37,7 @@ cd packages/infra && npm run docker:up
 cd packages/infra && npm run db:push
 
 # Seed the database
-cd packages/infra && npm run db:seed
+cd packages/infra && npm run db:seed && npm run db:seed:dev
 
 # Start the API server (in one terminal)
 cd apps/api && npm run dev
@@ -88,7 +88,7 @@ Authentication is handled by Better Auth via the Fastify backend:
 
 ```env
 # API URL
-NEXT_PUBLIC_API_URL=http://localhost:3344
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ## Common Patterns

@@ -41,7 +41,9 @@ packages/infra/
 | `npm run db:migrate` | Apply migrations to database |
 | `npm run db:push` | Push schema directly (no migrations) |
 | `npm run db:studio` | Open Drizzle Studio UI |
-| `npm run db:seed` | Seed database with initial data |
+| `npm run db:seed` | Seed structural data only (model + default TA) |
+| `npm run db:seed:dev` | Seed development fixtures (demo org, users, classrooms, challenges) |
+| `npm run db:reset` | Reset DB, run migrations, seed dev fixtures |
 
 ## Database Workflow
 
@@ -69,7 +71,7 @@ Required environment variables (validated by `src/env.ts`):
 ```env
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/taco_dev
 BETTER_AUTH_SECRET=your-secret-key-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3344
+BETTER_AUTH_URL=http://localhost:4000
 RESEND_API_KEY=re_xxxxxxxxxxxxx  # For email sending
 ```
 

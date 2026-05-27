@@ -4,6 +4,32 @@
 */
 
 
+export const postV1ChatStudentMessage400SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChatStudentMessage400SuccessEnum = (typeof postV1ChatStudentMessage400SuccessEnum)[keyof typeof postV1ChatStudentMessage400SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChatStudentMessage400 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChatStudentMessage400SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1ChatStudentMessage401SuccessEnum = {
     "false": false
 } as const;
@@ -18,6 +44,32 @@ export type PostV1ChatStudentMessage401 = {
      * @type boolean
     */
     success: PostV1ChatStudentMessage401SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
+export const postV1ChatStudentMessage403SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChatStudentMessage403SuccessEnum = (typeof postV1ChatStudentMessage403SuccessEnum)[keyof typeof postV1ChatStudentMessage403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChatStudentMessage403 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChatStudentMessage403SuccessEnum;
     /**
      * @type string
     */
@@ -84,19 +136,22 @@ export type PostV1ChatStudentMessage500 = {
 
 export type PostV1ChatStudentMessageMutationRequest = {
     /**
-     * @type string
+     * @type string, uuid
     */
     workSessionId: string;
     /**
      * @minLength 1
+     * @maxLength 10000
      * @type string
     */
     message: string;
     /**
+     * @maxLength 65536
      * @type string | undefined
     */
     currentCode?: string;
     /**
+     * @maxLength 65536
      * @type string | undefined
     */
     stdout?: string;
@@ -107,5 +162,5 @@ export type PostV1ChatStudentMessageMutationResponse = any;
 export type PostV1ChatStudentMessageMutation = {
     Response: any;
     Request: PostV1ChatStudentMessageMutationRequest;
-    Errors: PostV1ChatStudentMessage401 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500;
+    Errors: PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500;
 };

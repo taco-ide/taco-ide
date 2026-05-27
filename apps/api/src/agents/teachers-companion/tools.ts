@@ -5,10 +5,24 @@ import { db } from "@repo/infra/db";
 import {
   challengeSolution,
   userInteractionOnChallenge,
+  challenge,
 } from "@repo/infra/db/schema";
 import { user } from "@repo/infra/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, and } from "drizzle-orm";
+import { workSession } from "@repo/infra/db/schema";
 import { createLlm } from "../llm-factory";
+
+const ClassroomScopeSchema = z.object({
+  classroomId: z.string(),
+});
+
+function getScopedClassroomId(config: unknown): string | null {
+  const parsed = ClassroomScopeSchema.safeParse(
+    (config as { configurable?: { classroomContext?: unknown } } | undefined)
+      ?.configurable?.classroomContext,
+  );
+  return parsed.success ? parsed.data.classroomId : null;
+}
 
 export const createChallengeDraft = tool(
   async ({ title, description, difficulty, testCases, solution }) => {
@@ -44,7 +58,14 @@ export const createChallengeDraft = tool(
 );
 
 export const listSubmissions = tool(
-  async ({ challengeId, limit, offset }) => {
+  async ({ challengeId, limit, offset }, config) => {
+    const scopedClassroomId = getScopedClassroomId(config);
+    if (!scopedClassroomId) {
+      return JSON.stringify({
+        error: "Classroom context not available",
+        submissions: [],
+      });
+    }
     const effectiveLimit = limit ?? 50;
     const effectiveOffset = offset ?? 0;
     const rows = await db
@@ -58,7 +79,13 @@ export const listSubmissions = tool(
       })
       .from(challengeSolution)
       .innerJoin(user, eq(user.id, challengeSolution.userId))
-      .where(eq(challengeSolution.challengeId, challengeId))
+      .innerJoin(challenge, eq(challenge.id, challengeSolution.challengeId))
+      .where(
+        and(
+          eq(challengeSolution.challengeId, challengeId),
+          eq(challenge.classroomId, scopedClassroomId),
+        ),
+      )
       .limit(effectiveLimit)
       .offset(effectiveOffset);
 
@@ -102,7 +129,11 @@ export const listSubmissions = tool(
 );
 
 export const evaluateSubmission = tool(
-  async ({ submissionId, interactionLimit, interactionOffset }) => {
+  async ({ submissionId, interactionLimit, interactionOffset }, config) => {
+    const scopedClassroomId = getScopedClassroomId(config);
+    if (!scopedClassroomId) {
+      return JSON.stringify({ error: "Classroom context not available" });
+    }
     const effectiveLimit = interactionLimit ?? 100;
     const effectiveOffset = interactionOffset ?? 0;
     const solutions = await db
@@ -116,7 +147,13 @@ export const evaluateSubmission = tool(
       })
       .from(challengeSolution)
       .innerJoin(user, eq(user.id, challengeSolution.userId))
-      .where(eq(challengeSolution.id, submissionId))
+      .innerJoin(challenge, eq(challenge.id, challengeSolution.challengeId))
+      .where(
+        and(
+          eq(challengeSolution.id, submissionId),
+          eq(challenge.classroomId, scopedClassroomId),
+        ),
+      )
       .limit(1);
 
     if (!solutions[0]) {
@@ -134,8 +171,12 @@ export const evaluateSubmission = tool(
         createdAt: userInteractionOnChallenge.createdAt,
       })
       .from(userInteractionOnChallenge)
+      .innerJoin(workSession, eq(userInteractionOnChallenge.workSessionId, workSession.id))
       .where(
-        eq(userInteractionOnChallenge.challengeId, solution.challengeId),
+        and(
+          eq(userInteractionOnChallenge.challengeId, solution.challengeId),
+          eq(workSession.userId, solution.userId),
+        ),
       )
       .orderBy(asc(userInteractionOnChallenge.createdAt))
       .limit(effectiveLimit)

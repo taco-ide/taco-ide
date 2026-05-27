@@ -8,7 +8,29 @@ import { z } from "zod";
 /**
  * @description Default Response
  */
+export const postV1ChatStudentMessage400Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const postV1ChatStudentMessage401Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const postV1ChatStudentMessage403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
@@ -39,10 +61,10 @@ export const postV1ChatStudentMessage500Schema = z.object({
     })
 
 export const postV1ChatStudentMessageMutationRequestSchema = z.object({
-    "workSessionId": z.string(),
-"message": z.string().min(1),
-"currentCode": z.string().optional(),
-"stdout": z.string().optional()
+    "workSessionId": z.string().uuid(),
+"message": z.string().min(1).max(10000),
+"currentCode": z.string().max(65536).optional(),
+"stdout": z.string().max(65536).optional()
     })
 
 export const postV1ChatStudentMessageMutationResponseSchema = z.any()
