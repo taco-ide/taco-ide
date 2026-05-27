@@ -23,6 +23,17 @@
 # repo with sensitive UI.
 set -euo pipefail
 
+# Clean up temp files and the cloned gist dir on exit. The clone's .git/config
+# embeds the gh auth token in plain text, so this also removes a credential at
+# rest. Guarded with ${VAR:-} since the trap fires even on early abort.
+cleanup() {
+  rm -f "${ORIG:-}" "${PLACEHOLDER:-}" "${BLOCK:-}" "${NEWBODY:-}"
+  if [[ -n "${WORK:-}" && -d "$WORK" ]]; then
+    rm -rf "$WORK"
+  fi
+}
+trap cleanup EXIT
+
 PR="${1:?usage: pr-screenshots.sh <pr-number> [owner/repo]}"
 REPO="${2:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
 
@@ -43,8 +54,8 @@ gh pr view "$PR" -R "$REPO" --json body --jq .body > "$ORIG"
 # Old gist IDs referenced by a previous run (gist raw URLs). Unique.
 OLD_GIDS=()
 while IFS= read -r gid; do [[ -n "$gid" ]] && OLD_GIDS+=("$gid"); done < <(
-  grep -oE 'gist\.githubusercontent\.com/[^/]+/[0-9a-f]+/raw' "$ORIG" \
-    | sed -E 's#.*/([0-9a-f]+)/raw#\1#' | sort -u
+  grep -oE 'gist\.githubusercontent\.com/[^/]+/[0-9a-f]+/raw' "$ORIG" 2>/dev/null \
+    | sed -E 's#.*/([0-9a-f]+)/raw#\1#' | sort -u || true
 )
 
 # --- 1. create a secret gist with a throwaway placeholder file ---
@@ -114,8 +125,8 @@ BLOCK="$(mktemp)"
 NEWBODY="$(mktemp)"
 python3 - "$ORIG" "$BLOCK" "$NEWBODY" <<'PY'
 import sys
-orig  = open(sys.argv[1]).read()
-block = open(sys.argv[2]).read().rstrip() + "\n"
+orig  = open(sys.argv[1], encoding="utf-8").read()
+block = open(sys.argv[2], encoding="utf-8").read().rstrip() + "\n"
 start, end = "<!-- e2e-screenshots:start -->", "<!-- e2e-screenshots:end -->"
 if start in orig and end in orig:
     pre  = orig[:orig.index(start)]
@@ -123,7 +134,7 @@ if start in orig and end in orig:
     out  = pre + block.rstrip() + post
 else:
     out = block + "\n---\n\n" + orig
-open(sys.argv[3], "w").write(out)
+open(sys.argv[3], "w", encoding="utf-8").write(out)
 PY
 gh pr edit "$PR" -R "$REPO" --body-file "$NEWBODY"
 echo "Updated PR #$PR with ${#PNGS[@]} screenshot(s)."
