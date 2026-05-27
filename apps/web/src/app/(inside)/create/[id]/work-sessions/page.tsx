@@ -89,7 +89,7 @@ function WorkSessionsListContent() {
 
   return (
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-white">Sessões dos alunos</h1>
           <div className="flex flex-wrap items-center gap-2">

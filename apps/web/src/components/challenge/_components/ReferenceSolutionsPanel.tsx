@@ -1,11 +1,80 @@
 "use client";
 
-import { useGetV1ChallengesChallengeidReferenceSolutions } from "@/kubb/hooks";
+import {
+  useGetV1ChallengesChallengeidReferenceSolutions,
+  usePostV1ChallengesChallengeidReferenceSolutionsKindRegenerate,
+  getV1ChallengesChallengeidReferenceSolutionsQueryKey,
+} from "@/kubb/hooks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReferenceSolutionsPanelProps {
   challengeId: string;
+}
+
+const REGEN_KINDS = ["brute_force", "refined"] as const;
+
+function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const { mutateAsync, isPending } =
+    usePostV1ChallengesChallengeidReferenceSolutionsKindRegenerate();
+
+  const handleGenerate = async () => {
+    setError(null);
+    try {
+      // Generate both kinds; the endpoint creates the row when absent.
+      for (const kind of REGEN_KINDS) {
+        await mutateAsync({ challengeId, kind });
+      }
+      queryClient.invalidateQueries({
+        queryKey:
+          getV1ChallengesChallengeidReferenceSolutionsQueryKey(challengeId),
+      });
+    } catch (err: any) {
+      setError(err?.message || "Erro ao gerar soluções de referência");
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h2 className="text-slate-100 font-semibold">
+          Soluções de referência
+        </h2>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="border-slate-600 bg-slate-800 text-slate-200"
+          onClick={handleGenerate}
+          disabled={isPending}
+          title="Gerar soluções de referência"
+        >
+          {isPending ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5" />
+          )}
+          <span className="ml-1.5">Gerar</span>
+        </Button>
+      </div>
+
+      {error ? (
+        <Alert className="border-rose-500/30 bg-rose-500/10 text-rose-300 mb-3">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <p className="text-slate-400 text-sm">
+        Nenhuma solução de referência cadastrada.
+      </p>
+    </div>
+  );
 }
 
 type RefSolution = {
@@ -60,16 +129,7 @@ export function ReferenceSolutionsPanel({
   const refSolutions = refSolsData?.data ?? [];
 
   if (refSolutions.length === 0) {
-    return (
-      <div>
-        <h2 className="text-slate-100 font-semibold mb-3">
-          Soluções de referência
-        </h2>
-        <p className="text-slate-400 text-sm">
-          Nenhuma solução de referência cadastrada.
-        </p>
-      </div>
-    );
+    return <EmptyReferenceSolutions challengeId={challengeId} />;
   }
 
   if (refSolutions.length === 1) {
