@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Lightbulb, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
+import { useTranslations } from "next-intl";
 
 const STORAGE_KEY = "taco_problem_workspace_onboarding_v1";
 
@@ -14,16 +15,17 @@ function shouldShowForRole(role: string | null): boolean {
   return true;
 }
 
-const checklistItems: string[] = [
-  "Na aba Problema, leia o enunciado com calma antes de codar.",
-  "No painel da direita, edite seu código no editor.",
-  "Use Executar para rodar o programa e ver o resultado.",
-  "Na aba Input / Output, ajuste a entrada de teste e confira a saída.",
-  "Na aba Chat, peça ajuda ao assistente quando travar (ele usa seu código e o enunciado).",
-];
+const CHECKLIST_KEYS = [
+  "readStatement",
+  "editCode",
+  "runProgram",
+  "adjustIo",
+  "askChat",
+] as const;
 
 export function ProblemWorkspaceOnboarding() {
   const { user, isLoading: userLoading } = useUser();
+  const t = useTranslations("problem");
   const [mounted, setMounted] = useState(false);
   const [hidden, setHidden] = useState(true);
 
@@ -67,7 +69,7 @@ export function ProblemWorkspaceOnboarding() {
           <div className="min-w-0 flex-1 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <h2 className="text-sm font-semibold text-amber-100 leading-tight">
-                Primeiros passos nesta tela
+                {t("onboarding.title")}
               </h2>
               <Button
                 type="button"
@@ -75,19 +77,21 @@ export function ProblemWorkspaceOnboarding() {
                 size="icon"
                 className="size-8 shrink-0 text-amber-200/80 hover:bg-amber-500/15 hover:text-amber-100"
                 onClick={handleDismiss}
-                aria-label="Ocultar dicas"
+                aria-label={t("onboarding.hideTips")}
               >
                 <X className="size-4" />
               </Button>
             </div>
             <p className="text-xs text-amber-100/75 leading-relaxed">
-              Checklist rápido — você pode ocultar isso quando quiser; não aparece de novo neste navegador.
+              {t("onboarding.subtitle")}
             </p>
             <ul className="grid gap-1.5 sm:grid-cols-2 text-xs text-zinc-200/95">
-              {checklistItems.map((line) => (
-                <li key={line} className="flex gap-2 items-start">
+              {CHECKLIST_KEYS.map((key) => (
+                <li key={key} className="flex gap-2 items-start">
                   <CheckCircle2 className="size-3.5 shrink-0 mt-0.5 text-amber-400/90" />
-                  <span className="leading-snug">{line}</span>
+                  <span className="leading-snug">
+                    {t(`onboarding.checklist.${key}`)}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -98,7 +102,7 @@ export function ProblemWorkspaceOnboarding() {
                 className="h-8 bg-amber-500/90 text-zinc-950 hover:bg-amber-400 text-xs font-medium"
                 onClick={handleDismiss}
               >
-                Entendi, ocultar
+                {t("onboarding.dismiss")}
               </Button>
             </div>
           </div>

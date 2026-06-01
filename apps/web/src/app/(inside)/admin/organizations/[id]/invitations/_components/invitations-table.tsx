@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Loader2, Mail, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import apiClient, { ApiError } from "@/lib/apiClient";
@@ -65,19 +66,26 @@ function toAdminRole(role: string): AdminRole {
   return isAdminRole(role) ? role : "student";
 }
 
-function expiresInLabel(expiresAt: string): string {
+type ExpiresLabel =
+  | { kind: "raw"; value: string }
+  | { kind: "expired" }
+  | { kind: "inMinutes"; count: number }
+  | { kind: "inHours"; count: number }
+  | { kind: "inDays"; count: number };
+
+function getExpiresLabel(expiresAt: string): ExpiresLabel {
   const d = new Date(expiresAt);
-  if (Number.isNaN(d.getTime())) return expiresAt;
+  if (Number.isNaN(d.getTime())) return { kind: "raw", value: expiresAt };
   const now = Date.now();
   const diffMs = d.getTime() - now;
-  if (diffMs <= 0) return "Expirado";
+  if (diffMs <= 0) return { kind: "expired" };
   const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes < 60) return `em ${diffMinutes} min`;
+  if (diffMinutes < 60) return { kind: "inMinutes", count: diffMinutes };
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `em ${diffHours} h`;
+  if (diffHours < 24) return { kind: "inHours", count: diffHours };
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `em ${diffDays} d`;
-  return formatDateTime(expiresAt);
+  if (diffDays < 30) return { kind: "inDays", count: diffDays };
+  return { kind: "raw", value: formatDateTime(expiresAt) };
 }
 
 export function InvitationsTable({
@@ -85,7 +93,24 @@ export function InvitationsTable({
   rows,
   isLoading,
 }: InvitationsTableProps) {
+  const t = useTranslations("adminInvitations");
   const queryClient = useQueryClient();
+
+  function renderExpiresLabel(expiresAt: string): string {
+    const label = getExpiresLabel(expiresAt);
+    switch (label.kind) {
+      case "raw":
+        return label.value;
+      case "expired":
+        return t("expires.expired");
+      case "inMinutes":
+        return t("expires.inMinutes", { count: label.count });
+      case "inHours":
+        return t("expires.inHours", { count: label.count });
+      case "inDays":
+        return t("expires.inDays", { count: label.count });
+    }
+  }
   const [pendingCancel, setPendingCancel] = useState<InvitationRow | null>(
     null,
   );
@@ -95,8 +120,8 @@ export function InvitationsTable({
       onSuccess: () => {
         toast.success(
           pendingCancel
-            ? `Convite para "${pendingCancel.email}" cancelado`
-            : "Convite cancelado",
+            ? t("toast.canceledFor", { email: pendingCancel.email })
+            : t("toast.canceled"),
         );
         // Invalidate without the params discriminator so any status filter
         // (currently only "pending" is rendered, but the key matches loosely)
@@ -108,7 +133,7 @@ export function InvitationsTable({
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Erro ao cancelar convite",
+          err instanceof Error ? err.message : t("toast.cancelError"),
         );
       },
     },
@@ -134,21 +159,18 @@ export function InvitationsTable({
       return res.data;
     },
     onSuccess: (_data, variables) => {
-      toast.success(`Convite reenviado para "${variables.email}"`);
+      toast.success(t("toast.resent", { email: variables.email }));
       void queryClient.invalidateQueries({
         queryKey: [getV1OrganizationsIdInvitationsQueryKey(organizationId)[0]],
       });
     },
     onError: (err) => {
       if (err instanceof ApiError && err.status === 409) {
-        toast.error(
-          err.message ||
-            "Não é possível reenviar este convite no estado atual.",
-        );
+        toast.error(err.message || t("toast.resendConflict"));
         return;
       }
       if (err instanceof ApiError && err.status === 404) {
-        toast.error("Convite não encontrado. Atualize a lista.");
+        toast.error(t("toast.resendNotFound"));
         void queryClient.invalidateQueries({
           queryKey: [
             getV1OrganizationsIdInvitationsQueryKey(organizationId)[0],
@@ -157,7 +179,7 @@ export function InvitationsTable({
         return;
       }
       toast.error(
-        err instanceof Error ? err.message : "Erro ao reenviar convite",
+        err instanceof Error ? err.message : t("toast.resendError"),
       );
     },
   });
@@ -167,11 +189,19 @@ export function InvitationsTable({
       <Table>
         <TableHeader>
           <TableRow className="border-slate-700/60 hover:bg-transparent">
-            <TableHead className="text-slate-400">Email</TableHead>
-            <TableHead className="text-slate-400">Papel</TableHead>
-            <TableHead className="text-slate-400">Expira</TableHead>
-            <TableHead className="text-slate-400">Criado em</TableHead>
-            <TableHead className="text-right text-slate-400">Ações</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.email")}
+            </TableHead>
+            <TableHead className="text-slate-400">{t("table.role")}</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.expires")}
+            </TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.createdAt")}
+            </TableHead>
+            <TableHead className="text-right text-slate-400">
+              {t("table.actions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -209,8 +239,9 @@ export function InvitationsTable({
                   </span>
                   {row.inviterName || row.inviterEmail ? (
                     <div className="mt-0.5 text-[11px] text-slate-500">
-                      convidado por{" "}
-                      {row.inviterName ?? row.inviterEmail}
+                      {t("invitedBy", {
+                        inviter: row.inviterName ?? row.inviterEmail ?? "",
+                      })}
                     </div>
                   ) : null}
                 </TableCell>
@@ -218,7 +249,7 @@ export function InvitationsTable({
                   <RoleBadge role={toAdminRole(row.role)} />
                 </TableCell>
                 <TableCell className="text-xs text-slate-400">
-                  {expiresInLabel(row.expiresAt)}
+                  {renderExpiresLabel(row.expiresAt)}
                 </TableCell>
                 <TableCell className="text-xs text-slate-400">
                   {formatDateTime(row.createdAt)}
@@ -227,8 +258,8 @@ export function InvitationsTable({
                   <div className="inline-flex items-center gap-1">
                     <button
                       type="button"
-                      title="Reenviar convite"
-                      aria-label={`Reenviar convite para ${row.email}`}
+                      title={t("actions.resend")}
+                      aria-label={t("actions.resendFor", { email: row.email })}
                       disabled={
                         resendMutation.isPending &&
                         resendMutation.variables?.invitationId === row.id
@@ -250,8 +281,8 @@ export function InvitationsTable({
                     </button>
                     <button
                       type="button"
-                      title="Cancelar convite"
-                      aria-label={`Cancelar convite de ${row.email}`}
+                      title={t("actions.cancel")}
+                      aria-label={t("actions.cancelFor", { email: row.email })}
                       onClick={() => setPendingCancel(row)}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-400/80 hover:bg-red-500/10 hover:text-red-300"
                     >
@@ -272,10 +303,10 @@ export function InvitationsTable({
       >
         <AlertDialogContent className="bg-slate-900 border-slate-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar convite?</AlertDialogTitle>
+            <AlertDialogTitle>{t("cancelDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {pendingCancel
-                ? `O convite para "${pendingCancel.email}" será cancelado e o link enviado deixará de funcionar. Você poderá enviar um novo convite depois.`
+                ? t("cancelDialog.description", { email: pendingCancel.email })
                 : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -284,7 +315,7 @@ export function InvitationsTable({
               disabled={cancelMutation.isPending}
               className={buttonVariants({ variant: "outline-dark" })}
             >
-              Manter convite
+              {t("cancelDialog.keep")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={cancelMutation.isPending}
@@ -301,7 +332,7 @@ export function InvitationsTable({
               {cancelMutation.isPending ? (
                 <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
               ) : null}
-              Sim, cancelar
+              {t("cancelDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

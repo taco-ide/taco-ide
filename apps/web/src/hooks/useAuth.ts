@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { authClient } from "@/lib/auth";
 
 // Form data types
@@ -19,6 +20,7 @@ export interface SignupFormData {
 
 export const useAuth = () => {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Login error");
+        setError(result.error.message || t("errors.login"));
         return false;
       }
 
@@ -44,7 +46,7 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Login error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
@@ -65,7 +67,7 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Registration error");
+        setError(result.error.message || t("errors.registration"));
         return false;
       }
 
@@ -74,7 +76,7 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Signup error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
@@ -95,7 +97,7 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Logout error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
@@ -117,14 +119,14 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Error requesting password reset");
+        setError(result.error.message || t("errors.requestReset"));
         return false;
       }
 
       return true;
     } catch (err) {
       console.error("Password reset request error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
@@ -146,7 +148,7 @@ export const useAuth = () => {
       const token = urlParams.get("token");
 
       if (!token) {
-        setError("Invalid or expired reset link");
+        setError(t("errors.invalidResetLink"));
         return false;
       }
 
@@ -156,7 +158,7 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Error resetting password");
+        setError(result.error.message || t("errors.resetPassword"));
         return false;
       }
 
@@ -165,7 +167,7 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Password reset error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
@@ -183,7 +185,7 @@ export const useAuth = () => {
       const token = urlParams.get("token");
 
       if (!token && !data.code) {
-        setError("Verification token not found");
+        setError(t("errors.tokenNotFound"));
         return false;
       }
 
@@ -194,7 +196,7 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Email verification error");
+        setError(result.error.message || t("errors.verifyEmail"));
         return false;
       }
 
@@ -204,12 +206,12 @@ export const useAuth = () => {
       return true;
     } catch (err) {
       console.error("Email verification error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [router, t]);
 
   // Resend verification email
   const resendVerificationEmail = async (email: string): Promise<boolean> => {
@@ -223,14 +225,14 @@ export const useAuth = () => {
       });
 
       if (result.error) {
-        setError(result.error.message || "Error sending verification email");
+        setError(result.error.message || t("errors.sendVerification"));
         return false;
       }
 
       return true;
     } catch (err) {
       console.error("Resend verification error:", err);
-      setError("Error connecting to server");
+      setError(t("errors.connection"));
       return false;
     } finally {
       setIsLoading(false);

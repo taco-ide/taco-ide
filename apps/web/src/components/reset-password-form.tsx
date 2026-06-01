@@ -14,11 +14,14 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 export function ResetPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
   const { requestPasswordReset, resetPassword, error, isLoading } = useAuth();
   const [step, setStep] = useState<"request" | "reset">("request");
   const [requestSuccess, setRequestSuccess] = useState(false);
@@ -65,12 +68,14 @@ export function ResetPasswordForm({
       {/* Title and description */}
       <div className="flex flex-col items-center text-center mb-6">
         <h1 className="text-2xl font-bold">
-          {step === "request" ? "Password Recovery" : "Reset Password"}
+          {step === "request"
+            ? t("resetPassword.requestTitle")
+            : t("resetPassword.resetTitle")}
         </h1>
         <p className="text-balance text-muted-foreground">
           {step === "request"
-            ? "Enter your email to receive a password reset link."
-            : "Enter your new password below."}
+            ? t("resetPassword.requestSubtitle")
+            : t("resetPassword.resetSubtitle")}
         </p>
       </div>
 
@@ -81,7 +86,7 @@ export function ResetPasswordForm({
           onSubmit={requestForm.handleSubmit(onRequestSubmit)}
         >
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{c("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -97,18 +102,20 @@ export function ResetPasswordForm({
 
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{c("error")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Sending..." : "Send Reset Link"}
+            {isLoading
+              ? t("resetPassword.sending")
+              : t("resetPassword.sendLink")}
           </Button>
 
           <div className="text-center text-sm">
             <Link href="/auth/login" className="underline underline-offset-4">
-              Back to login
+              {t("backToLogin")}
             </Link>
           </div>
         </form>
@@ -118,16 +125,15 @@ export function ResetPasswordForm({
       {step === "request" && requestSuccess && (
         <div className="flex flex-col gap-6">
           <Alert>
-            <AlertTitle>Check your email</AlertTitle>
+            <AlertTitle>{t("resetPassword.checkEmailTitle")}</AlertTitle>
             <AlertDescription>
-              If an account exists with that email, we&apos;ve sent a password reset
-              link. Please check your inbox and spam folder.
+              {t("resetPassword.checkEmailDescription")}
             </AlertDescription>
           </Alert>
 
           <div className="text-center text-sm">
             <Link href="/auth/login" className="underline underline-offset-4">
-              Back to login
+              {t("backToLogin")}
             </Link>
           </div>
         </div>
@@ -140,7 +146,7 @@ export function ResetPasswordForm({
           onSubmit={resetForm.handleSubmit(onResetSubmit)}
         >
           <div className="grid gap-2">
-            <Label htmlFor="password">New Password</Label>
+            <Label htmlFor="password">{t("fields.newPassword")}</Label>
             <Input
               id="password"
               type="password"
@@ -154,7 +160,9 @@ export function ResetPasswordForm({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">
+              {t("fields.confirmNewPassword")}
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -169,18 +177,20 @@ export function ResetPasswordForm({
 
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{c("error")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Resetting..." : "Reset Password"}
+            {isLoading
+              ? t("resetPassword.resetting")
+              : t("resetPassword.resetSubmit")}
           </Button>
 
           <div className="text-center text-sm">
             <Link href="/auth/login" className="underline underline-offset-4">
-              Back to login
+              {t("backToLogin")}
             </Link>
           </div>
         </form>

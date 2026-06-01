@@ -5,19 +5,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Building2, LogOut, ShieldCheck, Users, X } from "lucide-react";
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/contexts/UserContext";
 import { AvatarSquare } from "@/components/admin/avatar-square";
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: typeof Building2;
 }
 
 const navItems: NavItem[] = [
-  { href: "/admin/organizations", label: "Organizações", icon: Building2 },
-  { href: "/admin/users", label: "Usuários", icon: Users },
+  { href: "/admin/organizations", labelKey: "nav.organizations", icon: Building2 },
+  { href: "/admin/users", labelKey: "nav.users", icon: Users },
 ];
 
 interface AdminSidebarProps {
@@ -43,6 +44,7 @@ function SidebarContent({
   logout,
   onNavigate,
 }: SidebarContentProps) {
+  const t = useTranslations("admin");
   return (
     <>
       <Link
@@ -59,13 +61,13 @@ function SidebarContent({
           className="h-7 w-auto"
         />
         <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
-          Admin
+          {t("sidebar.badge")}
         </span>
       </Link>
 
       <nav className="flex flex-col gap-2">
         <div className="px-2 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-          Plataforma
+          {t("sidebar.platform")}
         </div>
         <div className="flex flex-col gap-1">
           {navItems.map((item) => {
@@ -91,7 +93,7 @@ function SidebarContent({
                       : "text-slate-400 group-hover:text-slate-200",
                   )}
                 />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
@@ -99,14 +101,18 @@ function SidebarContent({
       </nav>
 
       <div className="mt-auto flex items-center gap-3 rounded-lg border border-slate-800/80 bg-slate-900/60 p-3">
-        <AvatarSquare name={user?.name ?? "Admin"} src={user?.image} size="sm" />
+        <AvatarSquare
+          name={user?.name ?? t("sidebar.adminFallback")}
+          src={user?.image}
+          size="sm"
+        />
         <div className="min-w-0 flex-1">
           <div className="truncate text-xs font-medium text-white">
-            {user?.name ?? "Admin"}
+            {user?.name ?? t("sidebar.adminFallback")}
           </div>
           <div className="flex items-center gap-1 text-[10px] text-slate-400">
             <ShieldCheck className="h-3 w-3 text-amber-300" />
-            Platform Admin
+            {t("sidebar.platformAdmin")}
           </div>
         </div>
         <button
@@ -115,8 +121,8 @@ function SidebarContent({
             void logout();
           }}
           className="text-slate-400 hover:text-white"
-          title="Sair"
-          aria-label="Sair"
+          title={t("sidebar.signOut")}
+          aria-label={t("sidebar.signOut")}
         >
           <LogOut className="h-4 w-4" />
         </button>
@@ -131,6 +137,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const pathname = usePathname() ?? "";
   const { user, logout } = useUser();
+  const t = useTranslations("admin");
 
   // Close drawer with Escape and lock background scroll while it is open.
   useEffect(() => {
@@ -157,7 +164,7 @@ export function AdminSidebar({
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
-            aria-label="Fechar menu"
+            aria-label={t("sidebar.closeMenu")}
             onClick={onCloseMobile}
             className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
           />
@@ -166,7 +173,7 @@ export function AdminSidebar({
               type="button"
               onClick={onCloseMobile}
               className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white"
-              aria-label="Fechar menu"
+              aria-label={t("sidebar.closeMenu")}
             >
               <X className="h-4 w-4" />
             </button>

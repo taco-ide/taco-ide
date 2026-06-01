@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Globe, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -63,13 +64,15 @@ export function DomainsTable({
   rows,
   isLoading,
 }: DomainsTableProps) {
+  const t = useTranslations("adminDomains");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [pendingDelete, setPendingDelete] = useState<DomainRow | null>(null);
 
   const deleteMutation = useDeleteV1OrganizationsIdEmailDomainsDomainid({
     mutation: {
       onSuccess: () => {
-        toast.success(`Domínio "${pendingDelete?.domain}" removido`);
+        toast.success(t("toast.removed", { domain: pendingDelete?.domain ?? "" }));
         void queryClient.invalidateQueries({
           queryKey: getV1OrganizationsIdEmailDomainsQueryKey(organizationId),
         });
@@ -77,7 +80,7 @@ export function DomainsTable({
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Erro ao remover domínio",
+          err instanceof Error ? err.message : t("error.removeFailed"),
         );
       },
     },
@@ -90,10 +93,16 @@ export function DomainsTable({
       <Table>
         <TableHeader>
           <TableRow className="border-slate-700/60 hover:bg-transparent">
-            <TableHead className="text-slate-400">Domínio</TableHead>
-            <TableHead className="text-slate-400">Papel</TableHead>
-            <TableHead className="text-slate-400">Adicionado em</TableHead>
-            <TableHead className="text-right text-slate-400">Ações</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.domain")}
+            </TableHead>
+            <TableHead className="text-slate-400">{t("table.role")}</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.addedAt")}
+            </TableHead>
+            <TableHead className="text-right text-slate-400">
+              {c("actions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,8 +147,10 @@ export function DomainsTable({
                 <TableCell className="text-right">
                   <button
                     type="button"
-                    title="Remover domínio"
-                    aria-label={`Remover domínio ${row.domain}`}
+                    title={t("actions.removeDomain")}
+                    aria-label={t("actions.removeDomainNamed", {
+                      domain: row.domain,
+                    })}
                     onClick={() => setPendingDelete(row)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-400/80 hover:bg-red-500/10 hover:text-red-300"
                   >
@@ -154,8 +165,8 @@ export function DomainsTable({
               <TableCell colSpan={4}>
                 <EmptyState
                   icon={Globe}
-                  title="Nenhum domínio configurado"
-                  body="Adicione um domínio acima para habilitar o vínculo automático para emails correspondentes."
+                  title={t("empty.title")}
+                  body={t("empty.body")}
                 />
               </TableCell>
             </TableRow>
@@ -171,10 +182,12 @@ export function DomainsTable({
       >
         <AlertDialogContent className="bg-slate-900 border-slate-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover domínio?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {pendingDelete
-                ? `O domínio "@${pendingDelete.domain}" deixará de vincular automaticamente novos usuários a esta organização. Membros já criados não serão afetados.`
+                ? t("deleteDialog.description", {
+                    domain: pendingDelete.domain,
+                  })
                 : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -183,7 +196,7 @@ export function DomainsTable({
               disabled={deleteMutation.isPending}
               className={buttonVariants({ variant: "outline-dark" })}
             >
-              Cancelar
+              {c("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={deleteMutation.isPending}
@@ -200,7 +213,7 @@ export function DomainsTable({
               {deleteMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : null}
-              Sim, remover
+              {t("deleteDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

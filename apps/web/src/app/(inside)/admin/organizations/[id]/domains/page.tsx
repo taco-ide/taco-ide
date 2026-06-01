@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Info, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -10,13 +11,15 @@ import { AddDomainForm } from "./_components/add-domain-form";
 import { DomainsTable } from "./_components/domains-table";
 
 export default function OrganizationDomainsPage() {
+  const t = useTranslations("adminDomains");
+  const c = useTranslations("common");
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
 
   const orgQuery = useGetV1OrganizationsId(id, {
     query: { enabled: id.length > 0 },
   });
-  const orgName = orgQuery.data?.data.name ?? "esta organização";
+  const orgName = orgQuery.data?.data.name ?? t("fallbackOrgName");
 
   const domainsQuery = useGetV1OrganizationsIdEmailDomains(id, {
     query: { enabled: id.length > 0 },
@@ -29,15 +32,14 @@ export default function OrganizationDomainsPage() {
     <div className="space-y-5">
       <Alert className="border-amber-500/30 bg-amber-500/5 text-amber-100">
         <Info className="h-4 w-4 text-amber-400" />
-        <AlertTitle className="text-white">
-          Vínculo automático por domínio
-        </AlertTitle>
+        <AlertTitle className="text-white">{t("info.title")}</AlertTitle>
         <AlertDescription className="text-slate-300">
-          Usuários que se cadastrarem com um email cujo domínio bata com um dos
-          abaixo serão adicionados a{" "}
-          <strong className="text-white">{orgName}</strong> automaticamente, com
-          o papel definido. A regra com a data de criação mais antiga vence
-          quando há múltiplas correspondências.
+          {t.rich("info.description", {
+            orgName,
+            strong: (chunks) => (
+              <strong className="text-white">{chunks}</strong>
+            ),
+          })}
         </AlertDescription>
       </Alert>
 
@@ -46,13 +48,13 @@ export default function OrganizationDomainsPage() {
       {domainsQuery.isError ? (
         <Alert variant="destructive" className="border-red-500/30 bg-red-500/5">
           <AlertTitle className="text-red-200">
-            Erro ao carregar domínios
+            {t("loadError.title")}
           </AlertTitle>
           <AlertDescription className="text-red-300">
             <div className="mb-3">
               {domainsQuery.error instanceof Error
                 ? domainsQuery.error.message
-                : "Tente novamente em instantes."}
+                : t("loadError.fallback")}
             </div>
             <Button
               type="button"
@@ -67,7 +69,7 @@ export default function OrganizationDomainsPage() {
                   domainsQuery.isFetching ? "animate-spin" : ""
                 }`}
               />
-              Tentar novamente
+              {c("retry")}
             </Button>
           </AlertDescription>
         </Alert>

@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   useGetV1ChallengesId,
   useGetV1ChallengesIdSolution,
@@ -157,6 +158,7 @@ export function ProblemProvider({
   challengeId: string;
   children: ReactNode;
 }) {
+  const t = useTranslations("problemChat");
   const queryClient = useQueryClient();
   const [createdSessionId, setCreatedSessionId] = useState<string | null>(null);
 
@@ -303,7 +305,7 @@ export function ProblemProvider({
     challengeQuery.error && !is404(challengeQuery.error)
       ? (challengeQuery.error instanceof Error
           ? challengeQuery.error.message
-          : "Problema não encontrado")
+          : t("errors.challengeNotFound"))
       : null;
 
   const ensureWorkSession = useCallback(async (): Promise<WorkSession | null> => {
@@ -510,7 +512,7 @@ export function ProblemProvider({
           challengeId,
           hint: "Ver logs acima de ensureWorkSession:* para o motivo",
         });
-        throw new Error("Sessão de trabalho não disponível");
+        throw new Error(t("errors.workSessionUnavailable"));
       }
       await saveSolution({
         code: params.code,
@@ -529,7 +531,7 @@ export function ProblemProvider({
       });
       return { modelResponse: result.data.modelResponse };
     },
-    [challengeId, ensureWorkSession, chatMutation, saveSolution]
+    [challengeId, ensureWorkSession, chatMutation, saveSolution, t]
   );
 
   const submitWorkSession = useCallback(

@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useUser } from "@/contexts/UserContext";
 import { useState, useRef, useEffect } from "react";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
 import { PlatformAdminGuard } from "@/components/guards/PlatformAdminGuard";
 
 const Navbar = () => {
+  const t = useTranslations("nav");
   const { user, getFirstName, logout } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,11 +40,11 @@ const Navbar = () => {
           <Link
             href="/explore"
             className="flex items-center shrink-0"
-            aria-label="Ir para Explorar"
+            aria-label={t("goToExplore")}
           >
             <Image
               src="/header-logo.png"
-              alt="TACO-IDE Logo"
+              alt={t("logoAlt")}
               width={220}
               height={56}
               priority
@@ -57,14 +59,14 @@ const Navbar = () => {
               href="/explore"
               className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
             >
-              Explorar
+              {t("explore")}
             </Link>
             <PermissionGuard resource="challenge" action="create">
               <Link
                 href="/create"
                 className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
               >
-                Criar
+                {t("create")}
               </Link>
             </PermissionGuard>
             <PlatformAdminGuard>
@@ -72,7 +74,7 @@ const Navbar = () => {
                 href="/admin"
                 className="px-3 py-1.5 text-sm text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 rounded-md transition-colors"
               >
-                Admin
+                {t("admin")}
               </Link>
             </PlatformAdminGuard>
           </nav>
@@ -82,14 +84,14 @@ const Navbar = () => {
                 type="button"
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="flex items-center gap-3 p-1 pr-2 rounded-full hover:bg-white/5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                aria-label="Menu do utilizador"
+                aria-label={t("userMenu")}
                 aria-expanded={showDropdown}
               >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FFB800] to-[#FFA000] flex items-center justify-center text-sm text-black font-bold">
                   {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div className="text-white pr-1">
-                  <span className="text-sm text-gray-300">Olá, </span>
+                  <span className="text-sm text-gray-300">{t("greeting")} </span>
                   <span className="font-medium">{getFirstName()}</span>
                 </div>
               </button>
@@ -103,13 +105,13 @@ const Navbar = () => {
                       className="block px-4 py-2 text-sm text-white hover:bg-white/10"
                       onClick={() => setShowDropdown(false)}
                     >
-                      Perfil
+                      {t("profile")}
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-white/10"
                     >
-                      Sair
+                      {t("signOut")}
                     </button>
                   </div>
                 </div>
@@ -119,7 +121,7 @@ const Navbar = () => {
             <Link href="/auth/login" className="btn btn-primary">
               <Image
                 src="/login.png"
-                alt="login"
+                alt={t("login")}
                 width={50}
                 height={50}
                 priority

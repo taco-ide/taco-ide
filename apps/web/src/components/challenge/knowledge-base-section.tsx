@@ -27,6 +27,7 @@ import {
 } from "@/kubb/hooks";
 import { useState } from "react";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiClient from "@/lib/apiClient";
 
@@ -139,22 +140,22 @@ export function KnowledgeBaseSection({
 // ---------- No classroom warning ----------
 
 function NoClassroomWarning() {
+  const t = useTranslations("knowledgeBase");
   return (
     <Card className="bg-slate-800 border-slate-700">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2 text-base">
           <BookOpen className="w-4 h-4 text-yellow-400" />
-          Knowledge Base
+          {t("title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Alert className="border-yellow-500/30 bg-yellow-500/10">
           <AlertTriangle className="w-4 h-4 text-yellow-400" />
           <AlertDescription className="text-yellow-300 space-y-2">
-            <p>Vincule este exercício a uma turma (passo Informações básicas) para usar Knowledge Base.</p>
+            <p>{t("noClassroom.requirement")}</p>
             <p className="text-sm text-yellow-200/90">
-              Toda base fica associada a uma turma: o material reutiliza o mesmo contexto da disciplina e pode ser
-              vinculado a vários desafios dessa turma.
+              {t("noClassroom.explanation")}
             </p>
           </AlertDescription>
         </Alert>
@@ -172,6 +173,7 @@ interface LinkedKbViewProps {
 }
 
 function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
+  const t = useTranslations("knowledgeBase");
   return (
     <Card className="bg-slate-800 border-slate-700">
       <CardHeader>
@@ -194,7 +196,7 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
             className="text-slate-400 hover:text-red-400 hover:bg-slate-800"
           >
             <Unlink className="w-3 h-3 mr-1" />
-            Desvincular
+            {t("linked.unlink")}
           </Button>
         </div>
       </CardHeader>
@@ -202,8 +204,7 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
         <Alert className="border-slate-600/80 bg-slate-900/60 text-slate-300">
           <BookOpen className="w-4 h-4 text-yellow-500/90" />
           <AlertDescription className="text-slate-300 text-sm">
-            Documentos e notas desta base entram no contexto do assistente quando o aluno usa o chat neste desafio. O
-            aluno não precisa &quot;abrir&quot; a base; ela apoia respostas mais alinhadas ao seu material.
+            {t("linked.contextHint")}
           </AlertDescription>
         </Alert>
         <Tabs defaultValue="documents" className="w-full">
@@ -212,13 +213,13 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
               value="documents"
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-yellow-400 text-slate-400"
             >
-              Documentos
+              {t("linked.tabs.documents")}
             </TabsTrigger>
             <TabsTrigger
               value="text"
               className="data-[state=active]:bg-slate-700 data-[state=active]:text-yellow-400 text-slate-400"
             >
-              Notas de Texto
+              {t("linked.tabs.text")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="documents">
@@ -235,15 +236,13 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
 
 // ---------- Empty KB state (create or link) ----------
 
-const KB_DOC_HINT =
-  "Formatos comuns: PDF, DOCX, PPTX, TXT, Markdown, HTML e outros listados na área de envio (até 10 MB por arquivo).";
-
 interface EmptyKbStateProps {
   challengeId: string;
   classroomId: string;
 }
 
 function EmptyKbState({ challengeId, classroomId }: EmptyKbStateProps) {
+  const t = useTranslations("knowledgeBase");
   const [actionMode, setActionMode] = useState<ActionMode>("idle");
 
   return (
@@ -251,7 +250,7 @@ function EmptyKbState({ challengeId, classroomId }: EmptyKbStateProps) {
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2 text-base">
           <BookOpen className="w-4 h-4 text-yellow-400" />
-          Knowledge Base
+          {t("title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -280,26 +279,21 @@ function EmptyKbState({ challengeId, classroomId }: EmptyKbStateProps) {
 // ---------- Idle action buttons ----------
 
 function IdleActions({ onSelect }: { onSelect: (mode: ActionMode) => void }) {
+  const t = useTranslations("knowledgeBase");
+  const strong = (chunks: React.ReactNode) => (
+    <strong className="text-slate-200">{chunks}</strong>
+  );
   return (
     <div className="flex flex-col py-4 text-slate-400 space-y-5">
       <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 p-4 space-y-3">
         <p className="text-sm text-slate-300 leading-relaxed">
-          A <strong className="text-slate-200">Knowledge Base</strong> guarda materiais de apoio (apostilas, slides,
-          PDFs, notas) ligados <strong className="text-slate-200">a esta turma</strong>. Você pode vincular uma base a
-          este desafio para o <strong className="text-slate-200">assistente</strong> usar esse conteúdo ao responder o
-          aluno no chat — o aluno não navega na base como um drive; ela enriquece o contexto da IA.
+          {t.rich("idle.intro", { strong })}
         </p>
         <ul className="text-sm list-disc pl-5 space-y-2 text-slate-300">
-          <li>
-            <strong className="text-slate-200">Criar nova</strong> quando for material novo deste módulo ou conjunto de
-            exercícios.
-          </li>
-          <li>
-            <strong className="text-slate-200">Vincular existente</strong> quando a turma já tem uma base (ex.: mesma
-            apostila em vários desafios).
-          </li>
+          <li>{t.rich("idle.bullets.createNew", { strong })}</li>
+          <li>{t.rich("idle.bullets.linkExisting", { strong })}</li>
         </ul>
-        <p className="text-xs text-slate-500">{KB_DOC_HINT}</p>
+        <p className="text-xs text-slate-500">{t("docHint")}</p>
       </div>
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
         <Button
@@ -309,7 +303,7 @@ function IdleActions({ onSelect }: { onSelect: (mode: ActionMode) => void }) {
           className="bg-yellow-500 hover:bg-yellow-600 text-slate-900"
         >
           <Plus className="w-3 h-3 mr-1" />
-          Criar Nova Knowledge Base
+          {t("idle.createButton")}
         </Button>
         <Button
           type="button"
@@ -319,7 +313,7 @@ function IdleActions({ onSelect }: { onSelect: (mode: ActionMode) => void }) {
           className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
         >
           <Link className="w-3 h-3 mr-1" />
-          Vincular Existente
+          {t("idle.linkButton")}
         </Button>
       </div>
     </div>
@@ -336,6 +330,8 @@ interface CreateKbFormProps {
 
 function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps) {
   const queryClient = useQueryClient();
+  const t = useTranslations("knowledgeBase");
+  const c = useTranslations("common");
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -348,7 +344,7 @@ function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps)
         });
       },
       onError: (err) => {
-        setError(err.message ?? "Erro ao vincular knowledge base");
+        setError(err.message ?? t("errors.link"));
       },
     },
   });
@@ -362,7 +358,7 @@ function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps)
         });
       },
       onError: (err) => {
-        setError(err.message ?? "Erro ao criar knowledge base");
+        setError(err.message ?? t("errors.create"));
       },
     },
   });
@@ -387,12 +383,12 @@ function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps)
       )}
       <div className="space-y-1">
         <Label className="text-slate-300 text-sm">
-          Titulo da Knowledge Base
+          {t("create.titleLabel")}
         </Label>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Ex: Material do Modulo 3..."
+          placeholder={t("create.titlePlaceholder")}
           className="bg-slate-900 border-slate-700 text-slate-200"
           autoFocus
         />
@@ -405,7 +401,7 @@ function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps)
           onClick={onCancel}
           className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
         >
-          Cancelar
+          {c("cancel")}
         </Button>
         <Button
           type="submit"
@@ -416,7 +412,7 @@ function CreateKbForm({ challengeId, classroomId, onCancel }: CreateKbFormProps)
           {isPending ? (
             <Loader2 className="w-3 h-3 animate-spin mr-1" />
           ) : null}
-          Criar e Vincular
+          {t("create.submit")}
         </Button>
       </div>
     </form>
@@ -433,6 +429,8 @@ interface LinkExistingKbProps {
 
 function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbProps) {
   const queryClient = useQueryClient();
+  const t = useTranslations("knowledgeBase");
+  const c = useTranslations("common");
   const [error, setError] = useState<string | null>(null);
 
   const { data: kbsResponse, isLoading } = useGetV1KnowledgeBases(
@@ -440,6 +438,10 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
   );
 
   const availableKbs = kbsResponse?.data ?? [];
+
+  const strong = (chunks: React.ReactNode) => (
+    <strong className="text-slate-400">{chunks}</strong>
+  );
 
   const linkMutation = usePostV1ChallengesChallengeidKnowledgeBases({
     mutation: {
@@ -453,7 +455,7 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
         });
       },
       onError: (err) => {
-        setError(err.message ?? "Erro ao vincular knowledge base");
+        setError(err.message ?? t("errors.link"));
       },
     },
   });
@@ -485,11 +487,9 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
       {availableKbs.length === 0 ? (
         <div className="text-center py-6 text-slate-400 space-y-3 px-1">
           <FileText className="w-8 h-8 mx-auto text-slate-500" />
-          <p className="text-sm">Nenhuma knowledge base encontrada nesta turma.</p>
+          <p className="text-sm">{t("link.empty.title")}</p>
           <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
-            Volte e use <strong className="text-slate-400">Criar Nova Knowledge Base</strong> para começar, ou envie
-            documentos depois na aba <strong className="text-slate-400">Documentos</strong> quando a base estiver
-            vinculada. {KB_DOC_HINT}
+            {t.rich("link.empty.description", { strong })} {t("docHint")}
           </p>
         </div>
       ) : (
@@ -507,7 +507,7 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
                   {kb.title}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {kb.documentCount} documento{kb.documentCount !== 1 ? "s" : ""}
+                  {t("link.documentCount", { count: kb.documentCount })}
                 </p>
               </div>
               <Link className="w-4 h-4 text-slate-500 flex-shrink-0 ml-2" />
@@ -524,7 +524,7 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
           onClick={onCancel}
           className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600"
         >
-          Voltar
+          {c("back")}
         </Button>
       </div>
     </div>

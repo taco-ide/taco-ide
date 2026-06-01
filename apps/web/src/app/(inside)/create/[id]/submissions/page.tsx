@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -34,16 +35,16 @@ function formatDt(iso: string | null) {
 }
 
 function AccessDenied() {
+  const t = useTranslations("submissions");
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-400">
-        Acesso restrito a professores e coordenadores.
-      </p>
+      <p className="text-slate-400">{t("accessDenied")}</p>
     </div>
   );
 }
 
 function SubmissionsListContent() {
+  const t = useTranslations("submissions");
   const params = useParams();
   const router = useRouter();
   const challengeId = params.id as string;
@@ -69,7 +70,7 @@ function SubmissionsListContent() {
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-white">Submissões</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -79,7 +80,7 @@ function SubmissionsListContent() {
               onClick={() => router.push(`/create/${challengeId}/work-sessions`)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Ver sessões dos alunos
+              {t("viewStudentSessions")}
             </Button>
           </div>
         </div>
@@ -90,26 +91,30 @@ function SubmissionsListContent() {
           </div>
         ) : error ? (
           <p className="text-center text-rose-400 py-8">
-            {error instanceof Error
-              ? error.message
-              : "Não foi possível carregar as submissões."}
+            {error instanceof Error ? error.message : t("loadError")}
           </p>
         ) : rows.length === 0 ? (
-          <p className="text-center text-slate-500 py-12">
-            Nenhuma submissão ainda.
-          </p>
+          <p className="text-center text-slate-500 py-12">{t("empty")}</p>
         ) : (
           <>
             <div className="rounded-lg border border-slate-700 bg-slate-800/50 overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700 hover:bg-slate-800/80">
-                    <TableHead className="text-slate-200">Aluno</TableHead>
-                    <TableHead className="text-slate-200">Submetida em</TableHead>
-                    <TableHead className="text-slate-200">Auto-review</TableHead>
-                    <TableHead className="text-slate-200">Nota</TableHead>
+                    <TableHead className="text-slate-200">
+                      {t("table.student")}
+                    </TableHead>
+                    <TableHead className="text-slate-200">
+                      {t("table.submittedAt")}
+                    </TableHead>
+                    <TableHead className="text-slate-200">
+                      {t("table.autoReview")}
+                    </TableHead>
+                    <TableHead className="text-slate-200">
+                      {t("table.grade")}
+                    </TableHead>
                     <TableHead className="text-slate-200 text-right w-32">
-                      Ações
+                      {t("table.actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -120,16 +125,20 @@ function SubmissionsListContent() {
                       className="border-slate-700 hover:bg-slate-800/60"
                     >
                       <TableCell className="text-slate-200 font-medium">
-                        {row.studentName ?? "(usuário removido)"}
+                        {row.studentName ?? t("removedUser")}
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
                         {formatDt(row.submittedAt)}
                       </TableCell>
                       <TableCell className="text-sm">
                         {row.autoReviewAt ? (
-                          <span className="text-emerald-400/90">Disponível</span>
+                          <span className="text-emerald-400/90">
+                            {t("autoReviewAvailable")}
+                          </span>
                         ) : (
-                          <span className="text-amber-400/90">Pendente</span>
+                          <span className="text-amber-400/90">
+                            {t("autoReviewPending")}
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm">
@@ -154,7 +163,7 @@ function SubmissionsListContent() {
                           }
                         >
                           <Eye className="w-3.5 h-3.5 mr-1" />
-                          Ver
+                          {t("view")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -165,8 +174,11 @@ function SubmissionsListContent() {
 
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
               <span>
-                {pagination.total} submissão(ões) · Página {pagination.page} de{" "}
-                {totalPages}
+                {t("pagination", {
+                  total: pagination.total,
+                  page: pagination.page,
+                  totalPages,
+                })}
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -196,7 +208,7 @@ function SubmissionsListContent() {
 
         <p className="mt-8 text-center text-slate-600 text-sm">
           <Link href="/explore" className="hover:text-slate-400 underline">
-            Explorar problemas
+            {t("exploreProblems")}
           </Link>
         </p>
       </div>

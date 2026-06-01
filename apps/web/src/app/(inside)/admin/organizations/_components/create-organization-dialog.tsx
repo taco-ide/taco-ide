@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,6 +32,8 @@ export function CreateOrganizationDialog({
   open,
   onOpenChange,
 }: CreateOrganizationDialogProps) {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
 
   const form = useForm<OrganizationFormValues>({
@@ -45,7 +48,7 @@ export function CreateOrganizationDialog({
   const mutation = usePostV1Organizations({
     mutation: {
       onSuccess: (response) => {
-        toast.success(`Organização "${response.data.name}" criada`);
+        toast.success(t("toast.created", { name: response.data.name }));
         void queryClient.invalidateQueries({
           predicate: (query) => {
             const first = query.queryKey[0] as { url?: string } | undefined;
@@ -61,16 +64,15 @@ export function CreateOrganizationDialog({
             "slug",
             {
               type: "manual",
-              message:
-                "Já existe uma organização com este slug. Escolha outro.",
+              message: t("slugConflict"),
             },
             { shouldFocus: true },
           );
           return;
         }
         const message =
-          err instanceof Error ? err.message : "Erro ao criar organização";
-        toast.error(`Erro ao criar organização: ${message}`);
+          err instanceof Error ? err.message : t("toast.createErrorFallback");
+        toast.error(t("toast.createError", { message }));
       },
     },
   });
@@ -89,9 +91,9 @@ export function CreateOrganizationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova organização</DialogTitle>
+          <DialogTitle>{t("createDialog.title")}</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Crie uma nova organização na plataforma TACO.
+            {t("createDialog.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -103,7 +105,7 @@ export function CreateOrganizationDialog({
               onClick={() => onOpenChange(false)}
               disabled={mutation.isPending}
             >
-              Cancelar
+              {c("cancel")}
             </Button>
             <Button
               type="submit"
@@ -115,7 +117,7 @@ export function CreateOrganizationDialog({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              Criar organização
+              {t("createDialog.submit")}
             </Button>
           </DialogFooter>
         </form>

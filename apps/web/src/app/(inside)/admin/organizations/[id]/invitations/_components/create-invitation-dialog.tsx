@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -48,17 +49,15 @@ const ROLE_OPTIONS: AdminRole[] = [
 
 const DEFAULT_ROLE: AdminRole = "teacher";
 
-const emailSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .email("Email inválido");
+const emailSchema = z.string().trim().toLowerCase().email();
 
 export function CreateInvitationDialog({
   open,
   onOpenChange,
   organizationId,
 }: CreateInvitationDialogProps) {
+  const t = useTranslations("adminInvitations");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AdminRole>(DEFAULT_ROLE);
@@ -76,7 +75,7 @@ export function CreateInvitationDialog({
   const createMutation = usePostV1OrganizationsIdInvitations({
     mutation: {
       onSuccess: (response) => {
-        toast.success(`Convite enviado para "${response.data.email}"`);
+        toast.success(t("toast.sent", { email: response.data.email }));
         void queryClient.invalidateQueries({
           queryKey: [getV1OrganizationsIdInvitationsQueryKey(organizationId)[0]],
         });
@@ -86,7 +85,7 @@ export function CreateInvitationDialog({
         const apiError = err as unknown as ApiError | undefined;
         const status = apiError?.status;
         const message =
-          err instanceof Error ? err.message : "Erro ao enviar convite";
+          err instanceof Error ? err.message : t("toast.sendError");
 
         if (status === 409) {
           // Backend returns 409 for both duplicate-pending and
@@ -94,13 +93,13 @@ export function CreateInvitationDialog({
           const isDuplicate = /já existe|pending invitation/i.test(message);
           const isMember = /já[\s\S]*membro|already a member/i.test(message);
           if (isDuplicate) {
-            setError("Já existe um convite pendente para este email");
-            toast.error("Já existe um convite pendente para este email");
+            setError(t("toast.duplicatePending"));
+            toast.error(t("toast.duplicatePending"));
             return;
           }
           if (isMember) {
-            setError("Este usuário já é membro da organização");
-            toast.error("Este usuário já é membro da organização");
+            setError(t("toast.alreadyMember"));
+            toast.error(t("toast.alreadyMember"));
             return;
           }
           setError(message);
@@ -119,8 +118,7 @@ export function CreateInvitationDialog({
 
     const parsed = emailSchema.safeParse(email);
     if (!parsed.success) {
-      const msg = parsed.error.errors[0]?.message ?? "Email inválido";
-      setError(msg);
+      setError(t("invalidEmail"));
       return;
     }
 
@@ -143,17 +141,16 @@ export function CreateInvitationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="border-slate-700 bg-slate-900 text-white sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Novo convite</DialogTitle>
+          <DialogTitle>{t("dialog.title")}</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Enviaremos um email com link de convite. O convite expira em 7
-            dias.
+            {t("dialog.description")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div className="space-y-1.5">
             <Label htmlFor="invite-email" className="text-slate-300">
-              Email
+              {c("email")}
             </Label>
             <Input
               id="invite-email"
@@ -163,7 +160,7 @@ export function CreateInvitationDialog({
                 setEmail(e.target.value);
                 if (error) setError(null);
               }}
-              placeholder="pessoa@exemplo.edu.br"
+              placeholder={t("dialog.emailPlaceholder")}
               className="border-slate-700 bg-slate-950/60 text-white placeholder:text-slate-500"
               aria-invalid={error ? true : undefined}
               disabled={createMutation.isPending}
@@ -179,7 +176,7 @@ export function CreateInvitationDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="invite-role" className="text-slate-300">
-              Papel ao aceitar
+              {t("dialog.roleLabel")}
             </Label>
             <Select
               value={role}
@@ -209,7 +206,7 @@ export function CreateInvitationDialog({
               onClick={() => onOpenChange(false)}
               disabled={createMutation.isPending}
             >
-              Cancelar
+              {c("cancel")}
             </Button>
             <Button
               type="submit"
@@ -221,7 +218,7 @@ export function CreateInvitationDialog({
               ) : (
                 <Send className="mr-1.5 h-4 w-4" />
               )}
-              Enviar convite
+              {t("dialog.submit")}
             </Button>
           </DialogFooter>
         </form>

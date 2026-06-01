@@ -11,6 +11,7 @@ import Editor from "@monaco-editor/react";
 import type { editor as MonacoEditor } from "monaco-editor";
 import Image from "next/image";
 import { Code2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const EDITOR_LANG = "python" as const;
 
@@ -20,6 +21,7 @@ type ReplayCodeColumnProps = {
 };
 
 export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
+  const t = useTranslations("workSessions");
   const theme = useCodeEditorStore((s) => s.theme);
   const fontSize = useCodeEditorStore((s) => s.fontSize);
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
@@ -65,7 +67,7 @@ export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
             />
           </div>
           <Code2 className="h-4 w-4 text-amber-500/90" />
-          Código
+          {t("replay.code.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Keyboard, Terminal } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type ReplayIOPanelProps = {
   stdin: string;
@@ -15,6 +16,7 @@ export function ReplayIOPanel({
   stdout,
   animationsEnabled,
 }: ReplayIOPanelProps) {
+  const t = useTranslations("workSessions");
   const duration = animationsEnabled ? 0.2 : 0;
 
   return (
@@ -22,7 +24,7 @@ export function ReplayIOPanel({
       <CardHeader className="shrink-0 space-y-0 border-b border-slate-700/80 py-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-300">
           <Keyboard className="h-4 w-4 text-amber-500/90" />
-          Input / Output
+          {t("replay.io.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4 p-4 min-h-0">
@@ -38,7 +40,7 @@ export function ReplayIOPanel({
             <textarea
               readOnly
               value={stdin}
-              placeholder="(vazio)"
+              placeholder={t("replay.io.stdinPlaceholder")}
               className="h-full min-h-[100px] w-full resize-none rounded-lg border border-slate-700/60 bg-slate-900/60 p-3 font-mono text-sm text-slate-300 placeholder:text-slate-600"
             />
           </motion.div>
@@ -58,7 +60,7 @@ export function ReplayIOPanel({
             <textarea
               readOnly
               value={stdout}
-              placeholder="(sem execução ainda)"
+              placeholder={t("replay.io.stdoutPlaceholder")}
               className="h-full min-h-[100px] w-full resize-none rounded-lg border border-slate-700/60 bg-slate-900/60 p-3 font-mono text-sm text-slate-300 placeholder:text-slate-600"
             />
           </motion.div>

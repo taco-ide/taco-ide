@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Eye,
@@ -44,6 +45,8 @@ import { useUser } from "@/contexts/UserContext";
 const PER_PAGE = 20;
 
 export default function AdminUsersPage() {
+  const t = useTranslations("admin");
+  const c = useTranslations("common");
   const { user: me } = useUser();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
@@ -76,15 +79,11 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Usuários</h1>
+        <h1 className="text-2xl font-semibold text-white">{t("users.title")}</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Buscar em toda a plataforma
+          {t("users.subtitle")}
           {queryEnabled && data ? (
-            <>
-              {" "}
-              · {pagination.total}{" "}
-              {pagination.total === 1 ? "usuário" : "usuários"}
-            </>
+            <> · {t("users.count", { count: pagination.total })}</>
           ) : null}
         </p>
       </div>
@@ -98,7 +97,7 @@ export default function AdminUsersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Buscar por nome ou e-mail…"
+            placeholder={t("users.searchPlaceholder")}
             autoFocus
             className="bg-slate-900 border-slate-700 pl-9 pr-9 text-white placeholder:text-slate-500"
           />
@@ -110,7 +109,7 @@ export default function AdminUsersPage() {
                 setPage(1);
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-white"
-              aria-label="Limpar busca"
+              aria-label={t("users.clearSearch")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -118,7 +117,7 @@ export default function AdminUsersPage() {
         </div>
         {!queryEnabled && search.length > 0 && (
           <span className="text-xs text-slate-500">
-            Digite ao menos 2 caracteres
+            {t("users.minChars")}
           </span>
         )}
       </div>
@@ -128,7 +127,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <span>
-              Não foi possível carregar usuários.{" "}
+              {t("users.loadError")}{" "}
               {error instanceof Error ? error.message : ""}
             </span>
           </div>
@@ -141,15 +140,15 @@ export default function AdminUsersPage() {
             }}
           >
             <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-            Tentar novamente
+            {c("retry")}
           </Button>
         </div>
       ) : !queryEnabled ? (
         <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/40">
           <EmptyState
             icon={Search}
-            title="Comece digitando para buscar usuários"
-            body="A busca usa nome ou e-mail. São necessários ao menos 2 caracteres."
+            title={t("users.empty.start.title")}
+            body={t("users.empty.start.body")}
           />
         </div>
       ) : (
@@ -157,23 +156,25 @@ export default function AdminUsersPage() {
           {!isLoading && rows.length === 0 ? (
             <EmptyState
               icon={UsersIcon}
-              title="Nenhum usuário encontrado"
-              body={`Nada corresponde a "${trimmed}".`}
+              title={t("users.empty.noResults.title")}
+              body={t("users.empty.noResults.body", { query: trimmed })}
             />
           ) : (
             <>
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700/60 hover:bg-transparent">
-                    <TableHead className="text-slate-400">Usuário</TableHead>
                     <TableHead className="text-slate-400">
-                      Organizações
+                      {t("users.table.user")}
                     </TableHead>
                     <TableHead className="text-slate-400">
-                      Admin da Plataforma
+                      {t("users.table.organizations")}
+                    </TableHead>
+                    <TableHead className="text-slate-400">
+                      {t("users.table.platformAdmin")}
                     </TableHead>
                     <TableHead className="text-right text-slate-400">
-                      Ações
+                      {c("actions")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -219,7 +220,7 @@ export default function AdminUsersPage() {
                                     {u.name}
                                     {isMe && (
                                       <span className="rounded-full border border-slate-600/60 bg-slate-800/70 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
-                                        Você
+                                        {t("users.you")}
                                       </span>
                                     )}
                                   </span>
@@ -232,7 +233,7 @@ export default function AdminUsersPage() {
                             <TableCell className="py-3">
                               {u.memberships.length === 0 ? (
                                 <span className="text-xs text-slate-500">
-                                  — Sem organizações —
+                                  {t("users.noOrganizations")}
                                 </span>
                               ) : (
                                 <div className="flex flex-wrap gap-1.5">
@@ -266,7 +267,9 @@ export default function AdminUsersPage() {
                                     isPlatformAdmin: u.isPlatformAdmin,
                                   })
                                 }
-                                ariaLabel={`Alternar Admin da Plataforma para ${u.name}`}
+                                ariaLabel={t("users.togglePlatformAdmin", {
+                                  name: u.name,
+                                })}
                               />
                             </TableCell>
                             <TableCell className="text-right">
@@ -275,7 +278,9 @@ export default function AdminUsersPage() {
                                   <button
                                     type="button"
                                     className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white"
-                                    aria-label={`Ações para ${u.name}`}
+                                    aria-label={t("users.actionsFor", {
+                                      name: u.name,
+                                    })}
                                   >
                                     <MoreHorizontal className="h-4 w-4" />
                                   </button>
@@ -289,7 +294,7 @@ export default function AdminUsersPage() {
                                     className="text-slate-400"
                                   >
                                     <Eye className="mr-2 h-3.5 w-3.5" />
-                                    Ver perfil
+                                    {t("users.viewProfile")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -301,7 +306,7 @@ export default function AdminUsersPage() {
               </Table>
               {isFetching && rows.length > 0 && (
                 <div className="flex items-center justify-end gap-2 border-t border-slate-700/60 bg-slate-800/30 px-4 py-2 text-[11px] text-slate-500">
-                  <Loader2 className="h-3 w-3 animate-spin" /> atualizando…
+                  <Loader2 className="h-3 w-3 animate-spin" /> {t("users.updating")}
                 </div>
               )}
               <Pager

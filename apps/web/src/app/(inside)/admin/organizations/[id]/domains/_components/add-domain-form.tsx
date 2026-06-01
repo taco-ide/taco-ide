@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -54,6 +55,7 @@ const domainSchema = z
   );
 
 export function AddDomainForm({ organizationId }: AddDomainFormProps) {
+  const t = useTranslations("adminDomains");
   const queryClient = useQueryClient();
   const [domain, setDomain] = useState("");
   const [role, setRole] = useState<AutoLinkRole>(DEFAULT_ROLE);
@@ -62,7 +64,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
   const createMutation = usePostV1OrganizationsIdEmailDomains({
     mutation: {
       onSuccess: (response) => {
-        toast.success(`Domínio "${response.data.domain}" adicionado`);
+        toast.success(t("toast.added", { domain: response.data.domain }));
         setDomain("");
         setRole(DEFAULT_ROLE);
         setError(null);
@@ -74,7 +76,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
         const apiError = err as unknown as ApiError | undefined;
         const status = apiError?.status;
         const message =
-          err instanceof Error ? err.message : "Erro ao adicionar domínio";
+          err instanceof Error ? err.message : t("error.addFailed");
 
         if (status === 409) {
           setError(message);
@@ -97,7 +99,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
     const parsed = domainSchema.safeParse(domain);
     if (!parsed.success) {
       const message =
-        parsed.error.errors[0]?.message ?? "Domínio inválido";
+        parsed.error.errors[0]?.message ?? t("error.invalidDomain");
       setError(message);
       return;
     }
@@ -120,7 +122,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
   return (
     <Card className="bg-slate-900/60 border-slate-700/60 text-white">
       <CardHeader>
-        <CardTitle className="text-base">Adicionar domínio</CardTitle>
+        <CardTitle className="text-base">{t("form.title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form
@@ -139,9 +141,9 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
                   setDomain(e.target.value);
                   reset();
                 }}
-                placeholder="exemplo.edu.br"
+                placeholder={t("form.domainPlaceholder")}
                 className="h-10 flex-1 border-0 bg-transparent px-0 text-sm text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0"
-                aria-label="Domínio"
+                aria-label={t("form.domainLabel")}
                 aria-invalid={error ? true : undefined}
                 disabled={createMutation.isPending}
                 autoComplete="off"
@@ -165,7 +167,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
           >
             <SelectTrigger
               className="h-10 border-slate-700/60 bg-slate-950/60 text-sm text-white"
-              aria-label="Papel atribuído"
+              aria-label={t("form.roleLabel")}
             >
               <SelectValue />
             </SelectTrigger>
@@ -188,7 +190,7 @@ export function AddDomainForm({ organizationId }: AddDomainFormProps) {
             ) : (
               <Plus className="h-4 w-4" />
             )}
-            Adicionar domínio
+            {t("form.submit")}
           </Button>
         </form>
       </CardContent>

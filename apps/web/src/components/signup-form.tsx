@@ -10,11 +10,14 @@ import { SignupFormData, signupSchema } from "@/lib/schemas";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
   const { signup, error, isLoading } = useAuth();
 
   const {
@@ -34,17 +37,17 @@ export function SignupForm({
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-2xl font-bold">Create your account</h1>
+            <h1 className="text-2xl font-bold">{t("signup.title")}</h1>
             <p className="text-balance text-muted-foreground">
-              Sign up for the TACO platform
+              {t("signup.subtitle")}
             </p>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">{t("fields.fullName")}</Label>
             <Input
               id="name"
               type="text"
-              placeholder="Your full name"
+              placeholder={t("signup.namePlaceholder")}
               {...register("name")}
             />
             {errors.name && (
@@ -52,7 +55,7 @@ export function SignupForm({
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{c("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -64,11 +67,11 @@ export function SignupForm({
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t("fields.password")}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Your password"
+              placeholder={t("signup.passwordPlaceholder")}
               {...register("password")}
             />
             {errors.password && (
@@ -78,11 +81,11 @@ export function SignupForm({
             )}
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">{t("fields.confirmPassword")}</Label>
             <Input
               id="confirmPassword"
               type="password"
-              placeholder="Confirm your password"
+              placeholder={t("signup.confirmPasswordPlaceholder")}
               {...register("confirmPassword")}
             />
             {errors.confirmPassword && (
@@ -94,18 +97,18 @@ export function SignupForm({
 
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{c("error")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing up..." : "Sign up"}
+            {isLoading ? t("signup.submitting") : t("signup.submit")}
           </Button>
           <div className="text-center text-sm">
-            Already have an account?{" "}
+            {t("signup.haveAccount")}{" "}
             <Link href="/auth/login" className="underline underline-offset-4">
-              Sign in
+              {t("signup.signInLink")}
             </Link>
           </div>
         </div>

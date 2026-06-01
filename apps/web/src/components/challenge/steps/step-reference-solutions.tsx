@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWatch, useFormContext } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,11 +26,6 @@ interface StepReferenceSolutionsProps {
 type Kind = "brute_force" | "refined";
 const KINDS: Kind[] = ["brute_force", "refined"];
 
-const KIND_LABELS: Record<Kind, string> = {
-  brute_force: "Brute Force",
-  refined: "Refinada",
-};
-
 function getStatusBadgeColor(
   status: string
 ): "pending" | "running" | "complete" | "failed" {
@@ -49,6 +45,7 @@ function StatusBadge({
 }: {
   status: "pending" | "running" | "complete" | "failed";
 }) {
+  const t = useTranslations("challenge");
   const colors: Record<
     "pending" | "running" | "complete" | "failed",
     string
@@ -59,23 +56,13 @@ function StatusBadge({
     failed: "bg-rose-500/20 text-rose-300 border-rose-500/30",
   };
 
-  const labels: Record<
-    "pending" | "running" | "complete" | "failed",
-    string
-  > = {
-    pending: "Pendente",
-    running: "Em execução",
-    complete: "Completa",
-    failed: "Falha",
-  };
-
   return (
     <span
       className={`inline-block px-2 py-1 rounded text-xs border ${
         colors[status]
       }`}
     >
-      {labels[status]}
+      {t(`referenceSolutions.status.${status}`)}
     </span>
   );
 }
@@ -102,6 +89,8 @@ function ReferenceKindCard({
     | undefined;
   isLoading: boolean;
 }) {
+  const t = useTranslations("challenge");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [editingCode, setEditingCode] = useState(false);
   const [editCode, setEditCode] = useState(data?.code ?? "");
@@ -125,7 +114,7 @@ function ReferenceKindCard({
         onSuccess: () => {
           setFeedback({
             type: "success",
-            message: "Solução regenerada",
+            message: t("referenceSolutions.card.feedback.regenerated"),
           });
           queryClient.invalidateQueries({
             queryKey: getV1ChallengesChallengeidReferenceSolutionsQueryKey(
@@ -139,18 +128,18 @@ function ReferenceKindCard({
           if (status === 409) {
             setFeedback({
               type: "error",
-              message: "Já em execução",
+              message: t("referenceSolutions.card.feedback.alreadyRunning"),
             });
           } else if (status === 429) {
             setFeedback({
               type: "error",
-              message: message || "Aguarde antes de tentar novamente",
+              message: message || t("referenceSolutions.card.feedback.rateLimited"),
             });
           } else {
             setFeedback({
               type: "error",
               message:
-                message || "Erro ao regenerar solução",
+                message || t("referenceSolutions.card.feedback.regenerateError"),
             });
           }
         },
@@ -163,7 +152,7 @@ function ReferenceKindCard({
         setEditingCode(false);
         setFeedback({
           type: "success",
-          message: "Solução atualizada manualmente",
+          message: t("referenceSolutions.card.feedback.savedManually"),
         });
         queryClient.invalidateQueries({
           queryKey: getV1ChallengesChallengeidReferenceSolutionsQueryKey(
@@ -174,7 +163,7 @@ function ReferenceKindCard({
       onError: (err: any) => {
         setFeedback({
           type: "error",
-          message: err?.message || "Erro ao salvar solução",
+          message: err?.message || t("referenceSolutions.card.feedback.saveError"),
         });
       },
     },
@@ -185,7 +174,7 @@ function ReferenceKindCard({
       onSuccess: () => {
         setFeedback({
           type: "success",
-          message: "Solução removida",
+          message: t("referenceSolutions.card.feedback.removed"),
         });
         queryClient.invalidateQueries({
           queryKey: getV1ChallengesChallengeidReferenceSolutionsQueryKey(
@@ -196,7 +185,7 @@ function ReferenceKindCard({
       onError: (err: any) => {
         setFeedback({
           type: "error",
-          message: err?.message || "Erro ao remover solução",
+          message: err?.message || t("referenceSolutions.card.feedback.removeError"),
         });
       },
     },
@@ -210,12 +199,14 @@ function ReferenceKindCard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-slate-200">
-            {KIND_LABELS[kind]}
+            {t(`referenceSolutions.kind.${kind}`)}
           </h3>
           <StatusBadge status={status} />
           {data && (
             <span className="text-xs px-1.5 py-0.5 bg-slate-700/50 text-slate-300 rounded">
-              {data.createdBy === "manual" ? "Manual" : "AI"}
+              {data.createdBy === "manual"
+                ? t("referenceSolutions.card.source.manual")
+                : t("referenceSolutions.card.source.ai")}
             </span>
           )}
         </div>
@@ -238,10 +229,11 @@ function ReferenceKindCard({
       {status === "complete" && data?.code ? (
         <div className="space-y-3">
           <p className="text-slate-500 text-xs">
-            Gerada em{" "}
-            {data.generatedAt
-              ? new Date(data.generatedAt).toLocaleString("pt-BR")
-              : "—"}
+            {t("referenceSolutions.card.generatedAt", {
+              date: data.generatedAt
+                ? new Date(data.generatedAt).toLocaleString()
+                : "—",
+            })}
           </p>
 
           {editingCode ? (
@@ -268,7 +260,7 @@ function ReferenceKindCard({
                   {saveMutation.isPending && (
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
                   )}
-                  Salvar
+                  {c("save")}
                 </Button>
                 <Button
                   size="sm"
@@ -279,7 +271,7 @@ function ReferenceKindCard({
                   }}
                   className="border-slate-600 bg-slate-800 text-slate-200"
                 >
-                  Cancelar
+                  {c("cancel")}
                 </Button>
               </div>
             </div>
@@ -308,7 +300,7 @@ function ReferenceKindCard({
                     <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
                   )}
                   <RotateCw className="w-3.5 h-3.5 mr-1" />
-                  Regenerar
+                  {t("referenceSolutions.card.actions.regenerate")}
                 </Button>
                 <Button
                   size="sm"
@@ -318,13 +310,13 @@ function ReferenceKindCard({
                   className="border-slate-600 bg-slate-800 text-slate-200 flex-1"
                 >
                   <Pencil className="w-3.5 h-3.5 mr-1" />
-                  Editar
+                  {c("edit")}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    if (window.confirm("Remover esta solução?")) {
+                    if (window.confirm(t("referenceSolutions.card.confirmRemove"))) {
                       deleteMutation.mutate({
                         challengeId,
                         kind,
@@ -335,7 +327,7 @@ function ReferenceKindCard({
                   className="border-rose-600/50 bg-slate-800 text-rose-300 hover:bg-rose-500/10 flex-1"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" />
-                  Remover
+                  {t("referenceSolutions.card.actions.remove")}
                 </Button>
               </div>
             </>
@@ -344,7 +336,7 @@ function ReferenceKindCard({
       ) : status === "pending" || !data ? (
         <div className="space-y-3">
           <p className="text-amber-400/90 text-sm">
-            Nenhuma solução ainda — clique Gerar
+            {t("referenceSolutions.card.empty")}
           </p>
           <Button
             size="sm"
@@ -360,13 +352,13 @@ function ReferenceKindCard({
             {regenerateMutation.isPending && (
               <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
             )}
-            Gerar agora
+            {t("referenceSolutions.card.actions.generateNow")}
           </Button>
         </div>
       ) : status === "running" ? (
         <div className="flex flex-col items-center justify-center gap-2 py-4">
           <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-          <p className="text-slate-400 text-sm">Em execução…</p>
+          <p className="text-slate-400 text-sm">{t("referenceSolutions.running")}</p>
         </div>
       ) : status === "failed" ? (
         <div className="space-y-3">
@@ -374,7 +366,7 @@ function ReferenceKindCard({
             <AlertDescription>
               {data?.error && data.error.length > 0
                 ? data.error.slice(0, 200)
-                : "Erro desconhecido"}
+                : t("referenceSolutions.unknownError")}
             </AlertDescription>
           </Alert>
           <Button
@@ -391,7 +383,7 @@ function ReferenceKindCard({
             {regenerateMutation.isPending && (
               <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
             )}
-            Tentar novamente
+            {c("retry")}
           </Button>
         </div>
       ) : null}
@@ -403,6 +395,7 @@ export function StepReferenceSolutions({
   challengeId,
   mode,
 }: StepReferenceSolutionsProps) {
+  const t = useTranslations("challenge");
   const { register } = useFormContext();
 
   const { data: refSolsData, isLoading: refSolsLoading } =
@@ -427,12 +420,12 @@ export function StepReferenceSolutions({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-100 mb-2">
-            Soluções de referência
+            {t("referenceSolutions.title")}
           </h2>
           <p className="text-slate-400">
             {mode === "create"
-              ? "Gere automaticamente soluções de referência para este desafio"
-              : "Gerencie as soluções de referência deste desafio"}
+              ? t("referenceSolutions.subtitle.create")
+              : t("referenceSolutions.subtitle.edit")}
           </p>
         </div>
 
@@ -445,13 +438,13 @@ export function StepReferenceSolutions({
           <div className="space-y-1 flex-1">
             <Label className="text-slate-200 block">
               {mode === "create"
-                ? "Gerar soluções de referência automaticamente ao salvar (recomendado)"
-                : "Regenerar soluções de referência ao salvar"}
+                ? t("referenceSolutions.toggle.label.create")
+                : t("referenceSolutions.toggle.label.edit")}
             </Label>
             <p className="text-xs text-slate-400">
               {mode === "create"
-                ? "Gera 2 soluções — uma simples (brute force) e uma refinada — usadas pela avaliação automática."
-                : "Soluções serão regeneradas ao salvar. Desmarque para preservar as atuais. Gera 2 soluções."}
+                ? t("referenceSolutions.toggle.description.create")
+                : t("referenceSolutions.toggle.description.edit")}
             </p>
           </div>
         </div>
@@ -460,9 +453,7 @@ export function StepReferenceSolutions({
       {mode === "create" && (
         <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-300">
           <AlertDescription>
-            As soluções serão geradas em background após salvar. Você poderá
-            editá-las manualmente ou regenerar a partir da tela de edição do
-            desafio.
+            {t("referenceSolutions.createNote")}
           </AlertDescription>
         </Alert>
       )}
@@ -470,7 +461,7 @@ export function StepReferenceSolutions({
       {mode === "edit" && challengeId && (
         <div className="space-y-4">
           <h3 className="text-slate-300 font-semibold text-sm">
-            Soluções por tipo
+            {t("referenceSolutions.byKind")}
           </h3>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {KINDS.map((kind) => (

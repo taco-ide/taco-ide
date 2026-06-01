@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 export type CsvStep = "upload" | "preview" | "result";
@@ -12,13 +13,8 @@ interface CsvStepperProps {
 
 const stepOrder: CsvStep[] = ["upload", "preview", "result"];
 
-const stepLabels: Record<CsvStep, string> = {
-  upload: "Upload",
-  preview: "Prévia e validação",
-  result: "Resultado",
-};
-
 export function CsvStepper({ step, className }: CsvStepperProps) {
+  const t = useTranslations("adminShared");
   const currentIndex = stepOrder.indexOf(step);
 
   return (
@@ -58,7 +54,7 @@ export function CsvStepper({ step, className }: CsvStepperProps) {
                   !isDone && !isActive && "text-slate-500",
                 )}
               >
-                {stepLabels[s]}
+                {t(`stepper.${s}`)}
               </span>
             </div>
             {showBar && (

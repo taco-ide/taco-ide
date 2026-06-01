@@ -11,9 +11,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import RunningCodeSkeleton from "./RunningCodeSkeleton";
+import { useTranslations } from "next-intl";
 
 function OutputPanel() {
   const { output, error, isRunning, pyodideStatus, language } = useCodeEditorStore();
+  const t = useTranslations("problem");
   const [isCopied, setIsCopied] = useState(false);
 
   const hasContent = error || output;
@@ -31,7 +33,7 @@ function OutputPanel() {
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
         <span className="text-xs font-medium text-zinc-400 flex items-center gap-2">
           <Terminal className="size-3.5" />
-          Output
+          {t("output.label")}
         </span>
         {hasContent && (
           <button
@@ -41,12 +43,12 @@ function OutputPanel() {
             {isCopied ? (
               <>
                 <CheckCircle className="size-3.5" />
-                Copiado!
+                {t("io.copied")}
               </>
             ) : (
               <>
                 <Copy className="size-3.5" />
-                Copiar
+                {t("io.copy")}
               </>
             )}
           </button>
@@ -59,7 +61,7 @@ function OutputPanel() {
               isPythonLoading ? (
                 <div className="flex flex-col items-center justify-center h-full min-h-[80px] text-zinc-500">
                   <Loader2 className="size-6 mb-2 animate-spin opacity-60" />
-                  <p className="text-xs">Carregando runtime Python (apenas na primeira vez)...</p>
+                  <p className="text-xs">{t("output.loadingRuntime")}</p>
                 </div>
               ) : (
                 <RunningCodeSkeleton />
@@ -68,7 +70,9 @@ function OutputPanel() {
               <div className="flex items-start gap-3 text-rose-400/90">
                 <AlertTriangle className="size-5 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <div className="font-medium">Erro de execução</div>
+                  <div className="font-medium">
+                    {t("output.executionError")}
+                  </div>
                   <pre className="whitespace-pre-wrap text-rose-400/80 text-xs">
                     {error}
                   </pre>
@@ -78,7 +82,9 @@ function OutputPanel() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-emerald-400/90 mb-2">
                   <CheckCircle className="size-5" />
-                  <span className="font-medium text-sm">Execução concluída</span>
+                  <span className="font-medium text-sm">
+                    {t("output.executionDone")}
+                  </span>
                 </div>
                 <pre className="whitespace-pre-wrap text-zinc-400 text-xs">
                   {output}
@@ -87,7 +93,7 @@ function OutputPanel() {
             ) : (
               <div className="h-full min-h-[80px] flex flex-col items-center justify-center text-zinc-500">
                 <Clock className="size-8 mb-2 opacity-60" />
-                <p className="text-xs">Execute o código para ver o output</p>
+                <p className="text-xs">{t("output.empty")}</p>
               </div>
             )}
           </div>

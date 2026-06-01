@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -31,6 +32,8 @@ type FilterMode = "all" | "active" | "inactive";
 const PER_PAGE = 20;
 
 export default function OrganizationsPage() {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
@@ -85,7 +88,7 @@ export default function OrganizationsPage() {
   const toggleActive = usePatchV1OrganizationsIdActive({
     mutation: {
       onSuccess: (_res, vars) => {
-        toast.success("Status atualizado");
+        toast.success(t("toast.statusUpdated"));
         void queryClient.invalidateQueries({
           predicate: (query) => {
             const first = query.queryKey[0] as { url?: string } | undefined;
@@ -100,7 +103,7 @@ export default function OrganizationsPage() {
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Erro ao atualizar status",
+          err instanceof Error ? err.message : t("toast.statusUpdateError"),
         );
       },
     },
@@ -122,19 +125,19 @@ export default function OrganizationsPage() {
   // global count without API support; fall back to "X nesta página".
   const summaryText = (() => {
     if (filter === "inactive") {
-      return `${rows.length} inativa(s) nesta página`;
+      return t("summary.inactiveOnPage", { count: rows.length });
     }
     if (filter === "active") {
-      return `${pagination.total} ativa(s)`;
+      return t("summary.active", { count: pagination.total });
     }
-    return `${pagination.total} no total`;
+    return t("summary.total", { count: pagination.total });
   })();
 
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Organizações</h1>
+          <h1 className="text-2xl font-semibold text-white">{t("title")}</h1>
           <p className="mt-1 text-sm text-slate-400">{summaryText}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -144,7 +147,7 @@ export default function OrganizationsPage() {
             className="bg-amber-500 text-slate-900 hover:bg-amber-400"
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Nova organização
+            {t("newOrganization")}
           </Button>
         </div>
       </div>
@@ -158,7 +161,7 @@ export default function OrganizationsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Buscar por nome ou slug…"
+            placeholder={t("searchPlaceholder")}
             className="bg-slate-900 border-slate-700 pl-9 pr-9 text-white placeholder:text-slate-500"
           />
           {search && (
@@ -169,7 +172,7 @@ export default function OrganizationsPage() {
                 setPage(1);
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-white"
-              aria-label="Limpar busca"
+              aria-label={t("clearSearch")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -179,9 +182,9 @@ export default function OrganizationsPage() {
         <div className="flex items-center gap-1 rounded-md border border-slate-700 bg-slate-900 p-1">
           {(
             [
-              { id: "all", label: "Todas" },
-              { id: "active", label: "Ativas" },
-              { id: "inactive", label: "Inativas" },
+              { id: "all", label: t("filter.all") },
+              { id: "active", label: t("filter.active") },
+              { id: "inactive", label: t("filter.inactive") },
             ] as { id: FilterMode; label: string }[]
           ).map((opt) => (
             <button
@@ -209,7 +212,7 @@ export default function OrganizationsPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <span>
-              Não foi possível carregar as organizações.{" "}
+              {t("loadError")}{" "}
               {error instanceof Error ? error.message : ""}
             </span>
           </div>
@@ -222,7 +225,7 @@ export default function OrganizationsPage() {
             }}
           >
             <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-            Tentar novamente
+            {c("retry")}
           </Button>
         </div>
       ) : (
@@ -230,8 +233,8 @@ export default function OrganizationsPage() {
           {showInitialEmpty ? (
             <EmptyState
               icon={Building2}
-              title="Ainda não há organizações"
-              body="Crie a primeira organização para começar a cadastrar membros e domínios."
+              title={t("empty.title")}
+              body={t("empty.body")}
               action={
                 <Button
                   type="button"
@@ -239,18 +242,18 @@ export default function OrganizationsPage() {
                   className="bg-amber-500 text-slate-900 hover:bg-amber-400"
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
-                  Criar primeira organização
+                  {t("empty.action")}
                 </Button>
               }
             />
           ) : !isLoading && rows.length === 0 ? (
             <EmptyState
               icon={Building2}
-              title="Nenhuma organização encontrada"
+              title={t("noResults.title")}
               body={
                 debouncedSearch
-                  ? `Nada corresponde a "${debouncedSearch}".`
-                  : "Tente um filtro diferente."
+                  ? t("noResults.bodyWithQuery", { query: debouncedSearch })
+                  : t("noResults.bodyNoQuery")
               }
             />
           ) : (

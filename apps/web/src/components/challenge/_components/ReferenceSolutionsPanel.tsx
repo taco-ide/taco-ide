@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 interface ReferenceSolutionsPanelProps {
   challengeId: string;
@@ -19,6 +20,7 @@ interface ReferenceSolutionsPanelProps {
 const REGEN_KINDS = ["brute_force", "refined"] as const;
 
 function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
+  const t = useTranslations("challenge");
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const { mutateAsync, isPending } =
@@ -36,7 +38,7 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
           getV1ChallengesChallengeidReferenceSolutionsQueryKey(challengeId),
       });
     } catch (err: any) {
-      setError(err?.message || "Erro ao gerar soluções de referência");
+      setError(err?.message || t("referenceSolutions.panel.generateError"));
     }
   };
 
@@ -44,7 +46,7 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
     <div>
       <div className="flex items-center justify-between mb-3 gap-2">
         <h2 className="text-slate-100 font-semibold">
-          Soluções de referência
+          {t("referenceSolutions.title")}
         </h2>
         <Button
           type="button"
@@ -53,14 +55,14 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
           className="border-slate-600 bg-slate-800 text-slate-200"
           onClick={handleGenerate}
           disabled={isPending}
-          title="Gerar soluções de referência"
+          title={t("referenceSolutions.panel.generateTitle")}
         >
           {isPending ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
             <RefreshCw className="w-3.5 h-3.5" />
           )}
-          <span className="ml-1.5">Gerar</span>
+          <span className="ml-1.5">{t("referenceSolutions.panel.generate")}</span>
         </Button>
       </div>
 
@@ -71,7 +73,7 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
       ) : null}
 
       <p className="text-slate-400 text-sm">
-        Nenhuma solução de referência cadastrada.
+        {t("referenceSolutions.panel.emptyList")}
       </p>
     </div>
   );
@@ -84,15 +86,12 @@ type RefSolution = {
   error: string | null;
 };
 
-function kindLabel(kind: string) {
-  return kind === "brute_force" ? "Brute Force" : "Refinada";
-}
-
 function SolutionBody({ sol }: { sol: RefSolution }) {
+  const t = useTranslations("challenge");
   if (sol.status === "complete") {
     return (
       <pre className="bg-slate-950 border border-slate-700 rounded p-3 text-slate-100 text-xs overflow-auto max-h-64 whitespace-pre-wrap">
-        {sol.code ?? "(sem código)"}
+        {sol.code ?? t("referenceSolutions.panel.noCode")}
       </pre>
     );
   }
@@ -100,22 +99,22 @@ function SolutionBody({ sol }: { sol: RefSolution }) {
     return (
       <div className="flex items-center gap-2 text-slate-400 text-sm italic p-3">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Em execução…
+        {t("referenceSolutions.running")}
       </div>
     );
   }
   if (sol.status === "failed") {
     return (
       <div className="border border-rose-500/30 bg-rose-500/10 text-rose-300 text-sm rounded p-3">
-        <span className="font-medium">Falhou:</span>{" "}
-        {sol.error ? sol.error.slice(0, 200) : "Erro desconhecido."}
+        <span className="font-medium">{t("referenceSolutions.panel.failedLabel")}</span>{" "}
+        {sol.error ? sol.error.slice(0, 200) : t("referenceSolutions.panel.unknownError")}
       </div>
     );
   }
   // pending or unknown
   return (
     <p className="text-amber-400/90 text-sm p-3">
-      Pendente — aguardando geração.
+      {t("referenceSolutions.panel.pendingAwaiting")}
     </p>
   );
 }
@@ -123,10 +122,16 @@ function SolutionBody({ sol }: { sol: RefSolution }) {
 export function ReferenceSolutionsPanel({
   challengeId,
 }: ReferenceSolutionsPanelProps) {
+  const t = useTranslations("challenge");
   const { data: refSolsData } =
     useGetV1ChallengesChallengeidReferenceSolutions(challengeId);
 
   const refSolutions = refSolsData?.data ?? [];
+
+  const kindLabel = (kind: string) =>
+    kind === "brute_force"
+      ? t("referenceSolutions.kind.brute_force")
+      : t("referenceSolutions.kind.refined");
 
   if (refSolutions.length === 0) {
     return <EmptyReferenceSolutions challengeId={challengeId} />;
@@ -137,7 +142,7 @@ export function ReferenceSolutionsPanel({
     return (
       <div>
         <h2 className="text-slate-100 font-semibold mb-3">
-          Solução de referência — {kindLabel(sol.kind)}
+          {t("referenceSolutions.panel.singleTitle", { kind: kindLabel(sol.kind) })}
         </h2>
         <SolutionBody sol={sol} />
       </div>
@@ -147,7 +152,7 @@ export function ReferenceSolutionsPanel({
   return (
     <div>
       <h2 className="text-slate-100 font-semibold mb-3">
-        Soluções de referência
+        {t("referenceSolutions.title")}
       </h2>
       <Tabs defaultValue={refSolutions[0]?.kind ?? "brute_force"}>
         <TabsList className="bg-slate-800 border border-slate-700">

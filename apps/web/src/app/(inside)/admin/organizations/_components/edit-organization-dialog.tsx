@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,6 +42,8 @@ export function EditOrganizationDialog({
   onOpenChange,
   org,
 }: EditOrganizationDialogProps) {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
 
   const form = useForm<OrganizationFormValues>({
@@ -61,7 +64,7 @@ export function EditOrganizationDialog({
   const mutation = usePutV1OrganizationsId({
     mutation: {
       onSuccess: (response) => {
-        toast.success(`Organização "${response.data.name}" atualizada`);
+        toast.success(t("toast.updated", { name: response.data.name }));
         void queryClient.invalidateQueries({
           predicate: (query) => {
             const first = query.queryKey[0] as { url?: string } | undefined;
@@ -85,16 +88,15 @@ export function EditOrganizationDialog({
             "slug",
             {
               type: "manual",
-              message:
-                "Já existe uma organização com este slug. Escolha outro.",
+              message: t("slugConflict"),
             },
             { shouldFocus: true },
           );
           return;
         }
         const message =
-          err instanceof Error ? err.message : "Erro ao atualizar organização";
-        toast.error(`Erro ao atualizar organização: ${message}`);
+          err instanceof Error ? err.message : t("toast.updateErrorFallback");
+        toast.error(t("toast.updateError", { message }));
       },
     },
   });
@@ -115,9 +117,9 @@ export function EditOrganizationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Editar organização</DialogTitle>
+          <DialogTitle>{t("editDialog.title")}</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Atualize a identidade pública desta organização.
+            {t("editDialog.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -129,7 +131,7 @@ export function EditOrganizationDialog({
               onClick={() => onOpenChange(false)}
               disabled={mutation.isPending}
             >
-              Cancelar
+              {c("cancel")}
             </Button>
             <Button
               type="submit"
@@ -141,7 +143,7 @@ export function EditOrganizationDialog({
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              Salvar alterações
+              {t("saveChanges")}
             </Button>
           </DialogFooter>
         </form>

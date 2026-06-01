@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import type { ChallengeFormData } from "@/components/challenge/schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function StepDescription() {
+    const t = useTranslations("challenge");
     const { register, watch } = useFormContext<ChallengeFormData>();
     const [reactContent, setMarkdownSource] = useRemark();
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,15 +43,11 @@ export function StepDescription() {
         <div className="space-y-6">
             <Alert className="border-amber-500/35 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-400">
                 <Lightbulb className="h-4 w-4" />
-                <AlertTitle className="text-amber-100">Enunciado que o aluno lê na aba Problema</AlertTitle>
+                <AlertTitle className="text-amber-100">{t("description.hint.title")}</AlertTitle>
                 <AlertDescription className="text-amber-100/90 space-y-2 text-sm">
-                    <p>
-                        Tudo que você escrever aqui (Markdown) é o texto principal do exercício. Boas práticas: contexto
-                        em 1–2 frases, formato de entrada e saída, exemplos, e restrições quando houver.
-                    </p>
+                    <p>{t("description.hint.body")}</p>
                     <p className="text-xs text-amber-200/85 border-l-2 border-amber-400/40 pl-3 my-2">
-                        Exemplo (ilustrativo): &quot;Leia dois inteiros e imprima a soma.&quot; + bloco com exemplo de
-                        entrada/saída.
+                        {t("description.hint.example")}
                     </p>
                 </AlertDescription>
             </Alert>
@@ -57,10 +55,10 @@ export function StepDescription() {
             <div className="grid grid-cols-2 gap-6 items-stretch h-[360px]">
             <Card className="p-6 bg-slate-800 border-slate-700 flex flex-col h-full">
                 <div className="flex flex-col flex-1 min-h-0 space-y-2">
-                    <Label className="text-slate-200">Problem Description</Label>
+                    <Label className="text-slate-200">{t("description.label")}</Label>
                     <Textarea
                         {...restRegister}
-                        placeholder="Type the problem text here... Markdown supported"
+                        placeholder={t("description.placeholder")}
                         className="flex-1 min-h-0 resize-none bg-slate-900 border-slate-700 text-slate-200"
                         onChange={(e) => {
                             rhfOnChange(e);
@@ -77,7 +75,7 @@ export function StepDescription() {
                                 <div className="flex items-center justify-center rounded-lg bg-[#1e1e2e] ring-1 ring-gray-800/50">
                                     <Text className="w-4 h-4 text-blue-400" />
                                 </div>
-                                <span className="text-sm font-medium text-gray-300">Problem Description Preview</span>
+                                <span className="text-sm font-medium text-gray-300">{t("description.previewTitle")}</span>
                             </div>
                         </div>
                     </CardTitle>

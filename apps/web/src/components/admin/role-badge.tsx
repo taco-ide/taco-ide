@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 export type AdminRole = "student" | "teacher" | "coordinator" | "admin";
@@ -22,6 +23,7 @@ interface RoleBadgeProps {
 }
 
 export function RoleBadge({ role, className }: RoleBadgeProps) {
+  const t = useTranslations("adminShared");
   return (
     <span
       className={cn(
@@ -30,7 +32,7 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
         className,
       )}
     >
-      {roleLabel[role]}
+      {t(`role.${role}`)}
     </span>
   );
 }

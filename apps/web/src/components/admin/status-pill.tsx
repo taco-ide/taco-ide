@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface StatusPillProps {
@@ -6,6 +7,7 @@ interface StatusPillProps {
 }
 
 export function StatusPill({ active, className }: StatusPillProps) {
+  const t = useTranslations("adminShared");
   return (
     <span
       className={cn(
@@ -22,7 +24,7 @@ export function StatusPill({ active, className }: StatusPillProps) {
           active ? "bg-emerald-400" : "bg-slate-500",
         )}
       />
-      {active ? "Ativa" : "Inativa"}
+      {active ? t("status.active") : t("status.inactive")}
     </span>
   );
 }

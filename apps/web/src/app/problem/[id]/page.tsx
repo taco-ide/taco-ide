@@ -19,6 +19,7 @@ import {
 import { useUser } from "@/contexts/UserContext";
 import { useGetV1ChallengesId } from "@/kubb/hooks";
 import { shouldOpenStaffWorkSessionsFirst } from "@/lib/staffProblemLanding";
+import { useTranslations } from "next-intl";
 
 function StaffWorkSessionsRedirect({ challengeId }: { challengeId: string }) {
   const router = useRouter();
@@ -36,6 +37,7 @@ function ProblemPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const t = useTranslations("problem");
   const id = params?.id as string | undefined;
   const { user, isLoading: userLoading } = useUser();
 
@@ -70,15 +72,13 @@ function ProblemPageContent() {
   if (challengeQuery.isError || !challengeQuery.data?.data) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-[#0c0d10] text-zinc-400 p-4">
-        <p className="text-rose-400/90">
-          Não foi possível carregar o problema.
-        </p>
+        <p className="text-rose-400/90">{t("page.loadError")}</p>
         <button
           type="button"
           onClick={() => router.push("/explore")}
           className="px-4 py-2 bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg text-sm transition-colors"
         >
-          Voltar para Explorar
+          {t("page.backToExplore")}
         </button>
       </div>
     );
@@ -106,6 +106,7 @@ type ProblemMainTab = "problem" | "io" | "chat";
 
 function ProblemPageInner() {
   const router = useRouter();
+  const t = useTranslations("problem");
   const { challengeId, isLoading, error } = useProblem();
   const [mainTab, setMainTab] = useState<ProblemMainTab>(() => {
     if (typeof window === "undefined" || !challengeId) return "problem";
@@ -149,7 +150,7 @@ function ProblemPageInner() {
           onClick={() => router.push("/explore")}
           className="px-4 py-2 bg-zinc-800/80 hover:bg-zinc-700/80 rounded-lg text-sm transition-colors"
         >
-          Voltar para Explorar
+          {t("page.backToExplore")}
         </button>
       </div>
     );
@@ -186,21 +187,21 @@ function ProblemPageInner() {
                     className="data-[state=active]:bg-zinc-800/60 data-[state=active]:text-amber-400/90 rounded-md gap-1.5 px-3 text-xs"
                   >
                     <FileText className="size-3.5" />
-                    Problema
+                    {t("tabs.problem")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="io"
                     className="data-[state=active]:bg-zinc-800/60 data-[state=active]:text-amber-400/90 rounded-md gap-1.5 px-3 text-xs"
                   >
                     <Terminal className="size-3.5" />
-                    Input / Output
+                    {t("tabs.io")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="chat"
                     className="data-[state=active]:bg-zinc-800/60 data-[state=active]:text-amber-400/90 rounded-md gap-1.5 px-3 text-xs"
                   >
                     <MessageCircle className="size-3.5" />
-                    Chat
+                    {t("tabs.chat")}
                   </TabsTrigger>
                 </TabsList>
                 <div className="flex-1 min-h-0 overflow-hidden">

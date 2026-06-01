@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Globe, Mail, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,13 +11,14 @@ interface OrgTabsNavProps {
 }
 
 const tabs = [
-  { key: "members", label: "Membros", icon: Users },
-  { key: "invitations", label: "Convites", icon: Mail },
-  { key: "domains", label: "Domínios", icon: Globe },
-  { key: "settings", label: "Configurações", icon: Settings },
+  { key: "members", labelKey: "tabs.members", icon: Users },
+  { key: "invitations", labelKey: "tabs.invitations", icon: Mail },
+  { key: "domains", labelKey: "tabs.domains", icon: Globe },
+  { key: "settings", labelKey: "tabs.settings", icon: Settings },
 ] as const;
 
 export function OrgTabsNav({ orgId }: OrgTabsNavProps) {
+  const t = useTranslations("adminOrgs");
   const pathname = usePathname() ?? "";
 
   return (
@@ -37,7 +39,7 @@ export function OrgTabsNav({ orgId }: OrgTabsNavProps) {
             )}
           >
             <Icon className="h-4 w-4" />
-            {tab.label}
+            {t(tab.labelKey)}
           </Link>
         );
       })}

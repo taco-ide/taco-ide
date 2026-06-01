@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,8 @@ import {
 } from "../../_components/organization-form-fields";
 
 export default function OrganizationSettingsPage() {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
   const queryClient = useQueryClient();
@@ -59,7 +62,7 @@ export default function OrganizationSettingsPage() {
   const updateMutation = usePutV1OrganizationsId({
     mutation: {
       onSuccess: (response) => {
-        toast.success(`Organização "${response.data.name}" atualizada`);
+        toast.success(t("toast.updated", { name: response.data.name }));
         void queryClient.invalidateQueries({
           predicate: (query) => {
             const first = query.queryKey[0] as { url?: string } | undefined;
@@ -82,10 +85,10 @@ export default function OrganizationSettingsPage() {
         const status = (err as { status?: number } | undefined)?.status;
         toast.error(
           status === 409
-            ? "Slug já está em uso"
+            ? t("toast.slugInUse")
             : err instanceof Error
               ? err.message
-              : "Erro ao salvar",
+              : t("toast.saveError"),
         );
       },
     },
@@ -96,7 +99,9 @@ export default function OrganizationSettingsPage() {
     mutation: {
       onSuccess: () => {
         toast.success(
-          org?.isActive ? "Organização desativada" : "Organização reativada",
+          org?.isActive
+            ? t("toast.deactivated")
+            : t("toast.reactivated"),
         );
         void queryClient.invalidateQueries({
           predicate: (query) => {
@@ -114,7 +119,7 @@ export default function OrganizationSettingsPage() {
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Erro ao atualizar status",
+          err instanceof Error ? err.message : t("toast.statusUpdateError"),
         );
       },
     },
@@ -137,10 +142,11 @@ export default function OrganizationSettingsPage() {
     <div className="grid max-w-3xl gap-6">
       <Card className="bg-slate-900/60 border-slate-700/60 text-white">
         <CardHeader>
-          <CardTitle className="text-base">Detalhes da organização</CardTitle>
+          <CardTitle className="text-base">
+            {t("settings.details.title")}
+          </CardTitle>
           <p className="text-xs text-slate-400">
-            A identidade pública da organização. Membros verão estes dados na
-            navbar e nos links de turmas.
+            {t("settings.details.description")}
           </p>
         </CardHeader>
         <CardContent>
@@ -159,7 +165,7 @@ export default function OrganizationSettingsPage() {
                 }
                 disabled={!form.formState.isDirty || updateMutation.isPending}
               >
-                Descartar
+                {t("settings.discard")}
               </Button>
               <Button
                 type="submit"
@@ -171,7 +177,7 @@ export default function OrganizationSettingsPage() {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Salvar alterações
+                {t("saveChanges")}
               </Button>
             </div>
           </form>
@@ -180,10 +186,11 @@ export default function OrganizationSettingsPage() {
 
       <Card className="bg-slate-900/60 border-red-500/25 text-white">
         <CardHeader>
-          <CardTitle className="text-base">Zona de risco</CardTitle>
+          <CardTitle className="text-base">
+            {t("settings.dangerZone.title")}
+          </CardTitle>
           <p className="text-xs text-slate-400">
-            Desativar congela o acesso de membros e oculta as turmas das buscas.
-            Os dados são preservados e podem ser reativados a qualquer momento.
+            {t("settings.dangerZone.description")}
           </p>
         </CardHeader>
         <CardContent>
@@ -191,13 +198,13 @@ export default function OrganizationSettingsPage() {
             <div>
               <div className="text-sm font-medium text-white">
                 {org.isActive
-                  ? "Desativar organização"
-                  : "Reativar organização"}
+                  ? t("deactivateOrg")
+                  : t("reactivateOrg")}
               </div>
               <div className="mt-0.5 text-xs text-slate-400">
                 {org.isActive
-                  ? "Membros perderão acesso imediatamente."
-                  : "Membros recuperarão o acesso imediatamente."}
+                  ? t("settings.dangerZone.deactivateHint")
+                  : t("settings.dangerZone.reactivateHint")}
               </div>
             </div>
             <Button
@@ -211,7 +218,7 @@ export default function OrganizationSettingsPage() {
               ) : (
                 <CirclePlay className="h-4 w-4" />
               )}
-              {org.isActive ? "Desativar" : "Reativar"}
+              {org.isActive ? t("deactivate") : t("reactivate")}
             </Button>
           </div>
         </CardContent>
@@ -222,13 +229,13 @@ export default function OrganizationSettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {org.isActive
-                ? "Desativar organização?"
-                : "Reativar organização?"}
+                ? t("confirm.deactivateTitle")
+                : t("confirm.reactivateTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {org.isActive
-                ? `Membros de "${org.name}" perderão acesso imediatamente. Você pode reativar quando quiser.`
-                : `Membros de "${org.name}" recuperarão o acesso imediatamente.`}
+                ? t("confirm.deactivateDescriptionNamed", { name: org.name })
+                : t("confirm.reactivateDescriptionNamed", { name: org.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -236,7 +243,7 @@ export default function OrganizationSettingsPage() {
               disabled={toggleActive.isPending}
               className={buttonVariants({ variant: "outline-dark" })}
             >
-              Cancelar
+              {c("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={toggleActive.isPending}
@@ -253,7 +260,9 @@ export default function OrganizationSettingsPage() {
                   : "bg-amber-500 text-slate-900 hover:bg-amber-400"
               }
             >
-              {org.isActive ? "Sim, desativar" : "Sim, reativar"}
+              {org.isActive
+                ? t("confirm.confirmDeactivate")
+                : t("confirm.confirmReactivate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

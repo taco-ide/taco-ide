@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,6 +35,8 @@ interface StepBasicInfoProps {
 }
 
 export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
+    const t = useTranslations("challenge");
+    const c = useTranslations("common");
     const [currentTag, setCurrentTag] = useState("");
     const [isCreating, setIsCreating] = useState(false);
     const [newClassroomTitle, setNewClassroomTitle] = useState("");
@@ -111,36 +114,44 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                 <Alert className="border-amber-500/35 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-400">
                     <Lightbulb className="h-4 w-4" />
                     <AlertTitle className="text-amber-100">
-                        Primeiro desafio: o que o aluno enxerga
+                        {t("basicInfo.hint.title")}
                     </AlertTitle>
                     <AlertDescription className="text-amber-100/90 space-y-2">
                         <ul className="list-disc pl-4 space-y-1.5 text-sm">
                             <li>
-                                <strong className="text-amber-50">Título e tags</strong> aparecem na lista de desafios
-                                para o aluno identificar o exercício.
+                                {t.rich("basicInfo.hint.titleTags", {
+                                    strong: (chunks) => (
+                                        <strong className="text-amber-50">{chunks}</strong>
+                                    ),
+                                })}
                             </li>
                             <li>
-                                <strong className="text-amber-50">Dificuldade</strong> ajuda o aluno a esperar o nível de
-                                esforço (não altera correção automática por si só).
+                                {t.rich("basicInfo.hint.difficulty", {
+                                    strong: (chunks) => (
+                                        <strong className="text-amber-50">{chunks}</strong>
+                                    ),
+                                })}
                             </li>
                             <li>
-                                <strong className="text-amber-50">Turma (obrigatória)</strong> define{" "}
-                                <em>onde</em> o desafio fica disponível. Sem turma, seus alunos não acessam o problema
-                                pelo fluxo normal da turma.
+                                {t.rich("basicInfo.hint.classroom", {
+                                    strong: (chunks) => (
+                                        <strong className="text-amber-50">{chunks}</strong>
+                                    ),
+                                    em: (chunks) => <em>{chunks}</em>,
+                                })}
                             </li>
                         </ul>
                         <p className="text-xs text-amber-200/80 pt-1">
-                            Exemplo de título: &quot;Soma de dois números&quot; ou &quot;Ordenar lista com bubble
-                            sort&quot;.
+                            {t("basicInfo.hint.example")}
                         </p>
                     </AlertDescription>
                 </Alert>
 
                 <div>
-                    <Label className="text-slate-200">Problem Title</Label>
+                    <Label className="text-slate-200">{t("basicInfo.title.label")}</Label>
                     <Input
                         {...register("title")}
-                        placeholder="Ex: Quick Sort Implementation"
+                        placeholder={t("basicInfo.title.placeholder")}
                         className="bg-slate-900 border-slate-700 text-slate-200"
                     />
                     {errors.title && (
@@ -149,14 +160,14 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                 </div>
 
                 <div>
-                    <Label className="text-slate-200">Difficulty</Label>
+                    <Label className="text-slate-200">{t("basicInfo.difficulty.label")}</Label>
                     <Controller
                         control={control}
                         name="difficulty"
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-200">
-                                    <SelectValue placeholder="Select difficulty" />
+                                    <SelectValue placeholder={t("basicInfo.difficulty.placeholder")} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-700">
                                     {difficultyLevels.map((level) => (
@@ -165,7 +176,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                             value={level.value}
                                             className="text-slate-200 focus:bg-slate-700"
                                         >
-                                            {level.label}
+                                            {t(`basicInfo.difficulty.options.${level.value}`)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -178,7 +189,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                 </div>
 
                 <div>
-                    <Label className="text-slate-200">Turma</Label>
+                    <Label className="text-slate-200">{t("basicInfo.classroom.label")}</Label>
                     {isCreating ? (
                         <div className="flex items-center gap-2">
                             <Input
@@ -193,7 +204,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                         handleCancelCreate();
                                     }
                                 }}
-                                placeholder="Nome da nova turma..."
+                                placeholder={t("basicInfo.classroom.newPlaceholder")}
                                 className="bg-slate-900 border-slate-700 text-slate-200 flex-1"
                                 autoFocus
                                 disabled={createClassroomMutation.isPending}
@@ -208,7 +219,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                 {createClassroomMutation.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
-                                    "Criar"
+                                    c("create")
                                 )}
                             </Button>
                             <Button
@@ -219,7 +230,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                 disabled={createClassroomMutation.isPending}
                                 className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
                             >
-                                Cancelar
+                                {c("cancel")}
                             </Button>
                         </div>
                     ) : (
@@ -235,8 +246,8 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                         <SelectValue
                                             placeholder={
                                                 isLoadingClassrooms
-                                                    ? "Carregando turmas..."
-                                                    : "Selecione uma turma"
+                                                    ? t("basicInfo.classroom.loading")
+                                                    : t("basicInfo.classroom.placeholder")
                                             }
                                         />
                                     </SelectTrigger>
@@ -256,7 +267,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                                         >
                                             <span className="flex items-center gap-1">
                                                 <Plus className="w-3 h-3" />
-                                                Criar nova turma
+                                                {t("basicInfo.classroom.createNew")}
                                             </span>
                                         </SelectItem>
                                     </SelectContent>
@@ -269,19 +280,19 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                     )}
                     {createClassroomMutation.isError && (
                         <p className="text-red-400 text-sm mt-1">
-                            Erro ao criar turma. Tente novamente.
+                            {t("basicInfo.classroom.createError")}
                         </p>
                     )}
                 </div>
 
                 <div>
-                    <Label className="text-slate-200">Tags</Label>
+                    <Label className="text-slate-200">{t("basicInfo.tags.label")}</Label>
                     <div className="space-y-2">
                         <Input
                             value={currentTag}
                             onChange={(e) => setCurrentTag(e.target.value)}
                             onKeyDown={handleAddTag}
-                            placeholder="Type a tag and press Enter"
+                            placeholder={t("basicInfo.tags.placeholder")}
                             className="bg-slate-900 border-slate-700 text-slate-200"
                         />
                         <div className="flex flex-wrap gap-2">

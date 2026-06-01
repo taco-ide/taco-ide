@@ -1,17 +1,18 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useGetV1OrganizationsId } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
 import { AdminTopbar } from "./admin-topbar";
 import type { BreadcrumbItem } from "./admin-breadcrumbs";
 
-const segmentLabels: Record<string, string> = {
-  admin: "Admin",
-  organizations: "Organizações",
-  users: "Usuários",
-  members: "Membros",
-  domains: "Domínios",
-  settings: "Configurações",
+const segmentLabelKeys: Record<string, string> = {
+  admin: "segments.admin",
+  organizations: "segments.organizations",
+  users: "segments.users",
+  members: "segments.members",
+  domains: "segments.domains",
+  settings: "segments.settings",
 };
 
 interface SegmentInfo {
@@ -41,6 +42,7 @@ interface AdminRouteBreadcrumbsProps {
 export function AdminRouteBreadcrumbs({
   onOpenMobileSidebar,
 }: AdminRouteBreadcrumbsProps) {
+  const t = useTranslations("admin");
   const pathname = usePathname() ?? "";
   const segments = buildSegments(pathname);
 
@@ -61,7 +63,8 @@ export function AdminRouteBreadcrumbs({
         href: fullPath,
       };
     }
-    const label = segmentLabels[segment] ?? segment;
+    const labelKey = segmentLabelKeys[segment];
+    const label = labelKey ? t(labelKey) : segment;
     return { label, href: fullPath };
   });
 
