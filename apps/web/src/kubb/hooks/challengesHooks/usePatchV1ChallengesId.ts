@@ -14,11 +14,11 @@ export const patchV1ChallengesIdMutationKey = () => [{ url: '/v1/challenges/:id'
 export type PatchV1ChallengesIdMutationKey = ReturnType<typeof patchV1ChallengesIdMutationKey>
 
 /**
- * @description Assign a challenge to a classroom or remove assignment. Teacher: only classrooms they lead. Coordinator: any classroom in org.
- * @summary Update challenge (assign to classroom)
+ * @description Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
+ * @summary Update challenge
  * {@link /v1/challenges/:id}
  */
-export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"], data: PatchV1ChallengesIdMutationRequest, config: Partial<RequestConfig<PatchV1ChallengesIdMutationRequest>> & { client?: typeof fetch } = {}) {
+export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest, config: Partial<RequestConfig<PatchV1ChallengesIdMutationRequest>> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
   const requestData = data  
@@ -28,13 +28,13 @@ export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"
 }
 
 /**
- * @description Assign a challenge to a classroom or remove assignment. Teacher: only classrooms they lead. Coordinator: any classroom in org.
- * @summary Update challenge (assign to classroom)
+ * @description Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
+ * @summary Update challenge
  * {@link /v1/challenges/:id}
  */
 export function usePatchV1ChallengesId<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data: PatchV1ChallengesIdMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PatchV1ChallengesIdMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePatchV1ChallengesId<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? patchV1ChallengesIdMutationKey()
 
-  return useMutation<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data: PatchV1ChallengesIdMutationRequest}, TContext>({
+  return useMutation<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext>({
     mutationFn: async({ id, data }) => {
       return patchV1ChallengesId(id, data, config)
     },

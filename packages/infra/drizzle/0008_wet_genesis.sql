@@ -1,0 +1,1 @@
+ALTER TABLE "challenge" DROP COLUMN "possible_solutions";

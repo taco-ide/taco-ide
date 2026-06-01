@@ -45,6 +45,22 @@ export type PatchV1ChallengesId200 = {
         /**
          * @type string
         */
+        title: string | null;
+        /**
+         * @type string
+        */
+        description: string | null;
+        /**
+         * @type string
+        */
+        difficulty: string | null;
+        /**
+         * @type array
+        */
+        tags: string[] | null;
+        /**
+         * @type string
+        */
         message: string;
     };
     /**
@@ -174,12 +190,42 @@ export type PatchV1ChallengesId404 = {
     };
 };
 
+export const patchV1ChallengesIdMutationRequestDifficultyEnum = {
+    "easy": "easy",
+    "medium": "medium",
+    "hard": "hard"
+} as const;
+
+export type PatchV1ChallengesIdMutationRequestDifficultyEnum = (typeof patchV1ChallengesIdMutationRequestDifficultyEnum)[keyof typeof patchV1ChallengesIdMutationRequestDifficultyEnum];
+
 export type PatchV1ChallengesIdMutationRequest = {
+    /**
+     * @minLength 1
+     * @maxLength 200
+     * @type string | undefined
+    */
+    title?: string;
+    /**
+     * @type string
+    */
+    description?: string | null;
+    /**
+     * @type string
+    */
+    difficulty?: PatchV1ChallengesIdMutationRequestDifficultyEnum | null;
+    /**
+     * @type array
+    */
+    tags?: string[] | null;
     /**
      * @minLength 1
      * @type string
     */
-    classroomId: string | null;
+    classroomId?: string | null;
+    /**
+     * @type boolean | undefined
+    */
+    generateReferenceSolutions?: boolean;
 };
 
 export type PatchV1ChallengesIdMutationResponse = PatchV1ChallengesId200;

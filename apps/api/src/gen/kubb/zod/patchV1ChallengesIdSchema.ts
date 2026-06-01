@@ -18,6 +18,10 @@ export const patchV1ChallengesId200Schema = z.object({
 "data": z.object({
     "id": z.string(),
 "classroomId": z.string().nullable(),
+"title": z.string().nullable(),
+"description": z.string().nullable(),
+"difficulty": z.string().nullable(),
+"tags": z.array(z.string()).nullable(),
 "message": z.string()
     }),
 "pagination": z.object({
@@ -73,7 +77,12 @@ export const patchV1ChallengesId404Schema = z.object({
     })
 
 export const patchV1ChallengesIdMutationRequestSchema = z.object({
-    "classroomId": z.string().min(1).nullable()
+    "title": z.string().min(1).max(200).optional(),
+"description": z.string().nullable().nullish(),
+"difficulty": z.enum(["easy", "medium", "hard"]).nullable().nullish(),
+"tags": z.array(z.string()).nullable().nullish(),
+"classroomId": z.string().min(1).nullable().nullish(),
+"generateReferenceSolutions": z.boolean().optional()
     })
 
 export const patchV1ChallengesIdMutationResponseSchema = z.lazy(() => patchV1ChallengesId200Schema)

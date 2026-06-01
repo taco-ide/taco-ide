@@ -16,6 +16,7 @@ export class AgentTimeoutError extends Error {
  * Only these keys are accepted to prevent arbitrary configuration of the LLM.
  */
 const LLMOverridesSchema = z.object({
+  model: z.string().min(1).optional(),
   temperature: z.number().min(0).max(2).optional(),
   max_tokens: z.number().int().min(1).optional(),
   top_p: z.number().min(0).max(1).optional(),
@@ -34,12 +35,14 @@ export function createLlm(overrides?: unknown): ChatOpenAI {
     ? LLMOverridesSchema.parse(overrides)
     : {};
 
+  const { model: modelOverride, ...rest } = validatedOverrides;
+
   return new ChatOpenAI({
-    model: env.LLM_MODEL_NAME,
+    model: modelOverride ?? env.LLM_MODEL_NAME,
     configuration: {
       baseURL: env.LLM_API_BASE,
       apiKey: env.LLM_API_KEY,
     },
-    ...validatedOverrides,
+    ...rest,
   });
 }

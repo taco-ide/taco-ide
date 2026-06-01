@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   Laptop,
   Loader2,
   Play,
@@ -88,7 +89,7 @@ function WorkSessionsListContent() {
 
   return (
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-white">Sessões dos alunos</h1>
           <div className="flex flex-wrap items-center gap-2">
@@ -101,6 +102,16 @@ function WorkSessionsListContent() {
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Editar problema
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="border-slate-600 bg-slate-800 text-slate-200"
+              onClick={() => router.push(`/create/${challengeId}/submissions`)}
+            >
+              <ClipboardCheck className="w-4 h-4 mr-2" />
+              Submissões
             </Button>
             <Button
               type="button"

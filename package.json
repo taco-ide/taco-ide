@@ -8,9 +8,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "db:reset": "npm run db:reset -w @repo/infra",
-    "db:reset:push": "npm run db:reset:push -w @repo/infra"
+    "db:reset:push": "npm run db:reset:push -w @repo/infra",
+    "test": "npm test -w @repo/api",
+    "test:e2e": "dotenv -e .env -- playwright test",
+    "test:e2e:ui": "dotenv -e .env -- playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "dotenv-cli": "^11.0.0",
     "prettier": "^3.7.4",
     "turbo": "^2.7.4",

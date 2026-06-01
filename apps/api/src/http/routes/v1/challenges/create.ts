@@ -17,6 +17,7 @@ import {
   teachingAssistant,
   challengeTeachingAssistant,
 } from "@repo/infra/db/schema";
+import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 
@@ -28,7 +29,7 @@ const CreateChallengeBodySchema = z
     classroomId: z.string().min(1),
     tags: z.array(z.string()).optional(),
     supportMaterials: z.unknown().optional(),
-    possibleSolutions: z.unknown().optional(),
+    generateReferenceSolutions: z.boolean().optional().default(true),
   })
   .strict();
 
@@ -85,7 +86,7 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         classroomId,
         tags,
         supportMaterials,
-        possibleSolutions,
+        generateReferenceSolutions: shouldGenerateRefSolutions,
       } = request.body;
 
       const [cl] = await db
@@ -122,7 +123,6 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           classroomId,
           tags: tags ?? null,
           supportMaterials: supportMaterials ?? null,
-          possibleSolutions: possibleSolutions ?? null,
           createdByUserId: usr.id,
         })
         .returning();
@@ -152,6 +152,11 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           teachingAssistantId: classroomTA.id,
           isDefault: true,
         });
+      }
+
+      // Fire and forget reference solution generation
+      if (shouldGenerateRefSolutions !== false) {
+        void generateReferenceSolutions(created.id);
       }
 
       return reply.status(201).send({

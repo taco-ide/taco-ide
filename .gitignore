@@ -19,6 +19,9 @@ node_modules
 
 # Testing
 coverage
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Turbo
 .turbo
@@ -49,6 +52,7 @@ uploads/
 .DS_Store
 *.pem
 .claude/history/
+**/.claude/history/
 .playwright-cli/
 .understand-anything/
 

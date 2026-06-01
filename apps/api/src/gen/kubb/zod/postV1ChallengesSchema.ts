@@ -73,7 +73,7 @@ export const postV1ChallengesMutationRequestSchema = z.object({
 "classroomId": z.string().min(1),
 "tags": z.array(z.string()).optional(),
 "supportMaterials": z.any().optional(),
-"possibleSolutions": z.any().optional()
+"generateReferenceSolutions": z.boolean().default(true)
     })
 
 export const postV1ChallengesMutationResponseSchema = z.lazy(() => postV1Challenges201Schema)

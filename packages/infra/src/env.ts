@@ -39,6 +39,10 @@ const envSchema = z.object({
     .default("https://taco-ide-resource.openai.azure.com/openai/v1/"),
   // Azure OpenAI deployment name — must match a deployed model in the Azure resource
   LLM_MODEL_NAME: z.string().default("gpt-4o-mini"),
+  // Deployment used by non-conversational generators (reference solutions,
+  // auto-review). Must be a non-reasoning model that accepts arbitrary
+  // temperature values so we can request closer-to-deterministic output.
+  LLM_DETERMINISTIC_MODEL_NAME: z.string().default("gpt-4o-mini"),
   LLM_API_KEY: z.string(),
   CODE_EXEC_API_URL: z
     .string()
@@ -64,12 +68,6 @@ const envSchema = z.object({
   PLATFORM_ADMIN_EMAIL: z.string().email().optional(),
   PLATFORM_ADMIN_PASSWORD: z.string().min(12).optional(),
   PLATFORM_ADMIN_NAME: z.string().min(2).optional(),
-
-  // Platform professor seed (all optional; seed skips with a warning if any is missing)
-  PLATFORM_PROFESSOR_EMAIL: z.string().email().optional(),
-  PLATFORM_PROFESSOR_PASSWORD: z.string().min(12).optional(),
-  PLATFORM_PROFESSOR_NAME: z.string().min(2).optional(),
-  PLATFORM_PROFESSOR_ORG_SLUG: z.string().min(1).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

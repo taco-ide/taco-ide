@@ -41,6 +41,10 @@ export type PostV1WorkSessionsIdSubmit200 = {
          * @type string
         */
         endedAt: string;
+        /**
+         * @type string
+        */
+        submissionId: string | null;
     };
     /**
      * @type object | undefined

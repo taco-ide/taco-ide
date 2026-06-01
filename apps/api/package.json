@@ -10,7 +10,9 @@
     "kubb": "dotenv -e ../../.env -- kubb generate",
     "kubb:clean": "tsx cleanKubb.ts",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "dotenv -e ../../.env -- vitest run",
+    "test:watch": "dotenv -e ../../.env -- vitest"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.1",
@@ -41,12 +43,16 @@
     "@kubb/plugin-zod": "^3.7.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.17.17",
+    "@vitest/coverage-v8": "^4.1.7",
+    "dotenv": "^17.4.2",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "globals": "^16.5.0",
+    "postgres": "^3.4.9",
     "tsup": "^8.4.0",
     "tsx": "^4.19.0",
     "typescript": "^5.9.0",
-    "typescript-eslint": "^8.53.0"
+    "typescript-eslint": "^8.53.0",
+    "vitest": "^4.1.7"
   }
 }

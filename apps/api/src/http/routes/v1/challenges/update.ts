@@ -8,8 +8,14 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
+import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challenge, classroom, member } from "@repo/infra/db/schema";
+import {
+  assertCanListChallengeWorkSessions,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
+import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 
@@ -19,7 +25,12 @@ const ChallengeParamsSchema = z.object({
 
 const UpdateChallengeBodySchema = z
   .object({
-    classroomId: z.string().min(1).nullable(),
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().nullable().optional(),
+    difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
+    tags: z.array(z.string()).nullable().optional(),
+    classroomId: z.string().min(1).nullable().optional(),
+    generateReferenceSolutions: z.boolean().optional(),
   })
   .strict();
 
@@ -27,6 +38,10 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
   data: z.object({
     id: z.string(),
     classroomId: z.string().nullable(),
+    title: z.string().nullable(),
+    description: z.string().nullable(),
+    difficulty: z.string().nullable(),
+    tags: z.array(z.string()).nullable(),
     message: z.string(),
   }),
 });
@@ -40,11 +55,12 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/:id",
     {
+      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges"],
-        summary: "Update challenge (assign to classroom)",
+        summary: "Update challenge",
         description:
-          "Assign a challenge to a classroom or remove assignment. Teacher: only classrooms they lead. Coordinator: any classroom in org.",
+          "Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.",
         params: ChallengeParamsSchema,
         body: UpdateChallengeBodySchema,
         response: {
@@ -66,25 +82,46 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       }
 
       const { id: challengeId } = request.params;
-      const { classroomId } = request.body;
+      const body = request.body;
+      const wantsClassroomChange = Object.prototype.hasOwnProperty.call(
+        body,
+        "classroomId"
+      );
+      const { classroomId } = body;
 
-      const existing = await db
-        .select({
-          id: challenge.id,
-          classroomId: challenge.classroomId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
+      // Load the challenge scoped to its real organization (via classroom).
+      // This is the authorization context: `usr.role` alone reflects the
+      // caller's *active* org, not the challenge's, so relying on it would let
+      // a coordinator/admin in org A edit a challenge in org B (IDOR).
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
         });
       }
 
-      if (classroomId) {
+      // Ownership check for content edits: teachers may only edit challenges
+      // they own or lead; coordinators/admins may edit any challenge in the
+      // challenge's own organization.
+      const isContentEdit =
+        body.title !== undefined ||
+        body.description !== undefined ||
+        body.difficulty !== undefined ||
+        body.tags !== undefined ||
+        body.generateReferenceSolutions !== undefined;
+
+      if (isContentEdit) {
+        const access = await assertCanListChallengeWorkSessions(usr, ctx);
+        if (!access.ok) {
+          return reply.status(access.status).send({
+            success: false as const,
+            message: access.message,
+          });
+        }
+      }
+
+      if (wantsClassroomChange && classroomId) {
         const cls = await db
           .select({
             id: classroom.id,
@@ -104,7 +141,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           });
         }
 
-        if (existing[0].classroomId) {
+        if (ctx.classroomId) {
           return reply.status(400).send({
             success: false as const,
             message:
@@ -141,8 +178,8 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
               "Only coordinator or the assigned teacher can assign challenges to this classroom",
           });
         }
-      } else {
-        const currentClassroomId = existing[0].classroomId;
+      } else if (wantsClassroomChange && classroomId === null) {
+        const currentClassroomId = ctx.classroomId;
         if (!currentClassroomId) {
           return reply.status(400).send({
             success: false as const,
@@ -187,14 +224,27 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         }
       }
 
+      const setValues: Partial<typeof challenge.$inferInsert> = {
+        updatedAt: new Date(),
+      };
+      if (wantsClassroomChange) setValues.classroomId = classroomId;
+      if (body.title !== undefined) setValues.title = body.title;
+      if (body.description !== undefined) setValues.description = body.description;
+      if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
+      if (body.tags !== undefined) setValues.tags = body.tags;
+
       const [updated] = await db
         .update(challenge)
-        .set({
-          classroomId,
-          updatedAt: new Date(),
-        })
+        .set(setValues)
         .where(eq(challenge.id, challengeId))
-        .returning({ id: challenge.id, classroomId: challenge.classroomId });
+        .returning({
+          id: challenge.id,
+          classroomId: challenge.classroomId,
+          title: challenge.title,
+          description: challenge.description,
+          difficulty: challenge.difficulty,
+          tags: challenge.tags,
+        });
 
       if (!updated) {
         return reply.status(500).send({
@@ -203,14 +253,25 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
+      // Fire and forget reference solution generation if explicitly requested
+      if (body.generateReferenceSolutions === true) {
+        void generateReferenceSolutions(challengeId);
+      }
+
       return reply.status(200).send({
         success: true as const,
         data: {
           id: updated.id,
           classroomId: updated.classroomId ?? null,
-          message: classroomId
-            ? "Challenge assigned to classroom"
-            : "Challenge unassigned from classroom",
+          title: updated.title ?? null,
+          description: updated.description ?? null,
+          difficulty: updated.difficulty ?? null,
+          tags: (updated.tags as string[] | null) ?? null,
+          message: wantsClassroomChange
+            ? classroomId
+              ? "Challenge assigned to classroom"
+              : "Challenge unassigned from classroom"
+            : "Challenge updated",
         },
       });
     }

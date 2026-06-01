@@ -244,7 +244,7 @@ export const suggestTestCases = tool(
     try {
       // Nested LLM call: sub-chain that returns structured test cases.
       // Uses a fresh ChatOpenAI instance so it does not pollute the agent's thread.
-      const llm = createLlm({ temperature: 0.2 });
+      const llm = createLlm();
       const prompt = `You are generating Python test cases for an educational challenge.
 
 Problem description:
