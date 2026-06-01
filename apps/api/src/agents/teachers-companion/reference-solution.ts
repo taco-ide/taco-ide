@@ -115,7 +115,7 @@ async function runOneKind(
     const llm = createLlm({
       model: env.LLM_DETERMINISTIC_MODEL_NAME,
       temperature: 0,
-      max_tokens: 1024,
+      max_tokens: 4096,
     });
     const prompt = prompts[kind](chal.title, chal.description ?? "");
     const result = await llm.invoke(prompt);
