@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRemark } from "react-remark";
-import { Text } from "lucide-react";
+import { Text, Lightbulb } from "lucide-react";
 import type { ChallengeFormData } from "@/components/challenge/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function StepDescription() {
     const { register, watch } = useFormContext<ChallengeFormData>();
@@ -37,7 +38,23 @@ export function StepDescription() {
     const { onChange: rhfOnChange, ...restRegister } = register("description");
 
     return (
-        <div className="grid grid-cols-2 gap-6 items-stretch h-[360px]">
+        <div className="space-y-6">
+            <Alert className="border-amber-500/35 bg-amber-500/10 text-amber-100 [&>svg]:text-amber-400">
+                <Lightbulb className="h-4 w-4" />
+                <AlertTitle className="text-amber-100">Enunciado que o aluno lê na aba Problema</AlertTitle>
+                <AlertDescription className="text-amber-100/90 space-y-2 text-sm">
+                    <p>
+                        Tudo que você escrever aqui (Markdown) é o texto principal do exercício. Boas práticas: contexto
+                        em 1–2 frases, formato de entrada e saída, exemplos, e restrições quando houver.
+                    </p>
+                    <p className="text-xs text-amber-200/85 border-l-2 border-amber-400/40 pl-3 my-2">
+                        Exemplo (ilustrativo): &quot;Leia dois inteiros e imprima a soma.&quot; + bloco com exemplo de
+                        entrada/saída.
+                    </p>
+                </AlertDescription>
+            </Alert>
+
+            <div className="grid grid-cols-2 gap-6 items-stretch h-[360px]">
             <Card className="p-6 bg-slate-800 border-slate-700 flex flex-col h-full">
                 <div className="flex flex-col flex-1 min-h-0 space-y-2">
                     <Label className="text-slate-200">Problem Description</Label>
@@ -73,6 +90,7 @@ export function StepDescription() {
                     </ScrollArea>
                 </CardContent>
             </Card>
+            </div>
         </div>
     );
 }

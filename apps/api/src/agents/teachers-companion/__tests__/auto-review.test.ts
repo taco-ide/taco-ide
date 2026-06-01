@@ -62,7 +62,6 @@ describe("runAutoReview", () => {
     ch = await createChallenge({
       createdByUserId: teacher.id,
       classroomId: classroom.id,
-      possibleSolutions: "def solve(): return 42",
     });
     await linkChallengeToTa(ch.id, ta.id);
     session = await createWorkSession({

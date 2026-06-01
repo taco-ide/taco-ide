@@ -94,20 +94,6 @@ describe("PATCH /v1/challenges/:id", () => {
     expect(body.data.title).toBe("Coord edit");
   });
 
-  it("possibleSolutions round-trips as a string", async () => {
-    const text = "def solve():\n    return 42\n";
-    const res = await app.inject({
-      method: "PATCH",
-      url: `/v1/challenges/${challengeA.id}`,
-      headers: { cookie: teacherACookie },
-      payload: { possibleSolutions: text },
-    });
-
-    expect(res.statusCode).toBe(200);
-    const body = res.json() as { data: { possibleSolutions: string | null } };
-    expect(body.data.possibleSolutions).toBe(text);
-  });
-
   it("returns 404 for unknown id", async () => {
     const res = await app.inject({
       method: "PATCH",

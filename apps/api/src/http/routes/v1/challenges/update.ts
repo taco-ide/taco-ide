@@ -11,6 +11,10 @@ import {
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challenge, classroom, member } from "@repo/infra/db/schema";
+import {
+  assertCanListChallengeWorkSessions,
+  loadChallengeWorkAccessContext,
+} from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
@@ -25,7 +29,6 @@ const UpdateChallengeBodySchema = z
     description: z.string().nullable().optional(),
     difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
     tags: z.array(z.string()).nullable().optional(),
-    possibleSolutions: z.string().nullable().optional(),
     classroomId: z.string().min(1).nullable().optional(),
     generateReferenceSolutions: z.boolean().optional(),
   })
@@ -39,7 +42,6 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
     description: z.string().nullable(),
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
-    possibleSolutions: z.string().nullable(),
     message: z.string(),
   }),
 });
@@ -58,7 +60,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         tags: ["challenges"],
         summary: "Update challenge",
         description:
-          "Update challenge content (title, description, difficulty, tags, possibleSolutions) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.",
+          "Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.",
         params: ChallengeParamsSchema,
         body: UpdateChallengeBodySchema,
         response: {
@@ -87,42 +89,36 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       );
       const { classroomId } = body;
 
-      const existing = await db
-        .select({
-          id: challenge.id,
-          classroomId: challenge.classroomId,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
+      // Load the challenge scoped to its real organization (via classroom).
+      // This is the authorization context: `usr.role` alone reflects the
+      // caller's *active* org, not the challenge's, so relying on it would let
+      // a coordinator/admin in org A edit a challenge in org B (IDOR).
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx) {
         return reply.status(404).send({
           success: false as const,
           message: "Challenge not found",
         });
       }
 
-      // Ownership check for content edits: teachers may only edit their own
-      // challenges; coordinators/admins may edit any in their org.
+      // Ownership check for content edits: teachers may only edit challenges
+      // they own or lead; coordinators/admins may edit any challenge in the
+      // challenge's own organization.
       const isContentEdit =
         body.title !== undefined ||
         body.description !== undefined ||
         body.difficulty !== undefined ||
         body.tags !== undefined ||
-        body.possibleSolutions !== undefined ||
         body.generateReferenceSolutions !== undefined;
 
-      if (
-        isContentEdit &&
-        usr.role === "teacher" &&
-        existing[0].createdByUserId !== usr.id
-      ) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only edit your own challenges",
-        });
+      if (isContentEdit) {
+        const access = await assertCanListChallengeWorkSessions(usr, ctx);
+        if (!access.ok) {
+          return reply.status(access.status).send({
+            success: false as const,
+            message: access.message,
+          });
+        }
       }
 
       if (wantsClassroomChange && classroomId) {
@@ -145,7 +141,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           });
         }
 
-        if (existing[0].classroomId) {
+        if (ctx.classroomId) {
           return reply.status(400).send({
             success: false as const,
             message:
@@ -183,7 +179,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           });
         }
       } else if (wantsClassroomChange && classroomId === null) {
-        const currentClassroomId = existing[0].classroomId;
+        const currentClassroomId = ctx.classroomId;
         if (!currentClassroomId) {
           return reply.status(400).send({
             success: false as const,
@@ -236,9 +232,6 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       if (body.description !== undefined) setValues.description = body.description;
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
-      if (body.possibleSolutions !== undefined) {
-        setValues.possibleSolutions = body.possibleSolutions;
-      }
 
       const [updated] = await db
         .update(challenge)
@@ -251,7 +244,6 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: challenge.description,
           difficulty: challenge.difficulty,
           tags: challenge.tags,
-          possibleSolutions: challenge.possibleSolutions,
         });
 
       if (!updated) {
@@ -266,13 +258,6 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         void generateReferenceSolutions(challengeId);
       }
 
-      const possibleSolutionsOut =
-        updated.possibleSolutions === null || updated.possibleSolutions === undefined
-          ? null
-          : typeof updated.possibleSolutions === "string"
-            ? updated.possibleSolutions
-            : JSON.stringify(updated.possibleSolutions);
-
       return reply.status(200).send({
         success: true as const,
         data: {
@@ -282,7 +267,6 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: updated.description ?? null,
           difficulty: updated.difficulty ?? null,
           tags: (updated.tags as string[] | null) ?? null,
-          possibleSolutions: possibleSolutionsOut,
           message: wantsClassroomChange
             ? classroomId
               ? "Challenge assigned to classroom"

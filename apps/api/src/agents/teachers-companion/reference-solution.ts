@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { db } from "@repo/infra/db";
 import {
   challenge,
@@ -71,8 +71,14 @@ async function runOneKind(
   chal: { id: string; title: string; description: string | null },
   kind: Kind,
 ): Promise<void> {
-  // 1. Upsert running row
-  await db
+  // 1. Atomically claim this (challenge, kind) for a run. The conflict update
+  //    only fires when the row is NOT already running, so two concurrent
+  //    generations cannot both proceed (issue #96). An empty `returning()`
+  //    means another run already holds the slot — skip to avoid a duplicate
+  //    (and billable) LLM call. Stale "running" rows left by a crashed process
+  //    are cleared on startup by recoverStaleRunningJobs (issue #95), so a
+  //    non-empty claim always reflects a live run.
+  const claimed = await db
     .insert(challengeReferenceSolution)
     .values({
       id: randomUUID(),
@@ -93,7 +99,16 @@ async function runOneKind(
         createdBy: "ai",
         updatedAt: new Date(),
       },
-    });
+      setWhere: ne(challengeReferenceSolution.status, "running"),
+    })
+    .returning({ id: challengeReferenceSolution.id });
+
+  if (claimed.length === 0) {
+    console.warn(
+      `[reference-solution] ${chal.id}/${kind} already running, skipping duplicate run`,
+    );
+    return;
+  }
 
   try {
     // TEMP(no-4o-mini): The only Azure deployment in this resource is

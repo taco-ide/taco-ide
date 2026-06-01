@@ -129,8 +129,6 @@ export const challenge = pgTable("challenge", {
   difficulty: varchar("difficulty", { length: 20 }),
   tags: jsonb("tags").$type<string[]>(),
   supportMaterials: jsonb("support_materials"),
-  /** @deprecated — see `challenge_reference_solution`. Remove in a future PR. */
-  possibleSolutions: jsonb("possible_solutions"),
   createdByUserId: text("created_by_user_id").references(() => user.id, {
     onDelete: "set null",
   }),

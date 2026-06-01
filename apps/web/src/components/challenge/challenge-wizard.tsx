@@ -50,11 +50,17 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
     const methods = useForm<ChallengeFormData>({
         resolver: zodResolver(challengeFormSchema),
-        defaultValues: initialData ?? {
+        // Base defaults first, then initialData (edit mode) on top. This keeps
+        // `generateReferenceSolutions` defined (true) in BOTH modes — edit
+        // initialData omits it — so the registered checkbox stays in sync with
+        // RHF state (no defaultChecked/value desync) and isDirty/getValues are
+        // accurate for the two-phase save on step 2.
+        defaultValues: {
             title: "",
             description: "",
             tags: [],
             generateReferenceSolutions: true,
+            ...initialData,
         },
     });
 

@@ -150,8 +150,12 @@ function NoClassroomWarning() {
       <CardContent>
         <Alert className="border-yellow-500/30 bg-yellow-500/10">
           <AlertTriangle className="w-4 h-4 text-yellow-400" />
-          <AlertDescription className="text-yellow-300">
-            Vincule este exercicio a uma turma para usar Knowledge Base.
+          <AlertDescription className="text-yellow-300 space-y-2">
+            <p>Vincule este exercício a uma turma (passo Informações básicas) para usar Knowledge Base.</p>
+            <p className="text-sm text-yellow-200/90">
+              Toda base fica associada a uma turma: o material reutiliza o mesmo contexto da disciplina e pode ser
+              vinculado a vários desafios dessa turma.
+            </p>
           </AlertDescription>
         </Alert>
       </CardContent>
@@ -194,7 +198,14 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <Alert className="border-slate-600/80 bg-slate-900/60 text-slate-300">
+          <BookOpen className="w-4 h-4 text-yellow-500/90" />
+          <AlertDescription className="text-slate-300 text-sm">
+            Documentos e notas desta base entram no contexto do assistente quando o aluno usa o chat neste desafio. O
+            aluno não precisa &quot;abrir&quot; a base; ela apoia respostas mais alinhadas ao seu material.
+          </AlertDescription>
+        </Alert>
         <Tabs defaultValue="documents" className="w-full">
           <TabsList className="bg-slate-900 border border-slate-700">
             <TabsTrigger
@@ -223,6 +234,9 @@ function LinkedKbView({ challengeId, kb, unlinkMutation }: LinkedKbViewProps) {
 }
 
 // ---------- Empty KB state (create or link) ----------
+
+const KB_DOC_HINT =
+  "Formatos comuns: PDF, DOCX, PPTX, TXT, Markdown, HTML e outros listados na área de envio (até 10 MB por arquivo).";
 
 interface EmptyKbStateProps {
   challengeId: string;
@@ -267,12 +281,27 @@ function EmptyKbState({ challengeId, classroomId }: EmptyKbStateProps) {
 
 function IdleActions({ onSelect }: { onSelect: (mode: ActionMode) => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-8 text-slate-500">
-      <BookOpen className="w-10 h-10 mb-2" />
-      <p className="text-sm mb-6 text-slate-400">
-        Nenhuma knowledge base vinculada a este desafio.
-      </p>
-      <div className="flex gap-3">
+    <div className="flex flex-col py-4 text-slate-400 space-y-5">
+      <div className="rounded-lg border border-slate-600/60 bg-slate-900/40 p-4 space-y-3">
+        <p className="text-sm text-slate-300 leading-relaxed">
+          A <strong className="text-slate-200">Knowledge Base</strong> guarda materiais de apoio (apostilas, slides,
+          PDFs, notas) ligados <strong className="text-slate-200">a esta turma</strong>. Você pode vincular uma base a
+          este desafio para o <strong className="text-slate-200">assistente</strong> usar esse conteúdo ao responder o
+          aluno no chat — o aluno não navega na base como um drive; ela enriquece o contexto da IA.
+        </p>
+        <ul className="text-sm list-disc pl-5 space-y-2 text-slate-300">
+          <li>
+            <strong className="text-slate-200">Criar nova</strong> quando for material novo deste módulo ou conjunto de
+            exercícios.
+          </li>
+          <li>
+            <strong className="text-slate-200">Vincular existente</strong> quando a turma já tem uma base (ex.: mesma
+            apostila em vários desafios).
+          </li>
+        </ul>
+        <p className="text-xs text-slate-500">{KB_DOC_HINT}</p>
+      </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
         <Button
           type="button"
           size="sm"
@@ -454,10 +483,13 @@ function LinkExistingKb({ challengeId, classroomId, onCancel }: LinkExistingKbPr
       )}
 
       {availableKbs.length === 0 ? (
-        <div className="text-center py-6 text-slate-400">
-          <FileText className="w-8 h-8 mx-auto mb-2 text-slate-500" />
-          <p className="text-sm">
-            Nenhuma knowledge base encontrada nesta turma.
+        <div className="text-center py-6 text-slate-400 space-y-3 px-1">
+          <FileText className="w-8 h-8 mx-auto text-slate-500" />
+          <p className="text-sm">Nenhuma knowledge base encontrada nesta turma.</p>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+            Volte e use <strong className="text-slate-400">Criar Nova Knowledge Base</strong> para começar, ou envie
+            documentos depois na aba <strong className="text-slate-400">Documentos</strong> quando a base estiver
+            vinculada. {KB_DOC_HINT}
           </p>
         </div>
       ) : (

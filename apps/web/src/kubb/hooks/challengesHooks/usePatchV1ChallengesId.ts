@@ -14,7 +14,7 @@ export const patchV1ChallengesIdMutationKey = () => [{ url: '/v1/challenges/:id'
 export type PatchV1ChallengesIdMutationKey = ReturnType<typeof patchV1ChallengesIdMutationKey>
 
 /**
- * @description Update challenge content (title, description, difficulty, tags, possibleSolutions) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
+ * @description Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
  * @summary Update challenge
  * {@link /v1/challenges/:id}
  */
@@ -28,7 +28,7 @@ export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"
 }
 
 /**
- * @description Update challenge content (title, description, difficulty, tags, possibleSolutions) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
+ * @description Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.
  * @summary Update challenge
  * {@link /v1/challenges/:id}
  */

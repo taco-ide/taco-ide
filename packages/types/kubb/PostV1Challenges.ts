@@ -194,7 +194,6 @@ export type PostV1ChallengesMutationRequest = {
     */
     tags?: string[];
     supportMaterials?: any;
-    possibleSolutions?: any;
     /**
      * @default true
      * @type boolean | undefined

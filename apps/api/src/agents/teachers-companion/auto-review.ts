@@ -1,4 +1,4 @@
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc, and, ne } from "drizzle-orm";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { db } from "@repo/infra/db";
 import {
@@ -59,11 +59,28 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       return;
     }
 
-    // Mark as running
-    await db
+    // Atomically claim this submission for review. The update only matches
+    // when it isn't already running, so two concurrent triggers can't both
+    // invoke the LLM (issue #96). An empty `returning()` means another run
+    // owns it — skip. Stale "running" rows from a crashed process are cleared
+    // on startup by recoverStaleRunningJobs (issue #95).
+    const claimed = await db
       .update(submission)
       .set({ autoReviewStatus: "running" })
-      .where(eq(submission.id, submissionId));
+      .where(
+        and(
+          eq(submission.id, submissionId),
+          ne(submission.autoReviewStatus, "running"),
+        ),
+      )
+      .returning({ id: submission.id });
+
+    if (claimed.length === 0) {
+      console.warn(
+        `[auto-review] submission ${submissionId} already running, skipping duplicate run`
+      );
+      return;
+    }
 
     const [ch] = await db
       .select({

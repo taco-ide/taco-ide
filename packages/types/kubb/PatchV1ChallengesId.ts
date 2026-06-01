@@ -61,10 +61,6 @@ export type PatchV1ChallengesId200 = {
         /**
          * @type string
         */
-        possibleSolutions: string | null;
-        /**
-         * @type string
-        */
         message: string;
     };
     /**
@@ -221,10 +217,6 @@ export type PatchV1ChallengesIdMutationRequest = {
      * @type array
     */
     tags?: string[] | null;
-    /**
-     * @type string
-    */
-    possibleSolutions?: string | null;
     /**
      * @minLength 1
      * @type string
