@@ -23,7 +23,8 @@ taco-ide/
 ## Core Technology Stack
 
 - **Backend**: Fastify 5, Zod validation, Swagger/OpenAPI, Better Auth
-- **Frontend**: Next.js 14 (App Router), Tailwind CSS, Radix UI, Zustand, React Query
+- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS, Radix UI, Zustand, React Query
+- **i18n**: next-intl — EN (default) + PT-BR, cookie-based (`src/i18n/`, `src/messages/`)
 - **Database**: PostgreSQL with Drizzle ORM
 - **Authentication**: Better Auth (email/password, password reset)
 - **Code Generation**: Kubb (generates types, React Query hooks, Zod schemas from OpenAPI)
