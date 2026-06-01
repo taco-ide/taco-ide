@@ -1008,26 +1008,18 @@
       "titleAccent": "your classroom"
     },
     "footer": {
-      "company": {
-        "about": "About",
-        "contact": "Contact",
-        "contributors": "Contributors",
-        "license": "License"
-      },
-      "companyTitle": "Company",
       "copyright": "© {year} TACO. All rights reserved.",
       "product": {
         "ai": "AI Feedback",
         "ide": "The IDE",
-        "languages": "Languages",
+        "openSource": "Open Source",
         "teachers": "For Teachers"
       },
       "productTitle": "Product",
       "resources": {
         "changelog": "Changelog",
         "docs": "Documentation",
-        "github": "GitHub",
-        "selfHosting": "Self-hosting"
+        "github": "GitHub"
       },
       "resourcesTitle": "Resources",
       "tagline": "The open-source, AI-assisted Python IDE for teachers and students."

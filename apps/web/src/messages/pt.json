@@ -1008,26 +1008,18 @@
       "titleAccent": "a sua sala de aula"
     },
     "footer": {
-      "company": {
-        "about": "Sobre",
-        "contact": "Contato",
-        "contributors": "Colaboradores",
-        "license": "Licença"
-      },
-      "companyTitle": "Empresa",
       "copyright": "© {year} TACO. Todos os direitos reservados.",
       "product": {
         "ai": "Feedback com IA",
         "ide": "A IDE",
-        "languages": "Linguagens",
+        "openSource": "Código Aberto",
         "teachers": "Para Professores"
       },
       "productTitle": "Produto",
       "resources": {
         "changelog": "Changelog",
         "docs": "Documentação",
-        "github": "GitHub",
-        "selfHosting": "Auto-hospedagem"
+        "github": "GitHub"
       },
       "resourcesTitle": "Recursos",
       "tagline": "A IDE de Python de código aberto e assistida por IA, para professores e alunos."
