@@ -5,6 +5,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useState, useRef, useEffect } from "react";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
 import { PlatformAdminGuard } from "@/components/guards/PlatformAdminGuard";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const Navbar = () => {
   const t = useTranslations("nav");
@@ -78,6 +79,7 @@ const Navbar = () => {
               </Link>
             </PlatformAdminGuard>
           </nav>
+          <LanguageSwitcher />
           {user ? (
             <div className="flex items-center gap-3 relative" ref={dropdownRef}>
               <button
