@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { DeleteV1OrganizationsIdEmailDomainsDomainidMutationResponse, DeleteV1OrganizationsIdEmailDomainsDomainidPathParams, DeleteV1OrganizationsIdEmailDomainsDomainid401, DeleteV1OrganizationsIdEmailDomainsDomainid403, DeleteV1OrganizationsIdEmailDomainsDomainid404 } from "../../../../../../packages/types/kubb/DeleteV1OrganizationsIdEmailDomainsDomainid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { DeleteV1OrganizationsIdEmailDomainsDomainidMutationResponse, DeleteV1OrganizationsIdEmailDomainsDomainidPathParams, DeleteV1OrganizationsIdEmailDomainsDomainid401, DeleteV1OrganizationsIdEmailDomainsDomainid403, DeleteV1OrganizationsIdEmailDomainsDomainid404 } from "../../../../../../packages/types/kubb/DeleteV1OrganizationsIdEmailDomainsDomainid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1OrganizationsIdEmailDomainsDomainidMutationKey = () => [{ url: '/v1/organizations/:id/email-domains/:domainId' }] as const

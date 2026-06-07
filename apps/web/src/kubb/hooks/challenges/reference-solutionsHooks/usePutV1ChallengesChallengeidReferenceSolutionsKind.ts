@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1ChallengesChallengeidReferenceSolutionsKindMutationRequest, PutV1ChallengesChallengeidReferenceSolutionsKindMutationResponse, PutV1ChallengesChallengeidReferenceSolutionsKindPathParams, PutV1ChallengesChallengeidReferenceSolutionsKind400, PutV1ChallengesChallengeidReferenceSolutionsKind401, PutV1ChallengesChallengeidReferenceSolutionsKind403, PutV1ChallengesChallengeidReferenceSolutionsKind404 } from "../../../../../../../packages/types/kubb/PutV1ChallengesChallengeidReferenceSolutionsKind.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PutV1ChallengesChallengeidReferenceSolutionsKindMutationRequest, PutV1ChallengesChallengeidReferenceSolutionsKindMutationResponse, PutV1ChallengesChallengeidReferenceSolutionsKindPathParams, PutV1ChallengesChallengeidReferenceSolutionsKind400, PutV1ChallengesChallengeidReferenceSolutionsKind401, PutV1ChallengesChallengeidReferenceSolutionsKind403, PutV1ChallengesChallengeidReferenceSolutionsKind404 } from "../../../../../../../packages/types/kubb/PutV1ChallengesChallengeidReferenceSolutionsKind.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1ChallengesChallengeidReferenceSolutionsKindMutationKey = () => [{ url: '/v1/challenges/:challengeId/reference-solutions/:kind' }] as const

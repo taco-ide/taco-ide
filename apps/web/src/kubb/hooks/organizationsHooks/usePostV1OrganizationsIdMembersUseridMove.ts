@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1OrganizationsIdMembersUseridMoveMutationRequest, PostV1OrganizationsIdMembersUseridMoveMutationResponse, PostV1OrganizationsIdMembersUseridMovePathParams, PostV1OrganizationsIdMembersUseridMove400, PostV1OrganizationsIdMembersUseridMove401, PostV1OrganizationsIdMembersUseridMove403, PostV1OrganizationsIdMembersUseridMove404, PostV1OrganizationsIdMembersUseridMove409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdMembersUseridMove.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1OrganizationsIdMembersUseridMoveMutationRequest, PostV1OrganizationsIdMembersUseridMoveMutationResponse, PostV1OrganizationsIdMembersUseridMovePathParams, PostV1OrganizationsIdMembersUseridMove400, PostV1OrganizationsIdMembersUseridMove401, PostV1OrganizationsIdMembersUseridMove403, PostV1OrganizationsIdMembersUseridMove404, PostV1OrganizationsIdMembersUseridMove409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdMembersUseridMove.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1OrganizationsIdMembersUseridMoveMutationKey = () => [{ url: '/v1/organizations/:id/members/:userId/move' }] as const

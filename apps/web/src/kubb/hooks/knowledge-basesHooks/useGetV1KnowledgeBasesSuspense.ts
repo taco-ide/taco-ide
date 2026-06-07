@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1KnowledgeBasesQueryResponse, GetV1KnowledgeBasesQueryParams, GetV1KnowledgeBases400, GetV1KnowledgeBases401 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBases.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1KnowledgeBasesQueryResponse, GetV1KnowledgeBasesQueryParams, GetV1KnowledgeBases400, GetV1KnowledgeBases401 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBases.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1KnowledgeBasesSuspenseQueryKey = (params: GetV1KnowledgeBasesQueryParams) => [{ url: '/v1/knowledge-bases/' }, ...(params ? [params] : [])] as const

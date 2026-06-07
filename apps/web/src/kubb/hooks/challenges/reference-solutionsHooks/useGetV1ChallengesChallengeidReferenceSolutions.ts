@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesChallengeidReferenceSolutionsQueryResponse, GetV1ChallengesChallengeidReferenceSolutionsPathParams, GetV1ChallengesChallengeidReferenceSolutions401, GetV1ChallengesChallengeidReferenceSolutions403, GetV1ChallengesChallengeidReferenceSolutions404 } from "../../../../../../../packages/types/kubb/GetV1ChallengesChallengeidReferenceSolutions.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChallengesChallengeidReferenceSolutionsQueryResponse, GetV1ChallengesChallengeidReferenceSolutionsPathParams, GetV1ChallengesChallengeidReferenceSolutions401, GetV1ChallengesChallengeidReferenceSolutions403, GetV1ChallengesChallengeidReferenceSolutions404 } from "../../../../../../../packages/types/kubb/GetV1ChallengesChallengeidReferenceSolutions.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesChallengeidReferenceSolutionsQueryKey = (challengeId: GetV1ChallengesChallengeidReferenceSolutionsPathParams["challengeId"]) => [{ url: '/v1/challenges/:challengeId/reference-solutions/', params: {challengeId:challengeId} }] as const

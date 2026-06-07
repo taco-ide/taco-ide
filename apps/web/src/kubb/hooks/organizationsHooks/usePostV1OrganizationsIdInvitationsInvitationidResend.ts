@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1OrganizationsIdInvitationsInvitationidResendMutationResponse, PostV1OrganizationsIdInvitationsInvitationidResendPathParams, PostV1OrganizationsIdInvitationsInvitationidResend401, PostV1OrganizationsIdInvitationsInvitationidResend403, PostV1OrganizationsIdInvitationsInvitationidResend404, PostV1OrganizationsIdInvitationsInvitationidResend409, PostV1OrganizationsIdInvitationsInvitationidResend500 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdInvitationsInvitationidResend.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1OrganizationsIdInvitationsInvitationidResendMutationResponse, PostV1OrganizationsIdInvitationsInvitationidResendPathParams, PostV1OrganizationsIdInvitationsInvitationidResend401, PostV1OrganizationsIdInvitationsInvitationidResend403, PostV1OrganizationsIdInvitationsInvitationidResend404, PostV1OrganizationsIdInvitationsInvitationidResend409, PostV1OrganizationsIdInvitationsInvitationidResend500 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdInvitationsInvitationidResend.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1OrganizationsIdInvitationsInvitationidResendMutationKey = () => [{ url: '/v1/organizations/:id/invitations/:invitationId/resend' }] as const

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { DeleteV1WorkSessionsIdResetMutationResponse, DeleteV1WorkSessionsIdResetPathParams, DeleteV1WorkSessionsIdReset401, DeleteV1WorkSessionsIdReset403, DeleteV1WorkSessionsIdReset404 } from "../../../../../../packages/types/kubb/DeleteV1WorkSessionsIdReset.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { DeleteV1WorkSessionsIdResetMutationResponse, DeleteV1WorkSessionsIdResetPathParams, DeleteV1WorkSessionsIdReset401, DeleteV1WorkSessionsIdReset403, DeleteV1WorkSessionsIdReset404 } from "../../../../../../packages/types/kubb/DeleteV1WorkSessionsIdReset.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1WorkSessionsIdResetMutationKey = () => [{ url: '/v1/work-sessions/:id/reset' }] as const

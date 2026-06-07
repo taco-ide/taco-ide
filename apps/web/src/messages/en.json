@@ -1311,6 +1311,7 @@
       "alreadyRunning": "Review already running — please wait.",
       "failed": "Review failed.",
       "generatedAt": "Generated on {date}",
+      "lineLabel": "line {line}",
       "noResult": "The agent did not return a review — check the server logs.",
       "pendingHint": "Pending — use the Run button to generate the review now.",
       "regenerated": "Review regenerated",
@@ -1320,6 +1321,17 @@
       "run": "Run",
       "runTitle": "Run automatic review",
       "running": "Running…",
+      "sections": {
+        "overall": "Overall assessment",
+        "problems": "Problems",
+        "strengths": "Strengths",
+        "suggestions": "Suggestions"
+      },
+      "severity": {
+        "alta": "high",
+        "baixa": "low",
+        "media": "medium"
+      },
       "title": "Automatic review",
       "unknownError": "Unknown error."
     },

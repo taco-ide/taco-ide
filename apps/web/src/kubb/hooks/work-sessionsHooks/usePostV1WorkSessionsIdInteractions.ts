@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1WorkSessionsIdInteractionsMutationRequest, PostV1WorkSessionsIdInteractionsMutationResponse, PostV1WorkSessionsIdInteractionsPathParams, PostV1WorkSessionsIdInteractions400, PostV1WorkSessionsIdInteractions401, PostV1WorkSessionsIdInteractions403, PostV1WorkSessionsIdInteractions404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdInteractions.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1WorkSessionsIdInteractionsMutationRequest, PostV1WorkSessionsIdInteractionsMutationResponse, PostV1WorkSessionsIdInteractionsPathParams, PostV1WorkSessionsIdInteractions400, PostV1WorkSessionsIdInteractions401, PostV1WorkSessionsIdInteractions403, PostV1WorkSessionsIdInteractions404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdInteractions.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1WorkSessionsIdInteractionsMutationKey = () => [{ url: '/v1/work-sessions/:id/interactions' }] as const

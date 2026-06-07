@@ -1311,6 +1311,7 @@
       "alreadyRunning": "Avaliação já em execução — aguarde.",
       "failed": "Falha na avaliação.",
       "generatedAt": "Gerada em {date}",
+      "lineLabel": "linha {line}",
       "noResult": "O agente não retornou avaliação — verifique os logs do servidor.",
       "pendingHint": "Pendente — use o botão Executar para gerar a avaliação agora.",
       "regenerated": "Avaliação regenerada",
@@ -1320,6 +1321,17 @@
       "run": "Executar",
       "runTitle": "Executar avaliação automática",
       "running": "Em execução…",
+      "sections": {
+        "overall": "Avaliação geral",
+        "problems": "Problemas",
+        "strengths": "Pontos fortes",
+        "suggestions": "Sugestões"
+      },
+      "severity": {
+        "alta": "alta",
+        "baixa": "baixa",
+        "media": "média"
+      },
       "title": "Avaliação automática",
       "unknownError": "Erro desconhecido."
     },

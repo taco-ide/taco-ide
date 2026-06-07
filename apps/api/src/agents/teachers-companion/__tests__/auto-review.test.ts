@@ -1,6 +1,6 @@
 /**
  * Tests for runAutoReview. Mocks the llm-factory so we don't hit the real
- * LLM and so we can simulate success / error / timeout paths.
+ * LLM and so we can simulate success / schema-failure / error paths.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
@@ -8,15 +8,18 @@ import { db } from "@repo/infra/db";
 import { submission } from "@repo/infra/db/schema";
 
 // Provide a controllable mock of createLlm before importing the module
-// under test. The mock returns an LLM-shaped object whose `invoke` is a
-// vi.fn we can rewire per-test via `invokeMock`.
+// under test. createLlm returns an object whose withStructuredOutput()
+// returns the structured-LLM whose `invoke` is rewired per-test via
+// invokeMock.
 const invokeMock = vi.fn();
 
 vi.mock("../../llm-factory", async () => {
   const actual = (await vi.importActual("../../llm-factory")) as Record<string, unknown>;
   return {
     ...actual,
-    createLlm: () => ({ invoke: invokeMock }),
+    createLlm: () => ({
+      withStructuredOutput: () => ({ invoke: invokeMock }),
+    }),
   };
 });
 
@@ -33,6 +36,20 @@ import {
   linkChallengeToTa,
 } from "../../../test/helpers/factories";
 
+const VALID_REVIEW = {
+  pontosFortes: ["Uso correto de loops"],
+  problemas: [
+    {
+      tipo: "correção",
+      gravidade: "media" as const,
+      linha: 3,
+      descricao: "Não trata entrada vazia",
+    },
+  ],
+  sugestoes: ["Testar com lista vazia"],
+  avaliacaoGeral: "Boa primeira tentativa, mas falta cobertura de borda.",
+};
+
 describe("runAutoReview", () => {
   let org: Awaited<ReturnType<typeof createOrg>>;
   let teacher: Awaited<ReturnType<typeof createUser>>;
@@ -43,8 +60,6 @@ describe("runAutoReview", () => {
   let sub: Awaited<ReturnType<typeof createSubmission>>;
 
   beforeAll(() => {
-    // Silence the console.error path used by the auto-review error branch
-    // so test output stays focused.
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "warn").mockImplementation(() => {});
   });
@@ -86,8 +101,8 @@ describe("runAutoReview", () => {
     });
   });
 
-  it("writes autoReview + autoReviewAt on the happy path", async () => {
-    invokeMock.mockResolvedValueOnce({ content: "Great work, careful with edge cases." });
+  it("writes both structured JSON and markdown fallback on the happy path", async () => {
+    invokeMock.mockResolvedValueOnce(VALID_REVIEW);
 
     await runAutoReview(sub.id);
 
@@ -95,16 +110,21 @@ describe("runAutoReview", () => {
       .select()
       .from(submission)
       .where(eq(submission.id, sub.id));
-    expect(row!.autoReview).toBe("Great work, careful with edge cases.");
+    expect(row!.autoReviewStatus).toBe("complete");
+    expect(row!.autoReviewJson).toMatchObject({
+      avaliacaoGeral: VALID_REVIEW.avaliacaoGeral,
+      pontosFortes: VALID_REVIEW.pontosFortes,
+      sugestoes: VALID_REVIEW.sugestoes,
+    });
+    expect(row!.autoReview).toContain("Avaliação geral");
+    expect(row!.autoReview).toContain("Pontos fortes");
     expect(row!.autoReviewAt).toBeInstanceOf(Date);
   });
 
-  it("handles array-content responses (multipart text)", async () => {
+  it("marks as failed when the LLM returns a payload that fails validation", async () => {
     invokeMock.mockResolvedValueOnce({
-      content: [
-        { type: "text", text: "Parte 1. " },
-        { type: "text", text: "Parte 2." },
-      ],
+      pontosFortes: ["ok"],
+      // missing required fields
     });
 
     await runAutoReview(sub.id);
@@ -113,10 +133,13 @@ describe("runAutoReview", () => {
       .select()
       .from(submission)
       .where(eq(submission.id, sub.id));
-    expect(row!.autoReview).toBe("Parte 1. Parte 2.");
+    expect(row!.autoReviewStatus).toBe("failed");
+    expect(row!.autoReviewError).toMatch(/formato/);
+    expect(row!.autoReview).toBeNull();
+    expect(row!.autoReviewJson).toBeNull();
   });
 
-  it("swallows LLM errors and leaves autoReview null", async () => {
+  it("swallows LLM errors and marks the submission as failed", async () => {
     invokeMock.mockRejectedValueOnce(new Error("LLM unavailable"));
 
     await expect(runAutoReview(sub.id)).resolves.toBeUndefined();
@@ -125,20 +148,10 @@ describe("runAutoReview", () => {
       .select()
       .from(submission)
       .where(eq(submission.id, sub.id));
+    expect(row!.autoReviewStatus).toBe("failed");
     expect(row!.autoReview).toBeNull();
+    expect(row!.autoReviewJson).toBeNull();
     expect(row!.autoReviewAt).toBeNull();
-  });
-
-  it("does not write when the LLM returns empty content", async () => {
-    invokeMock.mockResolvedValueOnce({ content: "" });
-
-    await runAutoReview(sub.id);
-
-    const [row] = await db
-      .select()
-      .from(submission)
-      .where(eq(submission.id, sub.id));
-    expect(row!.autoReview).toBeNull();
   });
 
   it("respects the AbortController timeout (signal passed to invoke)", async () => {
@@ -154,7 +167,7 @@ describe("runAutoReview", () => {
   });
 
   it("is a no-op for an unknown submission id", async () => {
-    invokeMock.mockResolvedValueOnce({ content: "should not be written" });
+    invokeMock.mockResolvedValueOnce(VALID_REVIEW);
 
     await runAutoReview("00000000-0000-0000-0000-000000000000");
 

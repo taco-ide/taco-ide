@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PatchV1OrganizationsIdActiveMutationRequest, PatchV1OrganizationsIdActiveMutationResponse, PatchV1OrganizationsIdActivePathParams, PatchV1OrganizationsIdActive400, PatchV1OrganizationsIdActive401, PatchV1OrganizationsIdActive403, PatchV1OrganizationsIdActive404 } from "../../../../../../packages/types/kubb/PatchV1OrganizationsIdActive.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PatchV1OrganizationsIdActiveMutationRequest, PatchV1OrganizationsIdActiveMutationResponse, PatchV1OrganizationsIdActivePathParams, PatchV1OrganizationsIdActive400, PatchV1OrganizationsIdActive401, PatchV1OrganizationsIdActive403, PatchV1OrganizationsIdActive404 } from "../../../../../../packages/types/kubb/PatchV1OrganizationsIdActive.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const patchV1OrganizationsIdActiveMutationKey = () => [{ url: '/v1/organizations/:id/active' }] as const

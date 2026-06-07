@@ -14,6 +14,7 @@ import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
+import { AutoReviewStructured } from "../../../../agents/teachers-companion/auto-review-schema";
 
 const ParamsSchema = z.object({
   challengeId: z.string().uuid(),
@@ -35,6 +36,7 @@ const SubmissionDetailSchema = z.object({
   gradedByUserId: z.string().nullable(),
   gradedAt: z.string().nullable(),
   autoReview: z.string().nullable(),
+  autoReviewJson: AutoReviewStructured.nullable(),
   autoReviewAt: z.string().nullable(),
   autoReviewStatus: z.enum(autoReviewStatusEnum),
   autoReviewError: z.string().nullable(),
@@ -108,6 +110,7 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           gradedByUserId: submission.gradedByUserId,
           gradedAt: submission.gradedAt,
           autoReview: submission.autoReview,
+          autoReviewJson: submission.autoReviewJson,
           autoReviewAt: submission.autoReviewAt,
           autoReviewStatus: submission.autoReviewStatus,
           autoReviewError: submission.autoReviewError,
@@ -146,6 +149,9 @@ export async function getSubmissionByIdRoute(app: FastifyTypedInstance) {
           gradedByUserId: row.gradedByUserId ?? null,
           gradedAt: row.gradedAt?.toISOString() ?? null,
           autoReview: row.autoReview ?? null,
+          autoReviewJson:
+            (row.autoReviewJson as z.infer<typeof AutoReviewStructured>) ??
+            null,
           autoReviewAt: row.autoReviewAt?.toISOString() ?? null,
           autoReviewStatus: row.autoReviewStatus,
           autoReviewError: row.autoReviewError ?? null,

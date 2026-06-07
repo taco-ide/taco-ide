@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1WorkSessionsIdQueryResponse, GetV1WorkSessionsIdPathParams, GetV1WorkSessionsId401, GetV1WorkSessionsId403, GetV1WorkSessionsId404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1WorkSessionsIdQueryResponse, GetV1WorkSessionsIdPathParams, GetV1WorkSessionsId401, GetV1WorkSessionsId403, GetV1WorkSessionsId404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsId.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1WorkSessionsIdSuspenseQueryKey = (id: GetV1WorkSessionsIdPathParams["id"]) => [{ url: '/v1/work-sessions/:id', params: {id:id} }] as const

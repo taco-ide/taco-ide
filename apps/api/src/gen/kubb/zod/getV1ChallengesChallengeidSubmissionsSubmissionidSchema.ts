@@ -31,6 +31,17 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200Schema = z.obje
 "gradedByUserId": z.string().nullable(),
 "gradedAt": z.string().nullable(),
 "autoReview": z.string().nullable(),
+"autoReviewJson": z.object({
+    "pontosFortes": z.array(z.string().min(1)).describe("Lista curta (1-4) de pontos positivos da submissão, em português."),
+"problemas": z.array(z.object({
+    "tipo": z.string().min(1).describe("Categoria do problema (ex.: correção, qualidade, estilo, autonomia)."),
+"gravidade": z.enum(["baixa", "media", "alta"]).describe("Gravidade pedagógica do problema."),
+"linha": z.number().int().describe("Linha aproximada do código, quando aplicável.").nullable().nullish(),
+"descricao": z.string().min(1).describe("Descrição curta e objetiva do problema.")
+    })).describe("Problemas identificados, do mais grave ao menos grave (0-6 itens)."),
+"sugestoes": z.array(z.string().min(1)).describe("Sugestões acionáveis para o professor repassar ao aluno (1-5 itens)."),
+"avaliacaoGeral": z.string().min(1).describe("Parágrafo curto (2-4 frases) com avaliação geral em português.")
+    }).nullable(),
 "autoReviewAt": z.string().nullable(),
 "autoReviewStatus": z.enum(["pending", "running", "complete", "failed"]),
 "autoReviewError": z.string().nullable()
