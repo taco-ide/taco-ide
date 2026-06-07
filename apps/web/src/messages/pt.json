@@ -889,7 +889,14 @@
     "classrooms": {
       "empty": "Você ainda não tem turmas.",
       "title": "Minhas turmas",
+      "titleOrg": "Turmas da sua organização",
       "viewAll": "Ver todas"
+    },
+    "orgOverview": {
+      "classrooms": "Turmas",
+      "students": "Alunos",
+      "teachers": "Professores",
+      "title": "Visão da organização"
     },
     "quickActions": {
       "adminConsole": {
@@ -940,15 +947,19 @@
       },
       "coordinator": {
         "classrooms": {
-          "description": "Cada card é uma turma da sua organização. Clique para gerenciar alunos, professores e desafios vinculados.",
+          "description": "Todas as turmas da sua organização — clique em uma para gerenciar alunos, professores e desafios vinculados.",
           "title": "Suas turmas"
+        },
+        "orgOverview": {
+          "description": "Contadores ao vivo de turmas, professores e alunos da sua organização. Use para identificar turmas vazias ou desbalanço de carga entre professores.",
+          "title": "Visão da organização"
         },
         "quickActions": {
           "description": "Use estes atalhos para criar um desafio, entrar em uma turma ou explorar o catálogo.",
           "title": "Atalhos"
         },
         "welcome": {
-          "description": "Esta é a sua base como coordenador — acesso rápido às suas turmas e às ações que você mais usa. Vamos fazer um tour rápido.",
+          "description": "Esta é a sua base como coordenador — acesso rápido à sua organização e às ações que você mais usa. Vamos fazer um tour rápido.",
           "title": "Bem-vindo ao TACO"
         }
       }

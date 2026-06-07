@@ -18,6 +18,7 @@ import { useUser } from "@/contexts/UserContext";
 import {
   useGetV1Classrooms,
   useGetV1Challenges,
+  useGetV1OrganizationsIdMembers,
 } from "@/kubb/hooks";
 import { useTutorial } from "@/hooks/useTutorial";
 
@@ -113,9 +114,9 @@ function QuickAction({
   );
 }
 
-function ClassroomGrid() {
+function ClassroomGrid({ scope }: { scope: "mine" | "org" }) {
   const t = useTranslations("dashboard");
-  const { data, isLoading } = useGetV1Classrooms({ scope: "mine" });
+  const { data, isLoading } = useGetV1Classrooms({ scope });
   const rows = data?.data ?? [];
 
   if (isLoading) {
@@ -156,6 +157,92 @@ function ClassroomGrid() {
         </Link>
       ))}
     </div>
+  );
+}
+
+function OrgStatTile({
+  icon: Icon,
+  label,
+  value,
+  loading,
+  accent,
+}: {
+  icon: typeof BookOpen;
+  label: string;
+  value: number;
+  loading: boolean;
+  accent: "amber" | "emerald" | "sky" | "violet";
+}) {
+  const accentBg: Record<typeof accent, string> = {
+    amber: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    emerald: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    sky: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+    violet: "bg-violet-500/15 text-violet-300 border-violet-500/30",
+  };
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-slate-700/60 bg-slate-800/40 px-4 py-3">
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${accentBg[accent]}`}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs uppercase tracking-wider text-slate-400">
+          {label}
+        </p>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-slate-500 mt-1" />
+        ) : (
+          <p className="text-xl font-semibold text-white">{value}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrgOverview({ organizationId }: { organizationId: string }) {
+  const t = useTranslations("dashboard");
+  const { data: classroomsData, isLoading: loadingClassrooms } =
+    useGetV1Classrooms({ scope: "org" });
+  const { data: teachersData, isLoading: loadingTeachers } =
+    useGetV1OrganizationsIdMembers(organizationId, { role: "teacher" });
+  const { data: studentsData, isLoading: loadingStudents } =
+    useGetV1OrganizationsIdMembers(organizationId, { role: "student" });
+
+  const classroomCount = classroomsData?.data?.length ?? 0;
+  const teacherCount = teachersData?.data?.length ?? 0;
+  const studentCount = studentsData?.data?.length ?? 0;
+
+  return (
+    <section data-tour="org-overview">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+        <ShieldCheck className="mr-1.5 inline h-4 w-4 align-text-bottom" />
+        {t("orgOverview.title")}
+      </h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <OrgStatTile
+          icon={BookOpen}
+          label={t("orgOverview.classrooms")}
+          value={classroomCount}
+          loading={loadingClassrooms}
+          accent="amber"
+        />
+        <OrgStatTile
+          icon={Users}
+          label={t("orgOverview.teachers")}
+          value={teacherCount}
+          loading={loadingTeachers}
+          accent="emerald"
+        />
+        <OrgStatTile
+          icon={Users}
+          label={t("orgOverview.students")}
+          value={studentCount}
+          loading={loadingStudents}
+          accent="sky"
+        />
+      </div>
+    </section>
   );
 }
 
@@ -225,6 +312,13 @@ function DashboardContent() {
         popover: {
           title: tour("coordinator.quickActions.title"),
           description: tour("coordinator.quickActions.description"),
+        },
+      },
+      {
+        element: '[data-tour="org-overview"]',
+        popover: {
+          title: tour("coordinator.orgOverview.title"),
+          description: tour("coordinator.orgOverview.description"),
         },
       },
       {
@@ -379,11 +473,17 @@ function DashboardContent() {
         </section>
       )}
 
+      {roleKey === "coordinator" && user.activeOrganizationId && (
+        <OrgOverview organizationId={user.activeOrganizationId} />
+      )}
+
       <section data-tour="classroom-grid">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
             <Users className="mr-1.5 inline h-4 w-4 align-text-bottom" />
-            {t("classrooms.title")}
+            {roleKey === "coordinator"
+              ? t("classrooms.titleOrg")
+              : t("classrooms.title")}
           </h2>
           <Link
             href="/classrooms"
@@ -393,7 +493,7 @@ function DashboardContent() {
             <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
-        <ClassroomGrid />
+        <ClassroomGrid scope={roleKey === "coordinator" ? "org" : "mine"} />
       </section>
 
       {roleKey === "student" && (
