@@ -770,6 +770,19 @@
       "referenceSolutions": "Reference Solutions"
     }
   },
+  "challengeManage": {
+    "actions": {
+      "edit": "Edit",
+      "studentView": "Student view"
+    },
+    "eyebrow": "Challenge",
+    "loading": "Loading…",
+    "tabs": {
+      "submissions": "Submissions",
+      "workSessions": "Work sessions"
+    },
+    "tabsLabel": "Challenge management sections"
+  },
   "classrooms": {
     "backToExplore": "Back to Explore",
     "create": {

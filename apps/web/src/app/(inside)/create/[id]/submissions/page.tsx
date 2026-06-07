@@ -4,13 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Loader2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { useGetV1ChallengesChallengeidSubmissions } from "@/kubb/hooks";
+import { ChallengeManageHeader } from "../_components/ChallengeManageHeader";
 
 const PER_PAGE = 20;
 
@@ -68,23 +63,8 @@ function SubmissionsListContent() {
 
   return (
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
+      <ChallengeManageHeader challengeId={challengeId} />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8 flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-slate-600 bg-slate-800 text-slate-200"
-              onClick={() => router.push(`/create/${challengeId}/work-sessions`)}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t("viewStudentSessions")}
-            </Button>
-          </div>
-        </div>
-
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-10 w-10 animate-spin text-amber-500" />

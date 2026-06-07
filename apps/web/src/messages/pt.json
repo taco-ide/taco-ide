@@ -770,6 +770,19 @@
       "referenceSolutions": "Soluções de referência"
     }
   },
+  "challengeManage": {
+    "actions": {
+      "edit": "Editar",
+      "studentView": "Visão do aluno"
+    },
+    "eyebrow": "Desafio",
+    "loading": "Carregando…",
+    "tabs": {
+      "submissions": "Submissões",
+      "workSessions": "Sessões"
+    },
+    "tabsLabel": "Seções de gestão do desafio"
+  },
   "classrooms": {
     "backToExplore": "Voltar ao Explorar",
     "create": {

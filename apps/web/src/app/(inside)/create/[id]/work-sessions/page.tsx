@@ -4,15 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardCheck,
-  Laptop,
-  Loader2,
-  Play,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { useGetV1ChallengesChallengeidWorkSessions } from "@/kubb/hooks";
+import { ChallengeManageHeader } from "../_components/ChallengeManageHeader";
 
 const PER_PAGE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -92,44 +85,8 @@ function WorkSessionsListContent() {
 
   return (
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
+      <ChallengeManageHeader challengeId={challengeId} />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8 flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-slate-600 bg-slate-800 text-slate-200"
-              onClick={() => router.push(`/create/${challengeId}`)}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t("actions.editProblem")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="border-slate-600 bg-slate-800 text-slate-200"
-              onClick={() => router.push(`/create/${challengeId}/submissions`)}
-            >
-              <ClipboardCheck className="w-4 h-4 mr-2" />
-              {t("actions.submissions")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-900 font-medium"
-              onClick={() =>
-                router.push(`/problem/${challengeId}?view=student`)
-              }
-            >
-              <Laptop className="w-4 h-4 mr-2" />
-              {t("actions.studentView")}
-            </Button>
-          </div>
-        </div>
-
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between rounded-lg border border-slate-700 bg-slate-800/50 p-4">
           <div className="flex items-center gap-2">
             <input
