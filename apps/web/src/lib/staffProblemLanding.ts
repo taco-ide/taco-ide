@@ -10,7 +10,7 @@ export type ChallengeStaffLandingMeta = {
  * Docente autor do desafio ou professor titular da turma; coordenador/admin tratam como staff.
  * Alunos e outros professores abrem direto a experiência tipo aluno.
  */
-export function shouldOpenStaffWorkSessionsFirst(
+export function shouldOpenStaffViewFirst(
   user: User | null,
   challenge: ChallengeStaffLandingMeta | undefined
 ): boolean {

@@ -18,13 +18,13 @@ import {
 } from "@/components/ui/resizable";
 import { useUser } from "@/contexts/UserContext";
 import { useGetV1ChallengesId } from "@/kubb/hooks";
-import { shouldOpenStaffWorkSessionsFirst } from "@/lib/staffProblemLanding";
+import { shouldOpenStaffViewFirst } from "@/lib/staffProblemLanding";
 import { useTranslations } from "next-intl";
 
-function StaffWorkSessionsRedirect({ challengeId }: { challengeId: string }) {
+function StaffSubmissionsRedirect({ challengeId }: { challengeId: string }) {
   const router = useRouter();
   useLayoutEffect(() => {
-    router.replace(`/create/${challengeId}/work-sessions`);
+    router.replace(`/create/${challengeId}/submissions`);
   }, [challengeId, router]);
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-[#0c0d10]">
@@ -89,9 +89,9 @@ function ProblemPageContent() {
   if (
     !viewAsStudent &&
     user &&
-    shouldOpenStaffWorkSessionsFirst(user, ch)
+    shouldOpenStaffViewFirst(user, ch)
   ) {
-    return <StaffWorkSessionsRedirect challengeId={id} />;
+    return <StaffSubmissionsRedirect challengeId={id} />;
   }
 
   return (

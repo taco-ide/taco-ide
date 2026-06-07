@@ -286,7 +286,6 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                         {currentStep === 3 && effectiveChallengeId && (
                             <StepKnowledgeBase
                                 challengeId={effectiveChallengeId}
-                                classroomId={methods.getValues("classroomId")}
                             />
                         )}
                     </div>
