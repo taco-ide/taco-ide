@@ -885,6 +885,55 @@
       "title": "Problema não encontrado"
     }
   },
+  "dashboard": {
+    "classrooms": {
+      "empty": "Você ainda não tem turmas.",
+      "title": "Minhas turmas",
+      "viewAll": "Ver todas"
+    },
+    "quickActions": {
+      "adminConsole": {
+        "description": "Gerencie organizações, usuários e configurações da plataforma.",
+        "title": "Console admin"
+      },
+      "exploreProblems": {
+        "description": "Veja os problemas disponíveis para você.",
+        "title": "Explorar problemas"
+      },
+      "myClassrooms": {
+        "description": "Veja as turmas que você leciona ou está matriculado.",
+        "title": "Minhas turmas"
+      },
+      "newChallenge": {
+        "description": "Crie um novo desafio de programação para sua turma.",
+        "title": "Novo desafio"
+      },
+      "title": "Atalhos"
+    },
+    "role": {
+      "admin": "Admin da plataforma",
+      "coordinator": "Coordenador",
+      "student": "Aluno",
+      "teacher": "Professor"
+    },
+    "studentTip": {
+      "description": "Escolha um desafio das suas turmas e o assistente de ensino vai te acompanhar enquanto você programa.",
+      "title": "Dica"
+    },
+    "subtitle": {
+      "admin": "Gerencie organizações e usuários no console admin.",
+      "coordinator": "Acompanhe suas turmas e a atividade na sua organização.",
+      "student": "Continue de onde parou ou descubra novos desafios para praticar.",
+      "teacher": "Corrija submissões, gerencie turmas e crie novos desafios."
+    },
+    "teacherChallenges": {
+      "create": "Novo",
+      "empty": "Você ainda não criou desafios.",
+      "title": "Meus desafios recentes",
+      "viewSubmissions": "Ver submissões"
+    },
+    "welcome": "Olá, {name}"
+  },
   "explore": {
     "byAuthor": "por {author}",
     "createClassroom": "Criar turma",
@@ -1169,7 +1218,9 @@
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>Todos os direitos reservados.",
     "create": "Criar",
+    "dashboard": "Painel",
     "explore": "Explorar",
+    "goToDashboard": "Ir para o Painel",
     "goToExplore": "Ir para Explorar",
     "greeting": "Olá,",
     "login": "Entrar",

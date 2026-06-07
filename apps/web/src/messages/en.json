@@ -885,6 +885,55 @@
       "title": "Problem not found"
     }
   },
+  "dashboard": {
+    "classrooms": {
+      "empty": "You don't have any classrooms yet.",
+      "title": "My classrooms",
+      "viewAll": "View all"
+    },
+    "quickActions": {
+      "adminConsole": {
+        "description": "Manage organizations, users and platform settings.",
+        "title": "Admin console"
+      },
+      "exploreProblems": {
+        "description": "Browse problems available to you.",
+        "title": "Browse problems"
+      },
+      "myClassrooms": {
+        "description": "See the classrooms you teach or are enrolled in.",
+        "title": "My classrooms"
+      },
+      "newChallenge": {
+        "description": "Create a new programming challenge for your class.",
+        "title": "New challenge"
+      },
+      "title": "Quick actions"
+    },
+    "role": {
+      "admin": "Platform admin",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "studentTip": {
+      "description": "Pick a challenge from your classrooms and the AI teaching assistant will guide you while you code.",
+      "title": "Tip"
+    },
+    "subtitle": {
+      "admin": "Manage organizations and users from the admin console.",
+      "coordinator": "Track your classrooms and the activity across your organization.",
+      "student": "Pick up where you left off or browse new challenges to practice.",
+      "teacher": "Review submissions, manage classrooms and create new challenges."
+    },
+    "teacherChallenges": {
+      "create": "New",
+      "empty": "You haven't created any challenges yet.",
+      "title": "My recent challenges",
+      "viewSubmissions": "View submissions"
+    },
+    "welcome": "Hi, {name}"
+  },
   "explore": {
     "byAuthor": "by {author}",
     "createClassroom": "Create classroom",
@@ -1169,7 +1218,9 @@
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>All rights reserved.",
     "create": "Create",
+    "dashboard": "Dashboard",
     "explore": "Explore",
+    "goToDashboard": "Go to Dashboard",
     "goToExplore": "Go to Explore",
     "greeting": "Hi,",
     "login": "Sign in",

@@ -27,9 +27,9 @@ export async function middleware(request: NextRequest) {
         (path === "/" && pathname === "/")
     ) || isAuthPath;
 
-  // If user is logged in and trying to access auth routes, redirect to explore
+  // If user is logged in and trying to access auth routes, redirect to dashboard
   if (isLoggedIn && isAuthPath) {
-    return NextResponse.redirect(new URL("/explore", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // If path is public, allow access
