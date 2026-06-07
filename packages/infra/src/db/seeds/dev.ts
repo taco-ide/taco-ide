@@ -24,6 +24,7 @@ import {
 } from "../schema";
 import { hashPassword } from "better-auth/crypto";
 import { seedBase, safeInsert, SEED_TA_ID } from "./base";
+import { seedPasswordDemoScenario } from "./dev-demo";
 
 // --- IDs fixos (reprodutiveis) ---
 const SEED_ORG_ID = "11111111-1111-1111-1111-111111111111";
@@ -316,10 +317,20 @@ async function seed() {
     });
   }
 
+  // --- 9. Cenario de demonstracao rico (Validador de senha forte) ---
+  await seedPasswordDemoScenario({
+    organizationId: SEED_ORG_ID,
+    classroomId: SEED_CLASSROOM_ALG,
+    teacherUserId: SEED_USER_TEACHER,
+    existingStudentUserId: SEED_USER_STUDENT,
+  });
+
   console.log("\n--- Contas de teste (senha: " + DEV_PASSWORD + ") ---");
   console.log("  Professor (teacher):   professor@taco-demo.local");
   console.log("  Aluno (student):       aluno@taco-demo.local");
   console.log("  Coordenador:           coordenador@taco-demo.local");
+  console.log("  Aluna forte:           maria@taco-demo.local");
+  console.log("  Aluno em dificuldade:  joao@taco-demo.local");
   console.log("\nOrganizacao: TACO Demo (slug: taco-demo)");
   console.log(
     "Apos login, defina a org ativa no client Better Auth (organization.switch) se necessario.\n"
