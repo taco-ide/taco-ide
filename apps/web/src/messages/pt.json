@@ -932,6 +932,27 @@
       "title": "Meus desafios recentes",
       "viewSubmissions": "Ver submissões"
     },
+    "tour": {
+      "buttons": {
+        "back": "Voltar",
+        "done": "Entendi",
+        "next": "Próximo"
+      },
+      "coordinator": {
+        "classrooms": {
+          "description": "Cada card é uma turma da sua organização. Clique para gerenciar alunos, professores e desafios vinculados.",
+          "title": "Suas turmas"
+        },
+        "quickActions": {
+          "description": "Use estes atalhos para criar um desafio, entrar em uma turma ou explorar o catálogo.",
+          "title": "Atalhos"
+        },
+        "welcome": {
+          "description": "Esta é a sua base como coordenador — acesso rápido às suas turmas e às ações que você mais usa. Vamos fazer um tour rápido.",
+          "title": "Bem-vindo ao TACO"
+        }
+      }
+    },
     "welcome": "Olá, {name}"
   },
   "explore": {

@@ -932,6 +932,27 @@
       "title": "My recent challenges",
       "viewSubmissions": "View submissions"
     },
+    "tour": {
+      "buttons": {
+        "back": "Back",
+        "done": "Got it",
+        "next": "Next"
+      },
+      "coordinator": {
+        "classrooms": {
+          "description": "Each card is a classroom in your organization. Click one to manage students, teachers and linked challenges.",
+          "title": "Your classrooms"
+        },
+        "quickActions": {
+          "description": "Use these shortcuts to create a new challenge, jump into a classroom or browse the catalogue.",
+          "title": "Quick actions"
+        },
+        "welcome": {
+          "description": "This is your home base as a coordinator — at-a-glance access to your classrooms and the actions you use most. We'll take a quick tour.",
+          "title": "Welcome to TACO"
+        }
+      }
+    },
     "welcome": "Hi, {name}"
   },
   "explore": {

@@ -19,6 +19,7 @@ import {
   useGetV1Classrooms,
   useGetV1Challenges,
 } from "@/kubb/hooks";
+import { useTutorial } from "@/hooks/useTutorial";
 
 type RoleKey = "student" | "teacher" | "coordinator" | "admin";
 
@@ -202,7 +203,45 @@ function TeacherChallenges() {
 
 function DashboardContent() {
   const t = useTranslations("dashboard");
+  const tour = useTranslations("dashboard.tour");
   const { user, isLoading, getFirstName } = useUser();
+
+  const roleKey = user
+    ? resolveRole(user.role, user.isPlatformAdmin)
+    : "student";
+
+  useTutorial(
+    "coordinator-onboarding",
+    [
+      {
+        element: '[data-tour="welcome-banner"]',
+        popover: {
+          title: tour("coordinator.welcome.title"),
+          description: tour("coordinator.welcome.description"),
+        },
+      },
+      {
+        element: '[data-tour="quick-actions"]',
+        popover: {
+          title: tour("coordinator.quickActions.title"),
+          description: tour("coordinator.quickActions.description"),
+        },
+      },
+      {
+        element: '[data-tour="classroom-grid"]',
+        popover: {
+          title: tour("coordinator.classrooms.title"),
+          description: tour("coordinator.classrooms.description"),
+        },
+      },
+    ],
+    {
+      autoStart: roleKey === "coordinator" && !isLoading,
+      nextBtnText: tour("buttons.next"),
+      prevBtnText: tour("buttons.back"),
+      doneBtnText: tour("buttons.done"),
+    }
+  );
 
   if (isLoading || !user) {
     return (
@@ -212,17 +251,17 @@ function DashboardContent() {
     );
   }
 
-  const roleKey = resolveRole(user.role, user.isPlatformAdmin);
-
   return (
     <div className="container mx-auto max-w-6xl space-y-8 px-4 py-8">
-      <WelcomeBanner
-        firstName={getFirstName()}
-        roleKey={roleKey}
-        orgName={user.activeOrganizationName}
-      />
+      <div data-tour="welcome-banner">
+        <WelcomeBanner
+          firstName={getFirstName()}
+          roleKey={roleKey}
+          orgName={user.activeOrganizationName}
+        />
+      </div>
 
-      <section>
+      <section data-tour="quick-actions">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
           {t("quickActions.title")}
         </h2>
@@ -340,7 +379,7 @@ function DashboardContent() {
         </section>
       )}
 
-      <section>
+      <section data-tour="classroom-grid">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
             <Users className="mr-1.5 inline h-4 w-4 align-text-bottom" />
