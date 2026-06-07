@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWatch, useFormContext } from "react-hook-form";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -91,6 +91,7 @@ function ReferenceKindCard({
 }) {
   const t = useTranslations("challenge");
   const c = useTranslations("common");
+  const format = useFormatter();
   const queryClient = useQueryClient();
   const [editingCode, setEditingCode] = useState(false);
   const [editCode, setEditCode] = useState(data?.code ?? "");
@@ -231,7 +232,10 @@ function ReferenceKindCard({
           <p className="text-slate-500 text-xs">
             {t("referenceSolutions.card.generatedAt", {
               date: data.generatedAt
-                ? new Date(data.generatedAt).toLocaleString()
+                ? format.dateTime(new Date(data.generatedAt), {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
                 : "—",
             })}
           </p>
