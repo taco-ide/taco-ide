@@ -149,6 +149,44 @@ for line in sys.stdin:
 `;
 
 // ===== Student code snapshots =====
+//
+// Each student has a progression of code versions (V1 -> final). The replay
+// code column shows the last snapshot at each step, so attaching a snapshot
+// to (almost) every interaction makes the code evolve visibly across the
+// timeline — the point of the replay. The final constant (no suffix) is the
+// one stored on the submission row.
+
+// --- Maria (strong): skeleton -> working -> idiomatic refine ---
+
+const MARIA_CODE_V1 = `import sys
+
+
+def is_strong(pwd):
+    # TODO: 5 regras
+    return False
+
+
+for line in sys.stdin:
+    print("VALID" if is_strong(line) else "INVALID")
+`;
+
+const MARIA_CODE_V2 = `import sys
+
+
+def is_strong(pwd):
+    if len(pwd) < 8:
+        return False
+    return (
+        any(c.isupper() for c in pwd)
+        and any(c.islower() for c in pwd)
+        and any(c.isdigit() for c in pwd)
+        and any(c in "!@#$%^&*" for c in pwd)
+    )
+
+
+for line in sys.stdin:
+    print("VALID" if is_strong(line) else "INVALID")
+`;
 
 const MARIA_CODE = `import sys
 
@@ -168,6 +206,44 @@ def is_strong(pwd: str) -> bool:
 
 for line in sys.stdin:
     print("VALID" if is_strong(line.rstrip()) else "INVALID")
+`;
+
+// --- Aluno Demo (medium): echo -> validation+rstrip bug -> verbose final ---
+
+const DEMO_CODE_V1 = `import sys
+
+for line in sys.stdin:
+    print(line)
+`;
+
+const DEMO_CODE_V2 = `import sys
+
+
+def is_strong(p):
+    if len(p) < 8:
+        return False
+    upper = False
+    lower = False
+    digit = False
+    special = False
+    for c in p:
+        if c >= "A" and c <= "Z":
+            upper = True
+        elif c >= "a" and c <= "z":
+            lower = True
+        elif c >= "0" and c <= "9":
+            digit = True
+        elif c in "!@#$%^&*":
+            special = True
+    return upper and lower and digit and special
+
+
+linhas = sys.stdin.read().split("\\n")
+for l in linhas:
+    if is_strong(l):
+        print("VALID")
+    else:
+        print("INVALID")
 `;
 
 const DEMO_CODE = `import sys
@@ -197,13 +273,38 @@ def is_strong(p):
 
 linhas = sys.stdin.read().split("\\n")
 for l in linhas:
-    if is_strong(l):
+    if is_strong(l.rstrip()):
+        print("VALID")
+    else:
+        print("INVALID")
+`;
+
+// --- João (struggling): echo -> length-only -> stdin attempt -> revert ---
+
+const JOAO_CODE_V1 = `senha = input()
+print(senha)
+`;
+
+const JOAO_CODE_V2 = `senha = input()
+
+if len(senha) >= 8:
+    print("VALID")
+else:
+    print("INVALID")
+`;
+
+const JOAO_CODE_V3 = `import sys
+
+# o TA falou pra usar sys.stdin
+for linha in sys.stdin:
+    if len(linha) >= 8:
         print("VALID")
     else:
         print("INVALID")
 `;
 
 const JOAO_CODE = `# tentativa 4 ainda nao funciona direito :(
+# voltei pro input() pq o sys.stdin me confundiu
 senha = input()
 
 if len(senha) >= 8:
@@ -231,7 +332,28 @@ const MARIA_INTERACTIONS: Interaction[] = [
       "Posso usar `any()` com geradores ou prefere que eu escreva loops manuais?",
     modelResponse:
       "Use o que ficar mais legível pra você. `any(c.isupper() for c in pwd)` é idiomático e cobre a regra; um loop com flag também é válido. O que importa é cobrir as cinco regras.",
-    minutesAgo: 32,
+    code: MARIA_CODE_V1,
+    minutesAgo: 34,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: MARIA_CODE_V2,
+    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    // sem rstrip ainda: o \n não atrapalha aqui porque nenhuma regra usa o
+    // tamanho exato, mas Maria percebe e adiciona rstrip na versão final
+    stdout: "VALID\nINVALID\nINVALID\n",
+    minutesAgo: 26,
+  },
+  {
+    type: "chat",
+    userPrompt:
+      "Funcionou. Vou extrair os especiais numa constante e tipar a função, fica mais limpo né?",
+    modelResponse:
+      "Perfeito. Extrair `SPECIALS` e anotar `-> bool` deixa a intenção explícita e evita recriar a string a cada caractere. Boa prática.",
+    code: MARIA_CODE_V2,
+    minutesAgo: 20,
   },
   {
     type: "code_run",
@@ -240,7 +362,7 @@ const MARIA_INTERACTIONS: Interaction[] = [
     code: MARIA_CODE,
     stdin: "Senha123!\nabc\nHelloWorld1\n",
     stdout: "VALID\nINVALID\nINVALID\n",
-    minutesAgo: 18,
+    minutesAgo: 15,
   },
 ];
 
@@ -250,31 +372,44 @@ const DEMO_INTERACTIONS: Interaction[] = [
     userPrompt: "Como leio várias linhas em Python? sys.stdin?",
     modelResponse:
       "Sim, `for line in sys.stdin:` itera linha a linha até EOF; cada linha vem com o `\\n` no final, então use `rstrip` antes de comparar. Se preferir ler tudo de uma vez, `sys.stdin.read().splitlines()`.",
-    minutesAgo: 48,
+    code: DEMO_CODE_V1,
+    minutesAgo: 50,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: DEMO_CODE_V1,
+    stdin: "Senha123!\n",
+    stdout: "Senha123!\n\n",
+    minutesAgo: 46,
   },
   {
     type: "chat",
     userPrompt: "o que conta como caractere especial?",
     modelResponse:
       "Só os listados no enunciado: `!@#$%^&*`. Outros símbolos não contam — bom verificar exatamente com `c in \"!@#$%^&*\"` ou um set.",
-    minutesAgo: 41,
+    code: DEMO_CODE_V1,
+    minutesAgo: 42,
   },
   {
     type: "code_run",
     userPrompt: "",
     modelResponse: "",
-    code: "import sys\nfor line in sys.stdin:\n    print(line)\n",
-    stdin: "Senha123!\n",
-    stdout: "Senha123!\n\n",
-    minutesAgo: 35,
+    code: DEMO_CODE_V2,
+    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    // split("\n") devolve uma string vazia final -> 1 INVALID a mais
+    stdout: "VALID\nINVALID\nINVALID\nINVALID\n",
+    minutesAgo: 33,
   },
   {
     type: "chat",
     userPrompt:
-      "tá aparecendo uma linha em branco a mais. como tiro o \\n da linha?",
+      "as 3 senhas estão certas mas tem um INVALID a mais no final, de onde vem?",
     modelResponse:
-      "Use `line.rstrip(\"\\n\")` ou `line.rstrip()`. O `print` já adiciona seu próprio `\\n`, então sem o rstrip você imprime dois.",
-    minutesAgo: 30,
+      "Do `split(\"\\n\")`: como o arquivo termina em `\\n`, ele devolve uma string vazia no fim da lista, e `\"\"` vira mais um INVALID. Use `splitlines()` (não devolve a vazia final) ou itere direto com `for line in sys.stdin:`.",
+    code: DEMO_CODE_V2,
+    minutesAgo: 28,
   },
   {
     type: "code_run",
@@ -282,6 +417,8 @@ const DEMO_INTERACTIONS: Interaction[] = [
     modelResponse: "",
     code: DEMO_CODE,
     stdin: "Senha123!\nabc\nHelloWorld1\n",
+    // a aluna adicionou .rstrip() (inofensivo aqui) mas manteve o split,
+    // então o INVALID extra persiste -> bug ainda presente na submissão
     stdout: "VALID\nINVALID\nINVALID\nINVALID\n",
     minutesAgo: 12,
   },
@@ -293,44 +430,75 @@ const JOAO_INTERACTIONS: Interaction[] = [
     userPrompt: "tô perdido, por onde começo?",
     modelResponse:
       "Comece pela função `is_strong(password)`. Pense em cada regra como uma verificação separada e retorne `True` só se todas passarem. Depois você pluga ela num loop que lê do `sys.stdin`.",
-    minutesAgo: 70,
+    minutesAgo: 72,
+  },
+  {
+    type: "chat",
+    userPrompt: "como leio a senha digitada?",
+    modelResponse:
+      "Pra começar você pode usar `input()` pra ler uma linha. Mas lembre que o enunciado pede várias senhas até o EOF — daqui a pouco a gente troca por um loop no `sys.stdin`.",
+    code: JOAO_CODE_V1,
+    minutesAgo: 64,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: JOAO_CODE_V1,
+    stdin: "Senha123!\n",
+    stdout: "Senha123!\n",
+    minutesAgo: 58,
   },
   {
     type: "chat",
     userPrompt: "como vejo se tem letra maiúscula?",
     modelResponse:
-      "Cada caractere em Python tem `.isupper()` que devolve True quando é maiúscula. Você pode varrer com um loop, ou usar `any(c.isupper() for c in password)`.",
-    minutesAgo: 60,
-  },
-  {
-    type: "chat",
-    userPrompt: "meu código não tá lendo direito as senhas",
-    modelResponse:
-      "Cola o que você tentou aqui que a gente olha junto. Provavelmente é a leitura do stdin ou o rstrip do `\\n`.",
+      "Cada caractere tem `.isupper()`, que devolve True quando é maiúscula. Dá pra varrer com um `for` ou usar `any(c.isupper() for c in senha)`. Faça uma regra de cada vez.",
+    code: JOAO_CODE_V2,
     minutesAgo: 50,
   },
   {
     type: "code_run",
     userPrompt: "",
     modelResponse: "",
-    code: 'senha = input()\nprint(senha)\n',
+    code: JOAO_CODE_V2,
     stdin: "Senha123!\n",
-    stdout: "Senha123!\n",
-    minutesAgo: 45,
+    stdout: "VALID\n",
+    minutesAgo: 46,
   },
   {
     type: "chat",
-    userPrompt: "agora só lê uma. como faz pra ler várias?",
+    userPrompt: "agora só lê uma senha. como faz pra ler várias?",
     modelResponse:
-      "`input()` lê só uma linha por chamada. Use um loop `for line in sys.stdin:` (com `import sys` no topo) — assim ele itera até o EOF e processa cada linha.",
-    minutesAgo: 35,
+      "`input()` lê só uma linha por chamada. Troque por `for line in sys.stdin:` (com `import sys` no topo) — assim ele itera até o EOF e processa cada senha.",
+    code: JOAO_CODE_V2,
+    minutesAgo: 40,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: JOAO_CODE_V3,
+    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    // só checa tamanho: 8+ chars -> VALID
+    stdout: "VALID\nINVALID\nVALID\n",
+    minutesAgo: 30,
   },
   {
     type: "chat",
-    userPrompt: "tá printando VALID pra tudo, oq fiz de errado?",
+    userPrompt: "tá printando VALID pra tudo que é grande, oq fiz de errado?",
     modelResponse:
-      "Verifica se você está checando **todas** as cinco regras (tamanho, maiúscula, minúscula, dígito e especial). Se só comparar o tamanho, qualquer senha de 8+ caracteres vai virar VALID.",
-    minutesAgo: 18,
+      "Você só está checando o **tamanho**. Faltam as outras quatro regras (maiúscula, minúscula, dígito e especial). Sem elas, qualquer senha com 8+ caracteres vira VALID. Tente adicionar uma regra de cada vez e rodar o exemplo do enunciado pra comparar.",
+    code: JOAO_CODE_V3,
+    minutesAgo: 22,
+  },
+  {
+    type: "chat",
+    userPrompt: "o sys.stdin me confundiu, voltei pro input(). depois eu termino as regras :(",
+    modelResponse:
+      "Sem problema — submeta o que tem e marque pra revisar com a monitoria. Quando voltar, faça uma regra por vez e teste cada uma isolada antes de juntar.",
+    code: JOAO_CODE,
+    minutesAgo: 12,
   },
 ];
 
@@ -374,8 +542,8 @@ const MARIA_REVIEW: Review = {
 
 const DEMO_REVIEW: Review = {
   pontosFortes: [
-    "Lógica está correta para os casos típicos do enunciado.",
-    "Houve uma boa progressão durante a sessão: a aluna identificou o bug do `\\n` extra com ajuda do TA e corrigiu.",
+    "A lógica das cinco regras está correta para as senhas em si.",
+    "Boa atitude de depuração: a aluna percebeu a linha `INVALID` extra e foi atrás da causa com o TA.",
   ],
   problemas: [
     {
@@ -388,14 +556,14 @@ const DEMO_REVIEW: Review = {
     {
       tipo: "correção",
       gravidade: "media" as const,
-      linha: 25,
+      linha: 26,
       descricao:
         "`sys.stdin.read().split(\"\\n\")` deixa uma string vazia final quando o arquivo termina em newline, e a saída tem uma linha `INVALID` extra para a string vazia. Compare com a saída esperada do enunciado.",
     },
     {
       tipo: "estilo",
       gravidade: "baixa" as const,
-      linha: 16,
+      linha: 20,
       descricao:
         "`if upper == True and lower == True ...` é redundante — `if upper and lower ...` basta.",
     },
@@ -417,14 +585,14 @@ const JOAO_REVIEW: Review = {
     {
       tipo: "correção",
       gravidade: "alta" as const,
-      linha: 4,
+      linha: 5,
       descricao:
         "Só verifica o **tamanho** da senha. As regras de maiúscula, minúscula, dígito e caractere especial estão completamente ausentes — qualquer senha com 8+ caracteres vira `VALID`.",
     },
     {
       tipo: "correção",
       gravidade: "alta" as const,
-      linha: 2,
+      linha: 3,
       descricao:
         "Usa `input()` que lê **apenas uma linha**. O enunciado pede leitura até EOF (várias senhas).",
     },
@@ -632,7 +800,8 @@ export async function seedPasswordDemoScenario({
       interactions: JOAO_INTERACTIONS,
       code: JOAO_CODE,
       stdin: "Senha123!\nabc\nHelloWorld1\n",
-      stdout: "VALID\nINVALID\nVALID\n",
+      // input() lê só a 1.ª linha; o programa imprime um resultado e encerra
+      stdout: "VALID\n",
       review: JOAO_REVIEW,
     },
   ];
