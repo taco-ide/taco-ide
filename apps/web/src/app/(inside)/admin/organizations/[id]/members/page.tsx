@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -59,18 +60,26 @@ import { MembersTable, type MemberRow } from "./_components/members-table";
 
 type RoleFilter = "all" | AdminRole;
 
-const filterButtons: { id: RoleFilter; label: string }[] = [
-  { id: "all", label: "Todos" },
-  { id: "admin", label: "Administradores" },
-  { id: "coordinator", label: "Coordenadores" },
-  { id: "teacher", label: "Professores" },
-  { id: "student", label: "Alunos" },
+const filterButtonIds: RoleFilter[] = [
+  "all",
+  "admin",
+  "coordinator",
+  "teacher",
+  "student",
 ];
 
 export default function MembersTabPage() {
+  const t = useTranslations("adminMembers");
+  const c = useTranslations("common");
   const params = useParams<{ id: string }>();
   const orgId = params?.id ?? "";
   const queryClient = useQueryClient();
+
+  const filterButtons: { id: RoleFilter; label: string }[] =
+    filterButtonIds.map((id) => ({
+      id,
+      label: t(`filters.${id}`),
+    }));
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
@@ -83,7 +92,7 @@ export default function MembersTabPage() {
   const { data: orgData } = useGetV1OrganizationsId(orgId, {
     query: { enabled: orgId.length > 0 },
   });
-  const orgName = orgData?.data?.name ?? "esta organização";
+  const orgName = orgData?.data?.name ?? t("fallbackOrgName");
 
   const queryParams = useMemo(() => {
     const trimmed = debouncedSearch.trim();
@@ -142,7 +151,7 @@ export default function MembersTabPage() {
   const updateRole = usePutV1OrganizationsIdMembersUserid({
     mutation: {
       onSuccess: () => {
-        toast.success("Papel atualizado");
+        toast.success(t("toast.roleUpdated"));
         void queryClient.invalidateQueries({
           queryKey: getV1OrganizationsIdMembersQueryKey(orgId),
         });
@@ -152,13 +161,11 @@ export default function MembersTabPage() {
       },
       onError: (err) => {
         if (err instanceof ApiError && err.status === 409) {
-          toast.error(
-            "Não foi possível alterar — esta operação deixaria a organização sem administradores.",
-          );
+          toast.error(t("toast.roleUpdateLastAdmin"));
           return;
         }
         toast.error(
-          err instanceof Error ? err.message : "Erro ao atualizar papel",
+          err instanceof Error ? err.message : t("toast.roleUpdateError"),
         );
       },
     },
@@ -167,7 +174,7 @@ export default function MembersTabPage() {
   const removeMember = useDeleteV1OrganizationsIdMembersUserid({
     mutation: {
       onSuccess: () => {
-        toast.success("Membro removido da organização");
+        toast.success(t("toast.memberRemoved"));
         setRemoveTarget(null);
         void queryClient.invalidateQueries({
           queryKey: getV1OrganizationsIdMembersQueryKey(orgId),
@@ -184,13 +191,11 @@ export default function MembersTabPage() {
       },
       onError: (err) => {
         if (err instanceof ApiError && err.status === 409) {
-          toast.error(
-            "Não é possível remover o único administrador da organização.",
-          );
+          toast.error(t("toast.removeLastAdmin"));
           return;
         }
         toast.error(
-          err instanceof Error ? err.message : "Erro ao remover membro",
+          err instanceof Error ? err.message : t("toast.removeError"),
         );
       },
     },
@@ -230,7 +235,7 @@ export default function MembersTabPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar membros por nome ou email…"
+            placeholder={t("searchPlaceholder")}
             className="bg-slate-900 border-slate-700 pl-9 pr-9 text-white placeholder:text-slate-500"
           />
           {search && (
@@ -238,7 +243,7 @@ export default function MembersTabPage() {
               type="button"
               onClick={() => setSearch("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-white"
-              aria-label="Limpar busca"
+              aria-label={t("clearSearch")}
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -272,7 +277,7 @@ export default function MembersTabPage() {
                 className="bg-amber-500 text-slate-900 hover:bg-amber-400"
               >
                 <UserPlus className="mr-1.5 h-4 w-4" />
-                Adicionar membro
+                {t("addMember")}
                 <ChevronDown className="ml-1 h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
@@ -287,10 +292,10 @@ export default function MembersTabPage() {
                 <Link2 className="mr-2 h-3.5 w-3.5 text-slate-300" />
                 <div className="flex flex-col items-start">
                   <span className="text-sm text-slate-100">
-                    Vincular usuário existente
+                    {t("linkExisting.title")}
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Buscar em toda a plataforma
+                    {t("linkExisting.description")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -301,10 +306,10 @@ export default function MembersTabPage() {
                 <FileSpreadsheet className="mr-2 h-3.5 w-3.5 text-slate-300" />
                 <div className="flex flex-col items-start">
                   <span className="text-sm text-slate-100">
-                    Importar de CSV
+                    {t("csvImport.title")}
                   </span>
                   <span className="text-[11px] text-slate-400">
-                    Adicionar vários de uma vez
+                    {t("csvImport.description")}
                   </span>
                 </div>
               </DropdownMenuItem>
@@ -318,7 +323,7 @@ export default function MembersTabPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <span>
-              Não foi possível carregar os membros.{" "}
+              {t("loadError")}{" "}
               {error instanceof Error ? error.message : ""}
             </span>
           </div>
@@ -331,7 +336,7 @@ export default function MembersTabPage() {
             }}
           >
             <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-            Tentar novamente
+            {c("retry")}
           </Button>
         </div>
       ) : (
@@ -339,14 +344,14 @@ export default function MembersTabPage() {
           {showInitialEmpty ? (
             <EmptyState
               icon={Users}
-              title="Sem membros"
-              body="Esta organização ainda não tem membros."
+              title={t("emptyInitial.title")}
+              body={t("emptyInitial.body")}
             />
           ) : showSearchEmpty ? (
             <EmptyState
               icon={Users}
-              title="Nenhum membro corresponde"
-              body="Tente uma busca ou filtro de papel diferente."
+              title={t("emptySearch.title")}
+              body={t("emptySearch.body")}
             />
           ) : (
             <>
@@ -361,7 +366,7 @@ export default function MembersTabPage() {
               />
               {isFetching && rows.length > 0 && (
                 <div className="flex items-center justify-end gap-2 border-t border-slate-700/60 bg-slate-800/30 px-4 py-2 text-[11px] text-slate-500">
-                  <Loader2 className="h-3 w-3 animate-spin" /> atualizando…
+                  <Loader2 className="h-3 w-3 animate-spin" /> {t("updating")}
                 </div>
               )}
             </>
@@ -408,10 +413,14 @@ export default function MembersTabPage() {
       >
         <AlertDialogContent className="bg-slate-900 border-slate-700 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover desta organização?</AlertDialogTitle>
+            <AlertDialogTitle>{t("removeDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {removeTarget
-                ? `${removeTarget.name} (${removeTarget.email}) perderá acesso a ${orgName}. Esta ação pode ser revertida vinculando o usuário novamente.`
+                ? t("removeDialog.description", {
+                    name: removeTarget.name,
+                    email: removeTarget.email,
+                    orgName,
+                  })
                 : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -420,7 +429,7 @@ export default function MembersTabPage() {
               disabled={removeMember.isPending}
               className={buttonVariants({ variant: "outline-dark" })}
             >
-              Cancelar
+              {c("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRemoveConfirm}
@@ -430,7 +439,7 @@ export default function MembersTabPage() {
               {removeMember.isPending ? (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               ) : null}
-              Remover
+              {t("removeDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

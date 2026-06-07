@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ interface KbTextEntriesProps {
 
 export function KbTextEntries({ knowledgeBaseId }: KbTextEntriesProps) {
   const queryClient = useQueryClient();
+  const t = useTranslations("knowledgeBase");
   const [newContent, setNewContent] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -31,12 +33,12 @@ export function KbTextEntries({ knowledgeBaseId }: KbTextEntriesProps) {
           queryKey: [{ url: "/v1/knowledge-bases/:kbId/entries/" }],
         });
         setNewContent("");
-        setFeedback({ type: "success", message: "Entrada adicionada" });
+        setFeedback({ type: "success", message: t("text.feedback.added") });
       },
       onError: (err) => {
         setFeedback({
           type: "error",
-          message: err.message ?? "Erro ao criar entrada",
+          message: err.message ?? t("text.feedback.error"),
         });
       },
     },
@@ -66,19 +68,18 @@ export function KbTextEntries({ knowledgeBaseId }: KbTextEntriesProps) {
       )}
 
       <p className="text-slate-500 text-sm text-center py-4">
-        Adicione notas de texto que serao incluidas na knowledge base como
-        contexto adicional para o assistente de IA.
+        {t("text.description")}
       </p>
 
       <PermissionGuard resource="knowledgeBase" action="create">
         <div className="border-t border-slate-700 pt-4 space-y-2">
           <Label className="text-slate-300 text-sm">
-            Adicionar nova entrada
+            {t("text.newEntryLabel")}
           </Label>
           <Textarea
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
-            placeholder="Conteudo da entrada de knowledge base..."
+            placeholder={t("text.placeholder")}
             className="bg-slate-900 border-slate-700 text-slate-200 min-h-[80px]"
           />
           <div className="flex justify-end">
@@ -94,7 +95,7 @@ export function KbTextEntries({ knowledgeBaseId }: KbTextEntriesProps) {
               ) : (
                 <Plus className="w-3 h-3 mr-1" />
               )}
-              Adicionar
+              {t("text.addButton")}
             </Button>
           </div>
         </div>

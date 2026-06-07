@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Check, Link2, Loader2, Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -44,6 +45,8 @@ export function LinkExistingUserDialog({
   onOpenChange,
   organizationId,
 }: LinkExistingUserDialogProps) {
+  const t = useTranslations("adminShared");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 250);
@@ -78,7 +81,7 @@ export function LinkExistingUserDialog({
   const mutation = usePostV1OrganizationsIdMembers({
     mutation: {
       onSuccess: () => {
-        toast.success("Usuário vinculado à organização");
+        toast.success(t("link.toast.success"));
         void queryClient.invalidateQueries({
           queryKey: getV1OrganizationsIdMembersQueryKey(organizationId),
         });
@@ -93,18 +96,18 @@ export function LinkExistingUserDialog({
       onError: (err) => {
         if (err instanceof ApiError) {
           if (err.status === 409) {
-            setErrorMessage("Este usuário já é membro da organização.");
+            setErrorMessage(t("link.error.alreadyMember"));
             return;
           }
           if (err.status === 404) {
-            setErrorMessage("Usuário não encontrado.");
+            setErrorMessage(t("link.error.userNotFound"));
             return;
           }
           setErrorMessage(err.message);
           return;
         }
         setErrorMessage(
-          err instanceof Error ? err.message : "Erro ao vincular usuário",
+          err instanceof Error ? err.message : t("link.error.generic"),
         );
       },
     },
@@ -123,16 +126,16 @@ export function LinkExistingUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Vincular usuário existente</DialogTitle>
+          <DialogTitle>{t("link.title")}</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Pesquise pessoas em toda a plataforma e adicione à organização.
+            {t("link.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="link-user-search" className="text-slate-300 text-xs">
-              Buscar usuário
+              {t("link.searchLabel")}
             </Label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -143,7 +146,7 @@ export function LinkExistingUserDialog({
                   setSearch(e.target.value);
                   setPicked(null);
                 }}
-                placeholder="Nome ou e-mail…"
+                placeholder={t("link.searchPlaceholder")}
                 autoFocus
                 className="bg-slate-950/40 border-slate-700 pl-9 pr-9 text-white placeholder:text-slate-500"
               />
@@ -155,7 +158,7 @@ export function LinkExistingUserDialog({
                     setPicked(null);
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500 hover:text-white"
-                  aria-label="Limpar busca"
+                  aria-label={t("link.clearSearch")}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -163,7 +166,7 @@ export function LinkExistingUserDialog({
             </div>
             {!queryEnabled && (
               <p className="text-[11px] text-slate-500">
-                Digite ao menos 2 caracteres para iniciar a busca.
+                {t("link.minChars")}
               </p>
             )}
           </div>
@@ -171,20 +174,20 @@ export function LinkExistingUserDialog({
           <div className="max-h-64 overflow-y-auto rounded-md border border-slate-700/60 bg-slate-950/40">
             {!queryEnabled ? (
               <div className="px-4 py-6 text-center text-xs text-slate-500">
-                Use o campo acima para pesquisar usuários.
+                {t("link.hintSearch")}
               </div>
             ) : isLoading || isFetching ? (
               <div className="flex items-center justify-center px-4 py-6 text-xs text-slate-400">
                 <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                Buscando…
+                {t("link.searching")}
               </div>
             ) : error ? (
               <div className="px-4 py-6 text-center text-xs text-rose-300">
-                Não foi possível buscar usuários.
+                {t("link.searchFailed")}
               </div>
             ) : candidates.length === 0 ? (
               <div className="px-4 py-6 text-center text-xs text-slate-500">
-                Nenhum usuário disponível para vincular.
+                {t("link.noCandidates")}
               </div>
             ) : (
               <ul className="divide-y divide-slate-700/60">
@@ -214,10 +217,9 @@ export function LinkExistingUserDialog({
                           </div>
                         </div>
                         <span className="shrink-0 text-[11px] text-slate-500">
-                          {u.memberships.length}{" "}
-                          {u.memberships.length === 1
-                            ? "organização"
-                            : "organizações"}
+                          {t("link.orgCount", {
+                            count: u.memberships.length,
+                          })}
                         </span>
                         {isPicked && (
                           <Check className="h-4 w-4 shrink-0 text-amber-300" />
@@ -232,7 +234,7 @@ export function LinkExistingUserDialog({
 
           <div className="space-y-1.5">
             <Label className="text-slate-300 text-xs">
-              Papel na organização
+              {t("link.roleLabel")}
             </Label>
             <RoleSelect value={role} onChange={setRole} />
           </div>
@@ -252,7 +254,7 @@ export function LinkExistingUserDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            Cancelar
+            {c("cancel")}
           </Button>
           <Button
             type="button"
@@ -265,7 +267,7 @@ export function LinkExistingUserDialog({
             ) : (
               <Link2 className="h-4 w-4" />
             )}
-            Vincular à organização
+            {t("link.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

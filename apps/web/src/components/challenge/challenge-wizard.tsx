@@ -5,6 +5,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
@@ -22,13 +23,6 @@ import { StepDescription } from "@/components/challenge/steps/step-description";
 import { StepReferenceSolutions } from "@/components/challenge/steps/step-reference-solutions";
 import { StepKnowledgeBase } from "@/components/challenge/steps/step-knowledge-base";
 
-const WIZARD_STEPS = [
-    { label: "Informações Básicas" },
-    { label: "Enunciado" },
-    { label: "Soluções de referência" },
-    { label: "Knowledge Base" },
-];
-
 interface ChallengeWizardProps {
     mode: "create" | "edit";
     challengeId?: string;
@@ -37,9 +31,18 @@ interface ChallengeWizardProps {
 }
 
 export function ChallengeWizard({ mode, challengeId, initialData, initialTags }: ChallengeWizardProps) {
+    const t = useTranslations("challenge");
+    const c = useTranslations("common");
     const router = useRouter();
     const queryClient = useQueryClient();
     const [currentStep, setCurrentStep] = useState(0);
+
+    const wizardSteps = [
+        { label: t("steps.basicInfo") },
+        { label: t("steps.description") },
+        { label: t("steps.referenceSolutions") },
+        { label: t("steps.knowledgeBase") },
+    ];
     const [tags, setTags] = useState<string[]>(initialTags ?? []);
     const [resolvedChallengeId, setResolvedChallengeId] = useState<string | null>(challengeId ?? null);
     const [hasSavedRefStep, setHasSavedRefStep] = useState(false);
@@ -74,14 +77,13 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 methods.reset(methods.getValues());
                 setFeedback({
                     type: "success",
-                    message:
-                        "Desafio salvo. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa.",
+                    message: t("feedback.createdGenerating"),
                 });
             },
             onError: (err) => {
                 setFeedback({
                     type: "error",
-                    message: err.message ?? "Erro ao criar problema",
+                    message: err.message ?? t("feedback.createError"),
                 });
             },
         },
@@ -101,14 +103,14 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 setFeedback({
                     type: "success",
                     message: willGenerate
-                        ? "Alterações salvas. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa."
-                        : "Alterações salvas. Você pode avançar para a próxima etapa.",
+                        ? t("feedback.updatedGenerating")
+                        : t("feedback.updatedNoGenerate"),
                 });
             },
             onError: (err) => {
                 setFeedback({
                     type: "error",
-                    message: err.message ?? "Erro ao atualizar problema",
+                    message: err.message ?? t("feedback.updateError"),
                 });
             },
         },
@@ -150,7 +152,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             const formData = methods.getValues();
             if (mode === "create" && !formData.classroomId) {
                 methods.setError("classroomId", {
-                    message: "Selecione uma turma",
+                    message: t("basicInfo.classroom.selectError"),
                 });
                 setCurrentStep(0);
                 return;
@@ -178,9 +180,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                     );
                     if (
                         hasManualRefs &&
-                        !window.confirm(
-                            "Isso vai substituir soluções editadas manualmente. Continuar?"
-                        )
+                        !window.confirm(t("confirm.overwriteManual"))
                     ) {
                         return;
                     }
@@ -219,7 +219,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             return;
         }
 
-        setCurrentStep((prev) => Math.min(prev + 1, WIZARD_STEPS.length - 1));
+        setCurrentStep((prev) => Math.min(prev + 1, wizardSteps.length - 1));
     };
 
     const handleBack = () => {
@@ -242,7 +242,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
         router.push("/explore");
     };
 
-    const isLastStep = currentStep === WIZARD_STEPS.length - 1;
+    const isLastStep = currentStep === wizardSteps.length - 1;
 
     const effectiveChallengeId = resolvedChallengeId ?? challengeId;
 
@@ -256,18 +256,18 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-12 text-center">
                     <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-3">
-                        {mode === "create" ? "Create New Problem" : "Edit Problem"}
+                        {mode === "create" ? t("header.createTitle") : t("header.editTitle")}
                     </h1>
                     <p className="text-slate-400 text-lg">
                         {mode === "create"
-                            ? "Design your programming challenge with detailed instructions and resources"
-                            : "Update your programming challenge"}
+                            ? t("header.createSubtitle")
+                            : t("header.editSubtitle")}
                     </p>
                 </div>
 
                 <WizardStepper
                     currentStep={currentStep}
-                    steps={WIZARD_STEPS}
+                    steps={wizardSteps}
                     onStepClick={handleStepClick}
                 />
 
@@ -314,7 +314,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                                 className="bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 transition-colors duration-200 flex items-center gap-2"
                             >
                                 <ArrowLeft className="w-4 h-4" />
-                                Anterior
+                                {c("previous")}
                             </Button>
                         )}
                     </div>
@@ -326,7 +326,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                                 className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium transition-all duration-200 flex items-center gap-2"
                             >
                                 <Check className="w-4 h-4" />
-                                Finalizar
+                                {t("nav.finish")}
                             </Button>
                         ) : (
                             <Button
@@ -341,8 +341,8 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                                     <ArrowRight className="w-4 h-4" />
                                 )}
                                 {showAdvanceLabelOnStep2
-                                    ? "Continuar para Knowledge Base"
-                                    : "Próximo"}
+                                    ? t("nav.continueToKnowledgeBase")
+                                    : t("nav.next")}
                             </Button>
                         )}
                     </div>

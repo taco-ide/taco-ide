@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRemarkSync } from "react-remark";
 import { AlertCircle, ArrowLeft, CheckCircle, Loader2, Play, RefreshCw, Save } from "lucide-react";
@@ -41,16 +42,17 @@ function AutoReviewMarkdown({ content }: { content: string }) {
 }
 
 function AccessDenied() {
+  const t = useTranslations("submissions");
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-400">
-        Acesso restrito a professores e coordenadores.
-      </p>
+      <p className="text-slate-400">{t("accessDenied")}</p>
     </div>
   );
 }
 
 function SubmissionDetailContent() {
+  const t = useTranslations("submissions");
+  const c = useTranslations("common");
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -95,11 +97,10 @@ function SubmissionDetailContent() {
         const generated = resp?.data?.generated;
         setAutoReviewFeedback(
           generated
-            ? { type: "success", message: "Avaliação regenerada" }
+            ? { type: "success", message: t("autoReview.regenerated") }
             : {
                 type: "error",
-                message:
-                  "O agente não retornou avaliação — verifique os logs do servidor.",
+                message: t("autoReview.noResult"),
               }
         );
         queryClient.invalidateQueries({
@@ -120,13 +121,12 @@ function SubmissionDetailContent() {
         } else if (status === 409) {
           setAutoReviewFeedback({
             type: "error",
-            message: "Avaliação já em execução — aguarde.",
+            message: t("autoReview.alreadyRunning"),
           });
         } else {
           setAutoReviewFeedback({
             type: "error",
-            message:
-              message ?? "Falha ao re-executar avaliação",
+            message: message ?? t("autoReview.rerunError"),
           });
         }
       },
@@ -141,7 +141,7 @@ function SubmissionDetailContent() {
   const gradeMutation = usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade({
     mutation: {
       onSuccess: () => {
-        setFeedback({ type: "success", message: "Nota salva" });
+        setFeedback({ type: "success", message: t("grade.saved") });
         queryClient.invalidateQueries({
           queryKey: getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey(
             challengeId,
@@ -155,7 +155,7 @@ function SubmissionDetailContent() {
       onError: (err) => {
         setFeedback({
           type: "error",
-          message: err.message ?? "Erro ao salvar a nota",
+          message: err.message ?? t("grade.saveError"),
         });
       },
     },
@@ -165,11 +165,11 @@ function SubmissionDetailContent() {
     setFeedback(null);
     const grade = gradeInput.trim();
     if (!grade) {
-      setFeedback({ type: "error", message: "Informe uma nota" });
+      setFeedback({ type: "error", message: t("grade.required") });
       return;
     }
     if (grade.length > 10) {
-      setFeedback({ type: "error", message: "Máximo 10 caracteres" });
+      setFeedback({ type: "error", message: t("grade.maxLength") });
       return;
     }
     gradeMutation.mutate({
@@ -193,7 +193,7 @@ function SubmissionDetailContent() {
   if (!submission) {
     return (
       <div className="min-h-screen bg-slate-900 flex justify-center items-center">
-        <p className="text-slate-400">Submissão não encontrada.</p>
+        <p className="text-slate-400">{t("notFound")}</p>
       </div>
     );
   }
@@ -204,10 +204,12 @@ function SubmissionDetailContent() {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-white">
-              Submissão de {submission.studentName ?? "(usuário removido)"}
+              {t("detailTitle", {
+                student: submission.studentName ?? t("removedUser"),
+              })}
             </h1>
             <p className="text-slate-400 text-sm">
-              Enviada em {formatDt(submission.submittedAt)}
+              {t("submittedAt", { date: formatDt(submission.submittedAt) })}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -221,7 +223,7 @@ function SubmissionDetailContent() {
               }
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
+              {c("back")}
             </Button>
             <Button
               type="button"
@@ -235,16 +237,18 @@ function SubmissionDetailContent() {
               }
             >
               <Play className="w-3.5 h-3.5 mr-1" />
-              Ver histórico (replay)
+              {t("viewReplay")}
             </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <section className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 lg:col-span-1">
-            <h2 className="text-slate-100 font-semibold mb-3">Código submetido</h2>
+            <h2 className="text-slate-100 font-semibold mb-3">
+              {t("submittedCode")}
+            </h2>
             <pre className="bg-slate-950 rounded p-3 text-slate-100 text-xs overflow-auto max-h-[420px] whitespace-pre-wrap">
-              {submission.code ?? "(sem código)"}
+              {submission.code ?? t("noCode")}
             </pre>
             {submission.stdin ? (
               <div className="mt-3">
@@ -266,7 +270,9 @@ function SubmissionDetailContent() {
 
           <section className="rounded-lg border border-slate-700 bg-slate-800/50 p-4 lg:col-span-1">
             <div className="flex items-center justify-between mb-3 gap-2">
-              <h2 className="text-slate-100 font-semibold">Avaliação automática</h2>
+              <h2 className="text-slate-100 font-semibold">
+                {t("autoReview.title")}
+              </h2>
               <Button
                 type="button"
                 size="sm"
@@ -278,8 +284,8 @@ function SubmissionDetailContent() {
                 }
                 title={
                   submission.autoReviewStatus === "complete"
-                    ? "Re-executar avaliação automática"
-                    : "Executar avaliação automática"
+                    ? t("autoReview.rerunTitle")
+                    : t("autoReview.runTitle")
                 }
               >
                 {rerunMutation.isPending || submission.autoReviewStatus === "running" ? (
@@ -288,7 +294,9 @@ function SubmissionDetailContent() {
                   <RefreshCw className="w-3.5 h-3.5" />
                 )}
                 <span className="ml-1.5">
-                  {submission.autoReviewStatus === "complete" ? "Re-executar" : "Executar"}
+                  {submission.autoReviewStatus === "complete"
+                    ? t("autoReview.rerun")
+                    : t("autoReview.run")}
                 </span>
               </Button>
             </div>
@@ -310,12 +318,14 @@ function SubmissionDetailContent() {
             {submission.autoReviewStatus === "running" || rerunMutation.isPending ? (
               <div className="flex items-center gap-2 text-slate-400 text-sm italic">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Em execução…
+                {t("autoReview.running")}
               </div>
             ) : submission.autoReviewStatus === "complete" && submission.autoReview ? (
               <>
                 <p className="text-slate-500 text-xs mb-2">
-                  Gerada em {formatDt(submission.autoReviewAt)}
+                  {t("autoReview.generatedAt", {
+                    date: formatDt(submission.autoReviewAt),
+                  })}
                 </p>
                 <AutoReviewMarkdown content={submission.autoReview} />
               </>
@@ -323,16 +333,16 @@ function SubmissionDetailContent() {
               <Alert className="border-rose-500/30 bg-rose-500/10 text-rose-300">
                 <AlertCircle className="w-4 h-4" />
                 <AlertDescription>
-                  <span className="font-medium">Falha na avaliação.</span>{" "}
+                  <span className="font-medium">{t("autoReview.failed")}</span>{" "}
                   {submission.autoReviewError
                     ? submission.autoReviewError.slice(0, 200)
-                    : "Erro desconhecido."}
+                    : t("autoReview.unknownError")}
                 </AlertDescription>
               </Alert>
             ) : (
               /* pending */
               <p className="text-amber-400/90 text-sm">
-                Pendente — use o botão Executar para gerar a avaliação agora.
+                {t("autoReview.pendingHint")}
               </p>
             )}
           </section>
@@ -341,18 +351,20 @@ function SubmissionDetailContent() {
             <ReferenceSolutionsPanel challengeId={challengeId} />
 
             <div>
-              <h2 className="text-slate-100 font-semibold mb-3">Nota</h2>
+              <h2 className="text-slate-100 font-semibold mb-3">
+                {t("grade.title")}
+              </h2>
               <div className="space-y-3">
                 <div>
                   <Label htmlFor="grade-input" className="text-slate-300 text-sm">
-                    Nota (ex.: 8.5, A)
+                    {t("grade.label")}
                   </Label>
                   <Input
                     id="grade-input"
                     value={gradeInput}
                     onChange={(e) => setGradeInput(e.target.value)}
                     maxLength={10}
-                    placeholder="Ex.: 8.5"
+                    placeholder={t("grade.placeholder")}
                     className="mt-1 bg-slate-900 border-slate-600 text-slate-100"
                   />
                 </div>
@@ -361,14 +373,14 @@ function SubmissionDetailContent() {
                     htmlFor="comment-input"
                     className="text-slate-300 text-sm"
                   >
-                    Comentário (opcional)
+                    {t("grade.commentLabel")}
                   </Label>
                   <Textarea
                     id="comment-input"
                     value={commentInput}
                     onChange={(e) => setCommentInput(e.target.value)}
                     rows={4}
-                    placeholder="Feedback para o aluno..."
+                    placeholder={t("grade.commentPlaceholder")}
                     className="mt-1 bg-slate-900 border-slate-600 text-slate-100"
                   />
                 </div>
@@ -387,7 +399,9 @@ function SubmissionDetailContent() {
 
                 {submission.gradedAt ? (
                   <p className="text-slate-500 text-xs">
-                    Última nota salva em {formatDt(submission.gradedAt)}
+                    {t("grade.lastSavedAt", {
+                      date: formatDt(submission.gradedAt),
+                    })}
                   </p>
                 ) : null}
 
@@ -402,7 +416,7 @@ function SubmissionDetailContent() {
                   ) : (
                     <Save className="w-4 h-4 mr-2" />
                   )}
-                  Salvar nota
+                  {t("grade.save")}
                 </Button>
               </div>
             </div>

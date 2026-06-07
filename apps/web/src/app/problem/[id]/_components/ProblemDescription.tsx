@@ -2,13 +2,15 @@
 
 import { useProblem } from "@/contexts/ProblemContext";
 import { useRemarkSync } from "react-remark";
+import { useTranslations } from "next-intl";
 
 function ProblemDescription() {
   const { challenge } = useProblem();
+  const t = useTranslations("problem");
 
   const problemDescription = challenge?.description
     ? `# ${challenge.title}\n\n${challenge.description}`
-    : `# Carregando...\n\nAguarde enquanto carregamos a descrição do problema.`;
+    : `# ${t("description.loadingTitle")}\n\n${t("description.loadingBody")}`;
 
   const reactContent = useRemarkSync(problemDescription);
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowRightLeft, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -57,6 +58,8 @@ export function MoveUserDialog({
   currentOrgId,
   currentOrgName,
 }: MoveUserDialogProps) {
+  const t = useTranslations("adminShared");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [destOrgId, setDestOrgId] = useState("");
   const [role, setRole] = useState<AdminRole>("teacher");
@@ -83,7 +86,7 @@ export function MoveUserDialog({
   const mutation = usePostV1OrganizationsIdMembersUseridMove({
     mutation: {
       onSuccess: (_res, variables) => {
-        toast.success("Usuário movido para a nova organização");
+        toast.success(t("move.toast.success"));
         void queryClient.invalidateQueries({
           queryKey: getV1OrganizationsIdMembersQueryKey(currentOrgId),
         });
@@ -109,20 +112,18 @@ export function MoveUserDialog({
       onError: (err) => {
         if (err instanceof ApiError) {
           if (err.status === 409) {
-            setErrorMessage(
-              "Não foi possível mover: o usuário é o único administrador da organização atual.",
-            );
+            setErrorMessage(t("move.error.lastAdmin"));
             return;
           }
           if (err.status === 404) {
-            setErrorMessage("Organização ou usuário não encontrado.");
+            setErrorMessage(t("move.error.notFound"));
             return;
           }
           setErrorMessage(err.message);
           return;
         }
         setErrorMessage(
-          err instanceof Error ? err.message : "Erro ao mover usuário",
+          err instanceof Error ? err.message : t("move.error.generic"),
         );
       },
     },
@@ -144,9 +145,9 @@ export function MoveUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-slate-700 text-white sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Mover para outra organização</DialogTitle>
+          <DialogTitle>{t("move.title")}</DialogTitle>
           <DialogDescription className="text-slate-400">
-            Move o usuário de {currentOrgName} para outra organização ativa.
+            {t("move.description", { org: currentOrgName })}
           </DialogDescription>
         </DialogHeader>
 
@@ -167,7 +168,7 @@ export function MoveUserDialog({
 
             <div className="space-y-1.5">
               <Label className="text-slate-300 text-xs">
-                Organização de destino
+                {t("move.destLabel")}
               </Label>
               <Select
                 value={destOrgId}
@@ -178,10 +179,10 @@ export function MoveUserDialog({
                   <SelectValue
                     placeholder={
                       orgsLoading
-                        ? "Carregando organizações…"
+                        ? t("move.loadingOrgs")
                         : otherOrgs.length === 0
-                          ? "Sem outras organizações ativas"
-                          : "Selecione uma organização…"
+                          ? t("move.noOtherOrgs")
+                          : t("move.selectOrg")
                     }
                   />
                 </SelectTrigger>
@@ -201,7 +202,7 @@ export function MoveUserDialog({
 
             <div className="space-y-1.5">
               <Label className="text-slate-300 text-xs">
-                Papel na nova organização
+                {t("move.newRoleLabel")}
               </Label>
               <RoleSelect value={role} onChange={setRole} />
             </div>
@@ -210,11 +211,10 @@ export function MoveUserDialog({
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <div className="space-y-1">
                 <p className="font-medium">
-                  O usuário perderá acesso a {currentOrgName}.
+                  {t("move.warning.title", { org: currentOrgName })}
                 </p>
                 <p className="text-amber-200/80">
-                  Matrículas em turmas, submissões e histórico de chat ficam
-                  arquivados na organização atual (não são excluídos).
+                  {t("move.warning.body")}
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export function MoveUserDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            Cancelar
+            {c("cancel")}
           </Button>
           <Button
             type="button"
@@ -248,7 +248,7 @@ export function MoveUserDialog({
             ) : (
               <ArrowRightLeft className="h-4 w-4" />
             )}
-            Mover usuário
+            {t("move.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

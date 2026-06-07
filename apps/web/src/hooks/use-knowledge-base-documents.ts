@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -43,6 +44,7 @@ const kbDocumentsKeys = {
 
 export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
   const queryClient = useQueryClient();
+  const t = useTranslations("knowledgeBase");
 
   const listQuery = useQuery({
     queryKey: kbDocumentsKeys.all(knowledgeBaseId),
@@ -51,7 +53,7 @@ export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
         `${API_BASE_URL}/v1/knowledge-bases/${knowledgeBaseId}/documents`,
         { credentials: "include" },
       );
-      if (!res.ok) throw new Error("Failed to fetch documents");
+      if (!res.ok) throw new Error(t("hookErrors.fetch"));
       const json: ListDocumentsResponse = await res.json();
       return json.data;
     },
@@ -80,8 +82,8 @@ export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
       if (!res.ok) {
         const err = await res
           .json()
-          .catch(() => ({ message: "Upload failed" }));
-        throw new Error(err.message || "Upload failed");
+          .catch(() => ({ message: t("hookErrors.upload") }));
+        throw new Error(err.message || t("hookErrors.upload"));
       }
       return res.json();
     },
@@ -101,7 +103,7 @@ export function useKnowledgeBaseDocuments(knowledgeBaseId: string) {
           credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Failed to delete document");
+      if (!res.ok) throw new Error(t("hookErrors.delete"));
       return res.json();
     },
     onSuccess: () => {

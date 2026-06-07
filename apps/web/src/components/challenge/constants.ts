@@ -1,5 +1,5 @@
 export const difficultyLevels = [
-    { value: "easy", label: "Easy" },
-    { value: "medium", label: "Medium" },
-    { value: "hard", label: "Hard" },
+    { value: "easy" },
+    { value: "medium" },
+    { value: "hard" },
 ] as const;

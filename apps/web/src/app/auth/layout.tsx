@@ -2,12 +2,15 @@
 
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslations } from "next-intl";
 
 export default function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("auth");
+
   return (
     <div className="flex min-h-svh flex-col items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm md:max-w-4xl">
@@ -17,7 +20,7 @@ export default function AuthLayout({
             <div className="relative hidden bg-muted md:block">
               <Image
                 src="/logoTaco.png"
-                alt="TACO Logo"
+                alt={t("logoAlt")}
                 width={500}
                 height={500}
                 className="absolute inset-0 h-full w-full object-scale-down dark:brightness-[0.2] dark:grayscale"
@@ -26,8 +29,10 @@ export default function AuthLayout({
           </CardContent>
         </Card>
         <div className="mt-6 text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-          By using our services, you agree to our{" "}
-          <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+          {t.rich("legal", {
+            terms: (chunks) => <a href="#">{chunks}</a>,
+            privacy: (chunks) => <a href="#">{chunks}</a>,
+          })}
         </div>
       </div>
     </div>

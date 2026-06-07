@@ -18,6 +18,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -138,8 +139,16 @@ async function importCsvRequest(params: {
   organizationId: string;
   file: File;
   dryRun: boolean;
+  httpErrorMessage: (status: number) => string;
+  invalidResponseMessage: string;
 }): Promise<ImportResponseData> {
-  const { organizationId, file, dryRun } = params;
+  const {
+    organizationId,
+    file,
+    dryRun,
+    httpErrorMessage,
+    invalidResponseMessage,
+  } = params;
   const url = `${API_BASE_URL}/v1/organizations/${encodeURIComponent(
     organizationId,
   )}/members/import-csv${dryRun ? "?dryRun=true" : ""}`;
@@ -163,14 +172,14 @@ async function importCsvRequest(params: {
   if (!response.ok) {
     const message =
       (body && "message" in body && body.message) ||
-      `Falha na importação (HTTP ${response.status})`;
+      httpErrorMessage(response.status);
     const error = new Error(message) as Error & { status?: number };
     error.status = response.status;
     throw error;
   }
 
   if (!body || !("data" in body) || !body.data) {
-    throw new Error("Resposta inválida do servidor");
+    throw new Error(invalidResponseMessage);
   }
 
   return body.data;
@@ -249,6 +258,7 @@ interface RowStatusPillProps {
 }
 
 function RowStatusPill({ status, variant }: RowStatusPillProps) {
+  const t = useTranslations("adminShared");
   const baseMap: Record<
     RowStatus,
     {
@@ -258,22 +268,22 @@ function RowStatusPill({ status, variant }: RowStatusPillProps) {
     }
   > = {
     created: {
-      label: variant === "preview" ? "criar" : "criado",
+      label: t(`csv.rowStatus.${variant}.created`),
       icon: UserPlus,
       className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
     },
     linked: {
-      label: variant === "preview" ? "vincular" : "vinculado",
+      label: t(`csv.rowStatus.${variant}.linked`),
       icon: Link2,
       className: "border-sky-500/30 bg-sky-500/10 text-sky-300",
     },
     skipped: {
-      label: variant === "preview" ? "ignorar" : "ignorado",
+      label: t(`csv.rowStatus.${variant}.skipped`),
       icon: CircleSlash,
       className: "border-slate-600/40 bg-slate-700/40 text-slate-300",
     },
     error: {
-      label: "erro",
+      label: t("csv.rowStatus.error"),
       icon: X,
       className: "border-red-500/30 bg-red-500/10 text-red-300",
     },
@@ -298,10 +308,11 @@ interface CsvRowsTableProps {
 }
 
 function CsvRowsTable({ rows, variant }: CsvRowsTableProps) {
+  const t = useTranslations("adminShared");
   if (rows.length === 0) {
     return (
       <div className="rounded-lg border border-slate-800 bg-slate-900/50 px-6 py-10 text-center text-sm text-slate-400">
-        Nenhuma linha para exibir.
+        {t("csv.table.empty")}
       </div>
     );
   }
@@ -313,10 +324,18 @@ function CsvRowsTable({ rows, variant }: CsvRowsTableProps) {
           <thead className="sticky top-0 z-[1] bg-slate-900/95 backdrop-blur">
             <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
               <th className="w-[6%] px-3 py-2 font-medium">#</th>
-              <th className="w-[16%] px-3 py-2 font-medium">Status</th>
-              <th className="w-[28%] px-3 py-2 font-medium">Email</th>
-              <th className="w-[16%] px-3 py-2 font-medium">Linha</th>
-              <th className="px-3 py-2 font-medium">Detalhe</th>
+              <th className="w-[16%] px-3 py-2 font-medium">
+                {t("csv.table.header.status")}
+              </th>
+              <th className="w-[28%] px-3 py-2 font-medium">
+                {t("csv.table.header.email")}
+              </th>
+              <th className="w-[16%] px-3 py-2 font-medium">
+                {t("csv.table.header.line")}
+              </th>
+              <th className="px-3 py-2 font-medium">
+                {t("csv.table.header.detail")}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -349,7 +368,7 @@ function CsvRowsTable({ rows, variant }: CsvRowsTableProps) {
                   {row.generatedPassword ? (
                     <div className="flex flex-col gap-0.5">
                       <span>
-                        {row.message || "Senha gerada automaticamente"}
+                        {row.message || t("csv.table.generatedPassword")}
                       </span>
                       <code className="self-start rounded bg-slate-800/80 px-1.5 py-0.5 font-mono text-[10.5px] text-amber-300">
                         {row.generatedPassword}
@@ -385,6 +404,8 @@ function UploadStep({
   onContinue,
   onCancel,
 }: UploadStepProps) {
+  const t = useTranslations("adminShared");
+  const c = useTranslations("common");
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -467,20 +488,22 @@ function UploadStep({
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">{file.name}</p>
             <p className="text-xs text-slate-400">
-              {formatBytes(file.size)} · clique para substituir
+              {t("csv.upload.fileMeta", { size: formatBytes(file.size) })}
             </p>
           </div>
         ) : (
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
-              Solte um arquivo CSV aqui
+              {t("csv.upload.dropHere")}
             </p>
             <p className="text-xs text-slate-400">
-              ou{" "}
-              <span className="underline decoration-dotted underline-offset-2">
-                clique para escolher
-              </span>{" "}
-              · apenas .csv · máximo 1 MB
+              {t.rich("csv.upload.dropHint", {
+                pick: (chunks) => (
+                  <span className="underline decoration-dotted underline-offset-2">
+                    {chunks}
+                  </span>
+                ),
+              })}
             </p>
           </div>
         )}
@@ -496,11 +519,13 @@ function UploadStep({
         <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-white">
             <FileSpreadsheet className="h-4 w-4 text-amber-400" />
-            Formato esperado
+            {t("csv.upload.format.title")}
           </div>
           <pre className="overflow-x-auto rounded bg-black/30 p-2.5 font-mono text-[11px] leading-relaxed text-slate-300">
             <code>
-              <span className="text-slate-500"># colunas: name, email, role (senha opcional)</span>
+              <span className="text-slate-500">
+                {t("csv.upload.format.exampleComment")}
+              </span>
               {"\n"}
               <span className="text-amber-300">Nome</span>,
               <span className="text-amber-300">E-mail</span>,
@@ -517,29 +542,30 @@ function UploadStep({
             </code>
           </pre>
           <p className="mt-2 text-[11px] text-slate-500">
-            Cabeçalhos aceitos (sem distinção de maiúsculas/acentos):{" "}
+            {t("csv.upload.format.headersLead")}{" "}
             <code>name</code>/<code>nome</code>, <code>email</code>/
             <code>e-mail</code>, <code>password</code>/<code>senha</code>,{" "}
             <code>role</code>/<code>função</code>/<code>papel</code>.
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            Papéis aceitos: <code>student</code>, <code>teacher</code>,{" "}
-            <code>coordinator</code>, <code>admin</code>.
+            {t("csv.upload.format.rolesLead")} <code>student</code>,{" "}
+            <code>teacher</code>, <code>coordinator</code>, <code>admin</code>.
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            <span className="text-amber-300">Senha é opcional</span>: deixe em
-            branco para o sistema gerar uma senha aleatória (exibida no
-            relatório final).
+            {t.rich("csv.upload.format.passwordOptional", {
+              highlight: (chunks) => (
+                <span className="text-amber-300">{chunks}</span>
+              ),
+            })}
           </p>
         </div>
         <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
           <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-white">
             <FileDown className="h-4 w-4 text-amber-400" />
-            Precisa de um modelo?
+            {t("csv.upload.template.title")}
           </div>
           <p className="mb-3 text-xs text-slate-400 leading-relaxed">
-            Baixe um template com cabeçalho correto e duas linhas de exemplo
-            válidas para começar.
+            {t("csv.upload.template.description")}
           </p>
           <Button
             type="button"
@@ -548,7 +574,7 @@ function UploadStep({
             onClick={handleDownloadTemplate}
           >
             <FileDown className="h-4 w-4" />
-            Baixar template.csv
+            {t("csv.upload.template.download")}
           </Button>
         </div>
       </div>
@@ -559,7 +585,7 @@ function UploadStep({
           variant="outline-dark"
           onClick={onCancel}
         >
-          Cancelar
+          {c("cancel")}
         </Button>
         <Button
           type="button"
@@ -567,7 +593,7 @@ function UploadStep({
           disabled={!file}
           className="bg-amber-500 text-slate-900 hover:bg-amber-400"
         >
-          Continuar para prévia
+          {t("csv.upload.continue")}
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -594,6 +620,7 @@ function PreviewStep({
   onConfirm,
   onRetry,
 }: PreviewStepProps) {
+  const t = useTranslations("adminShared");
   const summary = data?.summary;
   const rows = data?.rows ?? [];
   const errorCount = summary?.errors ?? 0;
@@ -614,13 +641,13 @@ function PreviewStep({
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
           <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
           <p className="text-sm text-slate-300">
-            Validando o arquivo no servidor...
+            {t("csv.preview.validating")}
           </p>
         </div>
       )}
 
       {error && !isLoading && (
-        <Banner kind="error" title="Não foi possível validar o arquivo">
+        <Banner kind="error" title={t("csv.preview.validateFailed")}>
           {error}
         </Banner>
       )}
@@ -628,31 +655,33 @@ function PreviewStep({
       {!isLoading && !error && summary && (
         <>
           <p className="text-xs text-slate-400">
-            Mostrando {Math.min(PREVIEW_ROW_LIMIT, totalRows)} de {totalRows}{" "}
-            {totalRows === 1 ? "linha" : "linhas"}.
+            {t("csv.preview.showing", {
+              shown: Math.min(PREVIEW_ROW_LIMIT, totalRows),
+              total: totalRows,
+            })}
           </p>
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             <SummaryStat
-              label="Vai criar"
+              label={t("csv.preview.stat.willCreate")}
               value={summary.created}
               kind="success"
               icon={UserPlus}
             />
             <SummaryStat
-              label="Vai vincular"
+              label={t("csv.preview.stat.willLink")}
               value={summary.linked}
               kind="info"
               icon={Link2}
             />
             <SummaryStat
-              label="Vai ignorar"
+              label={t("csv.preview.stat.willSkip")}
               value={summary.skipped}
               kind="ghost"
               icon={CircleSlash}
             />
             <SummaryStat
-              label="Erros"
+              label={t("csv.preview.stat.errors")}
               value={summary.errors}
               kind="danger"
               icon={AlertTriangle}
@@ -662,11 +691,9 @@ function PreviewStep({
           {errorCount > 0 && (
             <Banner
               kind="warn"
-              title={`${errorCount} ${errorCount === 1 ? "linha tem" : "linhas têm"} problemas`}
+              title={t("csv.preview.errorsBanner.title", { count: errorCount })}
             >
-              Linhas com erros serão ignoradas. Você pode corrigi-las e enviar
-              de novo, ou prosseguir e importar apenas as {importableCount}{" "}
-              linhas válidas.
+              {t("csv.preview.errorsBanner.body", { count: importableCount })}
             </Banner>
           )}
 
@@ -681,7 +708,7 @@ function PreviewStep({
           onClick={onBack}
         >
           <ArrowLeft className="h-4 w-4" />
-          Voltar
+          {t("csv.back")}
         </Button>
         {error && !isLoading && (
           <Button
@@ -690,16 +717,16 @@ function PreviewStep({
             onClick={onRetry}
           >
             <RefreshCcw className="h-4 w-4" />
-            Tentar novamente
+            {t("csv.retry")}
           </Button>
         )}
         <div className="flex-1" />
         {summary && (
           <span className="text-xs text-slate-400">
-            {importableCount}{" "}
-            {importableCount === 1 ? "linha será importada" : "linhas serão importadas"}{" "}
-            · {ignoredCount}{" "}
-            {ignoredCount === 1 ? "linha será ignorada" : "linhas serão ignoradas"}
+            {t("csv.preview.footerSummary", {
+              importable: importableCount,
+              ignored: ignoredCount,
+            })}
           </span>
         )}
         <Button
@@ -709,8 +736,7 @@ function PreviewStep({
           className="bg-amber-500 text-slate-900 hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-400"
         >
           <Check className="h-4 w-4" />
-          Confirmar e importar {importableCount}{" "}
-          {importableCount === 1 ? "linha" : "linhas"}
+          {t("csv.preview.confirm", { count: importableCount })}
         </Button>
       </div>
     </div>
@@ -738,6 +764,7 @@ function ResultStep({
   onClose,
   onRetry,
 }: ResultStepProps) {
+  const t = useTranslations("adminShared");
   const summary = data?.summary;
   const rows = data?.rows ?? [];
 
@@ -787,13 +814,13 @@ function ResultStep({
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
           <Loader2 className="h-6 w-6 animate-spin text-amber-400" />
           <p className="text-sm text-slate-300">
-            Importando membros para a organização...
+            {t("csv.result.importing")}
           </p>
         </div>
       )}
 
       {error && !isLoading && (
-        <Banner kind="error" title="Falha ao importar">
+        <Banner kind="error" title={t("csv.result.importFailed")}>
           {error}
         </Banner>
       )}
@@ -802,42 +829,41 @@ function ResultStep({
         <>
           <Banner
             kind="success"
-            title={`${importedCount} de ${totalCount} ${
-              totalCount === 1 ? "linha importada" : "linhas importadas"
-            } com sucesso`}
+            title={t("csv.result.successTitle", {
+              imported: importedCount,
+              total: totalCount,
+            })}
           >
             {rows.some((row) => row.generatedPassword) ? (
-              <>
-                Os novos usuários já podem entrar com a senha definida no CSV.
-                Linhas sem senha receberam uma <strong>senha gerada</strong> —
-                baixe o relatório abaixo para compartilhá-la com cada usuário.
-              </>
+              t.rich("csv.result.successWithGenerated", {
+                strong: (chunks) => <strong>{chunks}</strong>,
+              })
             ) : (
-              <>Os novos usuários já podem entrar com a senha definida no CSV.</>
+              t("csv.result.successPlain")
             )}
           </Banner>
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             <SummaryStat
-              label="Criados"
+              label={t("csv.result.stat.created")}
               value={summary.created}
               kind="success"
               icon={UserPlus}
             />
             <SummaryStat
-              label="Vinculados"
+              label={t("csv.result.stat.linked")}
               value={summary.linked}
               kind="info"
               icon={Link2}
             />
             <SummaryStat
-              label="Ignorados"
+              label={t("csv.result.stat.skipped")}
               value={summary.skipped}
               kind="ghost"
               icon={CircleSlash}
             />
             <SummaryStat
-              label="Falharam"
+              label={t("csv.result.stat.failed")}
               value={summary.errors}
               kind="danger"
               icon={AlertTriangle}
@@ -868,7 +894,7 @@ function ResultStep({
           disabled={isLoading || rows.length === 0}
         >
           <FileDown className="h-4 w-4" />
-          Baixar relatório.csv
+          {t("csv.result.downloadReport")}
         </Button>
         {error && !isLoading && (
           <Button
@@ -877,7 +903,7 @@ function ResultStep({
             onClick={onRetry}
           >
             <RefreshCcw className="h-4 w-4" />
-            Tentar novamente
+            {t("csv.retry")}
           </Button>
         )}
         <div className="flex-1" />
@@ -888,7 +914,7 @@ function ResultStep({
           className="bg-amber-500 text-slate-900 hover:bg-amber-400"
         >
           <Check className="h-4 w-4" />
-          Concluído
+          {t("csv.result.done")}
         </Button>
       </div>
     </div>
@@ -908,12 +934,13 @@ interface FilterBarProps {
 }
 
 function FilterBar({ filter, counts, onFilterChange }: FilterBarProps) {
+  const t = useTranslations("adminShared");
   const items: { key: ResultFilter; label: string; count: number }[] = [
-    { key: "all", label: "Todos", count: counts.all },
-    { key: "created", label: "Criados", count: counts.created },
-    { key: "linked", label: "Vinculados", count: counts.linked },
-    { key: "skipped", label: "Ignorados", count: counts.skipped },
-    { key: "error", label: "Erros", count: counts.error },
+    { key: "all", label: t("csv.filter.all"), count: counts.all },
+    { key: "created", label: t("csv.filter.created"), count: counts.created },
+    { key: "linked", label: t("csv.filter.linked"), count: counts.linked },
+    { key: "skipped", label: t("csv.filter.skipped"), count: counts.skipped },
+    { key: "error", label: t("csv.filter.error"), count: counts.error },
   ];
   return (
     <div className="inline-flex flex-wrap gap-1 rounded-lg border border-slate-800 bg-slate-900/60 p-1">
@@ -954,6 +981,7 @@ export function CsvImportModal({
   onOpenChange,
   organizationId,
 }: CsvImportModalProps) {
+  const t = useTranslations("adminShared");
   const queryClient = useQueryClient();
   const [step, setStep] = useState<CsvStep>("upload");
   const [file, setFile] = useState<File | null>(null);
@@ -974,6 +1002,9 @@ export function CsvImportModal({
         organizationId,
         file: params.file,
         dryRun: true,
+        httpErrorMessage: (status) =>
+          t("csv.error.http", { status }),
+        invalidResponseMessage: t("csv.error.invalidResponse"),
       }),
     onSuccess: (data) => {
       setPreviewData(data);
@@ -981,7 +1012,7 @@ export function CsvImportModal({
     },
     onError: (err) => {
       const message =
-        err instanceof Error ? err.message : "Erro inesperado na validação";
+        err instanceof Error ? err.message : t("csv.error.unexpectedValidation");
       setPreviewError(message);
     },
   });
@@ -992,6 +1023,9 @@ export function CsvImportModal({
         organizationId,
         file: params.file,
         dryRun: false,
+        httpErrorMessage: (status) =>
+          t("csv.error.http", { status }),
+        invalidResponseMessage: t("csv.error.invalidResponse"),
       }),
     onSuccess: (data) => {
       setResultData(data);
@@ -1000,15 +1034,13 @@ export function CsvImportModal({
         queryKey: getV1OrganizationsIdMembersQueryKey(organizationId),
       });
       const imported = data.summary.created + data.summary.linked;
-      toast.success(
-        `${imported} ${imported === 1 ? "linha importada" : "linhas importadas"}`,
-      );
+      toast.success(t("csv.toast.imported", { count: imported }));
     },
     onError: (err) => {
       const message =
-        err instanceof Error ? err.message : "Erro inesperado na importação";
+        err instanceof Error ? err.message : t("csv.error.unexpectedImport");
       setResultError(message);
-      toast.error("Falha ao importar membros");
+      toast.error(t("csv.toast.importFailed"));
     },
   });
 
@@ -1044,18 +1076,18 @@ export function CsvImportModal({
     }
     if (!isCsvFile(nextFile)) {
       setFile(null);
-      setFileError("O arquivo deve ter extensão .csv");
+      setFileError(t("csv.fileError.extension"));
       return;
     }
     if (nextFile.size > MAX_FILE_SIZE_BYTES) {
       setFile(null);
       setFileError(
-        `O arquivo excede o limite de 1 MB (${formatBytes(nextFile.size)}).`,
+        t("csv.fileError.tooLarge", { size: formatBytes(nextFile.size) }),
       );
       return;
     }
     setFile(nextFile);
-  }, []);
+  }, [t]);
 
   const runPreview = useCallback(
     (target: File) => {
@@ -1099,16 +1131,16 @@ export function CsvImportModal({
 
   const dialogTitle =
     step === "upload"
-      ? "Importar membros de CSV"
+      ? t("csv.dialog.upload.title")
       : step === "preview"
-        ? "Prévia e validação"
-        : "Importação concluída";
+        ? t("csv.dialog.preview.title")
+        : t("csv.dialog.result.title");
   const dialogSubtitle =
     step === "upload"
-      ? "Adicione usuários em massa a esta organização."
+      ? t("csv.dialog.upload.subtitle")
       : step === "preview"
-        ? "Revise o que será aplicado para cada linha antes de importar."
-        : "Resumo do que foi aplicado a esta organização.";
+        ? t("csv.dialog.preview.subtitle")
+        : t("csv.dialog.result.subtitle");
 
   // Disable closing while a real import is in flight to avoid losing state.
   const handleDialogChange = (next: boolean) => {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Select,
   SelectContent,
@@ -19,12 +20,7 @@ interface RoleSelectProps {
   ariaLabel?: string;
 }
 
-const options: { value: AdminRole; label: string }[] = [
-  { value: "student", label: "Aluno" },
-  { value: "teacher", label: "Professor" },
-  { value: "coordinator", label: "Coordenador" },
-  { value: "admin", label: "Administrador" },
-];
+const roleOrder: AdminRole[] = ["student", "teacher", "coordinator", "admin"];
 
 export function RoleSelect({
   value,
@@ -34,6 +30,7 @@ export function RoleSelect({
   triggerClassName,
   ariaLabel,
 }: RoleSelectProps) {
+  const t = useTranslations("adminShared");
   return (
     <Select
       value={value}
@@ -41,23 +38,23 @@ export function RoleSelect({
       disabled={disabled}
     >
       <SelectTrigger
-        aria-label={ariaLabel ?? "Selecionar papel"}
+        aria-label={ariaLabel ?? t("roleSelect.ariaLabel")}
         className={cn(
           "h-9 border-slate-700 bg-slate-900/60 text-white data-[state=open]:bg-slate-900",
           triggerClassName,
           className,
         )}
       >
-        <SelectValue placeholder="Selecionar…" />
+        <SelectValue placeholder={t("roleSelect.placeholder")} />
       </SelectTrigger>
       <SelectContent className="bg-slate-900 border-slate-700 text-white">
-        {options.map((opt) => (
+        {roleOrder.map((role) => (
           <SelectItem
-            key={opt.value}
-            value={opt.value}
+            key={role}
+            value={role}
             className="text-white focus:bg-slate-800 focus:text-white"
           >
-            {opt.label}
+            {t(`role.${role}`)}
           </SelectItem>
         ))}
       </SelectContent>
@@ -65,4 +62,6 @@ export function RoleSelect({
   );
 }
 
-export const adminRoleOptions = options;
+export const adminRoleOptions: { value: AdminRole }[] = roleOrder.map(
+  (value) => ({ value }),
+);

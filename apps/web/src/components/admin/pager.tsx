@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface PagerProps {
@@ -33,6 +34,7 @@ function buildPageList(current: number, totalPages: number): (number | "ellipsis
 }
 
 export function Pager({ page, perPage, total, totalPages, onPageChange }: PagerProps) {
+  const t = useTranslations("adminShared");
   if (total === 0) return null;
 
   const start = (page - 1) * perPage + 1;
@@ -42,7 +44,11 @@ export function Pager({ page, perPage, total, totalPages, onPageChange }: PagerP
   return (
     <div className="flex items-center justify-between gap-3 border-t border-slate-700/60 bg-slate-800/30 px-4 py-3 text-xs text-slate-400">
       <div>
-        Mostrando <strong className="text-white">{start}–{end}</strong> de {total}
+        {t.rich("pager.showing", {
+          range: `${start}–${end}`,
+          total,
+          strong: (chunks) => <strong className="text-white">{chunks}</strong>,
+        })}
       </div>
       <div className="flex items-center gap-1">
         <button
@@ -52,7 +58,7 @@ export function Pager({ page, perPage, total, totalPages, onPageChange }: PagerP
           )}
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page <= 1}
-          aria-label="Página anterior"
+          aria-label={t("pager.previousPage")}
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </button>
@@ -85,7 +91,7 @@ export function Pager({ page, perPage, total, totalPages, onPageChange }: PagerP
           )}
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
           disabled={page >= totalPages}
-          aria-label="Próxima página"
+          aria-label={t("pager.nextPage")}
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </button>

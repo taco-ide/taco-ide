@@ -9,6 +9,7 @@ import {
 import { useRemarkSync } from "react-remark";
 import { AnimatePresence, motion } from "framer-motion";
 import { MessageSquare } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
   deriveReplayState,
@@ -27,8 +28,9 @@ function normalizeAssistantMarkdown(text: string): string {
 }
 
 function AssistantMarkdownBody({ content }: { content: string }) {
+  const t = useTranslations("workSessions");
   const trimmed =
-    normalizeAssistantMarkdown(content || "") || "(Aguardando resposta...)";
+    normalizeAssistantMarkdown(content || "") || t("replay.chat.awaitingResponse");
   const md = useRemarkSync(trimmed);
   return (
     <div className="prose prose-sm prose-invert max-w-none prose-p:text-zinc-300 prose-p:my-0.5 prose-headings:text-zinc-100 prose-headings:my-1.5 prose-li:my-0 prose-li:text-zinc-300 prose-code:text-amber-400 prose-code:bg-zinc-700/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-600/50 prose-pre:text-zinc-300 prose-pre:text-xs prose-pre:my-1.5 prose-ul:my-1 prose-ol:my-1">
@@ -78,6 +80,7 @@ export function ReplayChatColumn({
   animationsEnabled,
   derived,
 }: ReplayChatColumnProps) {
+  const t = useTranslations("workSessions");
   const prevMessages = useMemo(
     () => deriveReplayState(interactions, Math.max(0, stepIndex - 1)).messages,
     [interactions, stepIndex]
@@ -159,7 +162,7 @@ export function ReplayChatColumn({
       <CardHeader className="shrink-0 space-y-0 border-b border-slate-700/80 py-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-slate-300">
           <MessageSquare className="h-4 w-4 text-amber-500/90" />
-          Chat
+          {t("replay.chat.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col p-0 overflow-hidden">
@@ -167,12 +170,12 @@ export function ReplayChatColumn({
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
             role="log"
-            aria-label="Mensagens do replay"
+            aria-label={t("replay.chat.logLabel")}
             className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-2"
           >
             {derived.messages.length === 0 ? (
               <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-4 text-sm text-slate-500">
-                Nenhuma mensagem de chat neste passo.
+                {t("replay.chat.emptyStep")}
               </div>
             ) : (
               <AnimatePresence initial={false}>

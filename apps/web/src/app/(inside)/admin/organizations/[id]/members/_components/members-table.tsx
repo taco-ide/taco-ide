@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   ArrowRightLeft,
   Eye,
@@ -58,12 +59,6 @@ interface MembersTableProps {
   onRemove: (row: MemberRow) => void;
 }
 
-const joinedViaLabel: Record<MemberRow["joinedVia"], string> = {
-  domain: "Domínio",
-  manual: "Manual",
-  invitation: "Convite",
-};
-
 function emailDomain(email: string): string {
   const at = email.lastIndexOf("@");
   return at >= 0 ? email.slice(at + 1) : email;
@@ -78,16 +73,30 @@ export function MembersTable({
   onMove,
   onRemove,
 }: MembersTableProps) {
+  const t = useTranslations("adminMembers");
+  const joinedViaLabel: Record<MemberRow["joinedVia"], string> = {
+    domain: t("joinedVia.domain"),
+    manual: t("joinedVia.manual"),
+    invitation: t("joinedVia.invitation"),
+  };
   return (
     <TooltipProvider delayDuration={200}>
       <Table>
         <TableHeader>
           <TableRow className="border-slate-700/60 hover:bg-transparent">
-            <TableHead className="text-slate-400">Membro</TableHead>
-            <TableHead className="text-slate-400">Papel</TableHead>
-            <TableHead className="text-slate-400">Última atividade</TableHead>
-            <TableHead className="text-slate-400">Origem</TableHead>
-            <TableHead className="text-right text-slate-400">Ações</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.member")}
+            </TableHead>
+            <TableHead className="text-slate-400">{t("table.role")}</TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.lastActive")}
+            </TableHead>
+            <TableHead className="text-slate-400">
+              {t("table.source")}
+            </TableHead>
+            <TableHead className="text-right text-slate-400">
+              {t("table.actions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -139,21 +148,21 @@ export function MembersTable({
                             value={role}
                             onChange={(next) => onRoleChange(row, next)}
                             disabled={solo || pending}
-                            ariaLabel={`Alterar papel de ${row.name}`}
+                            ariaLabel={t("changeRoleAria", { name: row.name })}
                           />
                         </div>
                         {solo && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span
-                                aria-label="Único administrador"
+                                aria-label={t("soloAdmin.aria")}
                                 className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-slate-700/60 text-slate-400"
                               >
                                 <Lock className="h-3.5 w-3.5" />
                               </span>
                             </TooltipTrigger>
                             <TooltipContent className="bg-slate-900 border-slate-700 text-white text-xs">
-                              Não é possível alterar — é o único administrador
+                              {t("soloAdmin.tooltip")}
                             </TooltipContent>
                           </Tooltip>
                         )}
@@ -183,7 +192,7 @@ export function MembersTable({
                           <button
                             type="button"
                             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white"
-                            aria-label={`Ações para ${row.name}`}
+                            aria-label={t("actionsAria", { name: row.name })}
                           >
                             <MoreHorizontal className="h-4 w-4" />
                           </button>
@@ -197,14 +206,14 @@ export function MembersTable({
                             className="text-slate-400"
                           >
                             <Eye className="mr-2 h-3.5 w-3.5" />
-                            Ver perfil
+                            {t("rowActions.viewProfile")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => onMove(row)}
                             className="text-slate-100 focus:bg-slate-800 focus:text-white data-[highlighted]:bg-slate-800 data-[highlighted]:text-white"
                           >
                             <ArrowRightLeft className="mr-2 h-3.5 w-3.5" />
-                            Mover para outra organização
+                            {t("rowActions.move")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="bg-slate-700/60" />
                           <DropdownMenuItem
@@ -213,7 +222,7 @@ export function MembersTable({
                             className="text-rose-300 focus:bg-rose-500/10 focus:text-rose-200 data-[highlighted]:bg-rose-500/10 data-[highlighted]:text-rose-200"
                           >
                             <UserMinus className="mr-2 h-3.5 w-3.5" />
-                            Remover desta organização
+                            {t("rowActions.remove")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

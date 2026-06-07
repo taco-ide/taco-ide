@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -39,14 +40,16 @@ function formatDt(iso: string | null) {
 }
 
 function AccessDenied() {
+  const t = useTranslations("workSessions");
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-400">Acesso restrito a professores e coordenadores.</p>
+      <p className="text-slate-400">{t("accessDenied")}</p>
     </div>
   );
 }
 
 function WorkSessionsListContent() {
+  const t = useTranslations("workSessions");
   const params = useParams();
   const router = useRouter();
   const challengeId = params.id as string;
@@ -91,7 +94,7 @@ function WorkSessionsListContent() {
     <div className="min-h-screen bg-slate-900 bg-[url('/grid.svg')] bg-fixed bg-center">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 flex flex-col gap-4">
-          <h1 className="text-2xl font-bold text-white">Sessões dos alunos</h1>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -101,7 +104,7 @@ function WorkSessionsListContent() {
               onClick={() => router.push(`/create/${challengeId}`)}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Editar problema
+              {t("actions.editProblem")}
             </Button>
             <Button
               type="button"
@@ -111,7 +114,7 @@ function WorkSessionsListContent() {
               onClick={() => router.push(`/create/${challengeId}/submissions`)}
             >
               <ClipboardCheck className="w-4 h-4 mr-2" />
-              Submissões
+              {t("actions.submissions")}
             </Button>
             <Button
               type="button"
@@ -122,7 +125,7 @@ function WorkSessionsListContent() {
               }
             >
               <Laptop className="w-4 h-4 mr-2" />
-              Visualização do aluno
+              {t("actions.studentView")}
             </Button>
           </div>
         </div>
@@ -137,18 +140,18 @@ function WorkSessionsListContent() {
               className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500"
             />
             <Label htmlFor="submitted-only" className="text-slate-200 cursor-pointer">
-              Apenas submetidas
+              {t("filters.submittedOnly")}
             </Label>
           </div>
           <div className="w-full sm:max-w-xs">
             <Label htmlFor="search-name" className="text-slate-400 text-xs mb-1 block">
-              Buscar por nome do aluno
+              {t("filters.searchLabel")}
             </Label>
             <Input
               id="search-name"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nome..."
+              placeholder={t("filters.searchPlaceholder")}
               className="bg-slate-900 border-slate-600 text-slate-100"
             />
           </div>
@@ -160,21 +163,21 @@ function WorkSessionsListContent() {
           </div>
         ) : error ? (
           <p className="text-center text-rose-400 py-8">
-            {error instanceof Error ? error.message : "Não foi possível carregar as sessões."}
+            {error instanceof Error ? error.message : t("error.load")}
           </p>
         ) : rows.length === 0 ? (
-          <p className="text-center text-slate-500 py-12">Nenhuma sessão encontrada.</p>
+          <p className="text-center text-slate-500 py-12">{t("empty")}</p>
         ) : (
           <>
             <div className="rounded-lg border border-slate-700 bg-slate-800/50 overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="border-slate-700 hover:bg-slate-800/80">
-                    <TableHead className="text-slate-200">Aluno</TableHead>
-                    <TableHead className="text-slate-200">Estado</TableHead>
-                    <TableHead className="text-slate-200">Criada em</TableHead>
-                    <TableHead className="text-slate-200">Última mensagem</TableHead>
-                    <TableHead className="text-slate-200 text-right w-32">Ações</TableHead>
+                    <TableHead className="text-slate-200">{t("table.student")}</TableHead>
+                    <TableHead className="text-slate-200">{t("table.state")}</TableHead>
+                    <TableHead className="text-slate-200">{t("table.createdAt")}</TableHead>
+                    <TableHead className="text-slate-200">{t("table.lastMessage")}</TableHead>
+                    <TableHead className="text-slate-200 text-right w-32">{t("table.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -188,9 +191,9 @@ function WorkSessionsListContent() {
                       </TableCell>
                       <TableCell className="text-slate-300">
                         {row.endedAt ? (
-                          <span className="text-emerald-400/90">Submetida</span>
+                          <span className="text-emerald-400/90">{t("state.submitted")}</span>
                         ) : (
-                          <span className="text-amber-400/90">Em andamento</span>
+                          <span className="text-amber-400/90">{t("state.inProgress")}</span>
                         )}
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
@@ -212,7 +215,7 @@ function WorkSessionsListContent() {
                           }
                         >
                           <Play className="w-3.5 h-3.5 mr-1" />
-                          Replay
+                          {t("actions.replay")}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -223,7 +226,11 @@ function WorkSessionsListContent() {
 
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
               <span>
-                {pagination.total} sessão(ões) · Página {pagination.page} de {totalPages}
+                {t("pagination.summary", {
+                  count: pagination.total,
+                  page: pagination.page,
+                  totalPages,
+                })}
               </span>
               <div className="flex items-center gap-2">
                 <Button
@@ -253,7 +260,7 @@ function WorkSessionsListContent() {
 
         <p className="mt-8 text-center text-slate-600 text-sm">
           <Link href="/explore" className="hover:text-slate-400 underline">
-            Explorar problemas
+            {t("exploreProblems")}
           </Link>
         </p>
       </div>

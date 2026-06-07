@@ -7,11 +7,13 @@ import {
 import { useProblem } from "@/contexts/ProblemContext";
 import { motion } from "framer-motion";
 import { Loader2, Play } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function RunButton() {
   const { runCode, isRunning, getInput, pyodideStatus, language } =
     useCodeEditorStore();
   const { addInteraction, saveSolution, isSessionEnded } = useProblem();
+  const t = useTranslations("problem");
 
   const isPythonLoading = isRunning && language === 'python' && pyodideStatus === 'loading';
 
@@ -57,7 +59,9 @@ function RunButton() {
               <div className="absolute inset-0 blur animate-pulse" />
             </div>
             <span className="text-sm font-medium text-white/90">
-              {isPythonLoading ? "Carregando Python..." : "Executando..."}
+              {isPythonLoading
+                ? t("run.loadingPython")
+                : t("run.running")}
             </span>
           </>
         ) : (
@@ -66,7 +70,7 @@ function RunButton() {
               <Play className="w-4 h-4 text-white/90 transition-transform group-hover:scale-110 group-hover:text-white" />
             </div>
             <span className="text-sm font-medium text-white/90 group-hover:text-white">
-              Run Code
+              {t("run.action")}
             </span>
           </>
         )}

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button, ButtonProps } from "../button";
@@ -64,12 +65,15 @@ const ChatBubbleAvatar: React.FC<ChatBubbleAvatarProps> = ({
   src,
   fallback,
   className,
-}) => (
-  <Avatar className={className}>
-    <AvatarImage src={src} alt="Avatar" />
-    <AvatarFallback>{fallback}</AvatarFallback>
-  </Avatar>
-);
+}) => {
+  const t = useTranslations("problemChat");
+  return (
+    <Avatar className={className}>
+      <AvatarImage src={src} alt={t("avatarAlt")} />
+      <AvatarFallback>{fallback}</AvatarFallback>
+    </Avatar>
+  );
+};
 
 // ChatBubbleMessage
 const chatBubbleMessageVariants = cva("p-4", {
@@ -103,25 +107,28 @@ const ChatBubbleMessage = React.forwardRef<
   (
     { className, variant, layout, isLoading = false, children, ...props },
     ref
-  ) => (
-    <div
-      className={cn(
-        chatBubbleMessageVariants({ variant, layout, className }),
-        "break-words max-w-full whitespace-pre-wrap"
-      )}
-      ref={ref}
-      {...props}
-    >
-      {isLoading ? (
-        <div className="flex items-center space-x-2 text-zinc-400">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Pensando...</span>
-        </div>
-      ) : (
-        children
-      )}
-    </div>
-  )
+  ) => {
+    const t = useTranslations("problemChat");
+    return (
+      <div
+        className={cn(
+          chatBubbleMessageVariants({ variant, layout, className }),
+          "break-words max-w-full whitespace-pre-wrap"
+        )}
+        ref={ref}
+        {...props}
+      >
+        {isLoading ? (
+          <div className="flex items-center space-x-2 text-zinc-400">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">{t("thinking")}</span>
+          </div>
+        ) : (
+          children
+        )}
+      </div>
+    );
+  }
 );
 ChatBubbleMessage.displayName = "ChatBubbleMessage";
 

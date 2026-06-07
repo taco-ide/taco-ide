@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Fragment } from "react";
+import { useTranslations } from "next-intl";
 
 export interface BreadcrumbItem {
   label: string;
@@ -12,8 +13,12 @@ interface AdminBreadcrumbsProps {
 }
 
 export function AdminBreadcrumbs({ items }: AdminBreadcrumbsProps) {
+  const t = useTranslations("admin");
   return (
-    <nav aria-label="Caminho" className="flex items-center gap-1.5 text-sm text-slate-400">
+    <nav
+      aria-label={t("breadcrumbs.label")}
+      className="flex items-center gap-1.5 text-sm text-slate-400"
+    >
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
         return (

@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function Header() {
+  const t = useTranslations("problem");
+  const c = useTranslations("common");
   const isTeacherPlus = useHasMinimumRole("teacher");
   const {
     workSession,
@@ -82,7 +85,7 @@ function Header() {
           <Link
             href="/explore"
             className="flex items-center gap-2 group py-1"
-            aria-label="Ir para Explorar"
+            aria-label={t("header.goToExplore")}
           >
             <Image
               src="/header-logo.png"
@@ -119,27 +122,27 @@ function Header() {
                   disabled={submitting}
                   className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-200"
                 >
-                  {submitting ? "A submeter…" : "Submeter"}
+                  {submitting ? t("submit.submitting") : t("submit.action")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-zinc-900 border-zinc-800">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-zinc-100">
-                    Submeter resolução?
+                    {t("submit.dialogTitle")}
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-zinc-400">
-                    Antes de submeter, avalie o Assistente de Ensino (AT) que
-                    lhe acompanhou nesta sessão, de 1 a 5 estrelas. A sua
-                    identidade <strong className="text-zinc-200">não</strong>{" "}
-                    será associada à avaliação. Apenas o AT, a nota e a data
-                    são guardados.
+                    {t.rich("submit.dialogDescription", {
+                      strong: (chunks) => (
+                        <strong className="text-zinc-200">{chunks}</strong>
+                      ),
+                    })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-3">
                   <div
                     className="flex items-center gap-1"
                     role="radiogroup"
-                    aria-label="Avaliação do AT (1 a 5 estrelas)"
+                    aria-label={t("submit.ratingLabel")}
                     onMouseLeave={() => setTaGradeHover(0)}
                   >
                     {[1, 2, 3, 4, 5].map((n) => {
@@ -150,7 +153,7 @@ function Header() {
                           type="button"
                           role="radio"
                           aria-checked={taGrade === n}
-                          aria-label={`${n} estrela${n > 1 ? "s" : ""}`}
+                          aria-label={t("submit.starLabel", { count: n })}
                           onClick={() => setTaGrade(n)}
                           onMouseEnter={() => setTaGradeHover(n)}
                           className="p-1 rounded hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
@@ -175,7 +178,7 @@ function Header() {
                     disabled={submitting}
                     className="bg-zinc-800 border-zinc-700 text-zinc-200"
                   >
-                    Cancelar
+                    {c("cancel")}
                   </AlertDialogCancel>
                   <AlertDialogAction
                     disabled={submitting || taGrade < 1}
@@ -185,7 +188,9 @@ function Header() {
                     }}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white"
                   >
-                    {submitting ? "A submeter…" : "Confirmar submissão"}
+                    {submitting
+                      ? t("submit.submitting")
+                      : t("submit.confirm")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -195,7 +200,7 @@ function Header() {
           {hasSession && isSessionEnded && (
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-medium text-rose-400/90 whitespace-nowrap">
-                Já submetido
+                {t("session.alreadySubmitted")}
               </span>
               {isTeacherPlus && (
                 <>
@@ -207,7 +212,7 @@ function Header() {
                     onClick={handleReopen}
                     className="text-xs border-zinc-600 text-zinc-200"
                   >
-                    {reopening ? "A reabrir…" : "Reabrir"}
+                    {reopening ? t("reopen.loading") : t("reopen.action")}
                   </Button>
                   <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
                     <AlertDialogTrigger asChild>
@@ -218,23 +223,21 @@ function Header() {
                         disabled={resetting}
                         className="text-xs"
                       >
-                        Reiniciar
+                        {t("reset.action")}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="bg-zinc-900 border-zinc-800">
                       <AlertDialogHeader>
                         <AlertDialogTitle className="text-zinc-100">
-                          Reiniciar problema?
+                          {t("reset.dialogTitle")}
                         </AlertDialogTitle>
                         <AlertDialogDescription className="text-zinc-400">
-                          Esta ação apaga a sessão de trabalho, o histórico de chat
-                          e o código guardado para este desafio. Não pode ser
-                          desfeita.
+                          {t("reset.dialogDescription")}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="bg-zinc-800 border-zinc-700 text-zinc-200">
-                          Cancelar
+                          {c("cancel")}
                         </AlertDialogCancel>
                         <Button
                           type="button"
@@ -243,7 +246,7 @@ function Header() {
                           className="bg-rose-600 hover:bg-rose-500"
                           onClick={() => void handleReset()}
                         >
-                          {resetting ? "A reiniciar…" : "Confirmar reinício"}
+                          {resetting ? t("reset.loading") : t("reset.confirm")}
                         </Button>
                       </AlertDialogFooter>
                     </AlertDialogContent>

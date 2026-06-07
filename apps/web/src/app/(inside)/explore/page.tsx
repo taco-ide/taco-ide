@@ -33,6 +33,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, ArrowRight, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useGetV1Challenges, useDeleteV1ChallengesId, getV1ChallengesQueryKey, useGetV1Classrooms } from "@/kubb/hooks";
 import { useUser } from "@/contexts/UserContext";
@@ -45,6 +46,8 @@ export default function ExplorePage() {
   const router = useRouter();
   const { user } = useUser();
   const queryClient = useQueryClient();
+  const t = useTranslations("explore");
+  const c = useTranslations("common");
   const [currentPage, setCurrentPage] = useState(1);
 
   const isCoordinatorPlus =
@@ -125,7 +128,7 @@ export default function ExplorePage() {
           <Button asChild>
             <Link href="/classrooms/create" className="gap-2">
               <Plus className="h-4 w-4" />
-              Criar turma
+              {t("createClassroom")}
             </Link>
           </Button>
         </div>
@@ -136,14 +139,14 @@ export default function ExplorePage() {
         </div>
       ) : error ? (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
-          {error instanceof Error ? error.message : "Erro ao carregar problemas"}
+          {error instanceof Error ? error.message : t("errors.loadProblems")}
         </div>
       ) : (
         <>
           {lastProblems.length > 0 && (
             <section className="space-y-6">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                Ultimos Problemas
+                {t("latestProblems")}
               </h1>
               <Carousel opts={{ align: "start" }} className="w-full">
                 <CarouselContent>
@@ -179,7 +182,7 @@ export default function ExplorePage() {
                           </div>
                           {problem.author && (
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700">
-                              <span className="text-xs text-slate-400">por {problem.author}</span>
+                              <span className="text-xs text-slate-400">{t("byAuthor", { author: problem.author })}</span>
                             </div>
                           )}
                         </div>
@@ -195,7 +198,7 @@ export default function ExplorePage() {
 
           <section className="mt-16 space-y-6">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              Turmas em Destaque
+              {t("featuredClassrooms")}
             </h1>
             {classroomsLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -205,11 +208,11 @@ export default function ExplorePage() {
               <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
                 {classroomsError instanceof Error
                   ? classroomsError.message
-                  : "Erro ao carregar turmas"}
+                  : t("errors.loadClassrooms")}
               </div>
             ) : classrooms.length === 0 ? (
               <p className="text-slate-400 py-8 text-center">
-                Nenhuma turma em destaque no momento.
+                {t("emptyClassrooms")}
               </p>
             ) : (
               <Carousel opts={{ align: "start" }} className="w-full">
@@ -242,7 +245,7 @@ export default function ExplorePage() {
 
           <section className="mt-16 space-y-6">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-              Problemas
+              {t("problems")}
             </h1>
 
             {isLoading ? (
@@ -255,13 +258,13 @@ export default function ExplorePage() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-slate-800/80 border-slate-700">
-                        <TableHead className="text-slate-200 font-semibold">Titulo</TableHead>
-                        <TableHead className="text-slate-200 font-semibold">Descricao</TableHead>
-                        <TableHead className="text-slate-200 font-semibold w-32">Dificuldade</TableHead>
-                        <TableHead className="text-slate-200 font-semibold">Tags</TableHead>
-                        <TableHead className="text-slate-200 font-semibold text-right">Autor</TableHead>
+                        <TableHead className="text-slate-200 font-semibold">{t("table.title")}</TableHead>
+                        <TableHead className="text-slate-200 font-semibold">{t("table.description")}</TableHead>
+                        <TableHead className="text-slate-200 font-semibold w-32">{t("table.difficulty")}</TableHead>
+                        <TableHead className="text-slate-200 font-semibold">{t("table.tags")}</TableHead>
+                        <TableHead className="text-slate-200 font-semibold text-right">{t("table.author")}</TableHead>
                         <PermissionGuard resource="challenge" action="update">
-                          <TableHead className="text-slate-200 font-semibold text-center w-24">Acoes</TableHead>
+                          <TableHead className="text-slate-200 font-semibold text-center w-24">{c("actions")}</TableHead>
                         </PermissionGuard>
                       </TableRow>
                     </TableHeader>
@@ -333,21 +336,21 @@ export default function ExplorePage() {
                                     <AlertDialogContent className="bg-slate-800 border-slate-700">
                                       <AlertDialogHeader>
                                         <AlertDialogTitle className="text-white">
-                                          Excluir problema
+                                          {t("deleteDialog.title")}
                                         </AlertDialogTitle>
                                         <AlertDialogDescription className="text-slate-400">
-                                          Tem certeza que deseja excluir &quot;{problem.title}&quot;? Esta acao nao pode ser desfeita.
+                                          {t("deleteDialog.description", { title: problem.title })}
                                         </AlertDialogDescription>
                                       </AlertDialogHeader>
                                       <AlertDialogFooter>
                                         <AlertDialogCancel className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">
-                                          Cancelar
+                                          {c("cancel")}
                                         </AlertDialogCancel>
                                         <AlertDialogAction
                                           onClick={() => handleDelete(problem.id)}
                                           className="bg-red-600 hover:bg-red-700 text-white"
                                         >
-                                          Excluir
+                                          {t("deleteDialog.confirm")}
                                         </AlertDialogAction>
                                       </AlertDialogFooter>
                                     </AlertDialogContent>

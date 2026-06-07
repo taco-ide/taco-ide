@@ -7,11 +7,14 @@ import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 export function VerifyForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
   const { verify, resendVerificationEmail, error, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -40,31 +43,34 @@ export function VerifyForm({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center text-center">
-          <h1 className="text-2xl font-bold">Email Verification</h1>
+          <h1 className="text-2xl font-bold">{t("verify.title")}</h1>
           <p className="text-balance text-muted-foreground">
-            {token
-              ? "Verifying your email..."
-              : "We've sent a verification link to your email. Please check your inbox and click the link to verify your account."}
+            {token ? t("verify.verifying") : t("verify.instructions")}
           </p>
           {email && !token && (
             <p className="text-sm text-muted-foreground mt-2">
-              Sent to: <span className="font-medium">{email}</span>
+              {t.rich("verify.sentTo", {
+                email,
+                strong: (chunks) => (
+                  <span className="font-medium">{chunks}</span>
+                ),
+              })}
             </p>
           )}
         </div>
 
         {error && (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>{c("error")}</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
         {resendSuccess && (
           <Alert>
-            <AlertTitle>Email Sent</AlertTitle>
+            <AlertTitle>{t("verify.emailSentTitle")}</AlertTitle>
             <AlertDescription>
-              A new verification email has been sent. Please check your inbox.
+              {t("verify.emailSentDescription")}
             </AlertDescription>
           </Alert>
         )}
@@ -77,7 +83,7 @@ export function VerifyForm({
             onClick={handleResend}
             disabled={isLoading}
           >
-            {isLoading ? "Sending..." : "Resend verification email"}
+            {isLoading ? t("verify.sending") : t("verify.resend")}
           </Button>
         )}
 
@@ -89,7 +95,7 @@ export function VerifyForm({
 
         <div className="text-center text-sm">
           <Link href="/auth/login" className="underline underline-offset-4">
-            Back to login
+            {t("backToLogin")}
           </Link>
         </div>
       </div>

@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,6 +46,8 @@ export function ToggleAdminDialog({
   target,
   currentUserId,
 }: ToggleAdminDialogProps) {
+  const t = useTranslations("adminShared");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [soloLock, setSoloLock] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -61,8 +64,8 @@ export function ToggleAdminDialog({
       onSuccess: () => {
         toast.success(
           target?.isPlatformAdmin
-            ? "Permissão de Administrador removida"
-            : "Usuário promovido a Administrador",
+            ? t("toggleAdmin.toast.removed")
+            : t("toggleAdmin.toast.promoted"),
         );
         void queryClient.invalidateQueries({
           queryKey: [getV1UsersQueryKey({ q: "" })[0]],
@@ -80,7 +83,7 @@ export function ToggleAdminDialog({
           return;
         }
         setErrorMessage(
-          err instanceof Error ? err.message : "Erro ao atualizar permissão",
+          err instanceof Error ? err.message : t("toggleAdmin.error.generic"),
         );
       },
     },
@@ -97,11 +100,10 @@ export function ToggleAdminDialog({
         <DialogContent className="bg-slate-900 border-slate-700 text-white sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Você é o único Administrador da Plataforma
+              {t("toggleAdmin.soloLock.title")}
             </DialogTitle>
             <DialogDescription className="text-slate-400">
-              Não é possível remover sua própria permissão enquanto você for o
-              único administrador.
+              {t("toggleAdmin.soloLock.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-2 text-center">
@@ -109,8 +111,7 @@ export function ToggleAdminDialog({
               <ShieldAlert className="h-6 w-6" />
             </div>
             <p className="max-w-sm text-sm text-slate-300">
-              Promova outro usuário a Administrador da Plataforma primeiro.
-              Depois disso você poderá rebaixar a si mesmo.
+              {t("toggleAdmin.soloLock.body")}
             </p>
           </div>
           <DialogFooter>
@@ -119,7 +120,7 @@ export function ToggleAdminDialog({
               onClick={() => onOpenChange(false)}
               className="bg-amber-500 text-slate-900 hover:bg-amber-400"
             >
-              Entendi
+              {t("toggleAdmin.soloLock.acknowledge")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -141,13 +142,13 @@ export function ToggleAdminDialog({
         <DialogHeader>
           <DialogTitle>
             {promoting
-              ? "Promover a Administrador da Plataforma?"
-              : "Remover Administrador da Plataforma?"}
+              ? t("toggleAdmin.promote.title")
+              : t("toggleAdmin.remove.title")}
           </DialogTitle>
           <DialogDescription className="text-slate-400">
             {promoting
-              ? "Conceda apenas a equipe TACO ou operadores de confiança."
-              : "A permissão será removida e as sessões ativas serão revogadas."}
+              ? t("toggleAdmin.promote.description")
+              : t("toggleAdmin.remove.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,28 +169,24 @@ export function ToggleAdminDialog({
             <div className="flex gap-3 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                Administradores da Plataforma podem{" "}
-                <strong className="text-amber-100">
-                  criar e excluir organizações
-                </strong>
-                ,{" "}
-                <strong className="text-amber-100">
-                  acessar dados de qualquer usuário
-                </strong>{" "}
-                e operar fora do escopo de organizações.
+                {t.rich("toggleAdmin.promote.warning", {
+                  strong: (chunks) => (
+                    <strong className="text-amber-100">{chunks}</strong>
+                  ),
+                })}
               </p>
             </div>
           ) : (
             <div className="flex gap-3 rounded-md border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-200">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <p>
-                {target.name} perderá acesso a <code>/admin</code> e às
-                ferramentas globais. As organizações onde {target.name} é
-                membro não são afetadas. As sessões ativas serão revogadas — o
-                usuário precisará entrar novamente.
+                {t.rich("toggleAdmin.remove.warning", {
+                  name: target.name,
+                  code: (chunks) => <code>{chunks}</code>,
+                })}
                 {isSelf && (
                   <span className="mt-1 block text-sky-100">
-                    Você será desconectado em seguida.
+                    {t("toggleAdmin.remove.selfNotice")}
                   </span>
                 )}
               </p>
@@ -211,7 +208,7 @@ export function ToggleAdminDialog({
             onClick={() => onOpenChange(false)}
             disabled={mutation.isPending}
           >
-            Cancelar
+            {c("cancel")}
           </Button>
           <Button
             type="button"
@@ -230,7 +227,9 @@ export function ToggleAdminDialog({
             ) : (
               <ShieldOff className="h-4 w-4" />
             )}
-            {promoting ? "Sim, promover" : "Sim, remover"}
+            {promoting
+              ? t("toggleAdmin.promote.confirm")
+              : t("toggleAdmin.remove.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

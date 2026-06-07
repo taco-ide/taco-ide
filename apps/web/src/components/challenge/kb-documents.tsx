@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useKnowledgeBaseDocuments } from "@/hooks/use-knowledge-base-documents";
 import { KbDocumentUploadZone } from "./kb-document-upload-zone";
@@ -12,6 +13,7 @@ interface KbDocumentsProps {
 }
 
 export function KbDocuments({ knowledgeBaseId }: KbDocumentsProps) {
+  const t = useTranslations("knowledgeBase");
   const {
     documents,
     isLoading,
@@ -30,11 +32,12 @@ export function KbDocuments({ knowledgeBaseId }: KbDocumentsProps) {
     setFeedback(null);
     try {
       await upload(file);
-      setFeedback({ type: "success", message: "Documento enviado com sucesso" });
+      setFeedback({ type: "success", message: t("documents.feedback.uploaded") });
     } catch (err) {
       setFeedback({
         type: "error",
-        message: err instanceof Error ? err.message : "Erro ao enviar documento",
+        message:
+          err instanceof Error ? err.message : t("documents.feedback.uploadError"),
       });
     }
   };
@@ -43,11 +46,12 @@ export function KbDocuments({ knowledgeBaseId }: KbDocumentsProps) {
     setFeedback(null);
     try {
       await deleteDocument(docId);
-      setFeedback({ type: "success", message: "Documento removido" });
+      setFeedback({ type: "success", message: t("documents.feedback.deleted") });
     } catch (err) {
       setFeedback({
         type: "error",
-        message: err instanceof Error ? err.message : "Erro ao remover documento",
+        message:
+          err instanceof Error ? err.message : t("documents.feedback.deleteError"),
       });
     }
   };

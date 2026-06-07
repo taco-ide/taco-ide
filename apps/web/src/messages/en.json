@@ -1,0 +1,1440 @@
+{
+  "admin": {
+    "accessDenied": {
+      "backToApp": "Back to the app",
+      "description": "You do not have <role>Platform Admin</role> permission to access this area. If you believe this is a mistake, contact a platform administrator.",
+      "loggedInAs": "Logged in as <strong>{email}</strong>",
+      "title": "Restricted access"
+    },
+    "breadcrumbs": {
+      "label": "Breadcrumb"
+    },
+    "nav": {
+      "organizations": "Organizations",
+      "users": "Users"
+    },
+    "segments": {
+      "admin": "Admin",
+      "domains": "Domains",
+      "members": "Members",
+      "organizations": "Organizations",
+      "settings": "Settings",
+      "users": "Users"
+    },
+    "sidebar": {
+      "adminFallback": "Admin",
+      "badge": "Admin",
+      "closeMenu": "Close menu",
+      "platform": "Platform",
+      "platformAdmin": "Platform Admin",
+      "signOut": "Sign out"
+    },
+    "topbar": {
+      "help": "Help",
+      "notifications": "Notifications",
+      "openMenu": "Open menu"
+    },
+    "users": {
+      "actionsFor": "Actions for {name}",
+      "clearSearch": "Clear search",
+      "count": "{count, plural, one {# user} other {# users}}",
+      "empty": {
+        "noResults": {
+          "body": "Nothing matches \"{query}\".",
+          "title": "No users found"
+        },
+        "start": {
+          "body": "Search uses name or email. At least 2 characters are required.",
+          "title": "Start typing to search for users"
+        }
+      },
+      "loadError": "Unable to load users.",
+      "minChars": "Type at least 2 characters",
+      "noOrganizations": "— No organizations —",
+      "searchPlaceholder": "Search by name or email…",
+      "subtitle": "Search across the entire platform",
+      "table": {
+        "organizations": "Organizations",
+        "platformAdmin": "Platform Admin",
+        "user": "User"
+      },
+      "title": "Users",
+      "togglePlatformAdmin": "Toggle Platform Admin for {name}",
+      "updating": "updating…",
+      "viewProfile": "View profile",
+      "you": "You"
+    }
+  },
+  "adminDomains": {
+    "actions": {
+      "removeDomain": "Remove domain",
+      "removeDomainNamed": "Remove domain {domain}"
+    },
+    "deleteDialog": {
+      "confirm": "Yes, remove",
+      "description": "The domain \"@{domain}\" will stop automatically linking new users to this organization. Members already created will not be affected.",
+      "title": "Remove domain?"
+    },
+    "empty": {
+      "body": "Add a domain above to enable automatic linking for matching emails.",
+      "title": "No domains configured"
+    },
+    "error": {
+      "addFailed": "Failed to add domain",
+      "invalidDomain": "Invalid domain",
+      "removeFailed": "Failed to remove domain"
+    },
+    "fallbackOrgName": "this organization",
+    "form": {
+      "domainLabel": "Domain",
+      "domainPlaceholder": "example.edu",
+      "roleLabel": "Assigned role",
+      "submit": "Add domain",
+      "title": "Add domain"
+    },
+    "info": {
+      "description": "Users who sign up with an email whose domain matches one of the entries below will be added to <strong>{orgName}</strong> automatically, with the defined role. When there are multiple matches, the rule with the oldest creation date wins.",
+      "title": "Automatic linking by domain"
+    },
+    "loadError": {
+      "fallback": "Please try again in a moment.",
+      "title": "Failed to load domains"
+    },
+    "table": {
+      "addedAt": "Added on",
+      "domain": "Domain",
+      "role": "Role"
+    },
+    "toast": {
+      "added": "Domain \"{domain}\" added",
+      "removed": "Domain \"{domain}\" removed"
+    }
+  },
+  "adminInvitations": {
+    "actions": {
+      "cancel": "Cancel invitation",
+      "cancelFor": "Cancel invitation for {email}",
+      "resend": "Resend invitation",
+      "resendFor": "Resend invitation to {email}"
+    },
+    "cancelDialog": {
+      "confirm": "Yes, cancel",
+      "description": "The invitation for \"{email}\" will be canceled and the link sent will stop working. You can send a new invitation later.",
+      "keep": "Keep invitation",
+      "title": "Cancel invitation?"
+    },
+    "description": "Invitations sent to join <strong>{orgName}</strong> that have not yet been accepted.",
+    "dialog": {
+      "description": "We will send an email with an invitation link. The invitation expires in 7 days.",
+      "emailPlaceholder": "person@example.edu",
+      "roleLabel": "Role on acceptance",
+      "submit": "Send invitation",
+      "title": "New invitation"
+    },
+    "empty": {
+      "action": "Create first invitation",
+      "body": "Send an email invitation so a new member can join this organization.",
+      "title": "No pending invitations"
+    },
+    "expires": {
+      "expired": "Expired",
+      "inDays": "in {count} d",
+      "inHours": "in {count} h",
+      "inMinutes": "in {count} min"
+    },
+    "fallbackOrgName": "this organization",
+    "invalidEmail": "Invalid email",
+    "invitedBy": "invited by {inviter}",
+    "loadError": "Could not load the invitations.",
+    "newInvitation": "New invitation",
+    "table": {
+      "actions": "Actions",
+      "createdAt": "Created on",
+      "email": "Email",
+      "expires": "Expires",
+      "role": "Role"
+    },
+    "title": "Pending invitations",
+    "toast": {
+      "alreadyMember": "This user is already a member of the organization",
+      "cancelError": "Failed to cancel invitation",
+      "canceled": "Invitation canceled",
+      "canceledFor": "Invitation for \"{email}\" canceled",
+      "duplicatePending": "There is already a pending invitation for this email",
+      "resendConflict": "This invitation cannot be resent in its current state.",
+      "resendError": "Failed to resend invitation",
+      "resendNotFound": "Invitation not found. Refresh the list.",
+      "resent": "Invitation resent to \"{email}\"",
+      "sendError": "Failed to send invitation",
+      "sent": "Invitation sent to \"{email}\""
+    },
+    "totalCount": "· {count} in total"
+  },
+  "adminMembers": {
+    "actionsAria": "Actions for {name}",
+    "addMember": "Add member",
+    "changeRoleAria": "Change role of {name}",
+    "clearSearch": "Clear search",
+    "csvImport": {
+      "description": "Add several at once",
+      "title": "Import from CSV"
+    },
+    "emptyInitial": {
+      "body": "This organization has no members yet.",
+      "title": "No members"
+    },
+    "emptySearch": {
+      "body": "Try a different search or role filter.",
+      "title": "No members match"
+    },
+    "fallbackOrgName": "this organization",
+    "filters": {
+      "admin": "Administrators",
+      "all": "All",
+      "coordinator": "Coordinators",
+      "student": "Students",
+      "teacher": "Teachers"
+    },
+    "joinedVia": {
+      "domain": "Domain",
+      "invitation": "Invitation",
+      "manual": "Manual"
+    },
+    "linkExisting": {
+      "description": "Search across the whole platform",
+      "title": "Link existing user"
+    },
+    "loadError": "Unable to load members.",
+    "removeDialog": {
+      "confirm": "Remove",
+      "description": "{name} ({email}) will lose access to {orgName}. This action can be reverted by linking the user again.",
+      "title": "Remove from this organization?"
+    },
+    "rowActions": {
+      "move": "Move to another organization",
+      "remove": "Remove from this organization",
+      "viewProfile": "View profile"
+    },
+    "searchPlaceholder": "Search members by name or email…",
+    "soloAdmin": {
+      "aria": "Only administrator",
+      "tooltip": "Cannot change — this is the only administrator"
+    },
+    "table": {
+      "actions": "Actions",
+      "lastActive": "Last activity",
+      "member": "Member",
+      "role": "Role",
+      "source": "Source"
+    },
+    "toast": {
+      "memberRemoved": "Member removed from the organization",
+      "removeError": "Error removing member",
+      "removeLastAdmin": "Cannot remove the organization's only administrator.",
+      "roleUpdateError": "Error updating role",
+      "roleUpdateLastAdmin": "Unable to change — this operation would leave the organization without administrators.",
+      "roleUpdated": "Role updated"
+    },
+    "updating": "updating…"
+  },
+  "adminOrgs": {
+    "classroomCount": "{count, plural, one {# classroom} other {# classrooms}}",
+    "clearSearch": "Clear search",
+    "confirm": {
+      "confirmDeactivate": "Yes, deactivate",
+      "confirmReactivate": "Yes, reactivate",
+      "deactivateDescription": "Members will lose access immediately. Data is preserved and you can reactivate whenever you want.",
+      "deactivateDescriptionNamed": "Members of \"{name}\" will lose access immediately. You can reactivate whenever you want.",
+      "deactivateTitle": "Deactivate organization?",
+      "reactivateDescription": "Members will regain access immediately.",
+      "reactivateDescriptionNamed": "Members of \"{name}\" will regain access immediately.",
+      "reactivateTitle": "Reactivate organization?"
+    },
+    "createDialog": {
+      "description": "Create a new organization on the TACO platform.",
+      "submit": "Create organization",
+      "title": "New organization"
+    },
+    "createdOn": "Created on {date}",
+    "deactivate": "Deactivate",
+    "deactivateOrg": "Deactivate organization",
+    "detailLoadError": "Unable to load the organization.",
+    "editDialog": {
+      "description": "Update this organization's public identity.",
+      "title": "Edit organization"
+    },
+    "empty": {
+      "action": "Create first organization",
+      "body": "Create the first organization to start adding members and domains.",
+      "title": "No organizations yet"
+    },
+    "filter": {
+      "active": "Active",
+      "all": "All",
+      "inactive": "Inactive"
+    },
+    "form": {
+      "logo": {
+        "hint": "Square PNG or SVG. Falls back to an initials avatar when empty.",
+        "label": "Logo URL <optional>· optional</optional>",
+        "placeholder": "https://example.edu/logo.png"
+      },
+      "name": {
+        "hint": "Display name shown to members. Use the institution's official name.",
+        "label": "Name",
+        "placeholder": "e.g., Federal Institute of São Paulo"
+      },
+      "slug": {
+        "hint": "Lowercase letters, numbers and hyphens only. Used in URLs.",
+        "label": "Slug"
+      }
+    },
+    "loadError": "Unable to load the organizations.",
+    "memberCount": "{count, plural, one {# member} other {# members}}",
+    "newOrganization": "New organization",
+    "noResults": {
+      "bodyNoQuery": "Try a different filter.",
+      "bodyWithQuery": "Nothing matches \"{query}\".",
+      "title": "No organizations found"
+    },
+    "reactivate": "Reactivate",
+    "reactivateOrg": "Reactivate organization",
+    "saveChanges": "Save changes",
+    "searchPlaceholder": "Search by name or slug…",
+    "settings": {
+      "dangerZone": {
+        "deactivateHint": "Members will lose access immediately.",
+        "description": "Deactivating freezes members' access and hides classrooms from searches. Data is preserved and can be reactivated at any time.",
+        "reactivateHint": "Members will regain access immediately.",
+        "title": "Danger zone"
+      },
+      "details": {
+        "description": "The organization's public identity. Members will see this data in the navbar and on classroom links.",
+        "title": "Organization details"
+      },
+      "discard": "Discard"
+    },
+    "slugConflict": "An organization with this slug already exists. Choose another.",
+    "summary": {
+      "active": "{count} active",
+      "inactiveOnPage": "{count} inactive on this page",
+      "total": "{count} total"
+    },
+    "table": {
+      "classrooms": "Classrooms",
+      "createdAt": "Created at",
+      "members": "Members",
+      "organization": "Organization",
+      "status": "Status",
+      "view": "View"
+    },
+    "tabs": {
+      "domains": "Domains",
+      "invitations": "Invitations",
+      "members": "Members",
+      "settings": "Settings"
+    },
+    "title": "Organizations",
+    "toast": {
+      "createError": "Failed to create organization: {message}",
+      "createErrorFallback": "Failed to create organization",
+      "created": "Organization \"{name}\" created",
+      "deactivated": "Organization deactivated",
+      "reactivated": "Organization reactivated",
+      "saveError": "Failed to save",
+      "slugInUse": "Slug is already in use",
+      "statusUpdateError": "Failed to update status",
+      "statusUpdated": "Status updated",
+      "updateError": "Failed to update organization: {message}",
+      "updateErrorFallback": "Failed to update organization",
+      "updated": "Organization \"{name}\" updated"
+    }
+  },
+  "adminShared": {
+    "csv": {
+      "back": "Back",
+      "dialog": {
+        "preview": {
+          "subtitle": "Review what will be applied to each row before importing.",
+          "title": "Preview and validation"
+        },
+        "result": {
+          "subtitle": "Summary of what was applied to this organization.",
+          "title": "Import complete"
+        },
+        "upload": {
+          "subtitle": "Add users in bulk to this organization.",
+          "title": "Import members from CSV"
+        }
+      },
+      "error": {
+        "http": "Import failed (HTTP {status})",
+        "invalidResponse": "Invalid server response",
+        "unexpectedImport": "Unexpected error during import",
+        "unexpectedValidation": "Unexpected error during validation"
+      },
+      "fileError": {
+        "extension": "The file must have a .csv extension",
+        "tooLarge": "The file exceeds the 1 MB limit ({size})."
+      },
+      "filter": {
+        "all": "All",
+        "created": "Created",
+        "error": "Errors",
+        "linked": "Linked",
+        "skipped": "Skipped"
+      },
+      "preview": {
+        "confirm": "Confirm and import {count, plural, one {# row} other {# rows}}",
+        "errorsBanner": {
+          "body": "Rows with errors will be skipped. You can fix them and upload again, or proceed and import only the {count} valid rows.",
+          "title": "{count, plural, one {# row has} other {# rows have}} problems"
+        },
+        "footerSummary": "{importable, plural, one {# row will be imported} other {# rows will be imported}} · {ignored, plural, one {# row will be skipped} other {# rows will be skipped}}",
+        "showing": "Showing {shown} of {total} {total, plural, one {row} other {rows}}.",
+        "stat": {
+          "errors": "Errors",
+          "willCreate": "Will create",
+          "willLink": "Will link",
+          "willSkip": "Will skip"
+        },
+        "validateFailed": "Could not validate the file",
+        "validating": "Validating the file on the server..."
+      },
+      "result": {
+        "done": "Done",
+        "downloadReport": "Download report.csv",
+        "importFailed": "Failed to import",
+        "importing": "Importing members into the organization...",
+        "stat": {
+          "created": "Created",
+          "failed": "Failed",
+          "linked": "Linked",
+          "skipped": "Skipped"
+        },
+        "successPlain": "The new users can already sign in with the password defined in the CSV.",
+        "successTitle": "{imported} of {total} {total, plural, one {row imported} other {rows imported}} successfully",
+        "successWithGenerated": "The new users can already sign in with the password defined in the CSV. Rows without a password received a <strong>generated password</strong> — download the report below to share it with each user."
+      },
+      "retry": "Try again",
+      "rowStatus": {
+        "error": "error",
+        "preview": {
+          "created": "create",
+          "linked": "link",
+          "skipped": "skip"
+        },
+        "result": {
+          "created": "created",
+          "linked": "linked",
+          "skipped": "skipped"
+        }
+      },
+      "table": {
+        "empty": "No rows to display.",
+        "generatedPassword": "Password generated automatically",
+        "header": {
+          "detail": "Detail",
+          "email": "Email",
+          "line": "Line",
+          "status": "Status"
+        }
+      },
+      "toast": {
+        "importFailed": "Failed to import members",
+        "imported": "{count, plural, one {# row imported} other {# rows imported}}"
+      },
+      "upload": {
+        "continue": "Continue to preview",
+        "dropHere": "Drop a CSV file here",
+        "dropHint": "or <pick>click to choose</pick> · only .csv · max 1 MB",
+        "fileMeta": "{size} · click to replace",
+        "format": {
+          "exampleComment": "# columns: name, email, role (password optional)",
+          "headersLead": "Accepted headers (case- and accent-insensitive):",
+          "passwordOptional": "<highlight>Password is optional</highlight>: leave it blank for the system to generate a random password (shown in the final report).",
+          "rolesLead": "Accepted roles:",
+          "title": "Expected format"
+        },
+        "template": {
+          "description": "Download a template with the correct header and two valid example rows to get started.",
+          "download": "Download template.csv",
+          "title": "Need a template?"
+        }
+      }
+    },
+    "link": {
+      "clearSearch": "Clear search",
+      "confirm": "Link to organization",
+      "description": "Search people across the platform and add them to the organization.",
+      "error": {
+        "alreadyMember": "This user is already a member of the organization.",
+        "generic": "Error linking user",
+        "userNotFound": "User not found."
+      },
+      "hintSearch": "Use the field above to search users.",
+      "minChars": "Type at least 2 characters to start the search.",
+      "noCandidates": "No users available to link.",
+      "orgCount": "{count, plural, one {# organization} other {# organizations}}",
+      "roleLabel": "Role in the organization",
+      "searchFailed": "Could not search users.",
+      "searchLabel": "Search user",
+      "searchPlaceholder": "Name or email…",
+      "searching": "Searching…",
+      "title": "Link existing user",
+      "toast": {
+        "success": "User linked to the organization"
+      }
+    },
+    "move": {
+      "confirm": "Move user",
+      "description": "Move the user from {org} to another active organization.",
+      "destLabel": "Destination organization",
+      "error": {
+        "generic": "Error moving user",
+        "lastAdmin": "Could not move: the user is the only administrator of the current organization.",
+        "notFound": "Organization or user not found."
+      },
+      "loadingOrgs": "Loading organizations…",
+      "newRoleLabel": "Role in the new organization",
+      "noOtherOrgs": "No other active organizations",
+      "selectOrg": "Select an organization…",
+      "title": "Move to another organization",
+      "toast": {
+        "success": "User moved to the new organization"
+      },
+      "warning": {
+        "body": "Class enrollments, submissions and chat history stay archived in the current organization (they are not deleted).",
+        "title": "The user will lose access to {org}."
+      }
+    },
+    "pager": {
+      "nextPage": "Next page",
+      "previousPage": "Previous page",
+      "showing": "Showing <strong>{range}</strong> of {total}"
+    },
+    "role": {
+      "admin": "Administrator",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "roleSelect": {
+      "ariaLabel": "Select role",
+      "placeholder": "Select…"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "stepper": {
+      "preview": "Preview and validation",
+      "result": "Result",
+      "upload": "Upload"
+    },
+    "toggleAdmin": {
+      "error": {
+        "generic": "Error updating permission"
+      },
+      "promote": {
+        "confirm": "Yes, promote",
+        "description": "Grant this only to the TACO team or trusted operators.",
+        "title": "Promote to Platform Administrator?",
+        "warning": "Platform Administrators can <strong>create and delete organizations</strong>, <strong>access any user's data</strong> and operate outside the scope of organizations."
+      },
+      "remove": {
+        "confirm": "Yes, remove",
+        "description": "The permission will be removed and active sessions will be revoked.",
+        "selfNotice": "You will be signed out afterwards.",
+        "title": "Remove Platform Administrator?",
+        "warning": "{name} will lose access to <code>/admin</code> and the global tools. The organizations where {name} is a member are not affected. Active sessions will be revoked — the user will need to sign in again."
+      },
+      "soloLock": {
+        "acknowledge": "Got it",
+        "body": "Promote another user to Platform Administrator first. After that you will be able to demote yourself.",
+        "description": "You cannot remove your own permission while you are the only administrator.",
+        "title": "You are the only Platform Administrator"
+      },
+      "toast": {
+        "promoted": "User promoted to Administrator",
+        "removed": "Administrator permission removed"
+      }
+    }
+  },
+  "auth": {
+    "backToLogin": "Back to login",
+    "errors": {
+      "connection": "Error connecting to server",
+      "invalidResetLink": "Invalid or expired reset link",
+      "login": "Login error",
+      "registration": "Registration error",
+      "requestReset": "Error requesting password reset",
+      "resetPassword": "Error resetting password",
+      "sendVerification": "Error sending verification email",
+      "tokenNotFound": "Verification token not found",
+      "verifyEmail": "Email verification error"
+    },
+    "fields": {
+      "confirmNewPassword": "Confirm New Password",
+      "confirmPassword": "Confirm Password",
+      "fullName": "Full Name",
+      "newPassword": "New Password",
+      "password": "Password"
+    },
+    "legal": "By using our services, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "login": {
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "sessionExpired": {
+        "description": "Please sign in again.",
+        "title": "Session expired or invalid"
+      },
+      "signUpLink": "Sign up",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "subtitle": "Sign in to your TACO account",
+      "title": "Welcome back"
+    },
+    "logoAlt": "TACO logo",
+    "resetPassword": {
+      "checkEmailDescription": "If an account exists with that email, we've sent a password reset link. Please check your inbox and spam folder.",
+      "checkEmailTitle": "Check your email",
+      "requestSubtitle": "Enter your email to receive a password reset link.",
+      "requestTitle": "Password Recovery",
+      "resetSubmit": "Reset Password",
+      "resetSubtitle": "Enter your new password below.",
+      "resetTitle": "Reset Password",
+      "resetting": "Resetting...",
+      "sendLink": "Send Reset Link",
+      "sending": "Sending..."
+    },
+    "signup": {
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "haveAccount": "Already have an account?",
+      "namePlaceholder": "Your full name",
+      "passwordPlaceholder": "Your password",
+      "signInLink": "Sign in",
+      "submit": "Sign up",
+      "submitting": "Signing up...",
+      "subtitle": "Sign up for the TACO platform",
+      "title": "Create your account"
+    },
+    "verify": {
+      "emailSentDescription": "A new verification email has been sent. Please check your inbox.",
+      "emailSentTitle": "Email Sent",
+      "instructions": "We've sent a verification link to your email. Please check your inbox and click the link to verify your account.",
+      "resend": "Resend verification email",
+      "sending": "Sending...",
+      "sentTo": "Sent to: <strong>{email}</strong>",
+      "title": "Email Verification",
+      "verifying": "Verifying your email..."
+    }
+  },
+  "challenge": {
+    "basicInfo": {
+      "classroom": {
+        "createError": "Error creating classroom. Please try again.",
+        "createNew": "Create new classroom",
+        "label": "Classroom",
+        "loading": "Loading classrooms...",
+        "newPlaceholder": "Name of the new classroom...",
+        "placeholder": "Select a classroom",
+        "selectError": "Select a classroom"
+      },
+      "difficulty": {
+        "label": "Difficulty",
+        "options": {
+          "easy": "Easy",
+          "hard": "Hard",
+          "medium": "Medium"
+        },
+        "placeholder": "Select difficulty"
+      },
+      "hint": {
+        "classroom": "<strong>Classroom (required)</strong> defines <em>where</em> the challenge is available. Without a classroom, your students cannot reach the problem through the normal classroom flow.",
+        "difficulty": "<strong>Difficulty</strong> helps the student anticipate the level of effort (it does not change automatic grading by itself).",
+        "example": "Example title: \"Sum of two numbers\" or \"Sort a list with bubble sort\".",
+        "title": "First challenge: what the student sees",
+        "titleTags": "<strong>Title and tags</strong> appear in the challenge list so the student can identify the exercise."
+      },
+      "tags": {
+        "label": "Tags",
+        "placeholder": "Type a tag and press Enter"
+      },
+      "title": {
+        "label": "Problem Title",
+        "placeholder": "e.g. Quick Sort Implementation"
+      }
+    },
+    "confirm": {
+      "overwriteManual": "This will replace manually edited solutions. Continue?"
+    },
+    "description": {
+      "hint": {
+        "body": "Everything you write here (Markdown) is the main text of the exercise. Good practices: context in 1–2 sentences, input and output format, examples, and constraints when applicable.",
+        "example": "Example (illustrative): \"Read two integers and print the sum.\" + a block with an input/output example.",
+        "title": "Statement the student reads on the Problem tab"
+      },
+      "label": "Problem Description",
+      "placeholder": "Type the problem text here... Markdown supported",
+      "previewTitle": "Problem Description Preview"
+    },
+    "feedback": {
+      "createError": "Error creating problem",
+      "createdGenerating": "Challenge saved. Reference solutions are being generated in the background — follow along below or move on to the next step.",
+      "updateError": "Error updating problem",
+      "updatedGenerating": "Changes saved. Reference solutions are being generated in the background — follow along below or move on to the next step.",
+      "updatedNoGenerate": "Changes saved. You can move on to the next step."
+    },
+    "header": {
+      "createSubtitle": "Design your programming challenge with detailed instructions and resources",
+      "createTitle": "Create New Problem",
+      "editSubtitle": "Update your programming challenge",
+      "editTitle": "Edit Problem"
+    },
+    "nav": {
+      "continueToKnowledgeBase": "Continue to Knowledge Base",
+      "finish": "Finish",
+      "next": "Next"
+    },
+    "referenceSolutions": {
+      "byKind": "Solutions by type",
+      "card": {
+        "actions": {
+          "generateNow": "Generate now",
+          "regenerate": "Regenerate",
+          "remove": "Remove"
+        },
+        "confirmRemove": "Remove this solution?",
+        "empty": "No solution yet — click Generate",
+        "feedback": {
+          "alreadyRunning": "Already running",
+          "rateLimited": "Wait before trying again",
+          "regenerateError": "Error regenerating solution",
+          "regenerated": "Solution regenerated",
+          "removeError": "Error removing solution",
+          "removed": "Solution removed",
+          "saveError": "Error saving solution",
+          "savedManually": "Solution updated manually"
+        },
+        "generatedAt": "Generated on {date}",
+        "source": {
+          "ai": "AI",
+          "manual": "Manual"
+        }
+      },
+      "createNote": "Solutions will be generated in the background after saving. You will be able to edit them manually or regenerate them from the challenge edit screen.",
+      "kind": {
+        "brute_force": "Brute Force",
+        "refined": "Refined"
+      },
+      "panel": {
+        "emptyList": "No reference solutions registered.",
+        "failedLabel": "Failed:",
+        "generate": "Generate",
+        "generateError": "Error generating reference solutions",
+        "generateTitle": "Generate reference solutions",
+        "noCode": "(no code)",
+        "pendingAwaiting": "Pending — awaiting generation.",
+        "singleTitle": "Reference solution — {kind}",
+        "unknownError": "Unknown error."
+      },
+      "running": "Running…",
+      "status": {
+        "complete": "Complete",
+        "failed": "Failed",
+        "pending": "Pending",
+        "running": "Running"
+      },
+      "subtitle": {
+        "create": "Automatically generate reference solutions for this challenge",
+        "edit": "Manage this challenge's reference solutions"
+      },
+      "title": "Reference Solutions",
+      "toggle": {
+        "description": {
+          "create": "Generates 2 solutions — a simple one (brute force) and a refined one — used by automatic grading.",
+          "edit": "Solutions will be regenerated on save. Uncheck to keep the current ones. Generates 2 solutions."
+        },
+        "label": {
+          "create": "Automatically generate reference solutions on save (recommended)",
+          "edit": "Regenerate reference solutions on save"
+        }
+      },
+      "unknownError": "Unknown error"
+    },
+    "steps": {
+      "basicInfo": "Basic Information",
+      "description": "Statement",
+      "knowledgeBase": "Knowledge Base",
+      "referenceSolutions": "Reference Solutions"
+    }
+  },
+  "classrooms": {
+    "backToExplore": "Back to Explore",
+    "create": {
+      "accessDenied": {
+        "description": "Only teachers and coordinators can create classrooms.",
+        "title": "Restricted access"
+      },
+      "error": "Failed to create classroom",
+      "fields": {
+        "description": {
+          "label": "Description (optional)",
+          "placeholder": "Brief description of the classroom, term or goals"
+        },
+        "teacher": {
+          "hint": "Coordinators can assign the classroom to another teacher in the organization.",
+          "label": "Lead teacher (optional)"
+        },
+        "title": {
+          "label": "Classroom title",
+          "placeholder": "e.g. Programming I — 2025"
+        }
+      },
+      "noActiveOrg": "Select an active organization to create a classroom.",
+      "organizationLabel": "Organization:",
+      "submit": "Create classroom",
+      "subtitle": "Set a title, description and lead teacher to organize your students",
+      "title": "New classroom"
+    },
+    "detail": {
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Classroom description",
+      "editDescriptionAria": "Edit description",
+      "editTitleAria": "Edit title",
+      "loadError": "Failed to load classroom",
+      "manageHint": "Manage this classroom's information, students and problems",
+      "noDescription": "No description.",
+      "noTeacher": "No teacher assigned",
+      "sections": {
+        "about": "About the classroom",
+        "problems": "Classroom problems",
+        "students": "Enrolled students"
+      },
+      "teacherName": "Prof. {name}",
+      "titlePlaceholder": "Classroom title"
+    },
+    "problems": {
+      "assignHint": "Assign problems without a classroom to this one:",
+      "assignLabel": "Assign a problem to the classroom",
+      "empty": "No problems assigned to this classroom.",
+      "listTitle": "Problem list",
+      "remove": "Remove"
+    },
+    "students": {
+      "addMemberPlaceholder": "Add an organization member…",
+      "empty": "No students enrolled."
+    },
+    "teacher": {
+      "label": "Lead teacher",
+      "none": "None",
+      "selectPlaceholder": "Select the teacher"
+    }
+  },
+  "common": {
+    "actions": "Actions",
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "create": "Create",
+    "delete": "Delete",
+    "edit": "Edit",
+    "email": "Email",
+    "error": "Error",
+    "language": "Language",
+    "loading": "Loading...",
+    "name": "Name",
+    "next": "Next",
+    "no": "No",
+    "optional": "Optional",
+    "previous": "Previous",
+    "required": "Required",
+    "retry": "Try again",
+    "save": "Save",
+    "saving": "Saving...",
+    "search": "Search",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "success": "Success",
+    "yes": "Yes"
+  },
+  "create": {
+    "accessDenied": {
+      "descriptionCreate": "Only teachers and coordinators can create problems.",
+      "descriptionEdit": "Only teachers and coordinators can edit problems.",
+      "title": "Restricted Access"
+    },
+    "notFound": {
+      "backToExplore": "Back to Explore",
+      "description": "The requested problem does not exist or has been removed.",
+      "title": "Problem not found"
+    }
+  },
+  "explore": {
+    "byAuthor": "by {author}",
+    "createClassroom": "Create classroom",
+    "deleteDialog": {
+      "confirm": "Delete",
+      "description": "Are you sure you want to delete \"{title}\"? This action cannot be undone.",
+      "title": "Delete problem"
+    },
+    "emptyClassrooms": "No featured classrooms at the moment.",
+    "errors": {
+      "loadClassrooms": "Error loading classrooms",
+      "loadProblems": "Error loading problems"
+    },
+    "featuredClassrooms": "Featured Classrooms",
+    "latestProblems": "Latest Problems",
+    "problems": "Problems",
+    "table": {
+      "author": "Author",
+      "description": "Description",
+      "difficulty": "Difficulty",
+      "tags": "Tags",
+      "title": "Title"
+    }
+  },
+  "guards": {},
+  "home": {
+    "ai": {
+      "chat": {
+        "aiMsg1": "Not going to hand it over 🙂 — but look at line 5. You're checking <code>n % 2 == 0</code>, good. Where do you actually add <code>n</code> to <code>total</code>? Check your indentation.",
+        "aiMsg2": "That's it. Indentation defines the block in Python — you've got it. Try it with negative numbers next.",
+        "inputPlaceholder": "Ask about the problem or your code…",
+        "name": "TACO Tutor",
+        "status": "online",
+        "userMsg1": "My loop returns 0 every time. Can you just fix it?",
+        "userMsg2": "Oh — it was outside the if. Fixed it, returns 6 now!"
+      },
+      "eyebrow": "AI feedback, done right",
+      "feats": [
+        {
+          "title": "Context-aware",
+          "desc": "Sees the exercise, the test cases, and the exact line that failed."
+        },
+        {
+          "title": "Guardrails you set",
+          "desc": "You decide how much the tutor reveals — hints only, never the full solution."
+        },
+        {
+          "title": "Saved to history",
+          "desc": "Every conversation is logged so you can see how a student got there."
+        }
+      ],
+      "subtitle": "TACO's tutor reads the student's actual code and the problem you set. It points out where the logic breaks and asks the right question — so students reach the solution themselves.",
+      "title": "Hints that",
+      "titleAccent": "teach",
+      "titleAfter": ", not answers that cheat"
+    },
+    "demo": {
+      "address": "taco.dev/problem/sum-of-evens",
+      "allTestsPassed": "✓ All tests passed — nice work!",
+      "badgeEasy": "easy",
+      "badgeTag": "loops",
+      "chatTab": "Chat",
+      "exampleLabel": "Example",
+      "fileName": "solution.py",
+      "inLabel": "in",
+      "ioTab": "I/O",
+      "outLabel": "out",
+      "outputTab": "Output",
+      "problemDescription": "Implement <code>sum_evens(nums)</code> that returns the sum of every even number in the list. Return <code>0</code> for an empty list.",
+      "problemTab": "Problem",
+      "problemTitle": "Sum of evens",
+      "runCode": "Run Code",
+      "runMeta": "▶ python solution.py · 28ms",
+      "testsTab": "Tests 3/3"
+    },
+    "duo": {
+      "eyebrow": "Two sides, one platform",
+      "students": {
+        "description": "A clean editor, instant runs, and an AI that nudges toward the answer so the learning actually sticks.",
+        "items": [
+          {
+            "b": "Real-time feedback",
+            "t": "the moment code runs."
+          },
+          {
+            "b": "Personalized AI support",
+            "t": "tuned to each problem."
+          },
+          {
+            "b": "No ready-made answers",
+            "t": "— hints, never solutions."
+          },
+          {
+            "b": "Safe, distraction-free",
+            "t": "environment built for focus."
+          }
+        ],
+        "tag": "For Students",
+        "title": "A tutor that won't just give it away"
+      },
+      "subtitle": "You design the exercises and set the guardrails. Students get a focused environment with an AI tutor that coaches instead of solving.",
+      "teachers": {
+        "description": "Build Python exercises, define what's allowed, and see exactly where every student is stuck — without grading at midnight.",
+        "items": [
+          {
+            "b": "Custom exercises",
+            "t": "with your own prompts, test cases and starter code."
+          },
+          {
+            "b": "Per-student progress",
+            "t": "across the whole class, in real time."
+          },
+          {
+            "b": "AI-automated grading",
+            "t": "that explains its reasoning, not just a score."
+          },
+          {
+            "b": "Libraries & constraints",
+            "t": "you control, per assignment."
+          }
+        ],
+        "tag": "For Teachers",
+        "title": "Design the course, watch it land"
+      },
+      "title": "Run your whole classroom",
+      "titleAccent": "in one place"
+    },
+    "final": {
+      "ctaPrimary": "Create your first class",
+      "ctaSecondary": "Explore the platform",
+      "note": "No credit card · Self-host or use the hosted version",
+      "subtitle": "Set up your first Python exercise in minutes. Free for educators, forever.",
+      "title": "Bring AI feedback to",
+      "titleAccent": "your classroom"
+    },
+    "footer": {
+      "copyright": "© {year} TACO. All rights reserved.",
+      "product": {
+        "ai": "AI Feedback",
+        "ide": "The IDE",
+        "openSource": "Open Source",
+        "teachers": "For Teachers"
+      },
+      "productTitle": "Product",
+      "resources": {
+        "changelog": "Changelog",
+        "docs": "Documentation",
+        "github": "GitHub"
+      },
+      "resourcesTitle": "Resources",
+      "tagline": "The open-source, AI-assisted Python IDE for teachers and students."
+    },
+    "hero": {
+      "ctaPrimary": "Create your first class",
+      "ctaSecondary": "See the IDE",
+      "eyebrowPill": "For Teachers",
+      "eyebrowText": "Built for classrooms, not coding bootcamps",
+      "subtitle": "TACO is the open-source IDE where teachers create custom Python exercises and every student gets real-time, individual guidance — without the AI ever handing out the answer.",
+      "titleAccent": "personalized AI feedback",
+      "titleLine1": "Teach Python with",
+      "trust": {
+        "free": "Free for educators",
+        "noData": "No student data sold",
+        "openSource": "Open-source",
+        "selfHostable": "Self-hostable"
+      }
+    },
+    "nav": {
+      "ai": "AI Feedback",
+      "ide": "The IDE",
+      "oss": "Open Source",
+      "signIn": "Sign in",
+      "startFree": "Start free",
+      "teachers": "For Teachers"
+    },
+    "oss": {
+      "contributorsTitle": "The people building TACO",
+      "eyebrow": "Open source",
+      "more": "+{count}",
+      "readDocs": "Read the docs",
+      "stats": {
+        "contributors": "Contributors",
+        "languages": "Languages supported",
+        "license": "License",
+        "openSource": "Open-source"
+      },
+      "subtitle": "TACO is free, transparent and self-hostable. Inspect it, fork it, run it on your school's own infrastructure.",
+      "title": "Built in the open,",
+      "titleAccent": "by educators",
+      "viewGithub": "View on GitHub"
+    }
+  },
+  "knowledgeBase": {
+    "create": {
+      "submit": "Create and Link",
+      "titleLabel": "Knowledge Base Title",
+      "titlePlaceholder": "E.g. Module 3 Material..."
+    },
+    "docHint": "Common formats: PDF, DOCX, PPTX, TXT, Markdown, HTML and others listed in the upload area (up to 10 MB per file).",
+    "documents": {
+      "chunks": "{count, plural, one {# chunk} other {# chunks}}",
+      "deleteDialog": {
+        "confirm": "Remove",
+        "description": "Are you sure you want to remove \"{filename}\"? This action cannot be undone.",
+        "title": "Remove document"
+      },
+      "empty": "No documents uploaded",
+      "feedback": {
+        "deleteError": "Failed to remove document",
+        "deleted": "Document removed",
+        "uploadError": "Failed to upload document",
+        "uploaded": "Document uploaded successfully"
+      }
+    },
+    "errors": {
+      "create": "Failed to create knowledge base",
+      "link": "Failed to link knowledge base"
+    },
+    "hookErrors": {
+      "delete": "Failed to delete document",
+      "fetch": "Failed to fetch documents",
+      "upload": "Upload failed"
+    },
+    "idle": {
+      "bullets": {
+        "createNew": "<strong>Create new</strong> when it is new material for this module or set of exercises.",
+        "linkExisting": "<strong>Link existing</strong> when the class already has a base (e.g. the same handout across several challenges)."
+      },
+      "createButton": "Create New Knowledge Base",
+      "intro": "The <strong>Knowledge Base</strong> stores supporting materials (handouts, slides, PDFs, notes) tied <strong>to this class</strong>. You can link a base to this challenge so the <strong>assistant</strong> uses that content when answering the student in the chat — the student does not browse the base like a drive; it enriches the AI's context.",
+      "linkButton": "Link Existing"
+    },
+    "link": {
+      "documentCount": "{count, plural, =0 {No documents} one {# document} other {# documents}}",
+      "empty": {
+        "description": "Go back and use <strong>Create New Knowledge Base</strong> to get started, or upload documents later in the <strong>Documents</strong> tab once the base is linked.",
+        "title": "No knowledge base found in this class."
+      }
+    },
+    "linked": {
+      "contextHint": "Documents and notes from this base enter the assistant's context when the student uses the chat in this challenge. The student does not need to \"open\" the base; it helps produce answers better aligned with your material.",
+      "tabs": {
+        "documents": "Documents",
+        "text": "Text Notes"
+      },
+      "unlink": "Unlink"
+    },
+    "noClassroom": {
+      "explanation": "Every base is tied to a class: the material reuses the same course context and can be linked to several challenges in that class.",
+      "requirement": "Link this exercise to a class (Basic information step) to use the Knowledge Base."
+    },
+    "status": {
+      "chunking": "Processing...",
+      "converting": "Converting...",
+      "embedding": "Indexing...",
+      "error": "Error",
+      "ready": "Ready",
+      "uploading": "Uploading..."
+    },
+    "text": {
+      "addButton": "Add",
+      "description": "Add text notes that will be included in the knowledge base as additional context for the AI assistant.",
+      "feedback": {
+        "added": "Entry added",
+        "error": "Failed to create entry"
+      },
+      "newEntryLabel": "Add new entry",
+      "placeholder": "Knowledge base entry content..."
+    },
+    "title": "Knowledge Base",
+    "upload": {
+      "errors": {
+        "tooLarge": "File exceeds the 10MB limit",
+        "unsupportedType": "Unsupported file type. Accepted: PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF"
+      },
+      "formats": "PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF (max. 10MB)",
+      "prompt": "Drag a file or click to select",
+      "uploading": "Uploading file..."
+    }
+  },
+  "nav": {
+    "admin": "Admin",
+    "copyright": "© {year} TACO.<br></br>All rights reserved.",
+    "create": "Create",
+    "explore": "Explore",
+    "goToExplore": "Go to Explore",
+    "greeting": "Hi,",
+    "login": "Sign in",
+    "logoAlt": "TACO-IDE logo",
+    "miniLogoAlt": "TACO logo",
+    "noOrg": {
+      "description": "You are not part of any active organization right now. This may have happened because your organization was deactivated or because you were removed. Please contact a platform administrator to restore your access.",
+      "loggedInAs": "Logged in as <strong>{email}</strong>",
+      "title": "No active organization"
+    },
+    "profile": "Profile",
+    "resources": "Resources",
+    "signOut": "Sign out",
+    "userMenu": "User menu"
+  },
+  "problem": {
+    "description": {
+      "loadingBody": "Please wait while we load the problem description.",
+      "loadingTitle": "Loading..."
+    },
+    "editor": {
+      "resetCode": "Reset code",
+      "title": "Editor"
+    },
+    "header": {
+      "goToExplore": "Go to Explore"
+    },
+    "io": {
+      "copied": "Copied!",
+      "copy": "Copy",
+      "inputLabel": "Input (stdin)",
+      "inputPlaceholder": "Type the input here..."
+    },
+    "onboarding": {
+      "checklist": {
+        "adjustIo": "On the Input / Output tab, adjust the test input and check the output.",
+        "askChat": "On the Chat tab, ask the assistant for help when you get stuck (it uses your code and the statement).",
+        "editCode": "In the right panel, edit your code in the editor.",
+        "readStatement": "On the Problem tab, read the statement carefully before coding.",
+        "runProgram": "Use Run to run the program and see the result."
+      },
+      "dismiss": "Got it, hide",
+      "hideTips": "Hide tips",
+      "subtitle": "Quick checklist — you can hide this whenever you want; it won't show again in this browser.",
+      "title": "First steps on this screen"
+    },
+    "output": {
+      "empty": "Run the code to see the output",
+      "executionDone": "Execution complete",
+      "executionError": "Execution error",
+      "label": "Output",
+      "loadingRuntime": "Loading Python runtime (first time only)..."
+    },
+    "page": {
+      "backToExplore": "Back to Explore",
+      "loadError": "Could not load the problem."
+    },
+    "profileMenu": {
+      "explore": "Explore",
+      "label": "User menu",
+      "profile": "Profile"
+    },
+    "reopen": {
+      "action": "Reopen",
+      "loading": "Reopening…"
+    },
+    "reset": {
+      "action": "Reset",
+      "confirm": "Confirm reset",
+      "dialogDescription": "This action deletes the work session, the chat history, and the saved code for this challenge. It cannot be undone.",
+      "dialogTitle": "Reset problem?",
+      "loading": "Resetting…"
+    },
+    "run": {
+      "action": "Run Code",
+      "loadingPython": "Loading Python...",
+      "running": "Running..."
+    },
+    "session": {
+      "alreadySubmitted": "Already submitted"
+    },
+    "submit": {
+      "action": "Submit",
+      "confirm": "Confirm submission",
+      "dialogDescription": "Before submitting, rate the Teaching Assistant (TA) that supported you in this session, from 1 to 5 stars. Your identity will <strong>not</strong> be linked to the rating. Only the TA, the rating, and the date are stored.",
+      "dialogTitle": "Submit solution?",
+      "ratingLabel": "TA rating (1 to 5 stars)",
+      "starLabel": "{count, plural, one {# star} other {# stars}}",
+      "submitting": "Submitting…"
+    },
+    "tabs": {
+      "chat": "Chat",
+      "io": "Input / Output",
+      "problem": "Problem"
+    },
+    "theme": {
+      "select": "Select Theme"
+    }
+  },
+  "problemChat": {
+    "avatarAlt": "Avatar",
+    "awaitingResponse": "(Waiting for response...)",
+    "errors": {
+      "challengeNotFound": "Problem not found",
+      "sendMessage": "Failed to send message",
+      "workSessionUnavailable": "Work session not available"
+    },
+    "input": {
+      "placeholder": "Type your message...",
+      "placeholderLocked": "Session submitted — chat locked",
+      "send": "Send"
+    },
+    "readOnlyNotice": "This session has been submitted. The chat is in read-only mode.",
+    "scrollToBottom": "Go to bottom",
+    "thinking": "Thinking...",
+    "welcome": {
+      "description": "Ask questions about the problem or code. Messages are saved to the history.",
+      "title": "Welcome to the Chat"
+    }
+  },
+  "profile": {
+    "editForm": {
+      "imageLabel": "Profile picture URL",
+      "imagePlaceholder": "https://example.com/photo.jpg",
+      "namePlaceholder": "Your full name",
+      "title": "Edit Profile"
+    },
+    "feedback": {
+      "updateError": "Failed to update profile",
+      "updateSuccess": "Profile updated successfully"
+    },
+    "loadError": "Could not load user data.",
+    "orgRole": {
+      "activeOrg": "Active organization",
+      "currentRole": "Current role",
+      "noActiveOrg": "No active organization",
+      "none": "None",
+      "title": "Organization and Role"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "subtitle": "Manage your personal information",
+    "title": "My Profile"
+  },
+  "submissions": {
+    "accessDenied": "Restricted to teachers and coordinators.",
+    "autoReview": {
+      "alreadyRunning": "Review already running — please wait.",
+      "failed": "Review failed.",
+      "generatedAt": "Generated on {date}",
+      "noResult": "The agent did not return a review — check the server logs.",
+      "pendingHint": "Pending — use the Run button to generate the review now.",
+      "regenerated": "Review regenerated",
+      "rerun": "Re-run",
+      "rerunError": "Failed to re-run review",
+      "rerunTitle": "Re-run automatic review",
+      "run": "Run",
+      "runTitle": "Run automatic review",
+      "running": "Running…",
+      "title": "Automatic review",
+      "unknownError": "Unknown error."
+    },
+    "autoReviewAvailable": "Available",
+    "autoReviewPending": "Pending",
+    "detailTitle": "Submission by {student}",
+    "empty": "No submissions yet.",
+    "exploreProblems": "Explore problems",
+    "grade": {
+      "commentLabel": "Comment (optional)",
+      "commentPlaceholder": "Feedback for the student...",
+      "label": "Grade (e.g.: 8.5, A)",
+      "lastSavedAt": "Last grade saved on {date}",
+      "maxLength": "Maximum 10 characters",
+      "placeholder": "E.g.: 8.5",
+      "required": "Enter a grade",
+      "save": "Save grade",
+      "saveError": "Error saving the grade",
+      "saved": "Grade saved",
+      "title": "Grade"
+    },
+    "loadError": "Could not load the submissions.",
+    "noCode": "(no code)",
+    "notFound": "Submission not found.",
+    "pagination": "{total, plural, =0 {0 submissions} one {# submission} other {# submissions}} · Page {page} of {totalPages}",
+    "removedUser": "(removed user)",
+    "submittedAt": "Submitted on {date}",
+    "submittedCode": "Submitted code",
+    "table": {
+      "actions": "Actions",
+      "autoReview": "Auto review",
+      "grade": "Grade",
+      "student": "Student",
+      "submittedAt": "Submitted at"
+    },
+    "title": "Submissions",
+    "view": "View",
+    "viewReplay": "View history (replay)",
+    "viewStudentSessions": "View student sessions"
+  },
+  "ui": {
+    "carousel": {
+      "nextSlide": "Next slide",
+      "previousSlide": "Previous slide"
+    }
+  },
+  "workSessions": {
+    "accessDenied": "Restricted to teachers and coordinators.",
+    "actions": {
+      "editProblem": "Edit problem",
+      "replay": "Replay",
+      "studentView": "Student view",
+      "submissions": "Submissions"
+    },
+    "empty": "No sessions found.",
+    "error": {
+      "load": "Unable to load sessions."
+    },
+    "exploreProblems": "Explore problems",
+    "filters": {
+      "searchLabel": "Search by student name",
+      "searchPlaceholder": "Name...",
+      "submittedOnly": "Submitted only"
+    },
+    "pagination": {
+      "summary": "{count, plural, =0 {no sessions} one {# session} other {# sessions}} · Page {page} of {totalPages}"
+    },
+    "replay": {
+      "backToList": "Back to list",
+      "chat": {
+        "awaitingResponse": "(Awaiting response...)",
+        "emptyStep": "No chat message in this step.",
+        "logLabel": "Replay messages",
+        "title": "Chat"
+      },
+      "code": {
+        "title": "Code"
+      },
+      "error": {
+        "load": "Unable to load the session."
+      },
+      "io": {
+        "stdinPlaceholder": "(empty)",
+        "stdoutPlaceholder": "(no execution yet)",
+        "title": "Input / Output"
+      },
+      "loading": "Loading session…",
+      "noInteractions": "This session has no recorded interactions yet.",
+      "sessionLabel": "Session {id}",
+      "toolbar": {
+        "beforeFirstEvent": "(before the 1st event)",
+        "goEnd": "Go to end",
+        "goStart": "Go to start",
+        "lastEventLabel": "Last event:",
+        "noAnimations": "No animations",
+        "pause": "Pause",
+        "pauseAria": "Pause",
+        "play": "Play",
+        "playAria": "Play",
+        "stepLabel": "Step:",
+        "stepNext": "Next step",
+        "stepPrev": "Previous step"
+      }
+    },
+    "state": {
+      "inProgress": "In progress",
+      "submitted": "Submitted"
+    },
+    "table": {
+      "actions": "Actions",
+      "createdAt": "Created at",
+      "lastMessage": "Last message",
+      "state": "State",
+      "student": "Student"
+    },
+    "title": "Student sessions"
+  }
+}

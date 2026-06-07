@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AtSign,
@@ -55,6 +56,8 @@ function formatDate(value: string): string {
 }
 
 export function OrgHeader({ org }: OrgHeaderProps) {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -63,7 +66,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
     mutation: {
       onSuccess: () => {
         toast.success(
-          org.isActive ? "Organização desativada" : "Organização reativada",
+          org.isActive ? t("toast.deactivated") : t("toast.reactivated"),
         );
         void queryClient.invalidateQueries({
           predicate: (query) => {
@@ -81,7 +84,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
       },
       onError: (err) => {
         toast.error(
-          err instanceof Error ? err.message : "Erro ao atualizar status",
+          err instanceof Error ? err.message : t("toast.statusUpdateError"),
         );
       },
     },
@@ -105,18 +108,17 @@ export function OrgHeader({ org }: OrgHeaderProps) {
               <span className="text-slate-600">·</span>
               <span className="inline-flex items-center gap-1.5">
                 <Users className="h-3 w-3" />
-                {org.memberCount} {org.memberCount === 1 ? "membro" : "membros"}
+                {t("memberCount", { count: org.memberCount })}
               </span>
               <span className="text-slate-600">·</span>
               <span className="inline-flex items-center gap-1.5">
                 <GraduationCap className="h-3 w-3" />
-                {org.classroomCount}{" "}
-                {org.classroomCount === 1 ? "turma" : "turmas"}
+                {t("classroomCount", { count: org.classroomCount })}
               </span>
               <span className="text-slate-600">·</span>
               <span className="inline-flex items-center gap-1.5">
                 <Calendar className="h-3 w-3" />
-                Criada em {formatDate(org.createdAt)}
+                {t("createdOn", { date: formatDate(org.createdAt) })}
               </span>
             </div>
           </div>
@@ -129,7 +131,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
             onClick={() => setEditOpen(true)}
           >
             <Pencil className="h-4 w-4" />
-            Editar
+            {c("edit")}
           </Button>
           <Button
             type="button"
@@ -142,7 +144,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
             ) : (
               <CirclePlay className="h-4 w-4" />
             )}
-            {org.isActive ? "Desativar" : "Reativar"}
+            {org.isActive ? t("deactivate") : t("reactivate")}
           </Button>
         </div>
       </div>
@@ -158,13 +160,13 @@ export function OrgHeader({ org }: OrgHeaderProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {org.isActive
-                ? "Desativar organização?"
-                : "Reativar organização?"}
+                ? t("confirm.deactivateTitle")
+                : t("confirm.reactivateTitle")}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
               {org.isActive
-                ? "Membros perderão acesso imediatamente. Os dados são preservados e você pode reativar quando quiser."
-                : "Membros recuperarão o acesso imediatamente."}
+                ? t("confirm.deactivateDescription")
+                : t("confirm.reactivateDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -172,7 +174,7 @@ export function OrgHeader({ org }: OrgHeaderProps) {
               disabled={toggleActive.isPending}
               className={buttonVariants({ variant: "outline-dark" })}
             >
-              Cancelar
+              {c("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={toggleActive.isPending}
@@ -189,7 +191,9 @@ export function OrgHeader({ org }: OrgHeaderProps) {
                   : "bg-amber-500 text-slate-900 hover:bg-amber-400"
               }
             >
-              {org.isActive ? "Sim, desativar" : "Sim, reativar"}
+              {org.isActive
+                ? t("confirm.confirmDeactivate")
+                : t("confirm.confirmReactivate")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

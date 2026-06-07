@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 
@@ -17,6 +18,8 @@ import { useUser } from "@/contexts/UserContext";
  * instead of a half-broken /explore where every action 400s/403s.
  */
 export function NoActiveOrganization() {
+  const t = useTranslations("nav");
+  const c = useTranslations("common");
   const { user, logout } = useUser();
 
   return (
@@ -34,24 +37,25 @@ export function NoActiveOrganization() {
           <Building2 className="h-6 w-6" />
         </div>
         <h1 className="text-xl font-semibold text-white">
-          Nenhuma organização ativa
+          {t("noOrg.title")}
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">
-          Você não está em nenhuma organização ativa no momento. Isso pode ter
-          acontecido porque sua organização foi desativada ou porque você foi
-          removido. Procure um administrador da plataforma para regularizar
-          seu acesso.
+          {t("noOrg.description")}
         </p>
         {user?.email && (
           <div className="mt-5 rounded-md border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-400">
-            Conectado como{" "}
-            <span className="font-medium text-white">{user.email}</span>
+            {t.rich("noOrg.loggedInAs", {
+              email: user.email,
+              strong: (chunks) => (
+                <span className="font-medium text-white">{chunks}</span>
+              ),
+            })}
           </div>
         )}
         <div className="mt-6 flex justify-center">
           <Button variant="outline-dark" onClick={() => void logout()}>
             <LogOut className="mr-2 h-4 w-4" />
-            Sair
+            {c("signOut")}
           </Button>
         </div>
       </div>

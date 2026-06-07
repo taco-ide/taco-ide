@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/UserContext";
 import { usePutV1UsersMe } from "@/kubb/hooks/usersHooks/usePutV1UsersMe";
@@ -24,14 +25,16 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-const roleLabelMap: Record<string, string> = {
-  student: "Estudante",
-  teacher: "Professor",
-  coordinator: "Coordenador",
-  admin: "Administrador",
+const roleLabelKeys: Record<string, string> = {
+  student: "roles.student",
+  teacher: "roles.teacher",
+  coordinator: "roles.coordinator",
+  admin: "roles.admin",
 };
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
+  const c = useTranslations("common");
   const { user, isLoading: isUserLoading } = useUser();
   const queryClient = useQueryClient();
   const [feedback, setFeedback] = useState<{
@@ -43,12 +46,12 @@ export default function ProfilePage() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getV1UsersMeQueryKey() });
-        setFeedback({ type: "success", message: "Perfil atualizado com sucesso" });
+        setFeedback({ type: "success", message: t("feedback.updateSuccess") });
       },
       onError: (err) => {
         setFeedback({
           type: "error",
-          message: err.message ?? "Erro ao atualizar perfil",
+          message: err.message ?? t("feedback.updateError"),
         });
       },
     },
@@ -87,7 +90,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-slate-400">Nao foi possivel carregar os dados do usuario.</p>
+        <p className="text-slate-400">{t("loadError")}</p>
       </div>
     );
   }
@@ -97,9 +100,9 @@ export default function ProfilePage() {
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
-            Meu Perfil
+            {t("title")}
           </h1>
-          <p className="text-slate-400">Gerencie suas informacoes pessoais</p>
+          <p className="text-slate-400">{t("subtitle")}</p>
         </div>
 
         {/* Avatar & Info */}
@@ -125,24 +128,24 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2 text-base">
               <Shield className="w-4 h-4 text-yellow-400" />
-              Organizacao e Papel
+              {t("orgRole.title")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Papel atual</span>
+              <span className="text-slate-400">{t("orgRole.currentRole")}</span>
               {user.role ? (
                 <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                  {roleLabelMap[user.role] ?? user.role}
+                  {roleLabelKeys[user.role] ? t(roleLabelKeys[user.role]) : user.role}
                 </Badge>
               ) : (
-                <span className="text-slate-500 text-sm">Nenhuma organizacao ativa</span>
+                <span className="text-slate-500 text-sm">{t("orgRole.noActiveOrg")}</span>
               )}
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-400">Organizacao ativa</span>
+              <span className="text-slate-400">{t("orgRole.activeOrg")}</span>
               <span className="text-slate-300 text-sm">
-                {user.activeOrganizationName ?? "Nenhuma"}
+                {user.activeOrganizationName ?? t("orgRole.none")}
               </span>
             </div>
           </CardContent>
@@ -153,14 +156,14 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2 text-base">
               <User className="w-4 h-4 text-yellow-400" />
-              Editar Perfil
+              {t("editForm.title")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <Label htmlFor="email" className="text-slate-300">
-                  Email
+                  {c("email")}
                 </Label>
                 <Input
                   id="email"
@@ -172,13 +175,13 @@ export default function ProfilePage() {
 
               <div>
                 <Label htmlFor="name" className="text-slate-300">
-                  Nome
+                  {c("name")}
                 </Label>
                 <Input
                   id="name"
                   {...register("name")}
                   className="bg-slate-900 border-slate-700 text-slate-200"
-                  placeholder="Seu nome completo"
+                  placeholder={t("editForm.namePlaceholder")}
                 />
                 {errors.name && (
                   <p className="text-red-400 text-sm mt-1">
@@ -189,13 +192,13 @@ export default function ProfilePage() {
 
               <div>
                 <Label htmlFor="image" className="text-slate-300">
-                  URL da foto de perfil
+                  {t("editForm.imageLabel")}
                 </Label>
                 <Input
                   id="image"
                   {...register("image")}
                   className="bg-slate-900 border-slate-700 text-slate-200"
-                  placeholder="https://exemplo.com/foto.jpg"
+                  placeholder={t("editForm.imagePlaceholder")}
                 />
                 {errors.image && (
                   <p className="text-red-400 text-sm mt-1">
@@ -227,7 +230,7 @@ export default function ProfilePage() {
                   ) : (
                     <Save className="w-4 h-4 mr-2" />
                   )}
-                  Salvar
+                  {c("save")}
                 </Button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,20 +29,14 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const STATUS_LABELS: Record<KbDocumentStatus, string> = {
-  uploading: "Enviando...",
-  converting: "Convertendo...",
-  chunking: "Processando...",
-  embedding: "Indexando...",
-  ready: "Pronto",
-  error: "Erro",
-};
-
 function StatusBadge({ status }: { status: KbDocumentStatus }) {
+  const t = useTranslations("knowledgeBase");
+  const label = t(`status.${status}`);
+
   if (status === "ready") {
     return (
       <Badge className="border-transparent bg-green-500/20 text-green-400">
-        {STATUS_LABELS[status]}
+        {label}
       </Badge>
     );
   }
@@ -49,14 +44,14 @@ function StatusBadge({ status }: { status: KbDocumentStatus }) {
   if (status === "error") {
     return (
       <Badge className="border-transparent bg-red-500/20 text-red-400">
-        {STATUS_LABELS[status]}
+        {label}
       </Badge>
     );
   }
 
   return (
     <Badge className="border-transparent bg-yellow-500/20 text-yellow-400 animate-pulse">
-      {STATUS_LABELS[status]}
+      {label}
     </Badge>
   );
 }
@@ -66,11 +61,14 @@ export function KbDocumentList({
   onDelete,
   isDeleting,
 }: KbDocumentListProps) {
+  const t = useTranslations("knowledgeBase");
+  const c = useTranslations("common");
+
   if (documents.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-slate-500">
         <FileText className="w-10 h-10 mb-2" />
-        <p className="text-sm">Nenhum documento enviado</p>
+        <p className="text-sm">{t("documents.empty")}</p>
       </div>
     );
   }
@@ -89,7 +87,7 @@ export function KbDocumentList({
               <p className="text-xs text-slate-500">
                 {formatFileSize(doc.fileSize)}
                 {doc.status === "ready" && doc.chunkCount > 0 && (
-                  <> &middot; {doc.chunkCount} chunks</>
+                  <> &middot; {t("documents.chunks", { count: doc.chunkCount })}</>
                 )}
                 {doc.errorMessage && (
                   <span className="text-red-400">
@@ -117,22 +115,23 @@ export function KbDocumentList({
               <AlertDialogContent className="bg-slate-800 border-slate-700">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="text-white">
-                    Remover documento
+                    {t("documents.deleteDialog.title")}
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-slate-400">
-                    Tem certeza que deseja remover &quot;{doc.filename}&quot;?
-                    Esta acao nao pode ser desfeita.
+                    {t("documents.deleteDialog.description", {
+                      filename: doc.filename,
+                    })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">
-                    Cancelar
+                    {c("cancel")}
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => onDelete(doc.id)}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    Remover
+                    {t("documents.deleteDialog.confirm")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

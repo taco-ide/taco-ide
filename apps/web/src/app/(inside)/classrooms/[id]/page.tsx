@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   useGetV1ClassroomsId,
   usePutV1ClassroomsId,
@@ -65,6 +66,8 @@ export default function ClassroomPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useUser();
+  const t = useTranslations("classrooms");
+  const c = useTranslations("common");
   const id = params.id as string;
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -193,7 +196,7 @@ export default function ClassroomPage() {
           <div className="max-w-xl mx-auto rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-red-200">
             {classroomError instanceof Error
               ? classroomError.message
-              : "Erro ao carregar turma"}
+              : t("detail.loadError")}
           </div>
           <Button
             variant="outline"
@@ -201,7 +204,7 @@ export default function ClassroomPage() {
             onClick={() => router.back()}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
+            {c("back")}
           </Button>
         </div>
       </div>
@@ -223,7 +226,7 @@ export default function ClassroomPage() {
           className="inline-flex items-center text-slate-400 hover:text-slate-200 mb-8 transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar ao Explorar
+          {t("backToExplore")}
         </Link>
 
         <div className="mb-10 text-center max-w-4xl mx-auto">
@@ -233,7 +236,7 @@ export default function ClassroomPage() {
                 value={titleDraft}
                 onChange={(e) => setTitleDraft(e.target.value)}
                 className={inputClass}
-                placeholder="Título da turma"
+                placeholder={t("detail.titlePlaceholder")}
               />
               <div className="flex gap-2 justify-center">
                 <Button
@@ -274,7 +277,7 @@ export default function ClassroomPage() {
                     setTitleDraft(classroom.title);
                   }}
                   className="text-slate-400 hover:text-yellow-400 transition-colors shrink-0"
-                  aria-label="Editar título"
+                  aria-label={t("detail.editTitleAria")}
                 >
                   <Pencil className="h-5 w-5" />
                 </button>
@@ -284,27 +287,29 @@ export default function ClassroomPage() {
           <p className="text-slate-400 text-lg mt-3">
             {classroom.organizationName ?? "—"} ·{" "}
             {classroom.teacherName
-              ? `Prof. ${classroom.teacherName}`
-              : "Sem professor definido"}
+              ? t("detail.teacherName", { name: classroom.teacherName })
+              : t("detail.noTeacher")}
           </p>
           <p className="text-slate-500 text-sm mt-2">
-            Gerencie informações, alunos e problemas desta turma
+            {t("detail.manageHint")}
           </p>
         </div>
 
         <div className="space-y-0 max-w-5xl mx-auto">
-          <SectionDivider label="Sobre a turma" />
+          <SectionDivider label={t("detail.sections.about")} />
 
           <Card className="p-6 bg-slate-800 border-slate-700">
             <CardContent className="p-0 space-y-4">
               {editingDesc ? (
                 <div className="space-y-2">
-                  <Label className="text-slate-200">Descrição</Label>
+                  <Label className="text-slate-200">
+                    {t("detail.descriptionLabel")}
+                  </Label>
                   <Textarea
                     value={descDraft}
                     onChange={(e) => setDescDraft(e.target.value)}
                     className={`min-h-[100px] ${inputClass}`}
-                    placeholder="Descrição da turma"
+                    placeholder={t("detail.descriptionPlaceholder")}
                   />
                   <div className="flex gap-2">
                     <Button
@@ -335,7 +340,7 @@ export default function ClassroomPage() {
               ) : (
                 <div className="flex items-start gap-2">
                   <p className="text-slate-300 flex-1 leading-relaxed">
-                    {classroom.description || "Sem descrição."}
+                    {classroom.description || t("detail.noDescription")}
                   </p>
                   {canEditMetadata && (
                     <button
@@ -345,7 +350,7 @@ export default function ClassroomPage() {
                         setDescDraft(classroom.description ?? "");
                       }}
                       className="text-slate-400 hover:text-yellow-400 transition-colors shrink-0"
-                      aria-label="Editar descrição"
+                      aria-label={t("detail.editDescriptionAria")}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -356,7 +361,7 @@ export default function ClassroomPage() {
               {canSetTeacher && orgId === user?.activeOrganizationId && (
                 <div className="pt-4 border-t border-slate-700">
                   <Label className="text-slate-200 block mb-2">
-                    Professor responsável
+                    {t("teacher.label")}
                   </Label>
                   <Select
                     value={classroom.teacherUserId ?? TEACHER_NONE_VALUE}
@@ -366,14 +371,14 @@ export default function ClassroomPage() {
                     <SelectTrigger
                       className={`w-full max-w-md ${selectTriggerClass}`}
                     >
-                      <SelectValue placeholder="Selecione o professor" />
+                      <SelectValue placeholder={t("teacher.selectPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent className={selectContentClass}>
                       <SelectItem
                         value={TEACHER_NONE_VALUE}
                         className={selectItemClass}
                       >
-                        Nenhum
+                        {t("teacher.none")}
                       </SelectItem>
                       {teachersInOrg.map((m) => (
                         <SelectItem
@@ -391,7 +396,7 @@ export default function ClassroomPage() {
             </CardContent>
           </Card>
 
-          <SectionDivider label="Alunos matriculados" />
+          <SectionDivider label={t("detail.sections.students")} />
 
           <Card className="p-6 bg-slate-800 border-slate-700">
             <CardContent className="p-0 space-y-4">
@@ -410,7 +415,9 @@ export default function ClassroomPage() {
                     <SelectTrigger
                       className={`w-full sm:w-[min(100%,320px)] ${selectTriggerClass}`}
                     >
-                      <SelectValue placeholder="Adicionar membro da organização…" />
+                      <SelectValue
+                        placeholder={t("students.addMemberPlaceholder")}
+                      />
                     </SelectTrigger>
                     <SelectContent className={selectContentClass}>
                       {availableToEnroll.map((m) => (
@@ -430,15 +437,17 @@ export default function ClassroomPage() {
                 </div>
               )}
               {!classroom.enrollments?.length ? (
-                <p className="text-slate-400 py-2">Nenhum aluno matriculado.</p>
+                <p className="text-slate-400 py-2">{t("students.empty")}</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow className="border-slate-700 hover:bg-transparent">
-                      <TableHead className="text-slate-200">Nome</TableHead>
-                      <TableHead className="text-slate-200">Email</TableHead>
+                      <TableHead className="text-slate-200">{c("name")}</TableHead>
+                      <TableHead className="text-slate-200">{c("email")}</TableHead>
                       {canManageEnrollments && (
-                        <TableHead className="text-slate-200 w-24">Ações</TableHead>
+                        <TableHead className="text-slate-200 w-24">
+                          {c("actions")}
+                        </TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
@@ -474,7 +483,7 @@ export default function ClassroomPage() {
             </CardContent>
           </Card>
 
-          <SectionDivider label="Problemas da turma" />
+          <SectionDivider label={t("detail.sections.problems")} />
 
           <Card className="p-6 bg-slate-800 border-slate-700">
             <CardContent className="p-0 space-y-4">
@@ -482,12 +491,10 @@ export default function ClassroomPage() {
                 <div className="flex items-center justify-center rounded-lg bg-slate-900/80 ring-1 ring-slate-700/80 p-2">
                   <BookOpen className="h-5 w-5 text-orange-400" />
                 </div>
-                Lista de problemas
+                {t("problems.listTitle")}
               </div>
               {canAssignChallenges && unassignedChallenges.length > 0 && (
-                <p className="text-sm text-slate-400">
-                  Atribua problemas sem turma a esta turma:
-                </p>
+                <p className="text-sm text-slate-400">{t("problems.assignHint")}</p>
               )}
               {classroomChallenges.length > 0 ? (
                 <div className="space-y-2">
@@ -524,7 +531,7 @@ export default function ClassroomPage() {
                             onClick={() => handleUnassignChallenge(ch.id)}
                             disabled={assignChallengeMutation.isPending}
                           >
-                            Remover
+                            {t("problems.remove")}
                           </Button>
                         )}
                       </div>
@@ -532,14 +539,12 @@ export default function ClassroomPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-400 py-2">
-                  Nenhum problema atribuído a esta turma.
-                </p>
+                <p className="text-slate-400 py-2">{t("problems.empty")}</p>
               )}
               {canAssignChallenges && unassignedChallenges.length > 0 && (
                 <div className="pt-4 border-t border-slate-700">
                   <Label className="text-slate-200 block mb-2">
-                    Atribuir problema à turma
+                    {t("problems.assignLabel")}
                   </Label>
                   <div className="flex flex-wrap gap-2">
                     {unassignedChallenges.map((ch) => (

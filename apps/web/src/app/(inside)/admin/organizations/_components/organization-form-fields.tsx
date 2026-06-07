@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export function OrganizationFormFields({
   form,
   autoSlug = false,
 }: OrganizationFormFieldsProps) {
+  const t = useTranslations("adminOrgs");
   const {
     register,
     formState: { errors, dirtyFields },
@@ -70,11 +72,11 @@ export function OrganizationFormFields({
     <div className="space-y-4">
       <div className="space-y-1.5">
         <Label htmlFor="org-name" className="text-slate-300">
-          Nome
+          {t("form.name.label")}
         </Label>
         <Input
           id="org-name"
-          placeholder="ex.: Instituto Federal de São Paulo"
+          placeholder={t("form.name.placeholder")}
           autoFocus
           {...register("name")}
           className="bg-slate-900 border-slate-700 text-white"
@@ -82,14 +84,12 @@ export function OrganizationFormFields({
         {errors.name && (
           <p className="text-xs text-red-400">{errors.name.message}</p>
         )}
-        <p className="text-[11px] text-slate-500">
-          Nome de exibição para os membros. Use o nome oficial da instituição.
-        </p>
+        <p className="text-[11px] text-slate-500">{t("form.name.hint")}</p>
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="org-slug" className="text-slate-300">
-          Slug
+          {t("form.slug.label")}
         </Label>
         <div className="flex overflow-hidden rounded-md border border-slate-700 bg-slate-900">
           <span className="border-r border-slate-700 bg-slate-900/80 px-3 py-2 text-xs text-slate-500">
@@ -108,28 +108,27 @@ export function OrganizationFormFields({
         {errors.slug && (
           <p className="text-xs text-red-400">{errors.slug.message}</p>
         )}
-        <p className="text-[11px] text-slate-500">
-          Apenas letras minúsculas, números e hífens. Usado em URLs.
-        </p>
+        <p className="text-[11px] text-slate-500">{t("form.slug.hint")}</p>
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="org-logo" className="text-slate-300">
-          URL do logo{" "}
-          <span className="text-slate-500 font-normal">· opcional</span>
+          {t.rich("form.logo.label", {
+            optional: (chunks) => (
+              <span className="text-slate-500 font-normal">{chunks}</span>
+            ),
+          })}
         </Label>
         <Input
           id="org-logo"
-          placeholder="https://exemplo.edu.br/logo.png"
+          placeholder={t("form.logo.placeholder")}
           {...register("logo")}
           className="bg-slate-900 border-slate-700 text-white"
         />
         {errors.logo && (
           <p className="text-xs text-red-400">{errors.logo.message}</p>
         )}
-        <p className="text-[11px] text-slate-500">
-          PNG ou SVG quadrado. Caímos no avatar com iniciais quando vazio.
-        </p>
+        <p className="text-[11px] text-slate-500">{t("form.logo.hint")}</p>
       </div>
     </div>
   );

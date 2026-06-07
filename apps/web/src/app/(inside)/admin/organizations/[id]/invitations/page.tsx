@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, Mail, Plus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pager } from "@/components/admin/pager";
@@ -14,6 +15,8 @@ import { InvitationsTable, type InvitationRow } from "./_components/invitations-
 const PER_PAGE = 20;
 
 export default function InvitationsTabPage() {
+  const t = useTranslations("adminInvitations");
+  const c = useTranslations("common");
   const params = useParams<{ id: string }>();
   const orgId = params?.id ?? "";
 
@@ -23,7 +26,7 @@ export default function InvitationsTabPage() {
   const { data: orgData } = useGetV1OrganizationsId(orgId, {
     query: { enabled: orgId.length > 0 },
   });
-  const orgName = orgData?.data?.name ?? "esta organização";
+  const orgName = orgData?.data?.name ?? t("fallbackOrgName");
 
   // Kubb-generated type for this query currently exposes only `status`. The
   // backend now also accepts `page` and `perPage`. We extend the param object
@@ -81,17 +84,20 @@ export default function InvitationsTabPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-0.5">
           <h2 className="text-base font-semibold text-white">
-            Convites pendentes
+            {t("title")}
           </h2>
           <p className="text-xs text-slate-400">
-            Convites enviados para entrar em{" "}
-            <strong className="text-white">{orgName}</strong> que ainda não
-            foram aceitos.
+            {t.rich("description", {
+              orgName,
+              strong: (chunks) => (
+                <strong className="text-white">{chunks}</strong>
+              ),
+            })}
             {pagination.total > 0 ? (
               <>
                 {" "}
                 <span className="text-slate-500">
-                  · {pagination.total} no total
+                  {t("totalCount", { count: pagination.total })}
                 </span>
               </>
             ) : null}
@@ -104,7 +110,7 @@ export default function InvitationsTabPage() {
           className="bg-amber-500 text-slate-900 hover:bg-amber-400"
         >
           <Plus className="mr-1.5 h-4 w-4" />
-          Novo convite
+          {t("newInvitation")}
         </Button>
       </div>
 
@@ -113,7 +119,7 @@ export default function InvitationsTabPage() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
             <span>
-              Não foi possível carregar os convites.{" "}
+              {t("loadError")}{" "}
               {error instanceof Error ? error.message : ""}
             </span>
           </div>
@@ -126,15 +132,15 @@ export default function InvitationsTabPage() {
             }}
           >
             <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-            Tentar novamente
+            {c("retry")}
           </Button>
         </div>
       ) : showInitialEmpty ? (
         <div className="overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900/40">
           <EmptyState
             icon={Mail}
-            title="Nenhum convite pendente"
-            body="Envie um convite por email para que um novo membro entre nesta organização."
+            title={t("empty.title")}
+            body={t("empty.body")}
             action={
               <Button
                 type="button"
@@ -142,7 +148,7 @@ export default function InvitationsTabPage() {
                 className="bg-amber-500 text-slate-900 hover:bg-amber-400"
               >
                 <Plus className="mr-1.5 h-4 w-4" />
-                Criar primeiro convite
+                {t("empty.action")}
               </Button>
             }
           />

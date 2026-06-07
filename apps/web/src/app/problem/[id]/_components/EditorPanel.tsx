@@ -13,6 +13,7 @@ import Image from "next/image";
 import { RotateCcwIcon, TypeIcon } from "lucide-react";
 import useMounted from "@/hooks/useMounted";
 import { useProblem } from "@/contexts/ProblemContext";
+import { useTranslations } from "next-intl";
 
 /** Editor do desafio é só Python; não usar `language` do store (pode estar desatualizado). */
 const EDITOR_LANG = "python" as const;
@@ -22,6 +23,7 @@ function EditorPanel() {
   const { theme, fontSize, editor, setFontSize, setEditor, preloadPyodide } =
     useCodeEditorStore();
   const { challengeId, solution, isSessionEnded } = useProblem();
+  const t = useTranslations("problem");
   const mounted = useMounted();
   const containerRef = useRef<HTMLDivElement>(null);
   /** Evita sobrescrever código local quando `solution` é atualizado pelo servidor (refetch). */
@@ -105,7 +107,9 @@ function EditorPanel() {
             />
           </div>
           <div>
-            <h2 className="text-xs font-medium text-zinc-300">Editor</h2>
+            <h2 className="text-xs font-medium text-zinc-300">
+              {t("editor.title")}
+            </h2>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +135,7 @@ function EditorPanel() {
             onClick={handleRefresh}
             disabled={isSessionEnded}
             className="p-1.5 hover:bg-zinc-800/60 rounded-md transition-colors text-zinc-500 hover:text-zinc-400 disabled:opacity-40 disabled:pointer-events-none"
-            aria-label="Resetar código"
+            aria-label={t("editor.resetCode")}
           >
             <RotateCcwIcon className="size-4" />
           </button>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useGetV1OrganizationsId } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ export default function OrganizationDetailLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   const params = useParams<{ id: string }>();
   const id = params?.id ?? "";
 
@@ -34,11 +37,11 @@ export default function OrganizationDetailLayout({
         <Button asChild variant="outline-dark" size="sm">
           <Link href="/admin/organizations">
             <ArrowLeft className="h-3.5 w-3.5" />
-            Voltar
+            {c("back")}
           </Link>
         </Button>
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
-          Não foi possível carregar a organização.{" "}
+          {t("detailLoadError")}{" "}
           {error instanceof Error ? error.message : ""}
         </div>
       </div>

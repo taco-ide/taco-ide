@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { CirclePause, CirclePlay, Eye, Pencil } from "lucide-react";
 import {
   Table,
@@ -52,16 +53,28 @@ export function OrganizationsTable({
   onToggleActive,
   togglingId,
 }: OrganizationsTableProps) {
+  const t = useTranslations("adminOrgs");
+  const c = useTranslations("common");
   return (
     <Table>
       <TableHeader>
         <TableRow className="border-slate-700/60 hover:bg-transparent">
-          <TableHead className="text-slate-400">Organização</TableHead>
-          <TableHead className="text-slate-400">Status</TableHead>
-          <TableHead className="text-right text-slate-400">Membros</TableHead>
-          <TableHead className="text-right text-slate-400">Turmas</TableHead>
-          <TableHead className="text-slate-400">Criada em</TableHead>
-          <TableHead className="text-right text-slate-400">Ações</TableHead>
+          <TableHead className="text-slate-400">
+            {t("table.organization")}
+          </TableHead>
+          <TableHead className="text-slate-400">{t("table.status")}</TableHead>
+          <TableHead className="text-right text-slate-400">
+            {t("table.members")}
+          </TableHead>
+          <TableHead className="text-right text-slate-400">
+            {t("table.classrooms")}
+          </TableHead>
+          <TableHead className="text-slate-400">
+            {t("table.createdAt")}
+          </TableHead>
+          <TableHead className="text-right text-slate-400">
+            {c("actions")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -127,14 +140,14 @@ export function OrganizationsTable({
                   <div className="flex items-center justify-end gap-1">
                     <Link
                       href={`/admin/organizations/${org.id}`}
-                      title="Ver"
+                      title={t("table.view")}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white"
                     >
                       <Eye className="h-4 w-4" />
                     </Link>
                     <button
                       type="button"
-                      title="Editar"
+                      title={c("edit")}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white"
                       onClick={() => onEdit(org)}
                     >
@@ -142,7 +155,7 @@ export function OrganizationsTable({
                     </button>
                     <button
                       type="button"
-                      title={org.isActive ? "Desativar" : "Reativar"}
+                      title={org.isActive ? t("deactivate") : t("reactivate")}
                       className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800/60 hover:text-white disabled:opacity-50"
                       onClick={() => onToggleActive(org)}
                       disabled={togglingId === org.id}

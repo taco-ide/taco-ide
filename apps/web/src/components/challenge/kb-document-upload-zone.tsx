@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Upload, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 const ACCEPTED_MIME_TYPES = [
@@ -30,16 +31,17 @@ export function KbDocumentUploadZone({
   onUpload,
   isUploading,
 }: KbDocumentUploadZoneProps) {
+  const t = useTranslations("knowledgeBase");
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
     if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
-      return "Tipo de arquivo nao suportado. Aceitos: PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF";
+      return t("upload.errors.unsupportedType");
     }
     if (file.size > MAX_FILE_SIZE) {
-      return "Arquivo excede o limite de 10MB";
+      return t("upload.errors.tooLarge");
     }
     return null;
   };
@@ -102,12 +104,10 @@ export function KbDocumentUploadZone({
           <Upload className="w-8 h-8 text-slate-500 mb-2" />
         )}
         <p className="text-sm text-slate-400 text-center">
-          {isUploading
-            ? "Enviando arquivo..."
-            : "Arraste um arquivo ou clique para selecionar"}
+          {isUploading ? t("upload.uploading") : t("upload.prompt")}
         </p>
         <p className="text-xs text-slate-500 mt-1">
-          PDF, DOCX, PPTX, TXT, MD, HTML, ODT, RTF (max. 10MB)
+          {t("upload.formats")}
         </p>
         <input
           ref={inputRef}

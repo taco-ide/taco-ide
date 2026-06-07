@@ -6,12 +6,41 @@ TACO-IDE is an intelligent educational platform designed to help teachers create
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
 - **Styling**: Tailwind CSS, Radix UI components
 - **State Management**: Zustand
 - **Authentication**: Better Auth (via `@repo/infra`)
 - **API Client**: Custom fetch wrapper for Fastify backend
 - **Code Editor**: Monaco Editor
+- **i18n**: next-intl (English + Brazilian Portuguese)
+
+## Internationalization (i18n)
+
+The whole UI is translatable to English (`en`, the default/fallback) and
+Brazilian Portuguese (`pt`) via **next-intl**, cookie-based (no `[locale]` URL
+segments).
+
+- **Config**: `src/i18n/config.ts` (locales, default, cookie name `NEXT_LOCALE`)
+  and `src/i18n/request.ts` (resolves the locale from the cookie per request).
+  The plugin is wired in `next.config.mjs`.
+- **Messages**: `src/messages/en.json` and `src/messages/pt.json`. Keys are
+  grouped by feature namespace (e.g. `home`, `auth`, `admin`, `problem`).
+  `common` holds generic shared words.
+- **Switching**: `<LanguageSwitcher>` (`src/components/language-switcher.tsx`)
+  sets the cookie via the `setLocale` server action (`src/app/actions/locale.ts`)
+  and refreshes — the choice persists across the whole platform.
+- **Usage**: Client components → `const t = useTranslations("namespace")` then
+  `t("key")`; inline markup → `t.rich(...)`. Server components → `await getTranslations(...)`.
+- **Adding strings**: add the key to BOTH `en.json` and `pt.json` under the right
+  namespace, then run `node scripts/check-i18n-keys.mjs` to verify every literal
+  `t()`/`t.rich()` call resolves in both locales (en/pt key parity).
+
+## Landing Page
+
+The public landing page lives in `src/app/(home)/` and is composed of section
+components under `_components/landing/` (Nav, Hero, IdeDemo, Duo, AiFeedback,
+OpenSource, FinalCta, Footer) plus a `Reveal` scroll-in wrapper (framer-motion).
+Contributor avatars come from `src/data/collaborators.json` (real GitHub photos).
 
 ## Architecture
 

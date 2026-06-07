@@ -11,11 +11,14 @@ import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const t = useTranslations("auth");
+  const c = useTranslations("common");
   const { login, error, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const sessionExpiredReason =
@@ -38,21 +41,21 @@ export function LoginForm({
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <h1 className="text-2xl font-bold">{t("login.title")}</h1>
             <p className="text-balance text-muted-foreground">
-              Sign in to your TACO account
+              {t("login.subtitle")}
             </p>
           </div>
           {sessionExpiredReason && (
             <Alert>
-              <AlertTitle>Sessão expirada ou inválida</AlertTitle>
+              <AlertTitle>{t("login.sessionExpired.title")}</AlertTitle>
               <AlertDescription>
-                Inicia sessão novamente.
+                {t("login.sessionExpired.description")}
               </AlertDescription>
             </Alert>
           )}
           <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{c("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -65,12 +68,12 @@ export function LoginForm({
           </div>
           <div className="grid gap-2">
             <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("fields.password")}</Label>
               <Link
                 href="/auth/reset-password"
                 className="ml-auto text-sm underline-offset-2 hover:underline"
               >
-                Forgot password?
+                {t("login.forgotPassword")}
               </Link>
             </div>
             <Input id="password" type="password" {...register("password")} />
@@ -83,18 +86,18 @@ export function LoginForm({
 
           {error && (
             <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>{c("error")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoading ? t("login.submitting") : t("login.submit")}
           </Button>
           <div className="text-center text-sm">
-            Don&apos;t have an account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/auth/signup" className="underline underline-offset-4">
-              Sign up
+              {t("login.signUpLink")}
             </Link>
           </div>
         </div>
