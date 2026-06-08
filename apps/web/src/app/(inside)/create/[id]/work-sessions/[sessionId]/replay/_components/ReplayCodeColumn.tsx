@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   defineMonacoThemes,
@@ -12,19 +12,29 @@ import type { editor as MonacoEditor } from "monaco-editor";
 import Image from "next/image";
 import { Code2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { lineDiff } from "./lineDiff";
+
+type MonacoNamespace = typeof import("monaco-editor");
 
 const EDITOR_LANG = "python" as const;
 
 type ReplayCodeColumnProps = {
   code: string;
+  prevCode: string;
   stepIndex: number;
 };
 
-export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
+export function ReplayCodeColumn({
+  code,
+  prevCode,
+  stepIndex,
+}: ReplayCodeColumnProps) {
   const t = useTranslations("workSessions");
   const theme = useCodeEditorStore((s) => s.theme);
   const fontSize = useCodeEditorStore((s) => s.fontSize);
   const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<MonacoNamespace | null>(null);
+  const decorationIdsRef = useRef<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editorHeightPx, setEditorHeightPx] = useState(320);
 
@@ -43,6 +53,32 @@ export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
     return () => ro.disconnect();
   }, []);
 
+  /** Destaca as linhas que mudaram em relação ao passo anterior. */
+  const updateDiffDecorations = useCallback(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    const diff = lineDiff(prevCode ?? "", code ?? "");
+    const decorations = diff.addedLineNumbers.map((line) => ({
+      range: new monaco.Range(line, 1, line, 1),
+      options: {
+        isWholeLine: true,
+        className: "replay-diff-added-line",
+        linesDecorationsClassName: "replay-diff-added-gutter",
+      },
+    }));
+    decorationIdsRef.current = editor.deltaDecorations(
+      decorationIdsRef.current,
+      decorations
+    );
+
+    const firstChanged = diff.addedLineNumbers[0];
+    if (firstChanged) {
+      editor.revealLineInCenterIfOutsideViewport(firstChanged);
+    }
+  }, [code, prevCode]);
+
   useEffect(() => {
     const editor = editorRef.current;
     if (!editor) return;
@@ -51,8 +87,9 @@ export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
     }
     requestAnimationFrame(() => {
       editor.layout();
+      updateDiffDecorations();
     });
-  }, [code, stepIndex, editorHeightPx]);
+  }, [code, stepIndex, editorHeightPx, updateDiffDecorations]);
 
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden border-slate-700 bg-slate-800/40 text-slate-100 shadow-none">
@@ -83,10 +120,14 @@ export function ReplayCodeColumn({ code, stepIndex }: ReplayCodeColumnProps) {
             language={LANGUAGE_CONFIG[EDITOR_LANG].monacoLanguage}
             theme={theme || "vs-dark"}
             beforeMount={defineMonacoThemes}
-            onMount={(editor) => {
+            onMount={(editor, monaco) => {
               editorRef.current = editor;
+              monacoRef.current = monaco;
               editor.setValue(code);
-              requestAnimationFrame(() => editor.layout());
+              requestAnimationFrame(() => {
+                editor.layout();
+                updateDiffDecorations();
+              });
             }}
             options={{
               readOnly: true,

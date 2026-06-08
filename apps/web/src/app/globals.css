@@ -97,3 +97,13 @@ body {
 .animate-fade-in {
     animation: fade-in 0.3s ease-out;
 }
+
+/* Replay: linhas adicionadas/alteradas em relação ao passo anterior (Monaco) */
+.replay-diff-added-line {
+    background-color: rgba(16, 185, 129, 0.14);
+}
+.replay-diff-added-gutter {
+    background-color: rgba(16, 185, 129, 0.65);
+    width: 3px !important;
+    margin-left: 3px;
+}

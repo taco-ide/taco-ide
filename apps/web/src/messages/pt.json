@@ -1517,6 +1517,16 @@
       "loading": "Carregando sessão…",
       "noInteractions": "Esta sessão ainda não tem interações registradas.",
       "sessionLabel": "Sessão {id}",
+      "steps": {
+        "title": "Passos",
+        "run": "Rodou o código",
+        "chatFallback": "Perguntou ao assistente",
+        "important": "Passo importante",
+        "fixed": "erro resolvido",
+        "broke": "quebrou",
+        "firstRun": "1ª execução",
+        "finalCode": "código final"
+      },
       "toolbar": {
         "beforeFirstEvent": "(antes do 1.º evento)",
         "goEnd": "Ir para o fim",

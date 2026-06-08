@@ -12,6 +12,7 @@ import { ReplayToolbar } from "./_components/ReplayToolbar";
 import { ReplayIOPanel } from "./_components/ReplayIOPanel";
 import { ReplayChatColumn } from "./_components/ReplayChatColumn";
 import { ReplayCodeColumn } from "./_components/ReplayCodeColumn";
+import { ReplayStepList } from "./_components/ReplayStepList";
 import { useWorkSessionReplay } from "./_components/useWorkSessionReplay";
 import type { ReplayInteraction } from "./_components/deriveReplayState";
 
@@ -107,7 +108,7 @@ function ReplayContent() {
             onClick={() => router.push(backHref)}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar à lista
+            {t("replay.backToList")}
           </Button>
           {data?.data?.id ? (
             <p className="text-xs text-slate-500 font-mono truncate max-w-[min(100%,280px)]">
@@ -142,29 +143,41 @@ function ReplayContent() {
         ) : null}
 
         {/* flex-1 + min-h-0: coluna do chat não empurra a página; scroll só dentro do log em ReplayChatColumn */}
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-3 lg:grid-rows-1 lg:items-stretch lg:gap-4">
-          <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
-            <ReplayIOPanel
-              stdin={replay.derived.stdin}
-              stdout={replay.derived.stdout}
-              animationsEnabled={replay.animationsEnabled}
-            />
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row lg:items-stretch lg:gap-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:grid lg:min-h-0 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.4fr)_minmax(0,1.4fr)] lg:grid-rows-1 lg:items-stretch lg:gap-4">
+            <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
+              <ReplayIOPanel
+                stdin={replay.derived.stdin}
+                stdout={replay.derived.stdout}
+                animationsEnabled={replay.animationsEnabled}
+              />
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
+              <ReplayChatColumn
+                interactions={interactions}
+                stepIndex={replay.stepIndex}
+                stepDirection={replay.stepDirection}
+                animationsEnabled={replay.animationsEnabled}
+                derived={replay.derived}
+              />
+            </div>
+            <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
+              <ReplayCodeColumn
+                code={replay.derived.code}
+                prevCode={replay.prevCode}
+                stepIndex={replay.stepIndex}
+              />
+            </div>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
-            <ReplayChatColumn
-              interactions={interactions}
-              stepIndex={replay.stepIndex}
-              stepDirection={replay.stepDirection}
-              animationsEnabled={replay.animationsEnabled}
-              derived={replay.derived}
-            />
-          </div>
-          <div className="flex min-h-[min(32vh,260px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full">
-            <ReplayCodeColumn
-              code={replay.derived.code}
-              stepIndex={replay.stepIndex}
-            />
-          </div>
+          {replay.totalSteps > 0 ? (
+            <aside className="flex min-h-[min(36vh,320px)] shrink-0 flex-col overflow-hidden lg:min-h-0 lg:h-full lg:max-h-full lg:w-[260px]">
+              <ReplayStepList
+                metas={replay.stepMetas}
+                currentStep={replay.stepIndex}
+                onSelect={replay.goTo}
+              />
+            </aside>
+          ) : null}
         </div>
       </div>
     </div>

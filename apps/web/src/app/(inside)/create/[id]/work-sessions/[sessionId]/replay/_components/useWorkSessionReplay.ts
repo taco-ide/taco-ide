@@ -3,6 +3,7 @@ import {
   deriveReplayState,
   type ReplayInteraction,
 } from "./deriveReplayState";
+import { computeStepMetas } from "./deriveStepMeta";
 
 /** Intervalo entre passos em play (~2s). */
 export const REPLAY_STEP_INTERVAL_MS = 2000;
@@ -52,6 +53,19 @@ export function useWorkSessionReplay(interactions: ReplayInteraction[]) {
     [interactions, effectiveStepIndex]
   );
 
+  /** Código no passo anterior — base do diff destacado no editor. */
+  const prevCode = useMemo(
+    () =>
+      deriveReplayState(interactions, Math.max(0, effectiveStepIndex - 1)).code,
+    [interactions, effectiveStepIndex]
+  );
+
+  /** Metadados por passo (resumo, edição, marcos, ⭐) — calculados uma vez. */
+  const stepMetas = useMemo(
+    () => computeStepMetas(interactions),
+    [interactions]
+  );
+
   const goStart = useCallback(() => {
     setStepIndex(0);
     setIsPlaying(false);
@@ -70,6 +84,14 @@ export function useWorkSessionReplay(interactions: ReplayInteraction[]) {
   const stepNext = useCallback(() => {
     setStepIndex((i) => Math.min(maxStepIndex, Math.min(i, maxStepIndex) + 1));
   }, [maxStepIndex]);
+
+  const goTo = useCallback(
+    (target: number) => {
+      setStepIndex(Math.max(0, Math.min(maxStepIndex, target)));
+      setIsPlaying(false);
+    },
+    [maxStepIndex]
+  );
 
   const togglePlay = useCallback(() => {
     setIsPlaying((p) => !p);
@@ -110,8 +132,11 @@ export function useWorkSessionReplay(interactions: ReplayInteraction[]) {
     setAnimationsEnabled,
     stepDirection,
     derived,
+    prevCode,
+    stepMetas,
     goStart,
     goEnd,
+    goTo,
     stepPrev,
     stepNext,
     togglePlay,
