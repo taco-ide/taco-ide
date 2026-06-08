@@ -50,7 +50,7 @@ test.describe("Professor workflow", () => {
 
     // The page must render — wait for any table row OR a clearly empty state.
     // The seeded submission exists, so we expect at least one row.
-    const studentCell = page.getByText("Aluno Demo").first();
+    const studentCell = page.getByText("Alex Morgan").first();
     await expect(studentCell).toBeVisible({ timeout: 15_000 });
     await shot("submissions-list");
 
@@ -59,7 +59,7 @@ test.describe("Professor workflow", () => {
       `/create/${SEED_CHALLENGE_ID}/submissions/${submissionId}`
     );
     await expect(
-      page.getByRole("heading", { name: /Submissão de Aluno Demo/i })
+      page.getByRole("heading", { name: /Submissão de Alex Morgan/i })
     ).toBeVisible();
     await expect(page.getByText(/print\('hello world'\)/)).toBeVisible();
     await shot("submission-detail");

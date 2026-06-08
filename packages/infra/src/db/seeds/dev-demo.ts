@@ -55,48 +55,60 @@ const SEED_SUB_DEMO_PWD = "88888888-8888-8888-8888-8888888800a1";
 const SEED_SUB_MARIA_PWD = "88888888-8888-8888-8888-8888888800a2";
 const SEED_SUB_JOAO_PWD = "88888888-8888-8888-8888-8888888800a3";
 
+// English copies — Mary (strong, mirrors Maria) and John (struggling, mirrors João)
+const SEED_USER_STUDENT_MARY = "33333333-3333-3333-3333-333333330006";
+const SEED_USER_STUDENT_JOHN = "33333333-3333-3333-3333-333333330007";
+const SEED_ACCOUNT_STUDENT_MARY = "44444444-4444-4444-4444-444444440006";
+const SEED_ACCOUNT_STUDENT_JOHN = "44444444-4444-4444-4444-444444440007";
+const SEED_MEMBER_STUDENT_MARY = "55555555-5555-5555-5555-555555550006";
+const SEED_MEMBER_STUDENT_JOHN = "55555555-5555-5555-5555-555555550007";
+const SEED_WS_MARY_PWD = "77777777-7777-7777-7777-7777777700a4";
+const SEED_WS_JOHN_PWD = "77777777-7777-7777-7777-7777777700a5";
+const SEED_SUB_MARY_PWD = "88888888-8888-8888-8888-8888888800a4";
+const SEED_SUB_JOHN_PWD = "88888888-8888-8888-8888-8888888800a5";
+
 // ===== Challenge content =====
 
-const CHALLENGE_DESCRIPTION = `# Validador de senha forte
+const CHALLENGE_DESCRIPTION = `# Strong password validator
 
-Implemente uma função \`is_strong(password: str) -> bool\` que retorne \`True\` quando a senha atende **todas** as regras abaixo:
+Implement a function \`is_strong(password: str) -> bool\` that returns \`True\` when the password satisfies **all** of the rules below:
 
-1. Pelo menos **8 caracteres**
-2. Pelo menos **uma letra maiúscula** (\`A-Z\`)
-3. Pelo menos **uma letra minúscula** (\`a-z\`)
-4. Pelo menos **um dígito** (\`0-9\`)
-5. Pelo menos **um caractere especial** entre \`!@#$%^&*\`
+1. At least **8 characters**
+2. At least **one uppercase letter** (\`A-Z\`)
+3. At least **one lowercase letter** (\`a-z\`)
+4. At least **one digit** (\`0-9\`)
+5. At least **one special character** from \`!@#$%^&*\`
 
-## Entrada
+## Input
 
-Uma senha por linha, terminando em EOF.
+One password per line, ending at EOF.
 
-## Saída
+## Output
 
-Para cada senha lida, imprima \`VALID\` ou \`INVALID\`.
+For each password read, print \`VALID\` or \`INVALID\`.
 
-## Exemplo
+## Example
 
 \`\`\`
-Entrada:
-Senha123!
+Input:
+Passw0rd!
 abc
 HelloWorld1
 
-Saída:
+Output:
 VALID
 INVALID
 INVALID
 \`\`\`
 
-> A penúltima é inválida porque é curta e não tem maiúscula nem especial.
-> A última é inválida porque não tem caractere especial.
+> The second one is invalid because it is short and has no uppercase or special character.
+> The third is invalid because it has no special character.
 
-## Casos de borda para considerar
+## Edge cases to consider
 
-- Senha vazia
-- Espaços no início/fim (use \`strip\`/\`rstrip\` com cuidado — pode trair o que o usuário digitou)
-- Linhas em branco no final do arquivo
+- Empty password
+- Leading/trailing spaces (use \`strip\`/\`rstrip\` carefully — it may betray what the user typed)
+- Blank lines at the end of the file
 `;
 
 const REF_BRUTE_FORCE_CODE = `import sys
@@ -189,6 +201,58 @@ for line in sys.stdin:
 `;
 
 const MARIA_CODE = `import sys
+
+SPECIALS = "!@#$%^&*"
+
+
+def is_strong(pwd: str) -> bool:
+    if len(pwd) < 8:
+        return False
+    return (
+        any(c.isupper() for c in pwd)
+        and any(c.islower() for c in pwd)
+        and any(c.isdigit() for c in pwd)
+        and any(c in SPECIALS for c in pwd)
+    )
+
+
+for line in sys.stdin:
+    print("VALID" if is_strong(line.rstrip()) else "INVALID")
+`;
+
+// --- Mary (strong, EN): English copy of Maria's progression ---
+
+const MARY_CODE_V1 = `import sys
+
+
+def is_strong(pwd):
+    # TODO: 5 rules
+    return False
+
+
+for line in sys.stdin:
+    print("VALID" if is_strong(line) else "INVALID")
+`;
+
+const MARY_CODE_V2 = `import sys
+
+
+def is_strong(pwd):
+    if len(pwd) < 8:
+        return False
+    return (
+        any(c.isupper() for c in pwd)
+        and any(c.islower() for c in pwd)
+        and any(c.isdigit() for c in pwd)
+        and any(c in "!@#$%^&*" for c in pwd)
+    )
+
+
+for line in sys.stdin:
+    print("VALID" if is_strong(line) else "INVALID")
+`;
+
+const MARY_CODE = `import sys
 
 SPECIALS = "!@#$%^&*"
 
@@ -313,6 +377,40 @@ else:
     print("INVALID")
 `;
 
+// --- John (struggling, EN): English copy of João's progression ---
+
+const JOHN_CODE_V1 = `password = input()
+print(password)
+`;
+
+const JOHN_CODE_V2 = `password = input()
+
+if len(password) >= 8:
+    print("VALID")
+else:
+    print("INVALID")
+`;
+
+const JOHN_CODE_V3 = `import sys
+
+# the TA told me to use sys.stdin
+for line in sys.stdin:
+    if len(line) >= 8:
+        print("VALID")
+    else:
+        print("INVALID")
+`;
+
+const JOHN_CODE = `# attempt 4 still doesn't work right :(
+# went back to input() because sys.stdin confused me
+password = input()
+
+if len(password) >= 8:
+    print("VALID")
+else:
+    print("INVALID")
+`;
+
 // ===== Chat / code-run interactions =====
 
 type Interaction = {
@@ -340,7 +438,7 @@ const MARIA_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: MARIA_CODE_V2,
-    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
     // sem rstrip ainda: o \n não atrapalha aqui porque nenhuma regra usa o
     // tamanho exato, mas Maria percebe e adiciona rstrip na versão final
     stdout: "VALID\nINVALID\nINVALID\n",
@@ -360,7 +458,7 @@ const MARIA_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: MARIA_CODE,
-    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
     stdout: "VALID\nINVALID\nINVALID\n",
     minutesAgo: 15,
   },
@@ -380,8 +478,8 @@ const DEMO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: DEMO_CODE_V1,
-    stdin: "Senha123!\n",
-    stdout: "Senha123!\n\n",
+    stdin: "Passw0rd!\n",
+    stdout: "Passw0rd!\n\n",
     minutesAgo: 46,
   },
   {
@@ -397,7 +495,7 @@ const DEMO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: DEMO_CODE_V2,
-    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
     // split("\n") devolve uma string vazia final -> 1 INVALID a mais
     stdout: "VALID\nINVALID\nINVALID\nINVALID\n",
     minutesAgo: 33,
@@ -416,7 +514,7 @@ const DEMO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: DEMO_CODE,
-    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
     // a aluna adicionou .rstrip() (inofensivo aqui) mas manteve o split,
     // então o INVALID extra persiste -> bug ainda presente na submissão
     stdout: "VALID\nINVALID\nINVALID\nINVALID\n",
@@ -445,8 +543,8 @@ const JOAO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: JOAO_CODE_V1,
-    stdin: "Senha123!\n",
-    stdout: "Senha123!\n",
+    stdin: "Passw0rd!\n",
+    stdout: "Passw0rd!\n",
     minutesAgo: 58,
   },
   {
@@ -462,7 +560,7 @@ const JOAO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: JOAO_CODE_V2,
-    stdin: "Senha123!\n",
+    stdin: "Passw0rd!\n",
     stdout: "VALID\n",
     minutesAgo: 46,
   },
@@ -479,7 +577,7 @@ const JOAO_INTERACTIONS: Interaction[] = [
     userPrompt: "",
     modelResponse: "",
     code: JOAO_CODE_V3,
-    stdin: "Senha123!\nabc\nHelloWorld1\n",
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
     // só checa tamanho: 8+ chars -> VALID
     stdout: "VALID\nINVALID\nVALID\n",
     minutesAgo: 30,
@@ -498,6 +596,124 @@ const JOAO_INTERACTIONS: Interaction[] = [
     modelResponse:
       "Sem problema — submeta o que tem e marque pra revisar com a monitoria. Quando voltar, faça uma regra por vez e teste cada uma isolada antes de juntar.",
     code: JOAO_CODE,
+    minutesAgo: 12,
+  },
+];
+
+// English copy of MARIA_INTERACTIONS (same beats, translated).
+const MARY_INTERACTIONS: Interaction[] = [
+  {
+    type: "chat",
+    userPrompt:
+      "Can I use `any()` with generators, or would you rather I write manual loops?",
+    modelResponse:
+      "Use whatever reads best for you. `any(c.isupper() for c in pwd)` is idiomatic and covers the rule; a loop with a flag is fine too. What matters is covering all five rules.",
+    code: MARY_CODE_V1,
+    minutesAgo: 34,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: MARY_CODE_V2,
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
+    stdout: "VALID\nINVALID\nINVALID\n",
+    minutesAgo: 26,
+  },
+  {
+    type: "chat",
+    userPrompt:
+      "It worked. I'll extract the specials into a constant and type the function — cleaner, right?",
+    modelResponse:
+      "Perfect. Extracting `SPECIALS` and annotating `-> bool` makes the intent explicit and avoids rebuilding the string on every character. Good practice.",
+    code: MARY_CODE_V2,
+    minutesAgo: 20,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: MARY_CODE,
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
+    stdout: "VALID\nINVALID\nINVALID\n",
+    minutesAgo: 15,
+  },
+];
+
+// English copy of JOAO_INTERACTIONS (same beats, translated).
+const JOHN_INTERACTIONS: Interaction[] = [
+  {
+    type: "chat",
+    userPrompt: "i'm lost, where do i start?",
+    modelResponse:
+      "Start with the `is_strong(password)` function. Think of each rule as a separate check and return `True` only if all of them pass. Then you plug it into a loop that reads from `sys.stdin`.",
+    minutesAgo: 72,
+  },
+  {
+    type: "chat",
+    userPrompt: "how do i read the typed password?",
+    modelResponse:
+      "To start you can use `input()` to read one line. But remember the statement asks for several passwords until EOF — soon we'll switch to a loop over `sys.stdin`.",
+    code: JOHN_CODE_V1,
+    minutesAgo: 64,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: JOHN_CODE_V1,
+    stdin: "Passw0rd!\n",
+    stdout: "Passw0rd!\n",
+    minutesAgo: 58,
+  },
+  {
+    type: "chat",
+    userPrompt: "how do i check if there's an uppercase letter?",
+    modelResponse:
+      "Every character has `.isupper()`, which returns True for an uppercase letter. You can scan with a `for` or use `any(c.isupper() for c in password)`. Do one rule at a time.",
+    code: JOHN_CODE_V2,
+    minutesAgo: 50,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: JOHN_CODE_V2,
+    stdin: "Passw0rd!\n",
+    stdout: "VALID\n",
+    minutesAgo: 46,
+  },
+  {
+    type: "chat",
+    userPrompt: "now it only reads one password. how do i read several?",
+    modelResponse:
+      "`input()` reads only one line per call. Switch to `for line in sys.stdin:` (with `import sys` at the top) — that way it iterates until EOF and processes every password.",
+    code: JOHN_CODE_V2,
+    minutesAgo: 40,
+  },
+  {
+    type: "code_run",
+    userPrompt: "",
+    modelResponse: "",
+    code: JOHN_CODE_V3,
+    stdin: "Passw0rd!\nabc\nHelloWorld1\n",
+    stdout: "VALID\nINVALID\nVALID\n",
+    minutesAgo: 30,
+  },
+  {
+    type: "chat",
+    userPrompt: "it's printing VALID for everything that's long, what did i do wrong?",
+    modelResponse:
+      "You're only checking the **length**. The other four rules are missing (uppercase, lowercase, digit and special). Without them, any password with 8+ characters becomes VALID. Try adding one rule at a time and run the statement's example to compare.",
+    code: JOHN_CODE_V3,
+    minutesAgo: 22,
+  },
+  {
+    type: "chat",
+    userPrompt: "sys.stdin confused me, i went back to input(). i'll finish the rules later :(",
+    modelResponse:
+      "No problem — submit what you have and flag it for review during TA hours. When you come back, do one rule at a time and test each in isolation before combining.",
+    code: JOHN_CODE,
     minutesAgo: 12,
   },
 ];
@@ -614,6 +830,68 @@ const JOAO_REVIEW: Review = {
     "Submissão incompleta — implementa só uma das cinco regras e lê apenas uma linha. O aluno mostrou engajamento (várias mensagens) mas pouca autonomia. Recomenda-se revisão guiada antes de avançar; o desafio está acima do nível atual de domínio.",
 };
 
+// English copy of MARIA_REVIEW.
+const MARY_REVIEW: Review = {
+  pontosFortes: [
+    "Lean solution using `any()` with generators — covers each rule in one readable line.",
+    "Explicit typing on `is_strong(pwd: str) -> bool` helps whoever reads it later.",
+    "The `SPECIALS` constant defined outside the function avoids reallocating on each call.",
+  ],
+  problemas: [
+    {
+      tipo: "quality",
+      gravidade: "baixa" as const,
+      linha: null,
+      descricao:
+        "`SPECIALS` could be a `set(...)` instead of a string to make `c in SPECIALS` O(1), though it makes no practical difference here.",
+    },
+  ],
+  sugestoes: [
+    "Briefly note that `line.rstrip()` matters because the `\\n` would count as a special character if left in.",
+    "If extending it, consider printing a message per failed rule — useful in a teaching context.",
+  ],
+  avaliacaoGeral:
+    "Correct, idiomatic and well-structured solution. The student reasoned independently — interacted little with the TA and only to confirm a stylistic choice. Ready for more advanced problems in this class.",
+};
+
+// English copy of JOAO_REVIEW.
+const JOHN_REVIEW: Review = {
+  pontosFortes: [
+    "The student persevered: came back to the TA several times instead of giving up, and the final code at least runs without a syntax error.",
+  ],
+  problemas: [
+    {
+      tipo: "correctness",
+      gravidade: "alta" as const,
+      linha: 5,
+      descricao:
+        "Only checks the password **length**. The uppercase, lowercase, digit and special-character rules are completely absent — any password with 8+ characters becomes `VALID`.",
+    },
+    {
+      tipo: "correctness",
+      gravidade: "alta" as const,
+      linha: 3,
+      descricao:
+        "Uses `input()`, which reads **only one line**. The statement asks for reading until EOF (several passwords).",
+    },
+    {
+      tipo: "autonomy",
+      gravidade: "media" as const,
+      linha: null,
+      descricao:
+        "Asked for help at almost every step without testing hypotheses alone. The TA had to guide from start to finish.",
+    },
+  ],
+  sugestoes: [
+    "Before submitting, run the statement's example and compare the expected output — here, it would have revealed the problem immediately.",
+    "Break the problem into 5 small functions (`has_upper`, `has_lower`, ...) and test each before combining.",
+    "Talk in TA hours about reading until EOF (`for line in sys.stdin:`) — worth reviewing week 2's material.",
+    "Suggest a smaller prerequisite exercise (e.g., counting vowels in a string) before attempting this again.",
+  ],
+  avaliacaoGeral:
+    "Incomplete submission — implements only one of the five rules and reads only one line. The student showed engagement (many messages) but little autonomy. Guided review is recommended before moving on; the challenge is above the current mastery level.",
+};
+
 // ===== Helpers =====
 
 function minutesAgo(min: number): Date {
@@ -649,7 +927,7 @@ export async function seedPasswordDemoScenario({
   await safeInsert("user maria (strong student)", () =>
     db.insert(user).values({
       id: SEED_USER_STUDENT_MARIA,
-      name: "Maria — aluna forte",
+      name: "Maria Oliveira",
       email: "maria@taco-demo.local",
       emailVerified: true,
       isActive: true,
@@ -658,7 +936,7 @@ export async function seedPasswordDemoScenario({
   await safeInsert("user joao (struggling student)", () =>
     db.insert(user).values({
       id: SEED_USER_STUDENT_JOAO,
-      name: "João — aluno em dificuldade",
+      name: "João Pereira",
       email: "joao@taco-demo.local",
       emailVerified: true,
       isActive: true,
@@ -701,11 +979,69 @@ export async function seedPasswordDemoScenario({
     })
   );
 
-  // Enroll all three students in the classroom
+  // --- English copies: Mary (strong), John (struggling) ---
+  await safeInsert("user mary (strong student, EN)", () =>
+    db.insert(user).values({
+      id: SEED_USER_STUDENT_MARY,
+      name: "Mary Bennett",
+      email: "mary@taco-demo.local",
+      emailVerified: true,
+      isActive: true,
+    })
+  );
+  await safeInsert("user john (struggling student, EN)", () =>
+    db.insert(user).values({
+      id: SEED_USER_STUDENT_JOHN,
+      name: "John Carter",
+      email: "john@taco-demo.local",
+      emailVerified: true,
+      isActive: true,
+    })
+  );
+
+  await safeInsert("account mary", () =>
+    db.insert(account).values({
+      id: SEED_ACCOUNT_STUDENT_MARY,
+      accountId: "mary@taco-demo.local",
+      providerId: credential,
+      userId: SEED_USER_STUDENT_MARY,
+      password: passwordHash,
+    })
+  );
+  await safeInsert("account john", () =>
+    db.insert(account).values({
+      id: SEED_ACCOUNT_STUDENT_JOHN,
+      accountId: "john@taco-demo.local",
+      providerId: credential,
+      userId: SEED_USER_STUDENT_JOHN,
+      password: passwordHash,
+    })
+  );
+
+  await safeInsert("member mary", () =>
+    db.insert(member).values({
+      id: SEED_MEMBER_STUDENT_MARY,
+      userId: SEED_USER_STUDENT_MARY,
+      organizationId,
+      role: "student",
+    })
+  );
+  await safeInsert("member john", () =>
+    db.insert(member).values({
+      id: SEED_MEMBER_STUDENT_JOHN,
+      userId: SEED_USER_STUDENT_JOHN,
+      organizationId,
+      role: "student",
+    })
+  );
+
+  // Enroll all students in the classroom
   for (const uid of [
     existingStudentUserId,
     SEED_USER_STUDENT_MARIA,
     SEED_USER_STUDENT_JOAO,
+    SEED_USER_STUDENT_MARY,
+    SEED_USER_STUDENT_JOHN,
   ]) {
     await safeInsert(`enroll ${uid} in ${classroomId}`, () =>
       db.insert(userClassroom).values({ userId: uid, classroomId })
@@ -717,7 +1053,7 @@ export async function seedPasswordDemoScenario({
     await db.insert(challenge).values({
       id: SEED_CHALLENGE_PASSWORD,
       classroomId,
-      title: "Validador de senha forte",
+      title: "Strong password validator",
       description: CHALLENGE_DESCRIPTION,
       difficulty: "medium",
       tags: ["Strings", "Validation", "Edge Cases"],
@@ -777,18 +1113,18 @@ export async function seedPasswordDemoScenario({
       studentUserId: SEED_USER_STUDENT_MARIA,
       interactions: MARIA_INTERACTIONS,
       code: MARIA_CODE,
-      stdin: "Senha123!\nabc\nHelloWorld1\n",
+      stdin: "Passw0rd!\nabc\nHelloWorld1\n",
       stdout: "VALID\nINVALID\nINVALID\n",
       review: MARIA_REVIEW,
     },
     {
-      label: "Aluno Demo (medium)",
+      label: "Alex Morgan (medium)",
       sessionId: SEED_WS_DEMO_PWD,
       submissionId: SEED_SUB_DEMO_PWD,
       studentUserId: existingStudentUserId,
       interactions: DEMO_INTERACTIONS,
       code: DEMO_CODE,
-      stdin: "Senha123!\nabc\nHelloWorld1\n",
+      stdin: "Passw0rd!\nabc\nHelloWorld1\n",
       stdout: "VALID\nINVALID\nINVALID\nINVALID\n",
       review: DEMO_REVIEW,
     },
@@ -799,10 +1135,33 @@ export async function seedPasswordDemoScenario({
       studentUserId: SEED_USER_STUDENT_JOAO,
       interactions: JOAO_INTERACTIONS,
       code: JOAO_CODE,
-      stdin: "Senha123!\nabc\nHelloWorld1\n",
+      stdin: "Passw0rd!\nabc\nHelloWorld1\n",
       // input() lê só a 1.ª linha; o programa imprime um resultado e encerra
       stdout: "VALID\n",
       review: JOAO_REVIEW,
+    },
+    {
+      label: "Mary (strong, EN)",
+      sessionId: SEED_WS_MARY_PWD,
+      submissionId: SEED_SUB_MARY_PWD,
+      studentUserId: SEED_USER_STUDENT_MARY,
+      interactions: MARY_INTERACTIONS,
+      code: MARY_CODE,
+      stdin: "Passw0rd!\nabc\nHelloWorld1\n",
+      stdout: "VALID\nINVALID\nINVALID\n",
+      review: MARY_REVIEW,
+    },
+    {
+      label: "John (struggling, EN)",
+      sessionId: SEED_WS_JOHN_PWD,
+      submissionId: SEED_SUB_JOHN_PWD,
+      studentUserId: SEED_USER_STUDENT_JOHN,
+      interactions: JOHN_INTERACTIONS,
+      code: JOHN_CODE,
+      stdin: "Passw0rd!\nabc\nHelloWorld1\n",
+      // input() reads only the 1st line; the program prints one result and exits
+      stdout: "VALID\n",
+      review: JOHN_REVIEW,
     },
   ];
 
@@ -867,9 +1226,9 @@ export async function seedPasswordDemoScenario({
 
   console.log("[dev-demo] Password-validator demo seeded.");
   console.log(
-    `  Students added: maria@taco-demo.local, joao@taco-demo.local (senha: ${DEV_PASSWORD})`
+    `  Students added: maria@taco-demo.local, joao@taco-demo.local, mary@taco-demo.local, john@taco-demo.local (senha: ${DEV_PASSWORD})`
   );
   console.log(
-    `  Challenge: Validador de senha forte (id ${SEED_CHALLENGE_PASSWORD})`
+    `  Challenge: Strong password validator (id ${SEED_CHALLENGE_PASSWORD})`
   );
 }
