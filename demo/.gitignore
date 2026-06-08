@@ -1,0 +1,4 @@
+# Recorded artifacts and captured session state — generated, not committed.
+output/
+shots/
+.auth/
