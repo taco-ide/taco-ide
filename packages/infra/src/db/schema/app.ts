@@ -449,6 +449,7 @@ export const submission = pgTable(
     gradedAt: timestamp("graded_at"),
     // Automated review from the teacher's companion agent
     autoReview: text("auto_review"),
+    autoReviewJson: jsonb("auto_review_json"),
     autoReviewAt: timestamp("auto_review_at"),
     autoReviewStatus: varchar("auto_review_status", { length: 16 })
       .notNull()

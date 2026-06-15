@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChallengesQueryResponse, GetV1ChallengesQueryParams, GetV1Challenges401 } from "../../../../../../packages/types/kubb/GetV1Challenges.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesSuspenseQueryKey = (params?: GetV1ChallengesQueryParams) => [{ url: '/v1/challenges/' }, ...(params ? [params] : [])] as const

@@ -22,6 +22,14 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum = {
 
 export type GetV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum = (typeof getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum)[keyof typeof getV1ChallengesChallengeidSubmissionsSubmissionid200SuccessEnum];
 
+export const problemasGravidadeEnum = {
+    "baixa": "baixa",
+    "media": "media",
+    "alta": "alta"
+} as const;
+
+export type ProblemasGravidadeEnum = (typeof problemasGravidadeEnum)[keyof typeof problemasGravidadeEnum];
+
 export const dataAutoReviewStatusEnum = {
     "pending": "pending",
     "running": "running",
@@ -103,6 +111,55 @@ export type GetV1ChallengesChallengeidSubmissionsSubmissionid200 = {
          * @type string
         */
         autoReview: string | null;
+        /**
+         * @type object
+        */
+        autoReviewJson: {
+            /**
+             * @description Lista curta (1-4) de pontos positivos da submissão, em português.
+             * @type array
+            */
+            pontosFortes: string[];
+            /**
+             * @description Problemas identificados, do mais grave ao menos grave (0-6 itens).
+             * @type array
+            */
+            problemas: {
+                /**
+                 * @description Categoria do problema (ex.: correção, qualidade, estilo, autonomia).
+                 * @minLength 1
+                 * @type string
+                */
+                tipo: string;
+                /**
+                 * @description Gravidade pedagógica do problema.
+                 * @type string
+                */
+                gravidade: ProblemasGravidadeEnum;
+                /**
+                 * @description Linha aproximada do código, quando aplicável.
+                 * @type integer
+                */
+                linha?: number | null;
+                /**
+                 * @description Descrição curta e objetiva do problema.
+                 * @minLength 1
+                 * @type string
+                */
+                descricao: string;
+            }[];
+            /**
+             * @description Sugestões acionáveis para o professor repassar ao aluno (1-5 itens).
+             * @type array
+            */
+            sugestoes: string[];
+            /**
+             * @description Parágrafo curto (2-4 frases) com avaliação geral em português.
+             * @minLength 1
+             * @type string
+            */
+            avaliacaoGeral: string;
+        } | null;
         /**
          * @type string
         */

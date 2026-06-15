@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1KnowledgeBasesKbidDocumentsMutationResponse, PostV1KnowledgeBasesKbidDocumentsPathParams, PostV1KnowledgeBasesKbidDocuments400, PostV1KnowledgeBasesKbidDocuments401, PostV1KnowledgeBasesKbidDocuments403, PostV1KnowledgeBasesKbidDocuments404, PostV1KnowledgeBasesKbidDocuments413 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidDocuments.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1KnowledgeBasesKbidDocumentsMutationResponse, PostV1KnowledgeBasesKbidDocumentsPathParams, PostV1KnowledgeBasesKbidDocuments400, PostV1KnowledgeBasesKbidDocuments401, PostV1KnowledgeBasesKbidDocuments403, PostV1KnowledgeBasesKbidDocuments404, PostV1KnowledgeBasesKbidDocuments413 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidDocuments.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1KnowledgeBasesKbidDocumentsMutationKey = () => [{ url: '/v1/knowledge-bases/:kbId/documents/' }] as const

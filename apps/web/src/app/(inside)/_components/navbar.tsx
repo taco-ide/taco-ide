@@ -39,9 +39,9 @@ const Navbar = () => {
       <div className="container mx-auto px-4 py-2 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Link
-            href="/explore"
+            href="/dashboard"
             className="flex items-center shrink-0"
-            aria-label={t("goToExplore")}
+            aria-label={t("goToDashboard")}
           >
             <Image
               src="/header-logo.png"
@@ -56,6 +56,12 @@ const Navbar = () => {
 
         <div className="flex items-center gap-4">
           <nav className="flex items-center gap-2 mr-4">
+            <Link
+              href="/dashboard"
+              className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+            >
+              {t("dashboard")}
+            </Link>
             <Link
               href="/explore"
               className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"

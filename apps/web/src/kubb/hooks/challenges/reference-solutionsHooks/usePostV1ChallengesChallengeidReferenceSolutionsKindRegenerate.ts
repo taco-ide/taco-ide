@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponse, PostV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathParams, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate401, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate403, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate404, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate409, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429 } from "../../../../../../../packages/types/kubb/PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponse, PostV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathParams, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate401, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate403, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate404, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate409, PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429 } from "../../../../../../../packages/types/kubb/PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationKey = () => [{ url: '/v1/challenges/:challengeId/reference-solutions/:kind/regenerate' }] as const

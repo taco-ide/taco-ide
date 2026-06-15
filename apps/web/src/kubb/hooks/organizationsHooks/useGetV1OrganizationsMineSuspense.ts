@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1OrganizationsMineQueryResponse, GetV1OrganizationsMine401 } from "../../../../../../packages/types/kubb/GetV1OrganizationsMine.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
+import type { GetV1OrganizationsMineQueryResponse, GetV1OrganizationsMine401 } from "../../../../../../packages/types/kubb/GetV1OrganizationsMine.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1OrganizationsMineSuspenseQueryKey = () => [{ url: '/v1/organizations/mine' }] as const

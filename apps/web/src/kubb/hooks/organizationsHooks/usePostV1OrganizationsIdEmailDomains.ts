@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1OrganizationsIdEmailDomainsMutationRequest, PostV1OrganizationsIdEmailDomainsMutationResponse, PostV1OrganizationsIdEmailDomainsPathParams, PostV1OrganizationsIdEmailDomains400, PostV1OrganizationsIdEmailDomains401, PostV1OrganizationsIdEmailDomains403, PostV1OrganizationsIdEmailDomains404, PostV1OrganizationsIdEmailDomains409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdEmailDomains.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1OrganizationsIdEmailDomainsMutationRequest, PostV1OrganizationsIdEmailDomainsMutationResponse, PostV1OrganizationsIdEmailDomainsPathParams, PostV1OrganizationsIdEmailDomains400, PostV1OrganizationsIdEmailDomains401, PostV1OrganizationsIdEmailDomains403, PostV1OrganizationsIdEmailDomains404, PostV1OrganizationsIdEmailDomains409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdEmailDomains.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1OrganizationsIdEmailDomainsMutationKey = () => [{ url: '/v1/organizations/:id/email-domains' }] as const

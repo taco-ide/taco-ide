@@ -46,9 +46,9 @@ export function deriveReplayState(
       messages.push({
         key: `${i.id}-assistant`,
         role: "assistant",
-        content: i.modelResponse?.trim()
-          ? i.modelResponse
-          : "(Aguardando resposta...)",
+        // Vazio quando não há resposta: o ReplayChatColumn aplica o fallback
+        // traduzido (replay.chat.awaitingResponse).
+        content: i.modelResponse?.trim() ? i.modelResponse : "",
       });
     }
   }

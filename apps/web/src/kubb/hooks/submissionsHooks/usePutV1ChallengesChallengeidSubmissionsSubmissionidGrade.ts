@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationRequest, PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationResponse, PutV1ChallengesChallengeidSubmissionsSubmissionidGradePathParams, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade400, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade401, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade403, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade404 } from "../../../../../../packages/types/kubb/PutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationRequest, PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationResponse, PutV1ChallengesChallengeidSubmissionsSubmissionidGradePathParams, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade400, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade401, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade403, PutV1ChallengesChallengeidSubmissionsSubmissionidGrade404 } from "../../../../../../packages/types/kubb/PutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey = () => [{ url: '/v1/challenges/:challengeId/submissions/:submissionId/grade' }] as const

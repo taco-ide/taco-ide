@@ -1,0 +1,1 @@
+ALTER TABLE "submission" ADD COLUMN "auto_review_json" jsonb;

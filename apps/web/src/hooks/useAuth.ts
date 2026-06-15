@@ -41,7 +41,7 @@ export const useAuth = () => {
       }
 
       // Redirect after successful login
-      router.push("/explore");
+      router.push("/dashboard");
       router.refresh();
       return true;
     } catch (err) {
@@ -63,7 +63,7 @@ export const useAuth = () => {
         email: data.email,
         password: data.password,
         name: data.name,
-        callbackURL: `${window.location.origin}/explore`,
+        callbackURL: `${window.location.origin}/dashboard`,
       });
 
       if (result.error) {
@@ -221,7 +221,7 @@ export const useAuth = () => {
     try {
       const result = await authClient.sendVerificationEmail({
         email,
-        callbackURL: `${window.location.origin}/explore`,
+        callbackURL: `${window.location.origin}/dashboard`,
       });
 
       if (result.error) {

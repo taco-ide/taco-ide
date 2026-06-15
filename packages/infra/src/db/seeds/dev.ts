@@ -24,6 +24,7 @@ import {
 } from "../schema";
 import { hashPassword } from "better-auth/crypto";
 import { seedBase, safeInsert, SEED_TA_ID } from "./base";
+import { seedPasswordDemoScenario } from "./dev-demo";
 
 // --- IDs fixos (reprodutiveis) ---
 const SEED_ORG_ID = "11111111-1111-1111-1111-111111111111";
@@ -96,7 +97,7 @@ async function seed() {
   await safeInsert("user student", () =>
     db.insert(user).values({
       id: SEED_USER_STUDENT,
-      name: "Aluno Demo",
+      name: "Alex Morgan",
       email: "aluno@taco-demo.local",
       emailVerified: true,
       isActive: true,
@@ -186,21 +187,23 @@ async function seed() {
   );
 
   // --- 6. Turmas ---
-  await safeInsert("classroom Algoritmos I", () =>
+  await safeInsert("classroom Algorithms I", () =>
     db.insert(classroom).values({
       id: SEED_CLASSROOM_ALG,
       organizationId: SEED_ORG_ID,
-      title: "Algoritmos I",
-      description: "Turma seed -- ordenacao, busca e nocoes de complexidade.",
+      teacherUserId: SEED_USER_TEACHER,
+      title: "Algorithms I",
+      description: "Sorting, searching and complexity basics.",
     })
   );
 
-  await safeInsert("classroom Estruturas de Dados", () =>
+  await safeInsert("classroom Data Structures", () =>
     db.insert(classroom).values({
       id: SEED_CLASSROOM_ED,
       organizationId: SEED_ORG_ID,
-      title: "Estruturas de Dados",
-      description: "Turma seed -- listas, pilhas, filas e grafos.",
+      teacherUserId: SEED_USER_TEACHER,
+      title: "Data Structures",
+      description: "Lists, stacks, queues and graphs.",
     })
   );
 
@@ -232,16 +235,16 @@ async function seed() {
   const challenges: ChDef[] = [
     {
       id: SEED_CHALLENGE_PUBLIC[0]!,
-      title: "Ordenacao simples",
-      description: "Ordene uma lista de inteiros com o algoritmo que preferir.",
+      title: "Simple sorting",
+      description: "Sort a list of integers with the algorithm of your choice.",
       difficulty: "easy",
       tags: ["Sorting", "Algorithms"],
       classroomId: null,
     },
     {
       id: SEED_CHALLENGE_PUBLIC[1]!,
-      title: "Soma de vetor",
-      description: "Calcule a soma dos elementos de um array.",
+      title: "Array sum",
+      description: "Compute the sum of the elements of an array.",
       difficulty: "easy",
       tags: ["Arrays", "Basics"],
       classroomId: null,
@@ -249,7 +252,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_A[0]!,
       title: "Binary Search",
-      description: "Implemente busca binaria em array ordenado.",
+      description: "Implement binary search on a sorted array.",
       difficulty: "medium",
       tags: ["Search", "Algorithms"],
       classroomId: SEED_CLASSROOM_ALG,
@@ -257,7 +260,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_A[1]!,
       title: "Counting Sort",
-      description: "Implemente counting sort.",
+      description: "Implement counting sort.",
       difficulty: "easy",
       tags: ["Sorting", "Algorithms"],
       classroomId: SEED_CLASSROOM_ALG,
@@ -265,23 +268,23 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_A[2]!,
       title: "Traveling Salesman (intro)",
-      description: "Modelagem introdutoria do TSP.",
+      description: "Introductory modeling of the TSP.",
       difficulty: "hard",
       tags: ["Graphs", "Optimization"],
       classroomId: SEED_CLASSROOM_ALG,
     },
     {
       id: SEED_CHALLENGE_CLASS_B[0]!,
-      title: "BFS em grafo",
-      description: "Implemente busca em largura.",
+      title: "Graph BFS",
+      description: "Implement breadth-first search.",
       difficulty: "medium",
       tags: ["Graphs", "Search"],
       classroomId: SEED_CLASSROOM_ED,
     },
     {
       id: SEED_CHALLENGE_CLASS_B[1]!,
-      title: "Pilha com array",
-      description: "Implemente uma pilha usando lista em Python.",
+      title: "Stack with an array",
+      description: "Implement a stack using a list in Python.",
       difficulty: "easy",
       tags: ["Stack", "Structures"],
       classroomId: SEED_CLASSROOM_ED,
@@ -289,7 +292,7 @@ async function seed() {
     {
       id: SEED_CHALLENGE_CLASS_B[2]!,
       title: "Knapsack 0/1",
-      description: "Problema da mochila com programacao dinamica.",
+      description: "The knapsack problem with dynamic programming.",
       difficulty: "hard",
       tags: ["Dynamic Programming", "Optimization"],
       classroomId: SEED_CLASSROOM_ED,
@@ -316,10 +319,22 @@ async function seed() {
     });
   }
 
+  // --- 9. Cenario de demonstracao rico (Validador de senha forte) ---
+  await seedPasswordDemoScenario({
+    organizationId: SEED_ORG_ID,
+    classroomId: SEED_CLASSROOM_ALG,
+    teacherUserId: SEED_USER_TEACHER,
+    existingStudentUserId: SEED_USER_STUDENT,
+  });
+
   console.log("\n--- Contas de teste (senha: " + DEV_PASSWORD + ") ---");
   console.log("  Professor (teacher):   professor@taco-demo.local");
   console.log("  Aluno (student):       aluno@taco-demo.local");
   console.log("  Coordenador:           coordenador@taco-demo.local");
+  console.log("  Aluna forte:           maria@taco-demo.local");
+  console.log("  Aluno em dificuldade:  joao@taco-demo.local");
+  console.log("  Strong student (EN):   mary@taco-demo.local");
+  console.log("  Struggling (EN):       john@taco-demo.local");
   console.log("\nOrganizacao: TACO Demo (slug: taco-demo)");
   console.log(
     "Apos login, defina a org ativa no client Better Auth (organization.switch) se necessario.\n"

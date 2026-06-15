@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { ReferenceSolutionsPanel } from "@/components/challenge/_components/ReferenceSolutionsPanel";
+import { AutoReviewStructuredView } from "./_components/AutoReviewStructuredView";
 import {
   useGetV1ChallengesChallengeidSubmissionsSubmissionid,
   useGetV1ChallengesId,
@@ -320,14 +321,21 @@ function SubmissionDetailContent() {
                 <Loader2 className="w-4 h-4 animate-spin" />
                 {t("autoReview.running")}
               </div>
-            ) : submission.autoReviewStatus === "complete" && submission.autoReview ? (
+            ) : submission.autoReviewStatus === "complete" &&
+              (submission.autoReviewJson || submission.autoReview) ? (
               <>
                 <p className="text-slate-500 text-xs mb-2">
                   {t("autoReview.generatedAt", {
                     date: formatDt(submission.autoReviewAt),
                   })}
                 </p>
-                <AutoReviewMarkdown content={submission.autoReview} />
+                {submission.autoReviewJson ? (
+                  <AutoReviewStructuredView
+                    review={submission.autoReviewJson}
+                  />
+                ) : submission.autoReview ? (
+                  <AutoReviewMarkdown content={submission.autoReview} />
+                ) : null}
               </>
             ) : submission.autoReviewStatus === "failed" ? (
               <Alert className="border-rose-500/30 bg-rose-500/10 text-rose-300">

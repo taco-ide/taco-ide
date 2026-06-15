@@ -13,23 +13,27 @@ import {
   AgentTimeoutError,
 } from "../llm-factory";
 import { env } from "@repo/infra/env";
+import {
+  AutoReviewStructured,
+  renderAutoReviewMarkdown,
+} from "./auto-review-schema";
 
 const REVIEW_PROMPT = `\
 You are an AI assistant for a programming teacher. Evaluate a student's \
-submission for a coding exercise. Produce a concise structured review (in \
-Portuguese) covering:
+submission for a coding exercise. Produce a structured formative review \
+(in Portuguese) following the JSON schema you were given.
 
-1. **Corretude** — does the code solve the problem? Note edge cases or
-   logic errors.
-2. **Qualidade do código** — clareza, nomes, estrutura, idiomas Python.
-3. **Trajetória de aprendizado** — observe a interação com o TA para
-   avaliar o grau de autonomia da solução (pediu muitas dicas? copiou? ou
-   formulou raciocínio próprio?).
-4. **Sugestões para o professor** — feedback construtivo que o
-   professor possa repassar ao aluno.
+Each field captures a distinct pedagogical signal:
+- "pontosFortes": what the student got right (correctness, clarity, autonomy).
+- "problemas": concrete issues, each with type (correção, qualidade,
+  estilo, autonomia, etc.), gravidade (baixa | media | alta) and optional
+  line. Order by gravity, most severe first.
+- "sugestoes": actionable suggestions the teacher can relay to the student.
+- "avaliacaoGeral": 2-4 sentences summarising correctness, quality and
+  the student's autonomy based on the TA conversation.
 
-Mantenha entre 4 e 8 parágrafos curtos. Não invente fatos sobre
-execução; baseie-se no código e na conversa fornecidos.`;
+Base every observation on the provided code and conversation — do not
+invent execution facts. Be terse and concrete; avoid generic praise.`;
 
 const MAX_INTERACTIONS_FOR_REVIEW = 40;
 
@@ -155,63 +159,60 @@ export async function runAutoReview(submissionId: string): Promise<void> {
       .filter(Boolean)
       .join("\n");
 
-    const llm = createLlm({
+    const baseLlm = createLlm({
       model: env.LLM_DETERMINISTIC_MODEL_NAME,
       temperature: 0,
       max_tokens: 2048,
+    });
+    const llm = baseLlm.withStructuredOutput(AutoReviewStructured, {
+      name: "auto_review",
     });
     const controller = new AbortController();
     const timeout = setTimeout(() => {
       controller.abort(new AgentTimeoutError(AGENT_TIMEOUT_MS));
     }, AGENT_TIMEOUT_MS);
 
-    let response;
+    let structured: AutoReviewStructured;
     try {
-      response = await llm.invoke(
+      structured = (await llm.invoke(
         [new SystemMessage(REVIEW_PROMPT), new HumanMessage(humanMessage)],
         { signal: controller.signal }
-      );
+      )) as AutoReviewStructured;
     } finally {
       clearTimeout(timeout);
     }
 
-    const reviewText =
-      typeof response.content === "string"
-        ? response.content
-        : Array.isArray(response.content)
-          ? response.content
-              .map((part) =>
-                typeof part === "string"
-                  ? part
-                  : typeof (part as any)?.text === "string"
-                    ? (part as any).text
-                    : ""
-              )
-              .join("")
-          : "";
-
-    if (!reviewText) {
-      console.warn(`[auto-review] empty LLM response for ${submissionId}`);
+    const parsed = AutoReviewStructured.safeParse(structured);
+    if (!parsed.success) {
+      console.warn(
+        `[auto-review] structured output failed validation for ${submissionId}:`,
+        parsed.error.flatten()
+      );
       await db
         .update(submission)
         .set({
           autoReviewStatus: "failed",
-          autoReviewError: "O agente retornou uma resposta vazia.",
+          autoReviewError:
+            "O agente devolveu um parecer fora do formato esperado.",
         })
         .where(eq(submission.id, submissionId))
         .catch((dbErr) =>
           console.error(
-            `[auto-review] failed to persist empty-response status for ${submissionId}:`,
+            `[auto-review] failed to persist invalid-schema status for ${submissionId}:`,
             dbErr
           )
         );
       return;
     }
 
+    const reviewJson = parsed.data;
+    const reviewMarkdown = renderAutoReviewMarkdown(reviewJson);
+
     await db
       .update(submission)
       .set({
-        autoReview: reviewText,
+        autoReview: reviewMarkdown,
+        autoReviewJson: reviewJson,
         autoReviewAt: new Date(),
         autoReviewStatus: "complete",
         autoReviewError: null,

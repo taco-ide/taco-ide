@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { DeleteV1ChallengesIdMutationResponse, DeleteV1ChallengesIdPathParams, DeleteV1ChallengesId401, DeleteV1ChallengesId403, DeleteV1ChallengesId404 } from "../../../../../../packages/types/kubb/DeleteV1ChallengesId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { DeleteV1ChallengesIdMutationResponse, DeleteV1ChallengesIdPathParams, DeleteV1ChallengesId401, DeleteV1ChallengesId403, DeleteV1ChallengesId404 } from "../../../../../../packages/types/kubb/DeleteV1ChallengesId.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1ChallengesIdMutationKey = () => [{ url: '/v1/challenges/:id' }] as const

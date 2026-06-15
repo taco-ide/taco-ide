@@ -770,6 +770,19 @@
       "referenceSolutions": "Soluções de referência"
     }
   },
+  "challengeManage": {
+    "actions": {
+      "edit": "Editar",
+      "studentView": "Visão do aluno"
+    },
+    "eyebrow": "Desafio",
+    "loading": "Carregando…",
+    "tabs": {
+      "submissions": "Submissões",
+      "workSessions": "Sessões"
+    },
+    "tabsLabel": "Seções de gestão do desafio"
+  },
   "classrooms": {
     "backToExplore": "Voltar ao Explorar",
     "create": {
@@ -871,6 +884,87 @@
       "description": "O problema solicitado não existe ou foi removido.",
       "title": "Problema não encontrado"
     }
+  },
+  "dashboard": {
+    "classrooms": {
+      "empty": "Você ainda não tem turmas.",
+      "title": "Minhas turmas",
+      "titleOrg": "Turmas da sua organização",
+      "viewAll": "Ver todas"
+    },
+    "orgOverview": {
+      "classrooms": "Turmas",
+      "students": "Alunos",
+      "teachers": "Professores",
+      "title": "Visão da organização"
+    },
+    "quickActions": {
+      "adminConsole": {
+        "description": "Gerencie organizações, usuários e configurações da plataforma.",
+        "title": "Console admin"
+      },
+      "exploreProblems": {
+        "description": "Veja os problemas disponíveis para você.",
+        "title": "Explorar problemas"
+      },
+      "myClassrooms": {
+        "description": "Veja as turmas que você leciona ou está matriculado.",
+        "title": "Minhas turmas"
+      },
+      "newChallenge": {
+        "description": "Crie um novo desafio de programação para sua turma.",
+        "title": "Novo desafio"
+      },
+      "title": "Atalhos"
+    },
+    "role": {
+      "admin": "Admin da plataforma",
+      "coordinator": "Coordenador",
+      "student": "Aluno",
+      "teacher": "Professor"
+    },
+    "studentTip": {
+      "description": "Escolha um desafio das suas turmas e o assistente de ensino vai te acompanhar enquanto você programa.",
+      "title": "Dica"
+    },
+    "subtitle": {
+      "admin": "Gerencie organizações e usuários no console admin.",
+      "coordinator": "Acompanhe suas turmas e a atividade na sua organização.",
+      "student": "Continue de onde parou ou descubra novos desafios para praticar.",
+      "teacher": "Corrija submissões, gerencie turmas e crie novos desafios."
+    },
+    "teacherChallenges": {
+      "create": "Novo",
+      "empty": "Você ainda não criou desafios.",
+      "title": "Meus desafios recentes",
+      "viewSubmissions": "Ver submissões"
+    },
+    "tour": {
+      "buttons": {
+        "back": "Voltar",
+        "done": "Entendi",
+        "next": "Próximo"
+      },
+      "coordinator": {
+        "classrooms": {
+          "description": "Todas as turmas da sua organização — clique em uma para gerenciar alunos, professores e desafios vinculados.",
+          "title": "Suas turmas"
+        },
+        "orgOverview": {
+          "description": "Contadores ao vivo de turmas, professores e alunos da sua organização. Use para identificar turmas vazias ou desbalanço de carga entre professores.",
+          "title": "Visão da organização"
+        },
+        "quickActions": {
+          "description": "Use estes atalhos para criar um desafio, entrar em uma turma ou explorar o catálogo.",
+          "title": "Atalhos"
+        },
+        "welcome": {
+          "description": "Esta é a sua base como coordenador — acesso rápido à sua organização e às ações que você mais usa. Vamos fazer um tour rápido.",
+          "title": "Bem-vindo ao TACO"
+        }
+      }
+    },
+    "welcome": "Olá, {name}"
   },
   "explore": {
     "byAuthor": "por {author}",
@@ -1156,7 +1250,9 @@
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>Todos os direitos reservados.",
     "create": "Criar",
+    "dashboard": "Painel",
     "explore": "Explorar",
+    "goToDashboard": "Ir para o Painel",
     "goToExplore": "Ir para Explorar",
     "greeting": "Olá,",
     "login": "Entrar",
@@ -1311,6 +1407,7 @@
       "alreadyRunning": "Avaliação já em execução — aguarde.",
       "failed": "Falha na avaliação.",
       "generatedAt": "Gerada em {date}",
+      "lineLabel": "linha {line}",
       "noResult": "O agente não retornou avaliação — verifique os logs do servidor.",
       "pendingHint": "Pendente — use o botão Executar para gerar a avaliação agora.",
       "regenerated": "Avaliação regenerada",
@@ -1320,6 +1417,17 @@
       "run": "Executar",
       "runTitle": "Executar avaliação automática",
       "running": "Em execução…",
+      "sections": {
+        "overall": "Avaliação geral",
+        "problems": "Problemas",
+        "strengths": "Pontos fortes",
+        "suggestions": "Sugestões"
+      },
+      "severity": {
+        "alta": "alta",
+        "baixa": "baixa",
+        "media": "média"
+      },
       "title": "Avaliação automática",
       "unknownError": "Erro desconhecido."
     },
@@ -1409,6 +1517,16 @@
       "loading": "Carregando sessão…",
       "noInteractions": "Esta sessão ainda não tem interações registradas.",
       "sessionLabel": "Sessão {id}",
+      "steps": {
+        "title": "Passos",
+        "run": "Rodou o código",
+        "chatFallback": "Perguntou ao assistente",
+        "important": "Passo importante",
+        "fixed": "erro resolvido",
+        "broke": "quebrou",
+        "firstRun": "1ª execução",
+        "finalCode": "código final"
+      },
       "toolbar": {
         "beforeFirstEvent": "(antes do 1.º evento)",
         "goEnd": "Ir para o fim",

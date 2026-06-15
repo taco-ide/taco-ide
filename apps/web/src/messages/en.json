@@ -770,6 +770,19 @@
       "referenceSolutions": "Reference Solutions"
     }
   },
+  "challengeManage": {
+    "actions": {
+      "edit": "Edit",
+      "studentView": "Student view"
+    },
+    "eyebrow": "Challenge",
+    "loading": "Loading…",
+    "tabs": {
+      "submissions": "Submissions",
+      "workSessions": "Work sessions"
+    },
+    "tabsLabel": "Challenge management sections"
+  },
   "classrooms": {
     "backToExplore": "Back to Explore",
     "create": {
@@ -871,6 +884,87 @@
       "description": "The requested problem does not exist or has been removed.",
       "title": "Problem not found"
     }
+  },
+  "dashboard": {
+    "classrooms": {
+      "empty": "You don't have any classrooms yet.",
+      "title": "My classrooms",
+      "titleOrg": "Classrooms in your organization",
+      "viewAll": "View all"
+    },
+    "orgOverview": {
+      "classrooms": "Classrooms",
+      "students": "Students",
+      "teachers": "Teachers",
+      "title": "Organization overview"
+    },
+    "quickActions": {
+      "adminConsole": {
+        "description": "Manage organizations, users and platform settings.",
+        "title": "Admin console"
+      },
+      "exploreProblems": {
+        "description": "Browse problems available to you.",
+        "title": "Browse problems"
+      },
+      "myClassrooms": {
+        "description": "See the classrooms you teach or are enrolled in.",
+        "title": "My classrooms"
+      },
+      "newChallenge": {
+        "description": "Create a new programming challenge for your class.",
+        "title": "New challenge"
+      },
+      "title": "Quick actions"
+    },
+    "role": {
+      "admin": "Platform admin",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "studentTip": {
+      "description": "Pick a challenge from your classrooms and the AI teaching assistant will guide you while you code.",
+      "title": "Tip"
+    },
+    "subtitle": {
+      "admin": "Manage organizations and users from the admin console.",
+      "coordinator": "Track your classrooms and the activity across your organization.",
+      "student": "Pick up where you left off or browse new challenges to practice.",
+      "teacher": "Review submissions, manage classrooms and create new challenges."
+    },
+    "teacherChallenges": {
+      "create": "New",
+      "empty": "You haven't created any challenges yet.",
+      "title": "My recent challenges",
+      "viewSubmissions": "View submissions"
+    },
+    "tour": {
+      "buttons": {
+        "back": "Back",
+        "done": "Got it",
+        "next": "Next"
+      },
+      "coordinator": {
+        "classrooms": {
+          "description": "All classrooms in your organization — click one to manage students, teachers and linked challenges.",
+          "title": "Your classrooms"
+        },
+        "orgOverview": {
+          "description": "Live counts of classrooms, teachers and students in your organization. Use these to spot empty classrooms or unbalanced teacher load at a glance.",
+          "title": "Organization overview"
+        },
+        "quickActions": {
+          "description": "Use these shortcuts to create a new challenge, jump into a classroom or browse the catalogue.",
+          "title": "Quick actions"
+        },
+        "welcome": {
+          "description": "This is your home base as a coordinator — at-a-glance access to your organization and the actions you use most. We'll take a quick tour.",
+          "title": "Welcome to TACO"
+        }
+      }
+    },
+    "welcome": "Hi, {name}"
   },
   "explore": {
     "byAuthor": "by {author}",
@@ -1156,7 +1250,9 @@
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>All rights reserved.",
     "create": "Create",
+    "dashboard": "Dashboard",
     "explore": "Explore",
+    "goToDashboard": "Go to Dashboard",
     "goToExplore": "Go to Explore",
     "greeting": "Hi,",
     "login": "Sign in",
@@ -1311,6 +1407,7 @@
       "alreadyRunning": "Review already running — please wait.",
       "failed": "Review failed.",
       "generatedAt": "Generated on {date}",
+      "lineLabel": "line {line}",
       "noResult": "The agent did not return a review — check the server logs.",
       "pendingHint": "Pending — use the Run button to generate the review now.",
       "regenerated": "Review regenerated",
@@ -1320,6 +1417,17 @@
       "run": "Run",
       "runTitle": "Run automatic review",
       "running": "Running…",
+      "sections": {
+        "overall": "Overall assessment",
+        "problems": "Problems",
+        "strengths": "Strengths",
+        "suggestions": "Suggestions"
+      },
+      "severity": {
+        "alta": "high",
+        "baixa": "low",
+        "media": "medium"
+      },
       "title": "Automatic review",
       "unknownError": "Unknown error."
     },
@@ -1409,6 +1517,16 @@
       "loading": "Loading session…",
       "noInteractions": "This session has no recorded interactions yet.",
       "sessionLabel": "Session {id}",
+      "steps": {
+        "title": "Steps",
+        "run": "Ran the code",
+        "chatFallback": "Asked the assistant",
+        "important": "Important step",
+        "fixed": "error fixed",
+        "broke": "broke",
+        "firstRun": "1st run",
+        "finalCode": "final code"
+      },
       "toolbar": {
         "beforeFirstEvent": "(before the 1st event)",
         "goEnd": "Go to end",

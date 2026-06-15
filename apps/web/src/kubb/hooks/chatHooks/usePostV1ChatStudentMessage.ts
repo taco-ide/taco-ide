@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChatStudentMessageMutationRequest, PostV1ChatStudentMessageMutationResponse, PostV1ChatStudentMessage400, PostV1ChatStudentMessage401, PostV1ChatStudentMessage403, PostV1ChatStudentMessage404, PostV1ChatStudentMessage500 } from "../../../../../../packages/types/kubb/PostV1ChatStudentMessage.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
+import type { PostV1ChatStudentMessageMutationRequest, PostV1ChatStudentMessageMutationResponse, PostV1ChatStudentMessage400, PostV1ChatStudentMessage401, PostV1ChatStudentMessage403, PostV1ChatStudentMessage404, PostV1ChatStudentMessage500 } from "../../../../../../packages/types/kubb/PostV1ChatStudentMessage.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ChatStudentMessageMutationKey = () => [{ url: '/v1/chat/student/message' }] as const

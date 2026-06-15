@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { GetV1ChatTeacherHistoryClassroomidQueryResponse, GetV1ChatTeacherHistoryClassroomidPathParams, GetV1ChatTeacherHistoryClassroomid401 } from "../../../../../../packages/types/kubb/GetV1ChatTeacherHistoryClassroomid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
+import type { GetV1ChatTeacherHistoryClassroomidQueryResponse, GetV1ChatTeacherHistoryClassroomidPathParams, GetV1ChatTeacherHistoryClassroomid401 } from "../../../../../../packages/types/kubb/GetV1ChatTeacherHistoryClassroomid.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChatTeacherHistoryClassroomidQueryKey = (classroomId: GetV1ChatTeacherHistoryClassroomidPathParams["classroomId"]) => [{ url: '/v1/chat/teacher/history/:classroomId', params: {classroomId:classroomId} }] as const
