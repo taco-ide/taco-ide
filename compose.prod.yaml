@@ -1,0 +1,103 @@
+# TACO-IDE — PRODUCTION stack for the VMs (backend + frontend only).
+#
+# The database is NOT managed here: point DATABASE_URL at your external Postgres
+# (it MUST have the pgvector extension available — see docs/deployment/README.md).
+#
+# Single public origin behind Caddy (auto-HTTPS). Only Caddy exposes ports
+# (80/443); api/web stay on the internal network.
+#
+#   # 1. Put real values in a root .env (DOMAIN, DATABASE_URL, secrets, keys)
+#   # 2. Build + start:
+#   docker compose -f compose.prod.yaml up -d --build
+#   # 3. (idempotent) migrations run automatically via the `migrate` service.
+#
+# Required in .env: DOMAIN, DATABASE_URL, BETTER_AUTH_SECRET (>=32), LLM_API_KEY.
+# Strongly recommended in prod: RESEND_API_KEY + EMAIL_FROM (else new users can't
+# verify their email and cannot sign in). Optional: EMBEDDING_*, LANGFUSE_*,
+# PLATFORM_ADMIN_* (auto-creates a platform admin on first migrate).
+
+name: taco-ide-prod
+
+services:
+  # One-shot DB provisioning against the EXTERNAL Postgres: drizzle migrations
+  # (incl. CREATE EXTENSION vector) + prod-safe seed (model, default TA, and the
+  # platform admin if PLATFORM_ADMIN_* are set). Idempotent; gates the API.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL to your external Postgres (append ?sslmode=require if needed)}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET (>=32 chars)}
+      BETTER_AUTH_URL: https://${DOMAIN:?set DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      LLM_API_KEY: ${LLM_API_KEY:?set LLM_API_KEY (required at boot)}
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runner
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET (>=32 chars)}
+      BETTER_AUTH_URL: https://${DOMAIN:?set DOMAIN}
+      FRONTEND_URL: https://${DOMAIN}
+      LLM_API_KEY: ${LLM_API_KEY:?set LLM_API_KEY}
+    volumes:
+      - uploads:/repo/uploads
+    expose:
+      - "4000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Single origin: the browser calls https://DOMAIN/v1/... which Caddy
+        # routes to the API. Baked at build time — rebuild web if DOMAIN changes.
+        NEXT_PUBLIC_API_URL: https://${DOMAIN:?set DOMAIN}
+    restart: unless-stopped
+    environment:
+      PORT: "4001"
+      HOSTNAME: 0.0.0.0
+    expose:
+      - "4001"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+      # ACME_EMAIL: ${ACME_EMAIL:-}   # optional; also uncomment the block in Caddyfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+      - api
+
+volumes:
+  uploads:
+  caddy_data:
+  caddy_config:
