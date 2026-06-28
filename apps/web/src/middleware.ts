@@ -12,8 +12,12 @@ const publicPaths = [
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Get Better Auth session cookie
-  const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+  // Get Better Auth session cookie. In production (HTTPS) Better Auth emits the
+  // `__Secure-` prefixed cookie; in development it uses the bare name. Check both
+  // so the SSR gate works in every environment.
+  const sessionToken =
+    request.cookies.get("better-auth.session_token")?.value ??
+    request.cookies.get("__Secure-better-auth.session_token")?.value;
   const isLoggedIn = !!sessionToken;
 
   // Check if current path is an auth route (login, signup, etc.)
