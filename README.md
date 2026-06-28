@@ -43,6 +43,22 @@ taco-ide/
 - **Resend** - Email delivery service
 - **Docker** - PostgreSQL container
 
+## Deploy (Docker)
+
+Full stack in containers (backend + frontend), runnable locally and on VMs:
+
+```bash
+# Local — test the whole platform with Docker Desktop:
+cp .env.docker.example .env
+docker compose up --build           # web :4001 · API :4000/docs
+
+# Production (VMs, single HTTPS origin behind Caddy, external Postgres):
+docker compose -f compose.prod.yaml up -d --build
+```
+
+Step-by-step guide (env matrix, external DB + pgvector, admin seed,
+troubleshooting): **[`docs/deployment/README.md`](docs/deployment/README.md)**.
+
 ## Getting Started
 
 ### Prerequisites
