@@ -1,0 +1,50 @@
+# Build context = repo root. Per-app .dockerignore files are NOT read for a
+# root-context build, so all exclusions live here.
+
+# Dependencies (reinstalled inside the image via npm ci)
+**/node_modules
+infra/                  # orphan stray node_modules dir, not a workspace
+
+# Build outputs
+**/.next
+**/dist
+**/out
+**/.turbo
+**/*.tsbuildinfo
+
+# VCS / tooling / editor
+.git
+.github
+.gitignore
+.claude
+.cursor
+.vscode
+.idea
+.plans
+.understand-anything
+
+# Local env files (secrets are injected at runtime via compose, never baked)
+.env
+.env.*
+
+# Tests / artifacts / generated docs
+coverage
+test-results
+playwright-report
+playwright/.cache
+.playwright-mcp
+.playwright-cli
+apps/api/src/swagger.yaml
+
+# Runtime data
+**/uploads
+
+# Non-build assets
+**/*.md
+docs/
+demo/
+design-reference/
+e2e/
+.DS_Store
+*.pem
+*.log
