@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1KnowledgeBasesKbidQueryResponse, GetV1KnowledgeBasesKbidPathParams, GetV1KnowledgeBasesKbid401, GetV1KnowledgeBasesKbid403, GetV1KnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1KnowledgeBasesKbidQueryResponse, GetV1KnowledgeBasesKbidPathParams, GetV1KnowledgeBasesKbid401, GetV1KnowledgeBasesKbid403, GetV1KnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbid.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1KnowledgeBasesKbidQueryKey = (kbId: GetV1KnowledgeBasesKbidPathParams["kbId"]) => [{ url: '/v1/knowledge-bases/:kbId', params: {kbId:kbId} }] as const

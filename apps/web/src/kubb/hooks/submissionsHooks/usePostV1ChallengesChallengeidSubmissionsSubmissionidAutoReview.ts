@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponse, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewPathParams, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview401, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview403, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview404, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview409, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500 } from "../../../../../../packages/types/kubb/PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponse, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewPathParams, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview401, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview403, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview404, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview409, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429, PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500 } from "../../../../../../packages/types/kubb/PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey = () => [{ url: '/v1/challenges/:challengeId/submissions/:submissionId/auto-review' }] as const

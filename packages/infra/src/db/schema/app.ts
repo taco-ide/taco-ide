@@ -119,6 +119,8 @@ export const teachingAssistant = pgTable(
 
 export const challengeDifficultyEnum = ["easy", "medium", "hard"] as const;
 
+export const challengeLatePolicyEnum = ["allow_late", "block"] as const;
+
 export const challenge = pgTable("challenge", {
   id: text("id").primaryKey(),
   classroomId: text("classroom_id").references(() => classroom.id, {
@@ -129,6 +131,14 @@ export const challenge = pgTable("challenge", {
   difficulty: varchar("difficulty", { length: 20 }),
   tags: jsonb("tags").$type<string[]>(),
   supportMaterials: jsonb("support_materials"),
+  // Scheduling window, always stored in UTC.
+  // null releaseAt = visible immediately; null dueAt = no deadline.
+  releaseAt: timestamp("release_at"),
+  dueAt: timestamp("due_at"),
+  latePolicy: varchar("late_policy", { length: 16 })
+    .$type<(typeof challengeLatePolicyEnum)[number]>()
+    .notNull()
+    .default("allow_late"),
   createdByUserId: text("created_by_user_id").references(() => user.id, {
     onDelete: "set null",
   }),

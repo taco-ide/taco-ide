@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1WorkSessionsIdReopenMutationResponse, PostV1WorkSessionsIdReopenPathParams, PostV1WorkSessionsIdReopen400, PostV1WorkSessionsIdReopen401, PostV1WorkSessionsIdReopen403, PostV1WorkSessionsIdReopen404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdReopen.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1WorkSessionsIdReopenMutationResponse, PostV1WorkSessionsIdReopenPathParams, PostV1WorkSessionsIdReopen400, PostV1WorkSessionsIdReopen401, PostV1WorkSessionsIdReopen403, PostV1WorkSessionsIdReopen404 } from "../../../../../../packages/types/kubb/PostV1WorkSessionsIdReopen.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1WorkSessionsIdReopenMutationKey = () => [{ url: '/v1/work-sessions/:id/reopen' }] as const

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { DeleteV1OrganizationsIdMembersUseridMutationResponse, DeleteV1OrganizationsIdMembersUseridPathParams, DeleteV1OrganizationsIdMembersUserid401, DeleteV1OrganizationsIdMembersUserid403, DeleteV1OrganizationsIdMembersUserid404, DeleteV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/DeleteV1OrganizationsIdMembersUserid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { DeleteV1OrganizationsIdMembersUseridMutationResponse, DeleteV1OrganizationsIdMembersUseridPathParams, DeleteV1OrganizationsIdMembersUserid401, DeleteV1OrganizationsIdMembersUserid403, DeleteV1OrganizationsIdMembersUserid404, DeleteV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/DeleteV1OrganizationsIdMembersUserid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1OrganizationsIdMembersUseridMutationKey = () => [{ url: '/v1/organizations/:id/members/:userId' }] as const

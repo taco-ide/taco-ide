@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { DeleteV1KnowledgeBasesKbidMutationResponse, DeleteV1KnowledgeBasesKbidPathParams, DeleteV1KnowledgeBasesKbid401, DeleteV1KnowledgeBasesKbid403, DeleteV1KnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/DeleteV1KnowledgeBasesKbid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { DeleteV1KnowledgeBasesKbidMutationResponse, DeleteV1KnowledgeBasesKbidPathParams, DeleteV1KnowledgeBasesKbid401, DeleteV1KnowledgeBasesKbid403, DeleteV1KnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/DeleteV1KnowledgeBasesKbid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1KnowledgeBasesKbidMutationKey = () => [{ url: '/v1/knowledge-bases/:kbId' }] as const

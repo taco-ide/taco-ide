@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { DeleteV1ChallengesChallengeidKnowledgeBasesKbidMutationResponse, DeleteV1ChallengesChallengeidKnowledgeBasesKbidPathParams, DeleteV1ChallengesChallengeidKnowledgeBasesKbid401, DeleteV1ChallengesChallengeidKnowledgeBasesKbid403, DeleteV1ChallengesChallengeidKnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/DeleteV1ChallengesChallengeidKnowledgeBasesKbid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { DeleteV1ChallengesChallengeidKnowledgeBasesKbidMutationResponse, DeleteV1ChallengesChallengeidKnowledgeBasesKbidPathParams, DeleteV1ChallengesChallengeidKnowledgeBasesKbid401, DeleteV1ChallengesChallengeidKnowledgeBasesKbid403, DeleteV1ChallengesChallengeidKnowledgeBasesKbid404 } from "../../../../../../packages/types/kubb/DeleteV1ChallengesChallengeidKnowledgeBasesKbid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1ChallengesChallengeidKnowledgeBasesKbidMutationKey = () => [{ url: '/v1/challenges/:challengeId/knowledge-bases/:kbId' }] as const
