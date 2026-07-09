@@ -16,6 +16,7 @@ import {
 import { db } from "@repo/infra/db";
 import {
   challenge,
+  challengeLatePolicyEnum,
   teachingAssistant,
   challengeTeachingAssistant,
 } from "@repo/infra/db/schema";
@@ -31,6 +32,9 @@ const CreateChallengeBodySchema = z
     classroomId: z.string().min(1),
     tags: z.array(z.string()).optional(),
     supportMaterials: z.unknown().optional(),
+    releaseAt: z.string().datetime({ offset: true }).optional(),
+    dueAt: z.string().datetime({ offset: true }).optional(),
+    latePolicy: z.enum(challengeLatePolicyEnum).optional(),
     generateReferenceSolutions: z.boolean().optional().default(true),
   })
   .strict();
@@ -42,6 +46,9 @@ const ChallengeCreatedSchema = z.object({
   difficulty: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   classroomId: z.string().nullable(),
+  releaseAt: z.string().nullable(),
+  dueAt: z.string().nullable(),
+  latePolicy: z.enum(challengeLatePolicyEnum),
   createdAt: z.string(),
 });
 
@@ -87,8 +94,18 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         classroomId,
         tags,
         supportMaterials,
+        releaseAt,
+        dueAt,
+        latePolicy,
         generateReferenceSolutions: shouldGenerateRefSolutions,
       } = request.body;
+
+      if (releaseAt && dueAt && new Date(dueAt) <= new Date(releaseAt)) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "dueAt must be after releaseAt",
+        });
+      }
 
       const cl = await loadClassroomAccessContext(classroomId);
       if (!cl)
@@ -114,6 +131,9 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           classroomId,
           tags: tags ?? null,
           supportMaterials: supportMaterials ?? null,
+          releaseAt: releaseAt ? new Date(releaseAt) : null,
+          dueAt: dueAt ? new Date(dueAt) : null,
+          latePolicy: latePolicy ?? "allow_late",
           createdByUserId: usr.id,
         })
         .returning();
@@ -159,6 +179,9 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           difficulty: created.difficulty,
           tags: created.tags ?? null,
           classroomId: created.classroomId,
+          releaseAt: created.releaseAt?.toISOString() ?? null,
+          dueAt: created.dueAt?.toISOString() ?? null,
+          latePolicy: created.latePolicy,
           createdAt: created.createdAt.toISOString(),
         },
       });

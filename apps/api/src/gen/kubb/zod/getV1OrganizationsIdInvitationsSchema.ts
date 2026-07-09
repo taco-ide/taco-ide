@@ -26,8 +26,8 @@ export const getV1OrganizationsIdInvitations200Schema = z.object({
 "email": z.string(),
 "role": z.string(),
 "status": z.string(),
-"expiresAt": z.string().datetime(),
-"createdAt": z.string().datetime(),
+"expiresAt": z.string().datetime({ offset: true }),
+"createdAt": z.string().datetime({ offset: true }),
 "inviterId": z.string().nullable(),
 "inviterName": z.string().nullable(),
 "inviterEmail": z.string().nullable()

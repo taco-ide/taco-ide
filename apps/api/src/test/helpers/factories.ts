@@ -124,6 +124,9 @@ export async function createChallenge(
       description: overrides.description ?? "Test challenge",
       difficulty: overrides.difficulty ?? "easy",
       tags: (overrides.tags as string[] | undefined) ?? ["test"],
+      releaseAt: overrides.releaseAt ?? null,
+      dueAt: overrides.dueAt ?? null,
+      latePolicy: overrides.latePolicy ?? "allow_late",
       createdByUserId: overrides.createdByUserId,
     })
     .returning();

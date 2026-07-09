@@ -9,7 +9,11 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { challenge } from "@repo/infra/db/schema";
+import {
+  CHALLENGE_SCHEDULE_WINDOW_CHECK,
+  challenge,
+  challengeLatePolicyEnum,
+} from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -17,6 +21,28 @@ import {
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
+
+const PG_CHECK_VIOLATION = "23514";
+
+// The app-level window check below reads the row and writes it in separate
+// statements, so a concurrent PATCH can still produce an inverted window. The
+// DB CHECK constraint is the real guard; map its violation to a 400.
+export function isScheduleWindowViolation(err: unknown): boolean {
+  for (let e: unknown = err; e && typeof e === "object"; ) {
+    const { code, constraint_name, cause } = e as {
+      code?: unknown;
+      constraint_name?: unknown;
+      cause?: unknown;
+    };
+    if (
+      code === PG_CHECK_VIOLATION &&
+      constraint_name === CHALLENGE_SCHEDULE_WINDOW_CHECK
+    )
+      return true;
+    e = cause;
+  }
+  return false;
+}
 
 // ==================== SCHEMAS ====================
 
@@ -31,6 +57,9 @@ const UpdateChallengeBodySchema = z
     difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
     tags: z.array(z.string()).nullable().optional(),
     classroomId: z.string().min(1).nullable().optional(),
+    releaseAt: z.string().datetime({ offset: true }).nullable().optional(),
+    dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+    latePolicy: z.enum(challengeLatePolicyEnum).optional(),
     generateReferenceSolutions: z.boolean().optional(),
   })
   .strict();
@@ -43,6 +72,9 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
     description: z.string().nullable(),
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
+    releaseAt: z.string().nullable(),
+    dueAt: z.string().nullable(),
+    latePolicy: z.enum(challengeLatePolicyEnum),
     message: z.string(),
   }),
 });
@@ -139,6 +171,36 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
+      // Validate the scheduling window against the *effective* values: a
+      // PATCH may change only one bound, so the other comes from the row.
+      if (body.releaseAt !== undefined || body.dueAt !== undefined) {
+        const [current] = await db
+          .select({ releaseAt: challenge.releaseAt, dueAt: challenge.dueAt })
+          .from(challenge)
+          .where(eq(challenge.id, challengeId))
+          .limit(1);
+
+        const effectiveReleaseAt =
+          body.releaseAt !== undefined
+            ? body.releaseAt && new Date(body.releaseAt)
+            : current?.releaseAt;
+        const effectiveDueAt =
+          body.dueAt !== undefined
+            ? body.dueAt && new Date(body.dueAt)
+            : current?.dueAt;
+
+        if (
+          effectiveReleaseAt &&
+          effectiveDueAt &&
+          effectiveDueAt <= effectiveReleaseAt
+        ) {
+          return reply.status(400).send({
+            success: false as const,
+            message: "dueAt must be after releaseAt",
+          });
+        }
+      }
+
       const setValues: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
       };
@@ -148,19 +210,36 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         setValues.description = body.description;
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
+      if (body.releaseAt !== undefined)
+        setValues.releaseAt = body.releaseAt ? new Date(body.releaseAt) : null;
+      if (body.dueAt !== undefined)
+        setValues.dueAt = body.dueAt ? new Date(body.dueAt) : null;
+      if (body.latePolicy !== undefined) setValues.latePolicy = body.latePolicy;
 
-      const [updated] = await db
-        .update(challenge)
-        .set(setValues)
-        .where(eq(challenge.id, challengeId))
-        .returning({
-          id: challenge.id,
-          classroomId: challenge.classroomId,
-          title: challenge.title,
-          description: challenge.description,
-          difficulty: challenge.difficulty,
-          tags: challenge.tags,
+      let updated;
+      try {
+        [updated] = await db
+          .update(challenge)
+          .set(setValues)
+          .where(eq(challenge.id, challengeId))
+          .returning({
+            id: challenge.id,
+            classroomId: challenge.classroomId,
+            title: challenge.title,
+            description: challenge.description,
+            difficulty: challenge.difficulty,
+            tags: challenge.tags,
+            releaseAt: challenge.releaseAt,
+            dueAt: challenge.dueAt,
+            latePolicy: challenge.latePolicy,
+          });
+      } catch (err) {
+        if (!isScheduleWindowViolation(err)) throw err;
+        return reply.status(400).send({
+          success: false as const,
+          message: "dueAt must be after releaseAt",
         });
+      }
 
       if (!updated) {
         return reply.status(500).send({
@@ -183,6 +262,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: updated.description ?? null,
           difficulty: updated.difficulty ?? null,
           tags: (updated.tags as string[] | null) ?? null,
+          releaseAt: updated.releaseAt?.toISOString() ?? null,
+          dueAt: updated.dueAt?.toISOString() ?? null,
+          latePolicy: updated.latePolicy,
           message: wantsClassroomChange
             ? classroomId
               ? "Challenge assigned to classroom"

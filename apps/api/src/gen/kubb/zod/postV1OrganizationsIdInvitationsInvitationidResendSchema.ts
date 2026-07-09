@@ -19,7 +19,7 @@ export const postV1OrganizationsIdInvitationsInvitationidResend200Schema = z.obj
 "data": z.object({
     "id": z.string(),
 "status": z.string(),
-"expiresAt": z.string().datetime()
+"expiresAt": z.string().datetime({ offset: true })
     }),
 "pagination": z.object({
     "total": z.number(),

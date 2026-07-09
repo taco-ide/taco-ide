@@ -4,7 +4,12 @@ import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import { ResponseSchema200, ResponseSchema401 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { challenge, classroom, user } from "@repo/infra/db/schema";
+import {
+  challenge,
+  challengeLatePolicyEnum,
+  classroom,
+  user,
+} from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -27,6 +32,9 @@ const ChallengeItemSchema = z.object({
   tags: z.array(z.string()).nullable(),
   author: z.string().nullable(),
   classroomTitle: z.string().nullable(),
+  releaseAt: z.string().nullable(),
+  dueAt: z.string().nullable(),
+  latePolicy: z.enum(challengeLatePolicyEnum),
   createdAt: z.string(),
 });
 
@@ -108,6 +116,9 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
           description: challenge.description,
           difficulty: challenge.difficulty,
           tags: challenge.tags,
+          releaseAt: challenge.releaseAt,
+          dueAt: challenge.dueAt,
+          latePolicy: challenge.latePolicy,
           createdAt: challenge.createdAt,
           authorName: user.name,
           classroomTitle: classroom.title,
@@ -132,6 +143,9 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
           tags: c.tags ?? [],
           author: c.authorName ?? null,
           classroomTitle: c.classroomTitle ?? null,
+          releaseAt: c.releaseAt?.toISOString() ?? null,
+          dueAt: c.dueAt?.toISOString() ?? null,
+          latePolicy: c.latePolicy,
           createdAt: c.createdAt.toISOString(),
         })),
         pagination: { total, page, perPage, totalPages },
