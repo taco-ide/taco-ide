@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1OrganizationsQueryResponse, GetV1OrganizationsQueryParams, GetV1Organizations401, GetV1Organizations403 } from "../../../../../../packages/types/kubb/GetV1Organizations.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1OrganizationsQueryResponse, GetV1OrganizationsQueryParams, GetV1Organizations401, GetV1Organizations403 } from "../../../../../../packages/types/kubb/GetV1Organizations.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1OrganizationsQueryKey = (params?: GetV1OrganizationsQueryParams) => [{ url: '/v1/organizations/' }, ...(params ? [params] : [])] as const

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1ClassroomsIdUnenrollMutationRequest, PostV1ClassroomsIdUnenrollMutationResponse, PostV1ClassroomsIdUnenrollPathParams, PostV1ClassroomsIdUnenroll400, PostV1ClassroomsIdUnenroll401, PostV1ClassroomsIdUnenroll403, PostV1ClassroomsIdUnenroll404 } from "../../../../../../packages/types/kubb/PostV1ClassroomsIdUnenroll.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1ClassroomsIdUnenrollMutationRequest, PostV1ClassroomsIdUnenrollMutationResponse, PostV1ClassroomsIdUnenrollPathParams, PostV1ClassroomsIdUnenroll400, PostV1ClassroomsIdUnenroll401, PostV1ClassroomsIdUnenroll403, PostV1ClassroomsIdUnenroll404 } from "../../../../../../packages/types/kubb/PostV1ClassroomsIdUnenroll.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1ClassroomsIdUnenrollMutationKey = () => [{ url: '/v1/classrooms/:id/unenroll' }] as const

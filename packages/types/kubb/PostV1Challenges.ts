@@ -10,6 +10,13 @@ export const postV1Challenges201SuccessEnum = {
 
 export type PostV1Challenges201SuccessEnum = (typeof postV1Challenges201SuccessEnum)[keyof typeof postV1Challenges201SuccessEnum];
 
+export const dataLatePolicyEnum = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type DataLatePolicyEnum = (typeof dataLatePolicyEnum)[keyof typeof dataLatePolicyEnum];
+
 /**
  * @description Default Response
 */
@@ -50,6 +57,18 @@ export type PostV1Challenges201 = {
          * @type string
         */
         classroomId: string | null;
+        /**
+         * @type string
+        */
+        releaseAt: string | null;
+        /**
+         * @type string
+        */
+        dueAt: string | null;
+        /**
+         * @type string
+        */
+        latePolicy: DataLatePolicyEnum;
         /**
          * @type string
         */
@@ -169,6 +188,13 @@ export const postV1ChallengesMutationRequestDifficultyEnum = {
 
 export type PostV1ChallengesMutationRequestDifficultyEnum = (typeof postV1ChallengesMutationRequestDifficultyEnum)[keyof typeof postV1ChallengesMutationRequestDifficultyEnum];
 
+export const postV1ChallengesMutationRequestLatePolicyEnum = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type PostV1ChallengesMutationRequestLatePolicyEnum = (typeof postV1ChallengesMutationRequestLatePolicyEnum)[keyof typeof postV1ChallengesMutationRequestLatePolicyEnum];
+
 export type PostV1ChallengesMutationRequest = {
     /**
      * @minLength 1
@@ -194,6 +220,18 @@ export type PostV1ChallengesMutationRequest = {
     */
     tags?: string[];
     supportMaterials?: any;
+    /**
+     * @type string | undefined, date-time
+    */
+    releaseAt?: string;
+    /**
+     * @type string | undefined, date-time
+    */
+    dueAt?: string;
+    /**
+     * @type string | undefined
+    */
+    latePolicy?: PostV1ChallengesMutationRequestLatePolicyEnum;
     /**
      * @default true
      * @type boolean | undefined

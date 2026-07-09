@@ -107,6 +107,18 @@ export type GetV1Challenges200 = {
         /**
          * @type string
         */
+        releaseAt: string | null;
+        /**
+         * @type string
+        */
+        dueAt: string | null;
+        /**
+         * @type string
+        */
+        latePolicy: string;
+        /**
+         * @type string
+        */
         createdAt: string;
     }[];
     /**

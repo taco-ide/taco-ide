@@ -18,6 +18,13 @@ export const patchV1ChallengesId200SuccessEnum = {
 
 export type PatchV1ChallengesId200SuccessEnum = (typeof patchV1ChallengesId200SuccessEnum)[keyof typeof patchV1ChallengesId200SuccessEnum];
 
+export const dataLatePolicyEnum2 = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type DataLatePolicyEnum2 = (typeof dataLatePolicyEnum2)[keyof typeof dataLatePolicyEnum2];
+
 /**
  * @description Default Response
 */
@@ -58,6 +65,18 @@ export type PatchV1ChallengesId200 = {
          * @type array
         */
         tags: string[] | null;
+        /**
+         * @type string
+        */
+        releaseAt: string | null;
+        /**
+         * @type string
+        */
+        dueAt: string | null;
+        /**
+         * @type string
+        */
+        latePolicy: DataLatePolicyEnum2;
         /**
          * @type string
         */
@@ -198,6 +217,13 @@ export const patchV1ChallengesIdMutationRequestDifficultyEnum = {
 
 export type PatchV1ChallengesIdMutationRequestDifficultyEnum = (typeof patchV1ChallengesIdMutationRequestDifficultyEnum)[keyof typeof patchV1ChallengesIdMutationRequestDifficultyEnum];
 
+export const patchV1ChallengesIdMutationRequestLatePolicyEnum = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type PatchV1ChallengesIdMutationRequestLatePolicyEnum = (typeof patchV1ChallengesIdMutationRequestLatePolicyEnum)[keyof typeof patchV1ChallengesIdMutationRequestLatePolicyEnum];
+
 export type PatchV1ChallengesIdMutationRequest = {
     /**
      * @minLength 1
@@ -222,6 +248,18 @@ export type PatchV1ChallengesIdMutationRequest = {
      * @type string
     */
     classroomId?: string | null;
+    /**
+     * @type string, date-time
+    */
+    releaseAt?: string | null;
+    /**
+     * @type string, date-time
+    */
+    dueAt?: string | null;
+    /**
+     * @type string | undefined
+    */
+    latePolicy?: PatchV1ChallengesIdMutationRequestLatePolicyEnum;
     /**
      * @type boolean | undefined
     */

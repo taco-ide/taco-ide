@@ -22,6 +22,9 @@ export const patchV1ChallengesId200Schema = z.object({
 "description": z.string().nullable(),
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
+"releaseAt": z.string().nullable(),
+"dueAt": z.string().nullable(),
+"latePolicy": z.enum(["allow_late", "block"]),
 "message": z.string()
     }),
 "pagination": z.object({
@@ -82,6 +85,9 @@ export const patchV1ChallengesIdMutationRequestSchema = z.object({
 "difficulty": z.enum(["easy", "medium", "hard"]).nullable().nullish(),
 "tags": z.array(z.string()).nullable().nullish(),
 "classroomId": z.string().min(1).nullable().nullish(),
+"releaseAt": z.string().datetime().nullable().nullish(),
+"dueAt": z.string().datetime().nullable().nullish(),
+"latePolicy": z.enum(["allow_late", "block"]).optional(),
 "generateReferenceSolutions": z.boolean().optional()
     })
 

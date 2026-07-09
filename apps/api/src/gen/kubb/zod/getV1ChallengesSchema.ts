@@ -28,6 +28,9 @@ export const getV1Challenges200Schema = z.object({
 "tags": z.array(z.string()).nullable(),
 "author": z.string().nullable(),
 "classroomTitle": z.string().nullable(),
+"releaseAt": z.string().nullable(),
+"dueAt": z.string().nullable(),
+"latePolicy": z.string(),
 "createdAt": z.string()
     })),
 "pagination": z.object({

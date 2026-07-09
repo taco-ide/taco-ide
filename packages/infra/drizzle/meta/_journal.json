@@ -71,6 +71,13 @@
       "when": 1780867441153,
       "tag": "0009_flimsy_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783556086593,
+      "tag": "0010_rich_the_watchers",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,12 @@ import {
 } from "../../_responses/types";
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, classroom, member } from "@repo/infra/db/schema";
+import {
+  challenge,
+  challengeLatePolicyEnum,
+  classroom,
+  member,
+} from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -30,6 +35,9 @@ const UpdateChallengeBodySchema = z
     difficulty: z.enum(["easy", "medium", "hard"]).nullable().optional(),
     tags: z.array(z.string()).nullable().optional(),
     classroomId: z.string().min(1).nullable().optional(),
+    releaseAt: z.string().datetime({ offset: true }).nullable().optional(),
+    dueAt: z.string().datetime({ offset: true }).nullable().optional(),
+    latePolicy: z.enum(challengeLatePolicyEnum).optional(),
     generateReferenceSolutions: z.boolean().optional(),
   })
   .strict();
@@ -42,6 +50,9 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
     description: z.string().nullable(),
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
+    releaseAt: z.string().nullable(),
+    dueAt: z.string().nullable(),
+    latePolicy: z.enum(challengeLatePolicyEnum),
     message: z.string(),
   }),
 });
@@ -109,6 +120,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         body.description !== undefined ||
         body.difficulty !== undefined ||
         body.tags !== undefined ||
+        body.releaseAt !== undefined ||
+        body.dueAt !== undefined ||
+        body.latePolicy !== undefined ||
         body.generateReferenceSolutions !== undefined;
 
       if (isContentEdit) {
@@ -224,6 +238,36 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         }
       }
 
+      // Validate the scheduling window against the *effective* values: a
+      // PATCH may change only one bound, so the other comes from the row.
+      if (body.releaseAt !== undefined || body.dueAt !== undefined) {
+        const [current] = await db
+          .select({ releaseAt: challenge.releaseAt, dueAt: challenge.dueAt })
+          .from(challenge)
+          .where(eq(challenge.id, challengeId))
+          .limit(1);
+
+        const effectiveReleaseAt =
+          body.releaseAt !== undefined
+            ? body.releaseAt && new Date(body.releaseAt)
+            : current?.releaseAt;
+        const effectiveDueAt =
+          body.dueAt !== undefined
+            ? body.dueAt && new Date(body.dueAt)
+            : current?.dueAt;
+
+        if (
+          effectiveReleaseAt &&
+          effectiveDueAt &&
+          effectiveDueAt <= effectiveReleaseAt
+        ) {
+          return reply.status(400).send({
+            success: false as const,
+            message: "dueAt must be after releaseAt",
+          });
+        }
+      }
+
       const setValues: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
       };
@@ -232,6 +276,11 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       if (body.description !== undefined) setValues.description = body.description;
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
+      if (body.releaseAt !== undefined)
+        setValues.releaseAt = body.releaseAt ? new Date(body.releaseAt) : null;
+      if (body.dueAt !== undefined)
+        setValues.dueAt = body.dueAt ? new Date(body.dueAt) : null;
+      if (body.latePolicy !== undefined) setValues.latePolicy = body.latePolicy;
 
       const [updated] = await db
         .update(challenge)
@@ -244,6 +293,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: challenge.description,
           difficulty: challenge.difficulty,
           tags: challenge.tags,
+          releaseAt: challenge.releaseAt,
+          dueAt: challenge.dueAt,
+          latePolicy: challenge.latePolicy,
         });
 
       if (!updated) {
@@ -267,6 +319,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: updated.description ?? null,
           difficulty: updated.difficulty ?? null,
           tags: (updated.tags as string[] | null) ?? null,
+          releaseAt: updated.releaseAt?.toISOString() ?? null,
+          dueAt: updated.dueAt?.toISOString() ?? null,
+          latePolicy: updated.latePolicy,
           message: wantsClassroomChange
             ? classroomId
               ? "Challenge assigned to classroom"

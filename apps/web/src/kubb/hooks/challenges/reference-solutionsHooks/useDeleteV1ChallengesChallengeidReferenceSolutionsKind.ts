@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { DeleteV1ChallengesChallengeidReferenceSolutionsKindMutationResponse, DeleteV1ChallengesChallengeidReferenceSolutionsKindPathParams, DeleteV1ChallengesChallengeidReferenceSolutionsKind401, DeleteV1ChallengesChallengeidReferenceSolutionsKind403, DeleteV1ChallengesChallengeidReferenceSolutionsKind404 } from "../../../../../../../packages/types/kubb/DeleteV1ChallengesChallengeidReferenceSolutionsKind.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { DeleteV1ChallengesChallengeidReferenceSolutionsKindMutationResponse, DeleteV1ChallengesChallengeidReferenceSolutionsKindPathParams, DeleteV1ChallengesChallengeidReferenceSolutionsKind401, DeleteV1ChallengesChallengeidReferenceSolutionsKind403, DeleteV1ChallengesChallengeidReferenceSolutionsKind404 } from "../../../../../../../packages/types/kubb/DeleteV1ChallengesChallengeidReferenceSolutionsKind.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1ChallengesChallengeidReferenceSolutionsKindMutationKey = () => [{ url: '/v1/challenges/:challengeId/reference-solutions/:kind' }] as const

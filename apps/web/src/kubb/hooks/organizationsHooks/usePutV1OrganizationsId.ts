@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PutV1OrganizationsIdMutationRequest, PutV1OrganizationsIdMutationResponse, PutV1OrganizationsIdPathParams, PutV1OrganizationsId400, PutV1OrganizationsId401, PutV1OrganizationsId403, PutV1OrganizationsId404, PutV1OrganizationsId409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PutV1OrganizationsIdMutationRequest, PutV1OrganizationsIdMutationResponse, PutV1OrganizationsIdPathParams, PutV1OrganizationsId400, PutV1OrganizationsId401, PutV1OrganizationsId403, PutV1OrganizationsId404, PutV1OrganizationsId409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsId.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1OrganizationsIdMutationKey = () => [{ url: '/v1/organizations/:id' }] as const

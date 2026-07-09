@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1OrganizationsIdEmailDomainsQueryResponse, GetV1OrganizationsIdEmailDomainsPathParams, GetV1OrganizationsIdEmailDomains401, GetV1OrganizationsIdEmailDomains403, GetV1OrganizationsIdEmailDomains404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdEmailDomains.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1OrganizationsIdEmailDomainsQueryResponse, GetV1OrganizationsIdEmailDomainsPathParams, GetV1OrganizationsIdEmailDomains401, GetV1OrganizationsIdEmailDomains403, GetV1OrganizationsIdEmailDomains404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdEmailDomains.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1OrganizationsIdEmailDomainsQueryKey = (id: GetV1OrganizationsIdEmailDomainsPathParams["id"]) => [{ url: '/v1/organizations/:id/email-domains', params: {id:id} }] as const

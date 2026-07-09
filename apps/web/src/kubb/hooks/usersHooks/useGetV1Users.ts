@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1UsersQueryResponse, GetV1UsersQueryParams, GetV1Users401, GetV1Users403 } from "../../../../../../packages/types/kubb/GetV1Users.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1UsersQueryResponse, GetV1UsersQueryParams, GetV1Users401, GetV1Users403 } from "../../../../../../packages/types/kubb/GetV1Users.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1UsersQueryKey = (params: GetV1UsersQueryParams) => [{ url: '/v1/users/' }, ...(params ? [params] : [])] as const

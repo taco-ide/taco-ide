@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PatchV1UsersIdPlatformAdminMutationRequest, PatchV1UsersIdPlatformAdminMutationResponse, PatchV1UsersIdPlatformAdminPathParams, PatchV1UsersIdPlatformAdmin401, PatchV1UsersIdPlatformAdmin403, PatchV1UsersIdPlatformAdmin404, PatchV1UsersIdPlatformAdmin409 } from "../../../../../../packages/types/kubb/PatchV1UsersIdPlatformAdmin.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PatchV1UsersIdPlatformAdminMutationRequest, PatchV1UsersIdPlatformAdminMutationResponse, PatchV1UsersIdPlatformAdminPathParams, PatchV1UsersIdPlatformAdmin401, PatchV1UsersIdPlatformAdmin403, PatchV1UsersIdPlatformAdmin404, PatchV1UsersIdPlatformAdmin409 } from "../../../../../../packages/types/kubb/PatchV1UsersIdPlatformAdmin.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const patchV1UsersIdPlatformAdminMutationKey = () => [{ url: '/v1/users/:id/platform-admin' }] as const

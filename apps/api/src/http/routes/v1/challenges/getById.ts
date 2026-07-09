@@ -41,6 +41,9 @@ const GetChallengeResponseSchema = ResponseSchema200.extend({
     createdByUserId: z.string().nullable(),
     classroomId: z.string().nullable(),
     classroomTeacherUserId: z.string().nullable(),
+    releaseAt: z.string().nullable(),
+    dueAt: z.string().nullable(),
+    latePolicy: z.string(),
     teachingAssistants: z.array(TeachingAssistantItemSchema),
     createdAt: z.string(),
   }),
@@ -91,6 +94,9 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           createdByUserId: challenge.createdByUserId,
           classroomId: challenge.classroomId,
           classroomTeacherUserId: classroom.teacherUserId,
+          releaseAt: challenge.releaseAt,
+          dueAt: challenge.dueAt,
+          latePolicy: challenge.latePolicy,
         })
         .from(challenge)
         .leftJoin(classroom, eq(challenge.classroomId, classroom.id))
@@ -134,6 +140,9 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
           createdByUserId: ch.createdByUserId ?? null,
           classroomId: ch.classroomId ?? null,
           classroomTeacherUserId: ch.classroomTeacherUserId ?? null,
+          releaseAt: ch.releaseAt?.toISOString() ?? null,
+          dueAt: ch.dueAt?.toISOString() ?? null,
+          latePolicy: ch.latePolicy,
           teachingAssistants: tas.map((t) => ({
             id: t.id,
             alias: t.alias,

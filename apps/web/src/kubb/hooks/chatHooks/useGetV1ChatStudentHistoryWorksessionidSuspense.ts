@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ChatStudentHistoryWorksessionidQueryResponse, GetV1ChatStudentHistoryWorksessionidPathParams, GetV1ChatStudentHistoryWorksessionid401, GetV1ChatStudentHistoryWorksessionid404 } from "../../../../../../packages/types/kubb/GetV1ChatStudentHistoryWorksessionid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChatStudentHistoryWorksessionidQueryResponse, GetV1ChatStudentHistoryWorksessionidPathParams, GetV1ChatStudentHistoryWorksessionid401, GetV1ChatStudentHistoryWorksessionid404 } from "../../../../../../packages/types/kubb/GetV1ChatStudentHistoryWorksessionid.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChatStudentHistoryWorksessionidSuspenseQueryKey = (workSessionId: GetV1ChatStudentHistoryWorksessionidPathParams["workSessionId"]) => [{ url: '/v1/chat/student/history/:workSessionId', params: {workSessionId:workSessionId} }] as const

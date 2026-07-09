@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1ChallengesChallengeidSubmissionsSubmissionidQueryResponse, GetV1ChallengesChallengeidSubmissionsSubmissionidPathParams, GetV1ChallengesChallengeidSubmissionsSubmissionid401, GetV1ChallengesChallengeidSubmissionsSubmissionid403, GetV1ChallengesChallengeidSubmissionsSubmissionid404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidSubmissionsSubmissionid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesChallengeidSubmissionsSubmissionidQueryResponse, GetV1ChallengesChallengeidSubmissionsSubmissionidPathParams, GetV1ChallengesChallengeidSubmissionsSubmissionid401, GetV1ChallengesChallengeidSubmissionsSubmissionid403, GetV1ChallengesChallengeidSubmissionsSubmissionid404 } from "../../../../../../packages/types/kubb/GetV1ChallengesChallengeidSubmissionsSubmissionid.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey = (challengeId: GetV1ChallengesChallengeidSubmissionsSubmissionidPathParams["challengeId"], submissionId: GetV1ChallengesChallengeidSubmissionsSubmissionidPathParams["submissionId"]) => [{ url: '/v1/challenges/:challengeId/submissions/:submissionId', params: {challengeId:challengeId,submissionId:submissionId} }] as const
