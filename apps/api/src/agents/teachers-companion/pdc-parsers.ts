@@ -54,6 +54,12 @@ const REVIEW_SECTIONS: Record<string, ReviewSection> = {
   "proximos passos": "nextSteps",
 };
 
+// "Nenhum ponto crítico foi observado." means an empty list, but a real
+// critique can also start with "Nenhuma validação da entrada...", so only a
+// first sentence about issues being found counts. Matched without accents.
+const NOTHING_TO_IMPROVE =
+  /^nenhum[a]?\s+(?:ponto|problema|questao|melhoria|erro|bug|ajuste)s?\b[^.\n]*\b(?:identificad|observad|encontrad|detectad)/i;
+
 function reviewSectionOf(line: string): ReviewSection | null {
   const m = /^\s*(?:#{1,6}\s*)?(?:\*\*|__)?\s*([^*_#\n]+?)\s*:?\s*(?:\*\*|__)?\s*:?\s*$/.exec(
     line,
@@ -104,7 +110,7 @@ export function parsePdcReview(markdown: string): AutoReviewStructured | null {
   if (!overall) return null;
 
   const improvements = sections.improvements ?? "";
-  const nothingToImprove = /^nenhum/i.test(stripAccents(improvements));
+  const nothingToImprove = NOTHING_TO_IMPROVE.test(stripAccents(improvements));
 
   const parsed = AutoReviewStructured.safeParse({
     avaliacaoGeral: overall,

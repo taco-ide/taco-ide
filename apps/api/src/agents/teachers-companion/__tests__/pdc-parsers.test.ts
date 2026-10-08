@@ -75,6 +75,27 @@ describe("parsePdcReview", () => {
     expect(review!.sugestoes[0]).toMatch(/^Continue praticando/);
   });
 
+  it("keeps a critique that merely starts with 'Nenhuma'", () => {
+    const review = parsePdcReview(
+      "**Avaliação Geral**\nBoa leitura.\n\n**Pontos de melhoria**\nNenhuma validação da entrada é realizada: int(input()) lança ValueError.\n\n**Próximos passos**\n- Trate entradas inválidas.",
+    );
+
+    expect(review!.problemas).toEqual([
+      {
+        tipo: "melhoria",
+        descricao: "Nenhuma validação da entrada é realizada: int(input()) lança ValueError.",
+      },
+    ]);
+  });
+
+  it("treats 'Nenhuma questão relevante foi identificada' as nothing to improve", () => {
+    const review = parsePdcReview(
+      "**Avaliação Geral**\nCorreto.\n\n**Pontos de melhoria**\nNenhuma questão relevante foi identificada.\n\n**Próximos passos**\n- Siga praticando.",
+    );
+
+    expect(review!.problemas).toEqual([]);
+  });
+
   it("accepts markdown headings instead of bold titles", () => {
     const review = parsePdcReview(
       "## Avaliação geral\nBom trabalho.\n\n## Pontos de melhoria:\nFalta tratar entrada vazia.\n\n## Próximos passos\n1. Teste com lista vazia.",

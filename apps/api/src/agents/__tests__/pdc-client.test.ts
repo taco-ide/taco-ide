@@ -93,6 +93,50 @@ describe("pdc-client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it("rejects queued requests once the circuit opens", async () => {
+    let releaseHealth!: () => void;
+    const healthGate = new Promise<void>((r) => {
+      releaseHealth = r;
+    });
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      if (String(input).endsWith("/health")) {
+        await healthGate;
+        throw new TypeError("fetch failed");
+      }
+      throw new Error(`unexpected url ${String(input)}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const calls = [1, 2, 3].map(() => runPdcWorkflow({}, { timeoutMs: 1_000 }));
+    releaseHealth();
+    const results = await Promise.allSettled(calls);
+
+    expect(results.every((r) => r.status === "rejected")).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("deletes the session even when its creation times out", async () => {
+    const fetchMock = vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/health")) return json({ status: "ok" });
+      if (url.includes("/sessions/") && init?.method === "POST") {
+        throw new DOMException("timed out", "TimeoutError");
+      }
+      if (url.includes("/sessions/") && init?.method === "DELETE") {
+        return json({}, 404);
+      }
+      throw new Error(`unexpected url ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toBeInstanceOf(
+      PdcUnavailableError,
+    );
+
+    const deletes = fetchMock.mock.calls.filter(([, i]) => i?.method === "DELETE");
+    expect(deletes).toHaveLength(1);
+  });
+
   it("rejects HTTP errors and empty answers", async () => {
     routeFetch(async () => json({ detail: "boom" }, 500));
     await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toThrow(/HTTP 500/);

@@ -67,6 +67,12 @@ function openCircuit(): void {
   circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
 }
 
+function assertCircuitClosed(): void {
+  if (Date.now() < circuitOpenUntil) {
+    throw new PdcUnavailableError("PDC marcado como indisponível (circuit breaker)");
+  }
+}
+
 /** Test-only: clears queue and circuit state between cases. */
 export function resetPdcClientForTests(): void {
   circuitOpenUntil = 0;
@@ -91,9 +97,7 @@ export async function runPdcWorkflow(
   const baseUrl = env.PDC_API_URL;
   if (!baseUrl) throw new PdcUnavailableError("PDC_API_URL não configurada");
 
-  if (Date.now() < circuitOpenUntil) {
-    throw new PdcUnavailableError("PDC marcado como indisponível (circuit breaker)");
-  }
+  assertCircuitClosed();
 
   if (!(await acquireSlot(QUEUE_MAX_WAIT_MS))) {
     throw new PdcUnavailableError(
@@ -103,8 +107,12 @@ export async function runPdcWorkflow(
 
   const sessionId = randomUUID();
   const sessionUrl = `${baseUrl}/apps/${APP_NAME}/users/${USER_ID}/sessions/${sessionId}`;
-  let sessionCreated = false;
+  // Set before the POST: a timed-out creation may still exist on the PDC.
+  let sessionAttempted = false;
   try {
+    // The circuit may have opened while this request waited in the queue.
+    assertCircuitClosed();
+
     try {
       const health = await fetch(`${baseUrl}/health`, {
         signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
@@ -115,6 +123,7 @@ export async function runPdcWorkflow(
       throw new PdcUnavailableError("Health check do PDC falhou", { cause: err });
     }
 
+    sessionAttempted = true;
     const session = await fetch(sessionUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -124,7 +133,6 @@ export async function runPdcWorkflow(
     if (!session.ok) {
       throw new PdcUnavailableError(`PDC recusou a sessão: HTTP ${session.status}`);
     }
-    sessionCreated = true;
 
     const res = await fetch(`${baseUrl}/run`, {
       method: "POST",
@@ -157,8 +165,9 @@ export async function runPdcWorkflow(
     );
   } finally {
     releaseSlot();
-    if (sessionCreated) {
-      // Best effort: the PDC keeps every session in memory otherwise.
+    if (sessionAttempted) {
+      // Best effort: the PDC keeps every session in memory otherwise. A 404
+      // (creation never landed) is fine.
       void fetch(sessionUrl, {
         method: "DELETE",
         signal: AbortSignal.timeout(SESSION_TIMEOUT_MS),
