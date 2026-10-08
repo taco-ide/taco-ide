@@ -124,7 +124,16 @@ export function ReferenceSolutionsPanel({
 }: ReferenceSolutionsPanelProps) {
   const t = useTranslations("challenge");
   const { data: refSolsData } =
-    useGetV1ChallengesChallengeidReferenceSolutions(challengeId);
+    useGetV1ChallengesChallengeidReferenceSolutions(challengeId, {
+      query: {
+        // Generation runs in the background; poll until it settles.
+        refetchInterval: (query) => {
+          const list = query.state.data?.data;
+          if (!Array.isArray(list)) return false;
+          return list.some((r) => r.status === "running") ? 3000 : false;
+        },
+      },
+    });
 
   const refSolutions = refSolsData?.data ?? [];
 

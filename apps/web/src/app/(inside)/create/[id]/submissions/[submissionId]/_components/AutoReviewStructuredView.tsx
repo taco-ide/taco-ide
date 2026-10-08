@@ -8,7 +8,8 @@ type Severity = "baixa" | "media" | "alta";
 
 export interface AutoReviewProblem {
   tipo: string;
-  gravidade: Severity;
+  // Missing when the review came from the PDC markdown parser.
+  gravidade?: Severity | null;
   linha?: number | null;
   descricao: string;
 }
@@ -73,13 +74,19 @@ export function AutoReviewStructuredView({
                 key={idx}
                 className={cn(
                   "rounded-md border px-3 py-2 text-sm",
-                  SEVERITY_STYLES[p.gravidade]
+                  p.gravidade
+                    ? SEVERITY_STYLES[p.gravidade]
+                    : "border-slate-600 bg-slate-700/30 text-slate-300"
                 )}
               >
                 <div className="flex flex-wrap items-center gap-2 mb-1 text-xs uppercase tracking-wide opacity-80">
                   <span className="font-semibold">{p.tipo}</span>
-                  <span>·</span>
-                  <span>{t(`severity.${p.gravidade}`)}</span>
+                  {p.gravidade && (
+                    <>
+                      <span>·</span>
+                      <span>{t(`severity.${p.gravidade}`)}</span>
+                    </>
+                  )}
                   {p.linha != null && (
                     <>
                       <span>·</span>

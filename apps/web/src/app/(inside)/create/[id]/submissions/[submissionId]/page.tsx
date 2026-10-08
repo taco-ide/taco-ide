@@ -75,7 +75,14 @@ function SubmissionDetailContent() {
     useGetV1ChallengesChallengeidSubmissionsSubmissionid(
       challengeId,
       submissionId,
-      { query: { enabled: !!challengeId && !!submissionId } }
+      {
+        query: {
+          enabled: !!challengeId && !!submissionId,
+          // The review runs in the background; poll until it settles.
+          refetchInterval: (query) =>
+            query.state.data?.data?.autoReviewStatus === "running" ? 3000 : false,
+        },
+      }
     );
 
   const { data: challengeData } = useGetV1ChallengesId(challengeId, {
@@ -94,16 +101,8 @@ function SubmissionDetailContent() {
 
   const rerunMutation = usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview({
     mutation: {
-      onSuccess: (resp) => {
-        const generated = resp?.data?.generated;
-        setAutoReviewFeedback(
-          generated
-            ? { type: "success", message: t("autoReview.regenerated") }
-            : {
-                type: "error",
-                message: t("autoReview.noResult"),
-              }
-        );
+      onSuccess: () => {
+        // 202: the review is now running; the polling above shows the result.
         queryClient.invalidateQueries({
           queryKey: getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey(
             challengeId,

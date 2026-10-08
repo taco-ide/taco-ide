@@ -35,7 +35,7 @@ export const getV1ChallengesChallengeidSubmissionsSubmissionid200Schema = z.obje
     "pontosFortes": z.array(z.string().min(1)).describe("Lista curta (1-4) de pontos positivos da submissão, em português."),
 "problemas": z.array(z.object({
     "tipo": z.string().min(1).describe("Categoria do problema (ex.: correção, qualidade, estilo, autonomia)."),
-"gravidade": z.enum(["baixa", "media", "alta"]).describe("Gravidade pedagógica do problema."),
+"gravidade": z.enum(["baixa", "media", "alta"]).nullable().nullish(),
 "linha": z.number().int().describe("Linha aproximada do código, quando aplicável.").nullable().nullish(),
 "descricao": z.string().min(1).describe("Descrição curta e objetiva do problema.")
     })).describe("Problemas identificados, do mais grave ao menos grave (0-6 itens)."),

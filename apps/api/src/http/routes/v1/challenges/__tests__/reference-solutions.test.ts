@@ -18,39 +18,36 @@ import {
   TEST_PASSWORD,
 } from "../../../../../test/helpers/factories";
 
-// Mock the LLM so regenerate doesn't hit a real service
+// Mock the generator so regenerate doesn't hit a real service. start only
+// claims the row (status=running), like the real one before it hands the
+// generation to the background; `done` resolves immediately.
 vi.mock("../../../../../agents/teachers-companion/reference-solution", () => {
   return {
-    generateReferenceSolutions: vi.fn(async (challengeId, kinds) => {
-      // Simulate completion without calling LLM. Upsert so it mirrors the real
-      // generator, which creates the row when one does not exist yet.
-      for (const kind of kinds || ["brute_force", "refined"]) {
-        await db
-          .insert(challengeReferenceSolution)
-          .values({
-            id: randomUUID(),
-            challengeId,
-            kind,
-            language: "python",
-            code: `# mock code for ${kind}`,
-            status: "complete",
-            createdBy: "ai",
-            generatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [
-              challengeReferenceSolution.challengeId,
-              challengeReferenceSolution.kind,
-            ],
-            set: {
-              code: `# mock code for ${kind}`,
-              status: "complete",
-              generatedAt: new Date(),
-              updatedAt: new Date(),
-            },
-          });
-      }
-    }),
+    generateReferenceSolutions: vi.fn(async () => {}),
+    startReferenceSolutions: vi.fn(
+      async (challengeId: string, kinds: Array<"brute_force" | "refined">) => {
+        for (const kind of kinds) {
+          await db
+            .insert(challengeReferenceSolution)
+            .values({
+              id: randomUUID(),
+              challengeId,
+              kind,
+              language: "python",
+              status: "running",
+              createdBy: "ai",
+            })
+            .onConflictDoUpdate({
+              target: [
+                challengeReferenceSolution.challengeId,
+                challengeReferenceSolution.kind,
+              ],
+              set: { status: "running", updatedAt: new Date() },
+            });
+        }
+        return { claimed: kinds, done: Promise.resolve() };
+      },
+    ),
   };
 });
 
@@ -208,7 +205,7 @@ describe("reference solutions", () => {
   });
 
   describe("POST /:kind/regenerate", () => {
-    it("regenerates and returns updated solution", async () => {
+    it("starts the regeneration and answers 202 with status=running", async () => {
       // POST regenerate on non-existent row creates it
       const res = await app.inject({
         method: "POST",
@@ -216,10 +213,10 @@ describe("reference solutions", () => {
         headers: { cookie: teacherCookie },
       });
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(202);
       const body = res.json() as any;
-      expect(body.data.status).toBe("complete");
-      expect(body.data.code).toBeTruthy(); // Mock fills this in
+      expect(body.data.kind).toBe("brute_force");
+      expect(body.data.status).toBe("running");
     });
 
     it("returns 409 if already running", async () => {
@@ -290,7 +287,7 @@ describe("reference solutions", () => {
         headers: { cookie: teacherCookie },
       });
 
-      expect(res.statusCode).toBe(200);
+      expect(res.statusCode).toBe(202);
       const body = res.json() as any;
       expect(body.success).toBe(true);
     });

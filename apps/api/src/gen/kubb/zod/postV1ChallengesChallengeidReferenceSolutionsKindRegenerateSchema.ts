@@ -13,7 +13,7 @@ export const postV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathPara
 /**
  * @description Default Response
  */
-export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate200Schema = z.object({
+export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate202Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
@@ -89,4 +89,4 @@ export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429Schem
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponseSchema = z.lazy(() => postV1ChallengesChallengeidReferenceSolutionsKindRegenerate200Schema)
+export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponseSchema = z.lazy(() => postV1ChallengesChallengeidReferenceSolutionsKindRegenerate202Schema)

@@ -14,7 +14,7 @@ export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutatio
 export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey = ReturnType<typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey>
 
 /**
- * @description Triggers the teacher's-companion auto-review for an existing submission and waits for it to finish. Overwrites any previous auto_review/auto_review_at. Staff-only.
+ * @description Starts the teacher's-companion auto-review for an existing submission in the background and answers 202 with status=running; poll the submission for the result. Overwrites any previous auto_review/auto_review_at. Staff-only.
  * @summary Re-run auto review
  * {@link /v1/challenges/:challengeId/submissions/:submissionId/auto-review}
  */
@@ -26,7 +26,7 @@ export async function postV1ChallengesChallengeidSubmissionsSubmissionidAutoRevi
 }
 
 /**
- * @description Triggers the teacher's-companion auto-review for an existing submission and waits for it to finish. Overwrites any previous auto_review/auto_review_at. Staff-only.
+ * @description Starts the teacher's-companion auto-review for an existing submission in the background and answers 202 with status=running; poll the submission for the result. Overwrites any previous auto_review/auto_review_at. Staff-only.
  * @summary Re-run auto review
  * {@link /v1/challenges/:challengeId/submissions/:submissionId/auto-review}
  */

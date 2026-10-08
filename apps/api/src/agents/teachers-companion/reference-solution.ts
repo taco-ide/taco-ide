@@ -3,38 +3,72 @@ import { db } from "@repo/infra/db";
 import {
   challenge,
   challengeReferenceSolution,
+  type GenerationProvider,
 } from "@repo/infra/db/schema";
-import { createLlm } from "../llm-factory";
-import { env } from "@repo/infra/env";
+import { createOpenRouterLlm } from "../llm-factory";
+import { isPdcEnabled, runPdcWorkflow } from "../pdc-client";
+import {
+  referenceSolutionPrompts,
+  referenceSolutionStrategies,
+} from "./generation-prompts";
+import { parsePdcAnswerKey, pdcVariationCode } from "./pdc-parsers";
 import { randomUUID } from "node:crypto";
 
 type Kind = "brute_force" | "refined";
 const ALL_KINDS: Kind[] = ["brute_force", "refined"];
+const PDC_TIMEOUT_MS = 180_000;
+const WHOLE_FENCE = /^```[\w+-]*\r?\n([\s\S]*?)\r?\n?```$/;
 
-const prompts: Record<Kind, (title: string, description: string) => string> = {
-  brute_force: (title, description) =>
-    `Você é um(a) professor(a) preparando uma solução de referência para um exercício de Python.
-
-Exercício: ${title}
-
-Descrição:
-${description}
-
-Gere a solução BRUTE-FORCE mais simples possível em Python. Priorize CLAREZA e CORREÇÃO sobre eficiência. Use loops/condicionais diretos, sem truques. O código deve ser legível por iniciantes.
-
-Responda APENAS com o código Python — sem cercas markdown (\`\`\`), sem comentários extras, sem explicações. Deve ser um programa/função completo e executável.`,
-  refined: (title, description) =>
-    `Você é um(a) professor(a) preparando uma solução de referência para um exercício de Python.
-
-Exercício: ${title}
-
-Descrição:
-${description}
-
-Gere uma solução IDIOMÁTICA e de qualidade de produção em Python. Use built-ins, list/dict comprehensions e a biblioteca padrão quando natural. Priorize clareza e correção, mas escolha algoritmos eficientes apropriados para mostrar à turma como "bom código".
-
-Responda APENAS com o código Python — sem cercas markdown (\`\`\`), sem comentários extras, sem explicações. Deve ser um programa/função completo e executável.`,
+type ChallengeForGeneration = {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: string | null;
+  tags: string[] | null;
 };
+
+/**
+ * Claim the requested kinds and generate them in the background. Resolves
+ * once the claims are persisted, so an HTTP handler can answer right away
+ * while the UI already sees `running`. `done` settles when every claimed kind
+ * is complete or failed, and never rejects.
+ */
+export async function startReferenceSolutions(
+  challengeId: string,
+  kinds: Kind[] = ALL_KINDS,
+): Promise<{ claimed: Kind[]; done: Promise<void> }> {
+  const [chal] = await db
+    .select({
+      id: challenge.id,
+      title: challenge.title,
+      description: challenge.description,
+      difficulty: challenge.difficulty,
+      tags: challenge.tags,
+    })
+    .from(challenge)
+    .where(eq(challenge.id, challengeId))
+    .limit(1);
+  if (!chal) {
+    console.warn(`[reference-solution] challenge not found: ${challengeId}`);
+    return { claimed: [], done: Promise.resolve() };
+  }
+
+  const claimed: Kind[] = [];
+  for (const kind of kinds) {
+    if (await claimKind(chal.id, kind)) claimed.push(kind);
+  }
+
+  const done =
+    claimed.length === 0
+      ? Promise.resolve()
+      : generate(chal, claimed).catch((err) => {
+          console.error(
+            `[reference-solution] uncaught error for ${challengeId}:`,
+            err,
+          );
+        });
+  return { claimed, done };
+}
 
 /**
  * Generate reference solutions for a challenge (fire-and-forget).
@@ -44,46 +78,31 @@ export async function generateReferenceSolutions(
   challengeId: string,
   kinds: Kind[] = ALL_KINDS,
 ): Promise<void> {
-  const [chal] = await db
-    .select({
-      id: challenge.id,
-      title: challenge.title,
-      description: challenge.description,
-    })
-    .from(challenge)
-    .where(eq(challenge.id, challengeId))
-    .limit(1);
-  if (!chal) {
-    console.warn(`[reference-solution] challenge not found: ${challengeId}`);
-    return;
-  }
-
-  for (const kind of kinds) {
-    await runOneKind(chal, kind).catch((err) => {
-      console.error(
-        `[reference-solution] uncaught error for ${challengeId}/${kind}:`,
-        err,
-      );
-    });
+  try {
+    const { done } = await startReferenceSolutions(challengeId, kinds);
+    await done;
+  } catch (err) {
+    console.error(
+      `[reference-solution] failed to start generation for ${challengeId}:`,
+      err,
+    );
   }
 }
 
-async function runOneKind(
-  chal: { id: string; title: string; description: string | null },
-  kind: Kind,
-): Promise<void> {
-  // 1. Atomically claim this (challenge, kind) for a run. The conflict update
-  //    only fires when the row is NOT already running, so two concurrent
-  //    generations cannot both proceed (issue #96). An empty `returning()`
-  //    means another run already holds the slot — skip to avoid a duplicate
-  //    (and billable) LLM call. Stale "running" rows left by a crashed process
-  //    are cleared on startup by recoverStaleRunningJobs (issue #95), so a
-  //    non-empty claim always reflects a live run.
+/**
+ * Atomically claim this (challenge, kind) for a run. The conflict update only
+ * fires when the row is NOT already running, so two concurrent generations
+ * cannot both proceed (issue #96). An empty `returning()` means another run
+ * already holds the slot. Stale "running" rows left by a crashed process are
+ * cleared on startup by recoverStaleRunningJobs (issue #95), so a non-empty
+ * claim always reflects a live run.
+ */
+async function claimKind(challengeId: string, kind: Kind): Promise<boolean> {
   const claimed = await db
     .insert(challengeReferenceSolution)
     .values({
       id: randomUUID(),
-      challengeId: chal.id,
+      challengeId,
       kind,
       language: "python",
       status: "running",
@@ -106,18 +125,90 @@ async function runOneKind(
 
   if (claimed.length === 0) {
     console.warn(
-      `[reference-solution] ${chal.id}/${kind} already running, skipping duplicate run`,
+      `[reference-solution] ${challengeId}/${kind} already running, skipping duplicate run`,
     );
-    return;
+    return false;
+  }
+  return true;
+}
+
+async function generate(
+  chal: ChallengeForGeneration,
+  kinds: Kind[],
+): Promise<void> {
+  const remaining = isPdcEnabled("gabarito")
+    ? await generateWithPdc(chal, kinds)
+    : kinds;
+  for (const kind of remaining) {
+    await generateWithOpenRouter(chal, kind);
+  }
+}
+
+/** One PDC request for all kinds. Returns the kinds it did not deliver. */
+async function generateWithPdc(
+  chal: ChallengeForGeneration,
+  kinds: Kind[],
+): Promise<Kind[]> {
+  let codes: Map<string, string>;
+  try {
+    const markdown = await runPdcWorkflow(
+      {
+        challenge: {
+          title: chal.title,
+          description: chal.description ?? "",
+          language: "python",
+          ...(chal.difficulty ? { difficulty: chal.difficulty } : {}),
+          ...(chal.tags?.length ? { tags: chal.tags } : {}),
+        },
+        solutionsRequested: kinds.length,
+        variations: kinds.map((kind) => ({
+          label: kind,
+          strategy: referenceSolutionStrategies[kind],
+        })),
+      },
+      { timeoutMs: PDC_TIMEOUT_MS },
+    );
+    codes = parsePdcAnswerKey(markdown);
+  } catch (err) {
+    console.warn(
+      `[reference-solution] PDC failed for ${chal.id}, using OpenRouter:`,
+      err instanceof Error ? err.message : err,
+    );
+    return kinds;
   }
 
+  const missing: Kind[] = [];
+  for (const kind of kinds) {
+    const code = pdcVariationCode(codes, kind);
+    if (!code) {
+      missing.push(kind);
+      continue;
+    }
+    try {
+      await persistComplete(chal.id, kind, code, "pdc");
+    } catch (err) {
+      console.error(
+        `[reference-solution] failed to persist PDC result for ${chal.id}/${kind}:`,
+        err,
+      );
+      missing.push(kind);
+    }
+  }
+  if (missing.length > 0) {
+    console.warn(
+      `[reference-solution] PDC answer for ${chal.id} lacked: ${missing.join(", ")}`,
+    );
+  }
+  return missing;
+}
+
+async function generateWithOpenRouter(
+  chal: ChallengeForGeneration,
+  kind: Kind,
+): Promise<void> {
   try {
-    const llm = createLlm({
-      model: env.LLM_DETERMINISTIC_MODEL_NAME,
-      temperature: 0,
-      max_tokens: 4096,
-    });
-    const prompt = prompts[kind](chal.title, chal.description ?? "");
+    const llm = createOpenRouterLlm({ temperature: 0, max_tokens: 4096 });
+    const prompt = referenceSolutionPrompts[kind](chal.title, chal.description ?? "");
     const result = await llm.invoke(prompt);
     const text =
       typeof result.content === "string"
@@ -136,12 +227,11 @@ async function runOneKind(
       return;
     }
 
-    await persist(chal.id, kind, {
-      code: text.trim(),
-      status: "complete",
-      error: null,
-      generatedAt: new Date(),
-    });
+    // The prompt forbids markdown fences, but a stray one would break the
+    // stored code, so unwrap a response that is a single fenced block.
+    const trimmed = text.trim();
+    const code = WHOLE_FENCE.exec(trimmed)?.[1]?.trim() ?? trimmed;
+    await persistComplete(chal.id, kind, code, "openrouter");
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await persist(chal.id, kind, {
@@ -158,6 +248,21 @@ async function runOneKind(
       err,
     );
   }
+}
+
+async function persistComplete(
+  challengeId: string,
+  kind: Kind,
+  code: string,
+  provider: GenerationProvider,
+) {
+  await persist(challengeId, kind, {
+    code,
+    status: "complete",
+    error: null,
+    provider,
+    generatedAt: new Date(),
+  });
 }
 
 async function persist(
