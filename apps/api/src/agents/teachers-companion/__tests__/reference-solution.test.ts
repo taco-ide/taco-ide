@@ -137,6 +137,44 @@ describe("generateReferenceSolutions", () => {
     });
   });
 
+  it("still generates the kinds already claimed when a later claim fails", async () => {
+    const realInsert = db.insert.bind(db);
+    const insertSpy = vi
+      .spyOn(db, "insert")
+      .mockImplementationOnce(realInsert)
+      .mockImplementationOnce(() => {
+        throw new Error("db down");
+      });
+    runPdcWorkflowMock.mockResolvedValueOnce(pdcAnswer({ brute_force: "print(6)" }));
+
+    try {
+      await generateReferenceSolutions(challengeId);
+    } finally {
+      insertSpy.mockRestore();
+    }
+
+    expect(await readRow("brute_force")).toMatchObject({
+      status: "complete",
+      code: "print(6)",
+    });
+    const [payload] = runPdcWorkflowMock.mock.calls[0]!;
+    expect(payload.variations).toHaveLength(1);
+  });
+
+  it("start rethrows when no kind could be claimed", async () => {
+    const insertSpy = vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw new Error("db down");
+    });
+
+    try {
+      await expect(startReferenceSolutions(challengeId, ["refined"])).rejects.toThrow(
+        "db down",
+      );
+    } finally {
+      insertSpy.mockRestore();
+    }
+  });
+
   it("start resolves with the claim before the generation finishes", async () => {
     let finish!: (value: string) => void;
     runPdcWorkflowMock.mockReturnValueOnce(

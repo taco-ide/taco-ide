@@ -249,8 +249,8 @@ async function reviewWithPdc(
 ): Promise<ReviewOutcome | null> {
   let markdown: string;
   try {
-    // Only the statement and the code: the PDC link is not encrypted, so the
-    // TA conversation stays with us.
+    // Data minimisation: only the statement and the code leave our servers;
+    // the TA conversation stays with us (issue #111).
     markdown = await runPdcWorkflow(
       {
         codigo_aluno: sub.code,

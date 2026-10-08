@@ -53,10 +53,22 @@ export async function startReferenceSolutions(
     return { claimed: [], done: Promise.resolve() };
   }
 
+  // A failed claim must not strand the kinds already claimed in `running`:
+  // generate those and surface the error only when nothing was claimed.
   const claimed: Kind[] = [];
+  let claimError: unknown;
   for (const kind of kinds) {
-    if (await claimKind(chal.id, kind)) claimed.push(kind);
+    try {
+      if (await claimKind(chal.id, kind)) claimed.push(kind);
+    } catch (err) {
+      claimError ??= err;
+      console.error(
+        `[reference-solution] failed to claim ${challengeId}/${kind}:`,
+        err,
+      );
+    }
   }
+  if (claimed.length === 0 && claimError) throw claimError;
 
   const done =
     claimed.length === 0

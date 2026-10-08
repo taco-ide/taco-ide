@@ -54,12 +54,6 @@ const REVIEW_SECTIONS: Record<string, ReviewSection> = {
   "proximos passos": "nextSteps",
 };
 
-// "Nenhum ponto crítico foi observado." means an empty list, but a real
-// critique can also start with "Nenhuma validação da entrada...", so only a
-// first sentence about issues being found counts. Matched without accents.
-const NOTHING_TO_IMPROVE =
-  /^nenhum[a]?\s+(?:ponto|problema|questao|melhoria|erro|bug|ajuste)s?\b[^.\n]*\b(?:identificad|observad|encontrad|detectad)/i;
-
 function reviewSectionOf(line: string): ReviewSection | null {
   const m = /^\s*(?:#{1,6}\s*)?(?:\*\*|__)?\s*([^*_#\n]+?)\s*:?\s*(?:\*\*|__)?\s*:?\s*$/.exec(
     line,
@@ -101,8 +95,10 @@ function toItems(text: string): string[] {
 /**
  * Last-resort mapping of a PDC review onto AutoReviewStructured, used when
  * the OpenRouter adapter is unavailable. The PDC does not grade problems, so
- * gravidade stays empty and the improvements become a single item. Returns
- * null when the expected sections are missing.
+ * gravidade stays empty and the improvements become a single item, kept
+ * verbatim even when it says there is nothing to fix: guessing that from the
+ * text could hide a real critique from the teacher. Returns null when the
+ * expected sections are missing.
  */
 export function parsePdcReview(markdown: string): AutoReviewStructured | null {
   const sections = splitReviewSections(markdown);
@@ -110,15 +106,12 @@ export function parsePdcReview(markdown: string): AutoReviewStructured | null {
   if (!overall) return null;
 
   const improvements = sections.improvements ?? "";
-  const nothingToImprove = NOTHING_TO_IMPROVE.test(stripAccents(improvements));
 
   const parsed = AutoReviewStructured.safeParse({
     avaliacaoGeral: overall,
     pontosFortes: [],
     problemas:
-      improvements && !nothingToImprove
-        ? [{ tipo: "melhoria", descricao: improvements }]
-        : [],
+      improvements ? [{ tipo: "melhoria", descricao: improvements }] : [],
     sugestoes: toItems(sections.nextSteps ?? ""),
   });
   return parsed.success ? parsed.data : null;

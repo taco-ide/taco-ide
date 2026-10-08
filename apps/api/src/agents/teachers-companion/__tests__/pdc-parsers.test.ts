@@ -66,13 +66,22 @@ describe("parsePdcReview", () => {
     expect(review!.sugestoes[0]).toMatch(/^Pratique converter/);
   });
 
-  it("returns no problems and sentence suggestions when nothing needs fixing", () => {
+  it("keeps the improvements text verbatim and splits paragraph suggestions", () => {
     const review = parsePdcReview(PDC_REVIEW_NOTHING_TO_IMPROVE);
 
     expect(review).not.toBeNull();
-    expect(review!.problemas).toEqual([]);
+    expect(review!.problemas).toHaveLength(1);
+    expect(review!.problemas[0]!.descricao).toMatch(/^Nenhum ponto crítico/);
     expect(review!.sugestoes.length).toBeGreaterThan(1);
     expect(review!.sugestoes[0]).toMatch(/^Continue praticando/);
+  });
+
+  it("does not hide a critique that follows a 'no syntax error' sentence", () => {
+    const review = parsePdcReview(
+      "**Avaliação Geral**\nLeu a entrada.\n\n**Pontos de melhoria**\nNenhum erro de sintaxe foi encontrado. A soma está errada: input() retorna strings.\n\n**Próximos passos**\n- Converta com int().",
+    );
+
+    expect(review!.problemas[0]!.descricao).toContain("A soma está errada");
   });
 
   it("keeps a critique that merely starts with 'Nenhuma'", () => {
@@ -86,14 +95,6 @@ describe("parsePdcReview", () => {
         descricao: "Nenhuma validação da entrada é realizada: int(input()) lança ValueError.",
       },
     ]);
-  });
-
-  it("treats 'Nenhuma questão relevante foi identificada' as nothing to improve", () => {
-    const review = parsePdcReview(
-      "**Avaliação Geral**\nCorreto.\n\n**Pontos de melhoria**\nNenhuma questão relevante foi identificada.\n\n**Próximos passos**\n- Siga praticando.",
-    );
-
-    expect(review!.problemas).toEqual([]);
   });
 
   it("accepts markdown headings instead of bold titles", () => {

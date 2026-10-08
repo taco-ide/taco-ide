@@ -92,12 +92,17 @@ function SubmissionDetailContent() {
   const submission = submissionData?.data;
   const challenge = challengeData?.data;
 
+  // Depend on the persisted values, not the object: the auto-review polling
+  // refetches the submission and must not wipe what the teacher is typing.
+  const persistedGrade = submission?.grade;
+  const persistedComment = submission?.gradingComment;
+  const loadedSubmissionId = submission?.submissionId;
   useEffect(() => {
-    if (submission) {
-      setGradeInput(submission.grade ?? "");
-      setCommentInput(submission.gradingComment ?? "");
+    if (loadedSubmissionId) {
+      setGradeInput(persistedGrade ?? "");
+      setCommentInput(persistedComment ?? "");
     }
-  }, [submission]);
+  }, [loadedSubmissionId, persistedGrade, persistedComment]);
 
   const rerunMutation = usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview({
     mutation: {
