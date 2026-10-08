@@ -8,7 +8,9 @@ import { AutoReviewStructured } from "./auto-review-schema";
 
 const VARIATION_HEADING = /^#{2,4}\s*Varia[çc][ãa]o:\s*(.+?)\s*$/gim;
 const CODE_LABEL = /\*\*C[óo]digo:?\*\*/i;
-const FENCED_CODE = /```[\w+-]*\r?\n([\s\S]*?)```/;
+// The closing fence must sit on its own line, so ``` inside a string literal
+// does not end the block early.
+const FENCED_CODE = /```[\w+-]*\r?\n([\s\S]*?)\r?\n[ \t]*```[ \t]*(?:\r?\n|$)/;
 const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+(.*\S)\s*$/;
 
 function stripAccents(text: string): string {

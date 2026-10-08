@@ -37,6 +37,14 @@ describe("parsePdcAnswerKey", () => {
     expect(pdcVariationCode(codes, "brute_force")).toBe("print(1)");
   });
 
+  it("keeps code that contains triple backticks inside a string", () => {
+    const codes = parsePdcAnswerKey(
+      '### Variação: refined\n\n**Código:**\n```python\nprint("```")\nprint(2)\n```\n\n**Validação sintática:** OK',
+    );
+
+    expect(pdcVariationCode(codes, "refined")).toBe('print("```")\nprint(2)');
+  });
+
   it("ignores a variation without a code block", () => {
     const codes = parsePdcAnswerKey(
       "### Variação: refined\n\nNão foi possível gerar.\n\n### Variação: brute_force\n\n```python\nx = 1\n```",

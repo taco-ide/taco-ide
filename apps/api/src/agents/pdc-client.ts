@@ -94,7 +94,7 @@ export async function runPdcWorkflow(
   payload: unknown,
   opts: { timeoutMs: number },
 ): Promise<string> {
-  const baseUrl = env.PDC_API_URL;
+  const baseUrl = env.PDC_API_URL?.replace(/\/+$/, "");
   if (!baseUrl) throw new PdcUnavailableError("PDC_API_URL não configurada");
 
   assertCircuitClosed();

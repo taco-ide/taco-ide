@@ -14,6 +14,7 @@ vi.mock("@repo/infra/env", async () => {
   };
 });
 
+import { env } from "@repo/infra/env";
 import {
   PdcUnavailableError,
   QUEUE_MAX_WAIT_MS,
@@ -76,6 +77,21 @@ describe("pdc-client", () => {
     expect(JSON.parse(body.newMessage.parts[0].text)).toEqual({ challenge: { title: "T" } });
     const deletes = fetchMock.mock.calls.filter(([, i]) => i?.method === "DELETE");
     expect(deletes).toHaveLength(1);
+  });
+
+  it("tolerates a trailing slash in PDC_API_URL", async () => {
+    const original = env.PDC_API_URL;
+    (env as { PDC_API_URL?: string }).PDC_API_URL = "http://pdc.test/";
+    try {
+      const fetchMock = routeFetch(async () => json(finalEvent("ok")));
+
+      await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).resolves.toBe("ok");
+      const urls = fetchMock.mock.calls.map(([url]) => String(url));
+      expect(urls[0]).toBe("http://pdc.test/health");
+      expect(urls.some((u) => u.includes("//apps") || u.endsWith("//run"))).toBe(false);
+    } finally {
+      (env as { PDC_API_URL?: string }).PDC_API_URL = original;
+    }
   });
 
   it("fails fast and opens the circuit when the health check fails", async () => {
