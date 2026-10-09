@@ -16,6 +16,8 @@ import { env } from "@repo/infra/env";
 const APP_NAME = "workflow_taco";
 const USER_ID = "taco-ide";
 const HEALTH_TIMEOUT_MS = 3_000;
+const HEALTH_ATTEMPTS = 2;
+const HEALTH_RETRY_DELAY_MS = 500;
 const SESSION_TIMEOUT_MS = 10_000;
 const CIRCUIT_OPEN_MS = 60_000;
 export const QUEUE_MAX_WAIT_MS = 30_000;
@@ -80,6 +82,40 @@ export function resetPdcClientForTests(): void {
   waiters.length = 0;
 }
 
+/** Message plus the low-level cause code (ECONNREFUSED, ETIMEDOUT...). */
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const code = (err.cause as { code?: unknown } | undefined)?.code;
+  return typeof code === "string" ? `${err.message} (${code})` : err.message;
+}
+
+/**
+ * One retry absorbs the network blips seen in homologation before the
+ * circuit opens and sends every call to OpenRouter for CIRCUIT_OPEN_MS.
+ */
+async function checkHealth(baseUrl: string): Promise<void> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= HEALTH_ATTEMPTS; attempt++) {
+    try {
+      const health = await fetch(`${baseUrl}/health`, {
+        signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
+      });
+      if (health.ok) return;
+      lastErr = new Error(`HTTP ${health.status}`);
+    } catch (err) {
+      lastErr = err;
+    }
+    if (attempt < HEALTH_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, HEALTH_RETRY_DELAY_MS));
+    }
+  }
+  openCircuit();
+  throw new PdcUnavailableError(
+    `Health check do PDC falhou após ${HEALTH_ATTEMPTS} tentativas: ${describeError(lastErr)}`,
+    { cause: lastErr },
+  );
+}
+
 type AdkEvent = {
   author?: string;
   content?: { parts?: Array<{ text?: string }> };
@@ -109,19 +145,12 @@ export async function runPdcWorkflow(
   const sessionUrl = `${baseUrl}/apps/${APP_NAME}/users/${USER_ID}/sessions/${sessionId}`;
   // Set before the POST: a timed-out creation may still exist on the PDC.
   let sessionAttempted = false;
+  let step: "sessão" | "execução" = "sessão";
   try {
     // The circuit may have opened while this request waited in the queue.
     assertCircuitClosed();
 
-    try {
-      const health = await fetch(`${baseUrl}/health`, {
-        signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
-      });
-      if (!health.ok) throw new Error(`HTTP ${health.status}`);
-    } catch (err) {
-      openCircuit();
-      throw new PdcUnavailableError("Health check do PDC falhou", { cause: err });
-    }
+    await checkHealth(baseUrl);
 
     sessionAttempted = true;
     const session = await fetch(sessionUrl, {
@@ -134,6 +163,7 @@ export async function runPdcWorkflow(
       throw new PdcUnavailableError(`PDC recusou a sessão: HTTP ${session.status}`);
     }
 
+    step = "execução";
     const res = await fetch(`${baseUrl}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -159,10 +189,13 @@ export async function runPdcWorkflow(
     return text;
   } catch (err) {
     if (err instanceof PdcUnavailableError) throw err;
-    throw new PdcUnavailableError(
-      err instanceof Error ? err.message : String(err),
-      { cause: err },
-    );
+    const timedOut = err instanceof Error && err.name === "TimeoutError";
+    const reason = timedOut
+      ? `sem resposta em ${(step === "sessão" ? SESSION_TIMEOUT_MS : opts.timeoutMs) / 1000}s`
+      : describeError(err);
+    throw new PdcUnavailableError(`PDC falhou na etapa de ${step}: ${reason}`, {
+      cause: err,
+    });
   } finally {
     releaseSlot();
     if (sessionAttempted) {

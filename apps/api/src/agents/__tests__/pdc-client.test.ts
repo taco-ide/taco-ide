@@ -94,19 +94,48 @@ describe("pdc-client", () => {
     }
   });
 
-  it("fails fast and opens the circuit when the health check fails", async () => {
+  it("opens the circuit when the health check fails twice", async () => {
     const fetchMock = vi.fn(async () => {
-      throw new TypeError("fetch failed");
+      throw new TypeError("fetch failed", { cause: { code: "ECONNREFUSED" } });
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toBeInstanceOf(
-      PdcUnavailableError,
-    );
+    const err = await runPdcWorkflow({}, { timeoutMs: 1_000 }).catch((e) => e);
+    expect(err).toBeInstanceOf(PdcUnavailableError);
+    expect(err.message).toMatch(/2 tentativas: fetch failed \(ECONNREFUSED\)/);
     await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toThrow(
       /circuit breaker/,
     );
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries the health check once before giving up", async () => {
+    let healthCalls = 0;
+    const fetchMock = vi.fn(async (input: string | URL) => {
+      const url = String(input);
+      if (url.endsWith("/health")) {
+        healthCalls++;
+        if (healthCalls === 1) throw new DOMException("timed out", "TimeoutError");
+        return json({ status: "ok" });
+      }
+      if (url.includes("/sessions/")) return json({});
+      if (url.endsWith("/run")) return json(finalEvent("ok"));
+      throw new Error(`unexpected url ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).resolves.toBe("ok");
+    expect(healthCalls).toBe(2);
+  });
+
+  it("names the step that timed out", async () => {
+    routeFetch(async () => {
+      throw new DOMException("timed out", "TimeoutError");
+    });
+
+    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toThrow(
+      "PDC falhou na etapa de execução: sem resposta em 1s",
+    );
   });
 
   it("rejects queued requests once the circuit opens", async () => {
@@ -128,7 +157,7 @@ describe("pdc-client", () => {
     const results = await Promise.allSettled(calls);
 
     expect(results.every((r) => r.status === "rejected")).toBe(true);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("deletes the session even when its creation times out", async () => {
@@ -145,8 +174,8 @@ describe("pdc-client", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toBeInstanceOf(
-      PdcUnavailableError,
+    await expect(runPdcWorkflow({}, { timeoutMs: 1_000 })).rejects.toThrow(
+      "PDC falhou na etapa de sessão: sem resposta em 10s",
     );
 
     const deletes = fetchMock.mock.calls.filter(([, i]) => i?.method === "DELETE");

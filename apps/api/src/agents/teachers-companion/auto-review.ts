@@ -23,7 +23,7 @@ import { ADAPT_PDC_REVIEW_PROMPT, REVIEW_PROMPT } from "./generation-prompts";
 import { parsePdcReview } from "./pdc-parsers";
 
 const MAX_INTERACTIONS_FOR_REVIEW = 40;
-const PDC_TIMEOUT_MS = 120_000;
+const PDC_TIMEOUT_MS = 180_000;
 const INVALID_REVIEW_MESSAGE =
   "O agente devolveu um parecer fora do formato esperado.";
 
