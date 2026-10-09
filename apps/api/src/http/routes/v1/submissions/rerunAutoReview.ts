@@ -17,7 +17,7 @@ import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
-import { runAutoReview } from "../../../../agents/teachers-companion/auto-review";
+import { startAutoReview } from "../../../../agents/teachers-companion/auto-review";
 
 const ParamsSchema = z.object({
   challengeId: z.string().uuid(),
@@ -31,7 +31,6 @@ const RerunResponseSchema = ResponseSchema200.extend({
     autoReviewAt: z.string().nullable(),
     autoReviewStatus: z.enum(autoReviewStatusEnum),
     autoReviewError: z.string().nullable(),
-    generated: z.boolean(),
   }),
 });
 
@@ -44,10 +43,10 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
         tags: ["submissions"],
         summary: "Re-run auto review",
         description:
-          "Triggers the teacher's-companion auto-review for an existing submission and waits for it to finish. Overwrites any previous auto_review/auto_review_at. Staff-only.",
+          "Starts the teacher's-companion auto-review for an existing submission in the background and answers 202 with status=running; poll the submission for the result. Overwrites any previous auto_review/auto_review_at. Staff-only.",
         params: ParamsSchema,
         response: {
-          200: RerunResponseSchema,
+          202: RerunResponseSchema,
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
@@ -127,10 +126,15 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
         }
       }
 
-      // Await so the professor's UI can show the fresh review immediately
-      // on the response. runAutoReview swallows its own errors and only
-      // persists on success — re-read the row to know whether it landed.
-      await runAutoReview(submissionId);
+      // The PDC can take minutes, longer than proxies keep a request open:
+      // wait only for the claim, then review in the background.
+      const { started } = await startAutoReview(submissionId);
+      if (!started) {
+        return reply.status(409).send({
+          success: false as const,
+          message: "Avaliação já em execução",
+        });
+      }
 
       const [updated] = await db
         .select({
@@ -144,7 +148,7 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
         .where(eq(submission.id, submissionId))
         .limit(1);
 
-      return reply.status(200).send({
+      return reply.status(202).send({
         success: true as const,
         data: {
           submissionId,
@@ -152,7 +156,6 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
           autoReviewAt: updated?.autoReviewAt?.toISOString() ?? null,
           autoReviewStatus: updated?.autoReviewStatus ?? "pending",
           autoReviewError: updated?.autoReviewError ?? null,
-          generated: updated?.autoReviewStatus === "complete",
         },
       });
     }

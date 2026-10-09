@@ -106,6 +106,7 @@ export async function updateRoute(app: FastifyTypedInstance) {
           code,
           status: "complete",
           createdBy: "manual",
+          provider: null,
           generatedAt: new Date(),
           error: null,
         })
@@ -119,6 +120,7 @@ export async function updateRoute(app: FastifyTypedInstance) {
             language,
             status: "complete",
             createdBy: "manual",
+            provider: null,
             generatedAt: new Date(),
             error: null,
             updatedAt: new Date(),

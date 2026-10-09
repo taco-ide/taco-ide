@@ -115,7 +115,7 @@ function ReferenceKindCard({
         onSuccess: () => {
           setFeedback({
             type: "success",
-            message: t("referenceSolutions.card.feedback.regenerated"),
+            message: t("referenceSolutions.card.feedback.started"),
           });
           queryClient.invalidateQueries({
             queryKey: getV1ChallengesChallengeidReferenceSolutionsQueryKey(

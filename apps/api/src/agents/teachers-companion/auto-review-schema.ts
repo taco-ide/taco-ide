@@ -5,7 +5,8 @@ export type AutoReviewProblemSeverity = z.infer<
   typeof AutoReviewProblemSeverity
 >;
 
-export const AutoReviewProblem = z.object({
+// LLM output contract: gravidade is mandatory when a model writes the review.
+const AutoReviewProblemLlm = z.object({
   tipo: z.string().min(1).describe(
     "Categoria do problema (ex.: correção, qualidade, estilo, autonomia)."
   ),
@@ -22,19 +23,23 @@ export const AutoReviewProblem = z.object({
     "Descrição curta e objetiva do problema."
   ),
 });
+
+// Stored contract: the deterministic PDC parser cannot infer gravidade.
+export const AutoReviewProblem = AutoReviewProblemLlm.extend({
+  gravidade: AutoReviewProblemSeverity.nullable().optional(),
+});
 export type AutoReviewProblem = z.infer<typeof AutoReviewProblem>;
 
-export const AutoReviewStructured = z.object({
+const problemasDescription =
+  "Problemas identificados, do mais grave ao menos grave (0-6 itens).";
+
+export const AutoReviewStructuredLlm = z.object({
   pontosFortes: z
     .array(z.string().min(1))
     .describe(
       "Lista curta (1-4) de pontos positivos da submissão, em português."
     ),
-  problemas: z
-    .array(AutoReviewProblem)
-    .describe(
-      "Problemas identificados, do mais grave ao menos grave (0-6 itens)."
-    ),
+  problemas: z.array(AutoReviewProblemLlm).describe(problemasDescription),
   sugestoes: z
     .array(z.string().min(1))
     .describe(
@@ -46,6 +51,10 @@ export const AutoReviewStructured = z.object({
     .describe(
       "Parágrafo curto (2-4 frases) com avaliação geral em português."
     ),
+});
+
+export const AutoReviewStructured = AutoReviewStructuredLlm.extend({
+  problemas: z.array(AutoReviewProblem).describe(problemasDescription),
 });
 export type AutoReviewStructured = z.infer<typeof AutoReviewStructured>;
 
@@ -72,7 +81,8 @@ export function renderAutoReviewMarkdown(review: AutoReviewStructured): string {
         review.problemas
           .map((p) => {
             const line = p.linha ? ` (linha ${p.linha})` : "";
-            return `- _${p.tipo} · ${p.gravidade}_${line}: ${p.descricao.trim()}`;
+            const label = [p.tipo, p.gravidade].filter(Boolean).join(" · ");
+            return `- _${label}_${line}: ${p.descricao.trim()}`;
           })
           .join("\n")
     );

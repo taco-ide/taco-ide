@@ -16,11 +16,11 @@ export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewPathPara
     submissionId: string;
 };
 
-export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200SuccessEnum = {
+export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202SuccessEnum = {
     "true": true
 } as const;
 
-export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200SuccessEnum = (typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200SuccessEnum)[keyof typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200SuccessEnum];
+export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202SuccessEnum = (typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202SuccessEnum)[keyof typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202SuccessEnum];
 
 export const dataAutoReviewStatusEnum2 = {
     "pending": "pending",
@@ -34,11 +34,11 @@ export type DataAutoReviewStatusEnum2 = (typeof dataAutoReviewStatusEnum2)[keyof
 /**
  * @description Default Response
 */
-export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200 = {
+export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202 = {
     /**
      * @type boolean
     */
-    success: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200SuccessEnum;
+    success: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202SuccessEnum;
     /**
      * @type string | undefined
     */
@@ -67,10 +67,6 @@ export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200 = {
          * @type string
         */
         autoReviewError: string | null;
-        /**
-         * @type boolean
-        */
-        generated: boolean;
     };
     /**
      * @type object | undefined
@@ -251,10 +247,10 @@ export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500 = {
     };
 };
 
-export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponse = PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200;
+export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponse = PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202;
 
 export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutation = {
-    Response: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200;
+    Response: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202;
     PathParams: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewPathParams;
     Errors: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview401 | PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview403 | PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview404 | PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview409 | PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429 | PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500;
 };
