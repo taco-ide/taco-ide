@@ -18,6 +18,22 @@ The root type check uses the actual workspace task name, `typecheck`. The previo
 `check-types` Turbo task did not match workspace scripts and could succeed without
 checking any application code.
 
+## Native build dependencies
+
+The committed lockfile includes optional native packages for Linux, macOS and
+other supported platforms. CI needs the Linux x64 variants of Rollup, esbuild,
+Next/SWC, sharp, lightningcss and the resolver used by ESLint. A lockfile produced
+from an existing macOS installation can omit variants needed by a clean Linux
+installation, causing `npm ci` to finish but a later build to fail.
+
+When updating native tooling, regenerate missing optional metadata in a clean
+temporary project without `node_modules`, using the exact parent versions already
+resolved in the lockfile. Preserve existing resolved versions and production
+flags; commit the platform variants and their optional dependencies together.
+Validate with a clean Linux `npm ci` and the API build, as well as the usual type
+and lint checks. A successful installation on macOS alone does not cover this
+cross-platform requirement.
+
 ## Disposable databases
 
 CI starts a PostgreSQL 16 service with pgvector. No production database or project
