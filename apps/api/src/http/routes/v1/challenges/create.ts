@@ -1,5 +1,9 @@
+import {
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -9,11 +13,9 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
   challenge,
-  classroom,
   teachingAssistant,
   challengeTeachingAssistant,
 } from "@repo/infra/db/schema";
@@ -55,7 +57,6 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("challenge", "create")],
       schema: {
         tags: ["challenges"],
         summary: "Create challenge",
@@ -89,27 +90,17 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         generateReferenceSolutions: shouldGenerateRefSolutions,
       } = request.body;
 
-      const [cl] = await db
-        .select({ id: classroom.id, organizationId: classroom.organizationId })
-        .from(classroom)
-        .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
-        .limit(1);
-
-      if (!cl) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Classroom not found",
-        });
-      }
-
+      const cl = await loadClassroomAccessContext(classroomId);
+      if (!cl)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      const access = await assertCanAccessClassroom(usr, cl, "manage");
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
       const organizationId = cl.organizationId;
-
-      if (organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Classroom does not belong to your active organization",
-        });
-      }
 
       const id = randomUUID();
 

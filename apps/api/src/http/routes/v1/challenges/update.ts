@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -8,12 +8,13 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, classroom, member } from "@repo/infra/db/schema";
+import { challenge } from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
@@ -55,7 +56,6 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/:id",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges"],
         summary: "Update challenge",
@@ -101,127 +101,42 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      // Ownership check for content edits: teachers may only edit challenges
-      // they own or lead; coordinators/admins may edit any challenge in the
-      // challenge's own organization.
-      const isContentEdit =
-        body.title !== undefined ||
-        body.description !== undefined ||
-        body.difficulty !== undefined ||
-        body.tags !== undefined ||
-        body.generateReferenceSolutions !== undefined;
-
-      if (isContentEdit) {
-        const access = await assertCanListChallengeWorkSessions(usr, ctx);
-        if (!access.ok) {
-          return reply.status(access.status).send({
-            success: false as const,
-            message: access.message,
-          });
-        }
-      }
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       if (wantsClassroomChange && classroomId) {
-        const cls = await db
-          .select({
-            id: classroom.id,
-            organizationId: classroom.organizationId,
-            teacherUserId: classroom.teacherUserId,
-          })
-          .from(classroom)
-          .where(
-            and(eq(classroom.id, classroomId), isNull(classroom.deletedAt))
-          )
-          .limit(1);
-
-        if (!cls[0]) {
-          return reply.status(404).send({
-            success: false as const,
-            message: "Classroom not found",
-          });
-        }
-
-        if (ctx.classroomId) {
+        if (ctx.classroomId)
           return reply.status(400).send({
             success: false as const,
             message:
               "Challenge is already assigned to a classroom. Remove assignment first.",
           });
-        }
-
-        const membership = await db
-          .select({ role: member.role })
-          .from(member)
-          .where(
-            and(
-              eq(member.userId, usr.id),
-              eq(member.organizationId, cls[0].organizationId)
-            )
-          )
-          .limit(1);
-
-        if (!membership[0]) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "You must be a member of the classroom's organization",
-          });
-        }
-
-        const isCoordinatorPlus = ["coordinator", "admin"].includes(
-          membership[0].role
+        const target = await loadClassroomAccessContext(classroomId);
+        if (!target)
+          return reply
+            .status(404)
+            .send({ success: false as const, message: "Classroom not found" });
+        const targetAccess = await assertCanAccessClassroom(
+          usr,
+          target,
+          "manage"
         );
-        const isLeadTeacher = cls[0].teacherUserId === usr.id;
-        if (!isCoordinatorPlus && !isLeadTeacher) {
-          return reply.status(403).send({
-            success: false as const,
-            message:
-              "Only coordinator or the assigned teacher can assign challenges to this classroom",
-          });
-        }
-      } else if (wantsClassroomChange && classroomId === null) {
-        const currentClassroomId = ctx.classroomId;
-        if (!currentClassroomId) {
-          return reply.status(400).send({
-            success: false as const,
-            message: "Challenge is not assigned to any classroom",
-          });
-        }
-
-        const cls = await db
-          .select({
-            organizationId: classroom.organizationId,
-            teacherUserId: classroom.teacherUserId,
-          })
-          .from(classroom)
-          .where(eq(classroom.id, currentClassroomId))
-          .limit(1);
-
-        if (cls[0]) {
-          const membership = await db
-            .select({ role: member.role })
-            .from(member)
-            .where(
-              and(
-                eq(member.userId, usr.id),
-                eq(member.organizationId, cls[0].organizationId)
-              )
-            )
-            .limit(1);
-
-          if (membership[0]) {
-            const isCoordinatorPlus = ["coordinator", "admin"].includes(
-              membership[0].role
-            );
-            const isLeadTeacher = cls[0].teacherUserId === usr.id;
-            if (!isCoordinatorPlus && !isLeadTeacher) {
-              return reply.status(403).send({
-                success: false as const,
-                message:
-                  "Only coordinator or the assigned teacher can remove challenges from this classroom",
-              });
-            }
-          }
-        }
+        if (!targetAccess.ok)
+          return reply
+            .status(targetAccess.status)
+            .send({ success: false as const, message: targetAccess.message });
+      } else if (
+        wantsClassroomChange &&
+        classroomId === null &&
+        !ctx.classroomId
+      ) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Challenge is not assigned to any classroom",
+        });
       }
 
       const setValues: Partial<typeof challenge.$inferInsert> = {
@@ -229,7 +144,8 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       };
       if (wantsClassroomChange) setValues.classroomId = classroomId;
       if (body.title !== undefined) setValues.title = body.title;
-      if (body.description !== undefined) setValues.description = body.description;
+      if (body.description !== undefined)
+        setValues.description = body.description;
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
 

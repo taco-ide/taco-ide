@@ -4,6 +4,9 @@ import {
   knowledgeBase,
   knowledgeBaseChunk,
   challengeKnowledgeBase,
+  challenge,
+  classroom,
+  organization,
 } from "@repo/infra/db/schema";
 import { generateEmbedding } from "./embedding";
 
@@ -41,7 +44,9 @@ export async function searchKnowledgeBase({
   const queryEmbedding = await generateEmbedding(query);
 
   if (!queryEmbedding) {
-    console.warn("[KB Search] Embedding generation failed, returning empty results");
+    console.warn(
+      "[KB Search] Embedding generation failed, returning empty results"
+    );
     return [];
   }
 
@@ -51,8 +56,7 @@ export async function searchKnowledgeBase({
     .select({
       id: knowledgeBaseChunk.id,
       content: knowledgeBaseChunk.content,
-      similarity:
-        sql<number>`1 - (${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector)`,
+      similarity: sql<number>`1 - (${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector)`,
       metadata: knowledgeBaseChunk.metadata,
       chunkIndex: knowledgeBaseChunk.chunkIndex,
       documentId: knowledgeBaseChunk.documentId,
@@ -103,7 +107,19 @@ export async function searchChallengeKnowledgeBases({
         isNull(knowledgeBase.deletedAt)
       )
     )
-    .where(eq(challengeKnowledgeBase.challengeId, challengeId));
+    .innerJoin(challenge, eq(challenge.id, challengeKnowledgeBase.challengeId))
+    .innerJoin(classroom, eq(classroom.id, challenge.classroomId))
+    .innerJoin(organization, eq(organization.id, classroom.organizationId))
+    .where(
+      and(
+        eq(challenge.id, challengeId),
+        isNull(challenge.deletedAt),
+        isNull(classroom.deletedAt),
+        eq(organization.isActive, true),
+        eq(knowledgeBase.classroomId, classroom.id),
+        eq(knowledgeBase.organizationId, organization.id)
+      )
+    );
 
   if (linkedKBs.length === 0) {
     return [];
@@ -114,7 +130,9 @@ export async function searchChallengeKnowledgeBases({
   const queryEmbedding = await generateEmbedding(query);
 
   if (!queryEmbedding) {
-    console.warn("[KB Search] Embedding generation failed, returning empty results");
+    console.warn(
+      "[KB Search] Embedding generation failed, returning empty results"
+    );
     return [];
   }
 
@@ -124,8 +142,7 @@ export async function searchChallengeKnowledgeBases({
     .select({
       id: knowledgeBaseChunk.id,
       content: knowledgeBaseChunk.content,
-      similarity:
-        sql<number>`1 - (${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector)`,
+      similarity: sql<number>`1 - (${knowledgeBaseChunk.embedding} <=> ${queryEmbeddingString}::vector)`,
       metadata: knowledgeBaseChunk.metadata,
       chunkIndex: knowledgeBaseChunk.chunkIndex,
       documentId: knowledgeBaseChunk.documentId,
@@ -146,7 +163,10 @@ export async function searchChallengeKnowledgeBases({
         or(
           sql`${knowledgeBaseChunk.documentId} IN (
             SELECT kbd.id FROM knowledge_base_document kbd
-            WHERE kbd.knowledge_base_id IN (${sql.join(kbIds.map((id) => sql`${id}`), sql`, `)})
+            WHERE kbd.knowledge_base_id IN (${sql.join(
+              kbIds.map((id) => sql`${id}`),
+              sql`, `
+            )})
             AND kbd.deleted_at IS NULL
           )`,
           inArray(knowledgeBaseChunk.knowledgeBaseId, kbIds)

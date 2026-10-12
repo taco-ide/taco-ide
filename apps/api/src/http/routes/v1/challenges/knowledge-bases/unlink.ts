@@ -1,5 +1,9 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanListChallengeWorkSessions,
+} from "../../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema204,
@@ -7,9 +11,8 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, challengeKnowledgeBase } from "@repo/infra/db/schema";
+import { challengeKnowledgeBase } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -26,7 +29,6 @@ export async function unlinkKnowledgeBaseRoute(app: FastifyTypedInstance) {
   }>(
     "/:kbId",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenge-knowledge-bases"],
         summary: "Unlink knowledge base from challenge",
@@ -52,31 +54,16 @@ export async function unlinkKnowledgeBaseRoute(app: FastifyTypedInstance) {
 
       const { challengeId, kbId } = request.params;
 
-      // Fetch challenge, validate exists and not deleted
-      const ch = await db
-        .select({
-          id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
-
-      // IDOR: teacher can only manage own challenges
-      if (usr.role === "teacher" && ch[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message:
-            "You can only manage knowledge bases for your own challenges",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       // Delete M2M record
       const deleted = await db

@@ -1,19 +1,23 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanParticipateInChallengeWorkSession,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 
 // ResponseSchema404 is imported to keep the import consistent with other route
 // files; only the "Challenge not found" path uses it here.
 import { db } from "@repo/infra/db";
-import { challengeSolution, challenge } from "@repo/infra/db/schema";
+import { challengeSolution } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
-
 
 const SolutionSchema = z.object({
   id: z.string(),
@@ -39,11 +43,13 @@ export async function getSolutionRoute(app: FastifyTypedInstance) {
       schema: {
         tags: ["solutions"],
         summary: "Get solution for challenge",
-        description: "Returns the current user's solution state for a challenge",
+        description:
+          "Returns the current user's solution state for a challenge",
         params: z.object({ id: z.string().min(1) }),
         response: {
           200: GetSolutionResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404, // challenge not found (solution absence is 200 + data: null)
         },
       },
@@ -59,18 +65,16 @@ export async function getSolutionRoute(app: FastifyTypedInstance) {
 
       const challengeId = request.params.id;
 
-      const ch = await db
-        .select({ id: challenge.id })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       const [solution] = await db
         .select()

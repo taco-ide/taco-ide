@@ -1,3 +1,7 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanListChallengeWorkSessions,
+} from "../../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
@@ -8,9 +12,8 @@ import {
   ResponseSchema404,
   ResponseSchema503,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { challenge, knowledgeBase } from "@repo/infra/db/schema";
+import { knowledgeBase } from "@repo/infra/db/schema";
 import { searchChallengeKnowledgeBases } from "../../../../../services/knowledge-base-search";
 
 // ==================== SCHEMAS ====================
@@ -57,7 +60,6 @@ export async function searchChallengeKnowledgeBasesRoute(
   }>(
     "/search",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenge-knowledge-bases"],
         summary: "Semantic search across challenge knowledge bases",
@@ -85,31 +87,19 @@ export async function searchChallengeKnowledgeBasesRoute(
 
       const { challengeId } = request.params;
 
-      // Fetch challenge, validate exists and not deleted
-      const ch = await db
-        .select({
-          id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
-
-      // IDOR: teacher can only search own challenges' KBs
-      if (usr.role === "teacher" && ch[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message:
-            "You can only search knowledge bases for your own challenges",
-        });
-      }
+      if (!ctx.classroomId)
+        return reply.status(200).send({ success: true as const, data: [] });
 
       const { q, limit } = request.query;
 
@@ -133,8 +123,12 @@ export async function searchChallengeKnowledgeBasesRoute(
         .from(knowledgeBase)
         .where(
           and(
-            sql`${knowledgeBase.id} IN (${sql.join(uniqueKbIds.map((id) => sql`${id}`), sql`, `)})`,
-            isNull(knowledgeBase.deletedAt)
+            sql`${knowledgeBase.id} IN (${sql.join(
+              uniqueKbIds.map((id) => sql`${id}`),
+              sql`, `
+            )})`,
+            isNull(knowledgeBase.deletedAt),
+            eq(knowledgeBase.classroomId, ctx.classroomId)
           )
         );
 
@@ -142,16 +136,18 @@ export async function searchChallengeKnowledgeBasesRoute(
 
       return reply.status(200).send({
         success: true as const,
-        data: results.map((r) => ({
-          chunkId: r.id,
-          content: r.content,
-          similarity: r.similarity,
-          metadata: r.metadata,
-          knowledgeBaseId: r.knowledgeBaseId,
-          knowledgeBaseTitle: titleMap.get(r.knowledgeBaseId) ?? "",
-          documentId: r.documentId,
-          createdAt: r.createdAt.toISOString(),
-        })),
+        data: results
+          .filter((r) => titleMap.has(r.knowledgeBaseId))
+          .map((r) => ({
+            chunkId: r.id,
+            content: r.content,
+            similarity: r.similarity,
+            metadata: r.metadata,
+            knowledgeBaseId: r.knowledgeBaseId,
+            knowledgeBaseTitle: titleMap.get(r.knowledgeBaseId) ?? "",
+            documentId: r.documentId,
+            createdAt: r.createdAt.toISOString(),
+          })),
       });
     }
   );

@@ -1,13 +1,14 @@
+import { classroomReadCondition } from "../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, or, desc, isNull, sql, inArray } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
-import { ResponseSchema200, ResponseSchema400, ResponseSchema401 } from "../../_responses/types";
-import { db } from "@repo/infra/db";
 import {
-  classroom,
-  organization,
-  userClassroom,
-} from "@repo/infra/db/schema";
+  ResponseSchema200,
+  ResponseSchema400,
+  ResponseSchema401,
+} from "../../_responses/types";
+import { db } from "@repo/infra/db";
+import { classroom, organization, userClassroom } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -50,7 +51,7 @@ export async function listClassroomsRoute(app: FastifyTypedInstance) {
         tags: ["classrooms"],
         summary: "List classrooms",
         description:
-          "List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.",
+          "List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all accessible active classrooms.",
         querystring: ListClassroomsQuerySchema,
         response: {
           200: ListClassroomsResponseSchema,
@@ -71,7 +72,7 @@ export async function listClassroomsRoute(app: FastifyTypedInstance) {
       const { scope, page, perPage } = request.query;
       const offset = (page - 1) * perPage;
 
-      const conditions = [isNull(classroom.deletedAt)];
+      const conditions = [classroomReadCondition(usr)];
 
       if (scope === "mine") {
         const enrolledRows = await db
@@ -86,7 +87,10 @@ export async function listClassroomsRoute(app: FastifyTypedInstance) {
         const enrolledIds = enrolledRows.map((r) => r.id);
         const mineCondition =
           enrolledIds.length > 0
-            ? or(inArray(classroom.id, enrolledIds), eq(classroom.teacherUserId, usr.id))
+            ? or(
+                inArray(classroom.id, enrolledIds),
+                eq(classroom.teacherUserId, usr.id)
+              )
             : eq(classroom.teacherUserId, usr.id);
         conditions.push(mineCondition!);
       } else if (scope === "org") {

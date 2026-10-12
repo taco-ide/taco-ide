@@ -1,5 +1,9 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanListChallengeWorkSessions,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema204,
@@ -7,7 +11,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challenge } from "@repo/infra/db/schema";
 
@@ -25,7 +28,6 @@ export async function deleteChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/:id",
     {
-      preHandler: [requirePermission("challenge", "delete")],
       schema: {
         tags: ["challenges"],
         summary: "Delete challenge",
@@ -50,31 +52,16 @@ export async function deleteChallengeRoute(app: FastifyTypedInstance) {
 
       const { id } = request.params;
 
-      const existing = await db
-        .select({
-          id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, id), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
-
-      if (
-        usr.role === "teacher" &&
-        existing[0].createdByUserId !== usr.id
-      ) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only delete your own challenges",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(id);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       await db
         .update(challenge)

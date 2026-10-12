@@ -1,15 +1,17 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanParticipateInChallengeWorkSession,
+} from "../../../services/work-session-access";
 import { z } from "zod";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  workSession,
-  userInteractionOnChallenge,
-} from "@repo/infra/db/schema";
+import { workSession, userInteractionOnChallenge } from "@repo/infra/db/schema";
 import { eq, asc } from "drizzle-orm";
 
 // ==================== SCHEMAS ====================
@@ -44,6 +46,7 @@ export async function studentHistoryRoute(app: FastifyTypedInstance) {
         response: {
           200: HistoryResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -66,12 +69,10 @@ export async function studentHistoryRoute(app: FastifyTypedInstance) {
         .limit(1);
 
       if (!ws[0]) {
-        return reply
-          .status(404)
-          .send({
-            success: false as const,
-            message: "Work session not found",
-          });
+        return reply.status(404).send({
+          success: false as const,
+          message: "Work session not found",
+        });
       }
 
       if (ws[0].userId !== user.id) {
@@ -79,6 +80,20 @@ export async function studentHistoryRoute(app: FastifyTypedInstance) {
           .status(401)
           .send({ success: false as const, message: "Not authorized" });
       }
+
+      const ctx = await loadChallengeWorkAccessContext(ws[0].challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanParticipateInChallengeWorkSession(
+        user,
+        ctx
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       // Load interactions
       const interactions = await db
@@ -98,6 +113,6 @@ export async function studentHistoryRoute(app: FastifyTypedInstance) {
           createdAt: i.createdAt.toISOString(),
         })),
       });
-    },
+    }
   );
 }

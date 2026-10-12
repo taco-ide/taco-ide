@@ -1,9 +1,10 @@
+import { normalizeOrgMemberRole } from "../services/work-session-access";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { auth, isValidRole } from "@repo/infra/auth";
+import { auth } from "@repo/infra/auth";
 import type { RoleName } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { user, member, organization } from "@repo/infra/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, isNull } from "drizzle-orm";
 
 export async function authMiddleware(
   request: FastifyRequest,
@@ -44,7 +45,7 @@ export async function authMiddleware(
         updatedAt: user.updatedAt,
       })
       .from(user)
-      .where(eq(user.id, session.user.id))
+      .where(and(eq(user.id, session.user.id), isNull(user.deletedAt)))
       .limit(1);
 
     if (!userData[0] || !userData[0].isActive) {
@@ -122,9 +123,7 @@ export async function authMiddleware(
         .limit(1);
 
       if (memberData[0]) {
-        if (isValidRole(memberData[0].role)) {
-          role = memberData[0].role;
-        }
+        role = normalizeOrgMemberRole(memberData[0].role);
         activeOrgName = memberData[0].orgName;
 
         // Debounced bump of member.lastActiveAt: only update if null or older

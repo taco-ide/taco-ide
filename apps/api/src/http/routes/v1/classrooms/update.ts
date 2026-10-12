@@ -1,5 +1,11 @@
+import {
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
+  getMembershipRole,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { hasMinimumRole } from "@repo/infra/auth";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -8,8 +14,7 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { classroom, member } from "@repo/infra/db/schema";
-import { roleHasPermission } from "@repo/infra/auth";
+import { classroom } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -71,77 +76,40 @@ export async function updateClassroomRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const role = usr.role ?? "student";
-      if (!roleHasPermission(role, "classroom", "update")) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Insufficient permissions to update classrooms",
-        });
-      }
-
       const { id } = request.params;
       const { title, description, teacherUserId } = request.body;
 
-      const existing = await db
-        .select({
-          id: classroom.id,
-          organizationId: classroom.organizationId,
-          teacherUserId: classroom.teacherUserId,
-        })
-        .from(classroom)
-        .where(and(eq(classroom.id, id), isNull(classroom.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Classroom not found",
-        });
-      }
-
-      const membership = await db
-        .select({ role: member.role })
-        .from(member)
-        .where(
-          and(
-            eq(member.userId, usr.id),
-            eq(member.organizationId, existing[0].organizationId)
-          )
-        )
-        .limit(1);
-
-      if (!membership[0]) {
+      const ctx = await loadClassroomAccessContext(id);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      const access = await assertCanAccessClassroom(usr, ctx, "manage");
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+      const coordination = await assertCanAccessClassroom(
+        usr,
+        ctx,
+        "coordinate"
+      );
+      const isCoordinatorPlus = coordination.ok;
+      if (teacherUserId !== undefined && !isCoordinatorPlus)
         return reply.status(403).send({
           success: false as const,
-          message: "You must be a member of the classroom's organization to update it",
+          message: "Only coordinator+ can change the assigned teacher",
         });
-      }
-
-      const teacherRoles = ["teacher", "coordinator", "admin"];
-      if (!teacherRoles.includes(membership[0].role)) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Only teachers and above can update classrooms",
-        });
-      }
-
-      const isCoordinatorPlus = ["coordinator", "admin"].includes(membership[0].role);
-      const isLeadTeacher = existing[0].teacherUserId === usr.id;
-
-      if (teacherUserId !== undefined) {
-        if (!isCoordinatorPlus) {
+      if (teacherUserId) {
+        const targetRole = await getMembershipRole(
+          teacherUserId,
+          ctx.organizationId
+        );
+        if (!targetRole || !hasMinimumRole(targetRole, "teacher"))
           return reply.status(403).send({
             success: false as const,
-            message: "Only coordinator+ can change the assigned teacher",
+            message: "Assigned teacher must be staff of this organization",
           });
-        }
-      }
-
-      if (!isCoordinatorPlus && !isLeadTeacher) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Only coordinator+ or the assigned teacher can update this classroom",
-        });
       }
 
       const updateData: {

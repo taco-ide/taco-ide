@@ -14,7 +14,7 @@ export const getV1ClassroomsQueryKey = (params?: GetV1ClassroomsQueryParams) => 
 export type GetV1ClassroomsQueryKey = ReturnType<typeof getV1ClassroomsQueryKey>
 
 /**
- * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all accessible active classrooms.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */
@@ -38,7 +38,7 @@ export function getV1ClassroomsQueryOptions(params?: GetV1ClassroomsQueryParams,
 }
 
 /**
- * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all accessible active classrooms.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */

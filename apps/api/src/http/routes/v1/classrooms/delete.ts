@@ -1,15 +1,17 @@
+import {
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
-  ResponseSchema200,
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { classroom, member } from "@repo/infra/db/schema";
-import { roleHasPermission } from "@repo/infra/auth";
+import { classroom } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -28,7 +30,8 @@ export async function deleteClassroomRoute(app: FastifyTypedInstance) {
       schema: {
         tags: ["classrooms"],
         summary: "Delete classroom (soft delete)",
-        description: "Soft delete a classroom. Requires coordinator or admin role.",
+        description:
+          "Soft delete a classroom. Requires coordinator or admin role.",
         params: ClassroomParamsSchema,
         response: {
           200: z.object({
@@ -50,54 +53,18 @@ export async function deleteClassroomRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const role = usr.role ?? "student";
-      if (!roleHasPermission(role, "classroom", "delete")) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Insufficient permissions to delete classrooms",
-        });
-      }
-
       const { id } = request.params;
 
-      const existing = await db
-        .select({ id: classroom.id, organizationId: classroom.organizationId })
-        .from(classroom)
-        .where(and(eq(classroom.id, id), isNull(classroom.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Classroom not found",
-        });
-      }
-
-      const membership = await db
-        .select({ role: member.role })
-        .from(member)
-        .where(
-          and(
-            eq(member.userId, usr.id),
-            eq(member.organizationId, existing[0].organizationId)
-          )
-        )
-        .limit(1);
-
-      if (!membership[0]) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You must be a member of the classroom's organization to delete it",
-        });
-      }
-
-      const coordinatorRoles = ["coordinator", "admin"];
-      if (!coordinatorRoles.includes(membership[0].role)) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Only coordinators and admins can delete classrooms",
-        });
-      }
+      const ctx = await loadClassroomAccessContext(id);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      const access = await assertCanAccessClassroom(usr, ctx, "coordinate");
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       await db
         .update(classroom)

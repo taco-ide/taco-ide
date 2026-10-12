@@ -6,7 +6,7 @@
 import fetch from "@/lib/apiClient";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesIdQueryResponse, GetV1ChallengesIdPathParams, GetV1ChallengesId401, GetV1ChallengesId404 } from "../../../../../../packages/types/kubb/GetV1ChallengesId.ts";
+import type { GetV1ChallengesIdQueryResponse, GetV1ChallengesIdPathParams, GetV1ChallengesId401, GetV1ChallengesId403, GetV1ChallengesId404 } from "../../../../../../packages/types/kubb/GetV1ChallengesId.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesIdQueryKey = (id: GetV1ChallengesIdPathParams["id"]) => [{ url: '/v1/challenges/:id', params: {id:id} }] as const
@@ -21,13 +21,13 @@ export type GetV1ChallengesIdQueryKey = ReturnType<typeof getV1ChallengesIdQuery
 export async function getV1ChallengesId(id: GetV1ChallengesIdPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId404>, unknown>({ method : "GET", url : `/v1/challenges/${id}`, ... requestConfig })  
+  const res = await request<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId403 | GetV1ChallengesId404>, unknown>({ method : "GET", url : `/v1/challenges/${id}`, ... requestConfig })
   return res.data
 }
 
 export function getV1ChallengesIdQueryOptions(id: GetV1ChallengesIdPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ChallengesIdQueryKey(id)
-  return queryOptions<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId404>, GetV1ChallengesIdQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId403 | GetV1ChallengesId404>, GetV1ChallengesIdQueryResponse, typeof queryKey>({
    enabled: !!(id),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ChallengesIdQueryOptions(id: GetV1ChallengesIdPathParams["i
  */
 export function useGetV1ChallengesId<TData = GetV1ChallengesIdQueryResponse, TQueryData = GetV1ChallengesIdQueryResponse, TQueryKey extends QueryKey = GetV1ChallengesIdQueryKey>(id: GetV1ChallengesIdPathParams["id"], options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1ChallengesIdQueryResponse, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId403 | GetV1ChallengesId404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ChallengesId<TData = GetV1ChallengesIdQueryResponse, TQu
    ...getV1ChallengesIdQueryOptions(id, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesId401 | GetV1ChallengesId403 | GetV1ChallengesId404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

@@ -45,6 +45,8 @@ export function requireRole(minimumRole: RoleName) {
       });
     }
 
+    if (request.user.isPlatformAdmin) return;
+
     if (!request.user.activeOrganizationId || !request.user.role) {
       return reply.status(403).send({
         success: false,
@@ -76,6 +78,8 @@ export function requirePermission<R extends Resource>(
         message: "Not authenticated",
       });
     }
+
+    if (request.user.isPlatformAdmin) return;
 
     if (!request.user.activeOrganizationId || !request.user.role) {
       return reply.status(403).send({

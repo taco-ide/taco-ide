@@ -82,6 +82,32 @@ export type PostV1ChatTeacherMessage404 = {
     };
 };
 
+export const postV1ChatTeacherMessage429SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChatTeacherMessage429SuccessEnum = (typeof postV1ChatTeacherMessage429SuccessEnum)[keyof typeof postV1ChatTeacherMessage429SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChatTeacherMessage429 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChatTeacherMessage429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1ChatTeacherMessage500SuccessEnum = {
     "false": false
 } as const;
@@ -115,6 +141,7 @@ export type PostV1ChatTeacherMessageMutationRequest = {
     classroomId: string;
     /**
      * @minLength 1
+     * @maxLength 10000
      * @type string
     */
     message: string;
@@ -125,5 +152,5 @@ export type PostV1ChatTeacherMessageMutationResponse = any;
 export type PostV1ChatTeacherMessageMutation = {
     Response: any;
     Request: PostV1ChatTeacherMessageMutationRequest;
-    Errors: PostV1ChatTeacherMessage401 | PostV1ChatTeacherMessage403 | PostV1ChatTeacherMessage404 | PostV1ChatTeacherMessage500;
+    Errors: PostV1ChatTeacherMessage401 | PostV1ChatTeacherMessage403 | PostV1ChatTeacherMessage404 | PostV1ChatTeacherMessage429 | PostV1ChatTeacherMessage500;
 };

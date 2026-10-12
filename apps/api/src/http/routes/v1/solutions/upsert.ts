@@ -1,15 +1,19 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanParticipateInChallengeWorkSession,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema201,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { challengeSolution, challenge } from "@repo/infra/db/schema";
+import { challengeSolution } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -56,6 +60,7 @@ export async function upsertSolutionRoute(app: FastifyTypedInstance) {
           200: ResponseSchema200.extend({ data: SolutionSchema }),
           201: ResponseSchema201.extend({ data: SolutionSchema }),
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -72,18 +77,16 @@ export async function upsertSolutionRoute(app: FastifyTypedInstance) {
       const challengeId = request.params.id;
       const { code, stdin, stdout, chatHistory } = request.body;
 
-      const ch = await db
-        .select({ id: challenge.id })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       const now = new Date();
       const newId = randomUUID();
