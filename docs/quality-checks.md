@@ -21,7 +21,7 @@ checking any application code.
 ## Native build dependencies
 
 The committed lockfile includes optional native packages for Linux, macOS and
-other supported platforms. CI needs the Linux x64 variants of Rollup, esbuild,
+other supported platforms. CI needs the Linux x64 variants of Rollup/Rolldown, esbuild,
 Next/SWC, sharp, lightningcss and the resolver used by ESLint. A lockfile produced
 from an existing macOS installation can omit variants needed by a clean Linux
 installation, causing `npm ci` to finish but a later build to fail.
