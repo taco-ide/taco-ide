@@ -496,7 +496,7 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
 
                 await tx.insert(account).values({
                   id: randomUUID(),
-                  accountId: row.data.email,
+                  accountId: newUserId,
                   providerId: "credential",
                   userId: newUserId,
                   password: passwordHash,

@@ -2,7 +2,7 @@
  * Seed de desenvolvimento: base + dados FAKE para dev.
  * - Organizacao demo, model + TA (via seedBase), usuarios teste (RBAC), turmas, challenges
  * - Cada challenge recebe linha em challenge_teaching_assistant -> SEED_TA_ID
- * - Senha padrao para todas as contas: Teste123!@
+ * - Initial password for new accounts: Teste123!@; existing passwords are preserved
  *
  * Rode: cd packages/infra && npm run db:seed:dev
  */
@@ -10,11 +10,9 @@ if (process.env.NODE_ENV === "production") {
   throw new Error("dev seed cannot run in production");
 }
 
-import { eq } from "drizzle-orm";
 import { db } from "../index";
 import {
   user,
-  account,
   organization,
   member,
   classroom,
@@ -22,7 +20,7 @@ import {
   challenge,
   challengeTeachingAssistant,
 } from "../schema";
-import { hashPassword } from "better-auth/crypto";
+import { seedCredential } from "./credentials";
 import { seedBase, safeInsert, SEED_TA_ID } from "./base";
 import { seedPasswordDemoScenario } from "./dev-demo";
 
@@ -80,9 +78,6 @@ async function seed() {
   // O TA padrao vem de seeds/base.ts (SEED_TA_ID). Nao duplicar aqui.
   await seedBase({ organizationId: SEED_ORG_ID });
 
-  // Better Auth usa scrypt (formato salt:hex), nao bcrypt
-  const passwordHash = await hashPassword(DEV_PASSWORD);
-
   // --- 3. Usuarios teste (email verificado para login direto) ---
   await safeInsert("user teacher", () =>
     db.insert(user).values({
@@ -114,48 +109,13 @@ async function seed() {
     })
   );
 
-  // --- 4. Contas email/senha (Better Auth: provider credential) ---
-  const credential = "credential";
-  await safeInsert("account teacher", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_TEACHER,
-      accountId: "professor@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_TEACHER,
-      password: passwordHash,
-    })
-  );
-
-  await safeInsert("account student", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_STUDENT,
-      accountId: "aluno@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_STUDENT,
-      password: passwordHash,
-    })
-  );
-
-  await safeInsert("account coordinator", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_COORD,
-      accountId: "coordenador@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_COORD,
-      password: passwordHash,
-    })
-  );
-
-  // Corrige hash antigo (ex.: bcrypt do seed anterior) ao re-rodar o seed
-  for (const uid of [SEED_USER_TEACHER, SEED_USER_STUDENT, SEED_USER_COORD]) {
-    try {
-      await db
-        .update(account)
-        .set({ password: passwordHash })
-        .where(eq(account.userId, uid));
-    } catch (e) {
-      console.warn(`  [skip] update password for ${uid}:`, e);
-    }
+  // --- 4. Canonical credentials; preserve existing passwords on repeated seeds. ---
+  for (const { userId, credentialId } of [
+    { userId: SEED_USER_TEACHER, credentialId: SEED_ACCOUNT_TEACHER },
+    { userId: SEED_USER_STUDENT, credentialId: SEED_ACCOUNT_STUDENT },
+    { userId: SEED_USER_COORD, credentialId: SEED_ACCOUNT_COORD },
+  ]) {
+    await seedCredential({ userId, credentialId, password: DEV_PASSWORD });
   }
 
   // --- 5. Membros na org (RBAC: teacher / student / coordinator) ---
@@ -327,7 +287,7 @@ async function seed() {
     existingStudentUserId: SEED_USER_STUDENT,
   });
 
-  console.log("\n--- Contas de teste (senha: " + DEV_PASSWORD + ") ---");
+  console.log("\n--- Test accounts (initial password for new accounts: " + DEV_PASSWORD + "; existing passwords are preserved) ---");
   console.log("  Professor (teacher):   professor@taco-demo.local");
   console.log("  Aluno (student):       aluno@taco-demo.local");
   console.log("  Coordenador:           coordenador@taco-demo.local");

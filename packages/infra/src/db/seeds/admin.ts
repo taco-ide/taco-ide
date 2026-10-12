@@ -6,80 +6,73 @@
  * local without the envs is a no-op for this step.
  */
 import { randomUUID } from "node:crypto";
-import { hashPassword } from "better-auth/crypto";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../index";
-import { account, user } from "../schema/auth";
+import { user } from "../schema/auth";
 import { env } from "../../env";
+import { seedCredential } from "./credentials";
 
-async function upsertCredential(
-  userId: string,
-  email: string,
-  password: string
+type PlatformAdminSeedOptions = Pick<
+  typeof env,
+  "PLATFORM_ADMIN_EMAIL" | "PLATFORM_ADMIN_PASSWORD" | "PLATFORM_ADMIN_NAME"
+>;
+
+export async function seedPlatformAdmin(
+  options: PlatformAdminSeedOptions = env,
 ) {
-  const passwordHash = await hashPassword(password);
-  const existing = await db.query.account.findFirst({
-    where: and(eq(account.userId, userId), eq(account.providerId, "credential")),
-  });
-
-  if (existing) {
-    await db
-      .update(account)
-      .set({ password: passwordHash, updatedAt: new Date() })
-      .where(eq(account.id, existing.id));
-    return;
-  }
-
-  await db.insert(account).values({
-    id: randomUUID(),
-    accountId: email,
-    providerId: "credential",
-    userId,
-    password: passwordHash,
-  });
-}
-
-export async function seedPlatformAdmin() {
   const { PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD, PLATFORM_ADMIN_NAME } =
-    env;
+    options;
 
-  if (!PLATFORM_ADMIN_EMAIL || !PLATFORM_ADMIN_PASSWORD || !PLATFORM_ADMIN_NAME) {
+  if (
+    !PLATFORM_ADMIN_EMAIL ||
+    !PLATFORM_ADMIN_PASSWORD ||
+    !PLATFORM_ADMIN_NAME
+  ) {
     console.warn(
-      "[seed:admin] Skipping — set PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD and PLATFORM_ADMIN_NAME to provision the admin"
+      "[seed:admin] Skipping — set PLATFORM_ADMIN_EMAIL, PLATFORM_ADMIN_PASSWORD and PLATFORM_ADMIN_NAME to provision the admin",
     );
     return;
   }
 
   const email = PLATFORM_ADMIN_EMAIL.toLowerCase();
-  const existing = await db.query.user.findFirst({
-    where: eq(user.email, email),
-  });
+  await db.transaction(async (tx) => {
+    const existing = await tx.query.user.findFirst({
+      where: eq(user.email, email),
+    });
 
-  if (existing) {
-    await db
-      .update(user)
-      .set({
-        name: PLATFORM_ADMIN_NAME,
-        isPlatformAdmin: true,
-        emailVerified: true,
-        isActive: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(user.id, existing.id));
-    await upsertCredential(existing.id, email, PLATFORM_ADMIN_PASSWORD);
-    console.log(`[seed:admin] Updated existing platform admin: ${email}`);
-    return;
-  }
+    if (existing) {
+      await seedCredential(
+        {
+          userId: existing.id,
+          password: PLATFORM_ADMIN_PASSWORD,
+          rotateExistingPassword: true,
+        },
+        tx,
+      );
+      await tx
+        .update(user)
+        .set({
+          name: PLATFORM_ADMIN_NAME,
+          isPlatformAdmin: true,
+          emailVerified: true,
+          isActive: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, existing.id));
+      console.log(`[seed:admin] Updated existing platform admin: ${email}`);
+      return;
+    }
 
-  const userId = randomUUID();
-  await db.insert(user).values({
-    id: userId,
-    name: PLATFORM_ADMIN_NAME,
-    email,
-    emailVerified: true,
-    isActive: true,
-    isPlatformAdmin: true,
+    const userId = randomUUID();
+    await tx.insert(user).values({
+      id: userId,
+      name: PLATFORM_ADMIN_NAME,
+      email,
+      emailVerified: true,
+      isActive: true,
+      isPlatformAdmin: true,
+    });
+    await seedCredential({ userId, password: PLATFORM_ADMIN_PASSWORD }, tx);
+    console.log(`[seed:admin] Created platform admin: ${email}`);
   });
-  await upsertCredential(userId, email, PLATFORM_ADMIN_PASSWORD);
-  console.log(`[seed:admin] Created platform admin: ${email}`);
 }

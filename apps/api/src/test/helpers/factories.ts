@@ -64,7 +64,7 @@ export async function createUser(
 
   await db.insert(account).values({
     id: randomUUID(),
-    accountId: email,
+    accountId: id,
     providerId: "credential",
     userId: id,
     password: passwordHash,
