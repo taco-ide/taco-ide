@@ -154,6 +154,12 @@ Seed entry points live in `src/db/seeds/`:
   `better-auth/crypto`). Re-running rotates the password if the env
   changes.
 
+Credential accounts use the owning `user.id` as `accountId`. The shared
+`credentials.ts` normalizer preserves existing passwords in dev/demo seeds;
+only the admin seed explicitly opts into configured password rotation. Existing
+databases need the data-only credential identifier migration before upgrading
+Better Auth; see `docs/security/dependency-upgrades.md`.
+
 Run with `npm run db:seed` (base + admin), `npm run db:seed:dev` or
 `npm run db:seed:prod`.
 

@@ -47,7 +47,7 @@ taco-ide/
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22.12+ (CI uses Node 22)
 - Docker & Docker Compose
 - npm 11+
 

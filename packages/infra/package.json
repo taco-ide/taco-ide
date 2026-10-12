@@ -9,7 +9,9 @@
     "./auth": "./src/auth/index.ts",
     "./auth/client": "./src/auth/client.ts",
     "./auth/invitation-email": "./src/auth/invitation-email.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./db/seeds/admin": "./src/db/seeds/admin.ts",
+    "./db/seeds/credentials": "./src/db/seeds/credentials.ts"
   },
   "scripts": {
     "build": "tsc -b",
@@ -29,9 +31,9 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
-    "better-auth": "^1.4.13",
+    "better-auth": "^1.7.7",
     "dotenv-cli": "^11.0.0",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.5",
     "resend": "^4.1.2",
     "zod": "^3.24.2"
