@@ -56,7 +56,7 @@ separate actions. Both run with the English locale cookie set explicitly.
 
 ## Run the checks locally
 
-Install Node.js 22.9+ and npm 11, then run `npm ci`. Point `DATABASE_URL` at a local,
+Install Node.js 22.12+ and npm 11, then run `npm ci`. Point `DATABASE_URL` at a local,
 disposable PostgreSQL database with pgvector available. Do not use a shared or
 production database: API tests drop and recreate the suffixed `_test` database;
 browser tests write grades and create challenges in the base database.

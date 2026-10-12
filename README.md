@@ -46,7 +46,7 @@ taco-ide/
 
 ### Prerequisites
 
-- Node.js 22.9+ (compatible with npm 11; Docker deployment uses Node.js 22)
+- Node.js 22.12+ (compatible with npm 11; Docker deployment uses Node.js 22)
 - Docker & Docker Compose
 - npm 11+
 
