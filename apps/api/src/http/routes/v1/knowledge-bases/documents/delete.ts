@@ -1,3 +1,4 @@
+import { assertKnowledgeBaseResourceAccess } from "../../../../services/knowledge-base-access";
 import { z } from "zod";
 import { eq, and, isNull } from "drizzle-orm";
 import { extname, join } from "node:path";
@@ -11,7 +12,6 @@ import {
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
-  knowledgeBase,
   knowledgeBaseDocument,
   knowledgeBaseChunk,
 } from "@repo/infra/db/schema";
@@ -58,36 +58,16 @@ export async function deleteDocumentRoute(app: FastifyTypedInstance) {
 
       const { kbId, docId } = request.params;
 
-      const kb = await db
-        .select({
-          id: knowledgeBase.id,
-          organizationId: knowledgeBase.organizationId,
-          createdByUserId: knowledgeBase.createdByUserId,
-        })
-        .from(knowledgeBase)
-        .where(and(eq(knowledgeBase.id, kbId), isNull(knowledgeBase.deletedAt)))
-        .limit(1);
-
-      if (!kb[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Knowledge base not found",
-        });
-      }
-
-      if (kb[0].organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Knowledge base does not belong to your active organization",
-        });
-      }
-
-      if (usr.role === "teacher" && kb[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only manage documents in your own knowledge bases",
-        });
-      }
+      const access = await assertKnowledgeBaseResourceAccess(
+        usr,
+        kbId,
+        "manage"
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+      const { knowledgeBase: kb } = access;
 
       const existing = await db
         .select({
@@ -126,7 +106,7 @@ export async function deleteDocumentRoute(app: FastifyTypedInstance) {
         .where(eq(knowledgeBaseChunk.documentId, docId));
 
       // Delete physical file (best-effort)
-      const orgId = kb[0].organizationId;
+      const orgId = kb.organizationId;
       const ext = extname(existing[0].filename);
       const filePath = join(
         process.cwd(),

@@ -1,4 +1,4 @@
-import { eq, and, isNull, sql, type SQL } from "drizzle-orm";
+import { eq, and, isNull, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import type { FastifyRequest } from "fastify";
 import type { RoleName } from "@repo/infra/auth";
 import { isValidRole } from "@repo/infra/auth";
@@ -213,14 +213,20 @@ export async function assertStaffCanAccessChallengeWorkSessions(
 }
 
 /** Correlated predicates keep pagination/count scoped by the same current access policy. */
-export function classroomReadCondition(usr: AuthUser): SQL {
+export function classroomReadCondition(
+  usr: AuthUser,
+  createdByUserId?: SQLWrapper
+): SQL {
+  const creator = createdByUserId
+    ? sql`${createdByUserId} = ${usr.id}`
+    : sql`false`;
   const participation = usr.isPlatformAdmin
     ? sql`true`
     : sql`exists (
     select 1 from ${member} where ${member.organizationId} = ${classroom.organizationId}
       and ${member.userId} = ${usr.id} and (
         ${member.role} in ('admin', 'owner', 'coordinator') or
-        (${member.role} = 'teacher' and ${classroom.teacherUserId} = ${usr.id}) or
+        (${member.role} = 'teacher' and (${classroom.teacherUserId} = ${usr.id} or ${creator})) or
         (${member.role} in ('student', 'member', 'teacher') and exists (
           select 1 from ${userClassroom} where ${userClassroom.classroomId} = ${classroom.id}
             and ${userClassroom.userId} = ${usr.id} and ${userClassroom.deletedAt} is null))
@@ -230,14 +236,7 @@ export function classroomReadCondition(usr: AuthUser): SQL {
 }
 
 export function challengeReadCondition(usr: AuthUser): SQL {
-  const creator = usr.isPlatformAdmin
-    ? sql`true`
-    : sql`exists (select 1 from ${member}
-    where ${member.organizationId} = ${classroom.organizationId} and ${member.userId} = ${usr.id}
-      and ${member.role} = 'teacher' and ${challenge.createdByUserId} = ${usr.id})`;
   return sql`${challenge.deletedAt} is null and (${challenge.classroomId} is null or exists (
     select 1 from ${classroom} where ${classroom.id} = ${challenge.classroomId}
-      and ${classroom.deletedAt} is null and exists (select 1 from ${organization}
-        where ${organization.id} = ${classroom.organizationId} and ${organization.isActive} = true)
-      and (${classroomReadCondition(usr)} or ${creator})))`;
+      and ${classroomReadCondition(usr, challenge.createdByUserId)}))`;
 }

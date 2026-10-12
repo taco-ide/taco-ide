@@ -1,5 +1,6 @@
+import { assertKnowledgeBaseResourceAccess } from "../../../../services/knowledge-base-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../../types";
 import {
@@ -12,7 +13,6 @@ import {
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
-  knowledgeBase,
   knowledgeBaseDocument,
   knowledgeBaseChunk,
 } from "@repo/infra/db/schema";
@@ -125,7 +125,11 @@ async function processDocument(
   // Stage: embedding
   await db
     .update(knowledgeBaseDocument)
-    .set({ status: "embedding", chunkCount: chunks.length, updatedAt: new Date() })
+    .set({
+      status: "embedding",
+      chunkCount: chunks.length,
+      updatedAt: new Date(),
+    })
     .where(eq(knowledgeBaseDocument.id, doc.id));
 
   try {
@@ -173,7 +177,12 @@ async function processDocument(
   // Stage: ready
   await db
     .update(knowledgeBaseDocument)
-    .set({ status: "ready", errorStage: null, errorMessage: null, updatedAt: new Date() })
+    .set({
+      status: "ready",
+      errorStage: null,
+      errorMessage: null,
+      updatedAt: new Date(),
+    })
     .where(eq(knowledgeBaseDocument.id, doc.id));
 }
 
@@ -213,36 +222,16 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
 
       const { kbId } = request.params;
 
-      const kb = await db
-        .select({
-          id: knowledgeBase.id,
-          organizationId: knowledgeBase.organizationId,
-          createdByUserId: knowledgeBase.createdByUserId,
-        })
-        .from(knowledgeBase)
-        .where(and(eq(knowledgeBase.id, kbId), isNull(knowledgeBase.deletedAt)))
-        .limit(1);
-
-      if (!kb[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Knowledge base not found",
-        });
-      }
-
-      if (kb[0].organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Knowledge base does not belong to your active organization",
-        });
-      }
-
-      if (usr.role === "teacher" && kb[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only upload documents to your own knowledge bases",
-        });
-      }
+      const access = await assertKnowledgeBaseResourceAccess(
+        usr,
+        kbId,
+        "manage"
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+      const { knowledgeBase: kb } = access;
 
       const file = await request.file();
       if (!file) {
@@ -264,7 +253,7 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const organizationId = kb[0].organizationId;
+      const organizationId = kb.organizationId;
       const docId = randomUUID();
 
       const [docRecord] = await db
