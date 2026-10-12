@@ -8,6 +8,7 @@ This update follows issue #114 and upgrades the runtime packages that had fixes 
 - Next.js 16.4.0, matching Next ESLint packages, and PostCSS 8.5.30.
 - Fastify 5.12.5 and js-yaml 4.3.2, preserving their major versions.
 - LangChain core 1.2.17, LangGraph 1.4.21 and the OpenAI integration 1.6.2.
+- shell-quote 1.12.0, a compatible transitive update through Kubb/devtools, removing the critical report from the complete dependency tree.
 - csv-parse 7.0.3. Its major update is required for the available fix; the existing named parser API and the CSV-import integration tests remain compatible.
 
 The lockfile pins the verified versions. Cross-platform optional binary entries must be retained so `npm ci` can build on both macOS and Linux; regenerating a lockfile from an already-populated macOS node_modules can omit Linux Rollup dependencies.
@@ -25,6 +26,8 @@ Seed normalization preserves existing passwords, including changed demo password
 ## Audit result and remaining work
 
 The `npm audit --omit=dev` snapshots taken for this change reported 42 alerts before the update (2 critical, 25 high, 15 moderate) and 26 afterward (0 critical, 15 high, 11 moderate). Counts include dependency paths pulled into workspace tooling and are not a measure of reachable production vulnerabilities.
+
+The complete audit including development packages reports 36 remaining alerts (0 critical, 22 high, 14 moderate), after fixing shell-quote. The API Docker image currently includes the full workspace dependency tree for its source/loader setup; development labels alone do not exclude packages from that image. Evaluate the full report when assessing the image, and track reducing its dependency footprint in #119. The runtime-only snapshot and full-tree snapshot have different scopes.
 
 Remaining reports involve the Tailwind 3 plugin/build chain, Drizzle Kit/esbuild and Vitest/coverage tooling. Resolving them requires separate version and compatibility work; automatic force-fix suggestions include disruptive migrations or downgrades and were not applied. Issue #119 tracks that follow-up separately from the runtime update in #114. The absence of critical alerts does not mean the complete dependency tree is free of advisories.
 
