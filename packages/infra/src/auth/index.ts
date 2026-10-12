@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import { and, asc, eq } from "drizzle-orm";
@@ -8,6 +9,11 @@ import * as schema from "../db/schema";
 import { env } from "../env";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email";
 import { sendInvitationEmail } from "./invitation-email";
+import {
+  rejectAdministrativeUserFields,
+  requireActiveAccount,
+  requireActivePlatformAdmin,
+} from "./boundaries";
 import {
   ac,
   studentRole,
@@ -123,10 +129,12 @@ export const auth = betterAuth({
         type: "boolean",
         defaultValue: true,
         required: false,
+        input: false,
       },
       deletedAt: {
         type: "date",
         required: false,
+        input: false,
       },
       // input: false prevents clients from setting isPlatformAdmin during
       // sign-up or self-update. Promotion is done server-side only.
@@ -137,6 +145,23 @@ export const auth = betterAuth({
         input: false,
       },
     },
+  },
+
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email" && ctx.path !== "/update-user") return;
+
+      // Reject every supplied value, including false/null. input:false alone
+      // may ignore such values or substitute a default during sign-up.
+      rejectAdministrativeUserFields(ctx.body);
+
+      if (ctx.path !== "/update-user") return;
+      const session = await getSessionFromCtx(ctx, { disableCookieCache: true });
+      if (!session) {
+        throw new APIError("UNAUTHORIZED", { message: "Not authenticated" });
+      }
+      await requireActiveAccount(session.user.id);
+    }),
   },
 
   plugins: [
@@ -150,7 +175,13 @@ export const auth = betterAuth({
         owner: adminRole,
         member: studentRole,
       },
-      allowUserToCreateOrganization: true,
+      allowUserToCreateOrganization: async (user) => {
+        // Read current privileges from the database, never cached user claims.
+        // Throw instead of returning false so server-side userId calls cannot
+        // bypass the same platform-admin policy through the plugin.
+        await requireActivePlatformAdmin(user.id);
+        return true;
+      },
       creatorRole: "admin",
       sendInvitationEmail: async (data) => {
         try {
