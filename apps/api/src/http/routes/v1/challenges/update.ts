@@ -60,7 +60,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         tags: ["challenges"],
         summary: "Update challenge",
         description:
-          "Update challenge content (title, description, difficulty, tags) and/or assign to a classroom. Teacher: only own challenges. Coordinator/admin: any challenge in their org. Classroom reassignment additionally requires coordinator+ or being the classroom lead teacher.",
+          "Update challenge content or classroom assignment. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.",
         params: ChallengeParamsSchema,
         body: UpdateChallengeBodySchema,
         response: {
