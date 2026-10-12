@@ -26,6 +26,12 @@ em containers; o **banco em produção é externo** (você fornece a `DATABASE_U
 - **`migrate`** roda **uma vez** antes da API: aplica as migrations do Drizzle
   (incluindo `CREATE EXTENSION vector`) e o seed. É idempotente.
 - **`uploads`** (arquivos do Knowledge Base) ficam num volume Docker.
+- **API sem root:** na árvore da aplicação, o usuário `app` pode escrever
+  apenas nos uploads e no arquivo de especificação `apps/api/src/swagger.yaml`, pré-criado na imagem. Os demais
+  arquivos e diretórios de código continuam pertencendo a root, sem permissão
+  de escrita.
+- **Caddy reproduzível:** `compose.prod.yaml` fixa `2.11.7-alpine` e o digest do
+  índice multi-plataforma oficial; uma nova publicação da tag não muda o deploy.
 
 ### Arquivos desta infra
 
@@ -154,6 +160,15 @@ Opcional: `EMBEDDING_*` (busca semântica do Knowledge Base), `PLATFORM_ADMIN_*`
 
 ### B.2 Subir
 
+Valide a configuração com a mesma imagem do proxy usada no deploy:
+
+```bash
+docker compose -f compose.prod.yaml run --rm --no-deps caddy \
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+
+Depois suba os serviços:
+
 ```bash
 docker compose -f compose.prod.yaml up -d --build
 ```
@@ -272,3 +287,10 @@ auto-hospede e sobrescreva `LLM_API_BASE` / `EMBEDDING_API_URL` /
   monorepo. Imagem web pequena.
 - **Banco só local:** em produção você aponta a `DATABASE_URL` para o Postgres
   externo; o `compose.prod.yaml` não sobe banco.
+- **Atualização do Caddy:** escolha uma release mantida nas
+  [releases oficiais](https://github.com/caddyserver/caddy/releases), confirme
+  sua tag Alpine na [imagem oficial](https://hub.docker.com/_/caddy) e obtenha
+  o digest com `docker buildx imagetools inspect caddy:<versão>-alpine`. Atualize
+  tag e digest juntos em `compose.prod.yaml`, valide o Caddyfile com o comando
+  da seção B.2 e só então publique o deploy. O digest fixado é o índice
+  multi-plataforma, permitindo a mesma referência em VMs AMD64 e ARM64.

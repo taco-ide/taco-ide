@@ -57,8 +57,14 @@ COPY apps/api/ ./apps/api/
 # Runtime writes by the non-root `app` user:
 #  - uploads/ (Knowledge Base files; mount a volume here in compose)
 #  - apps/api/src/swagger.yaml (the server re-exports the OpenAPI spec on boot)
+# Pre-create the spec so only that file is writable; source files and directories
+# stay owned by root with no write bits, preventing source changes at runtime.
 RUN mkdir -p /repo/uploads/documents \
-    && chown -R app /repo/uploads /repo/apps/api/src
+    && touch /repo/apps/api/src/swagger.yaml \
+    && chmod -R a-w /repo/apps/api/src \
+    && chown -R app /repo/uploads \
+    && chown app /repo/apps/api/src/swagger.yaml \
+    && chmod 0644 /repo/apps/api/src/swagger.yaml
 
 USER app
 EXPOSE 4000

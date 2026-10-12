@@ -73,6 +73,13 @@ docker compose -f compose.prod.yaml config >/dev/null && echo "env OK"
 ```
 Se faltar um obrigatório, ele falha aqui dizendo qual variável.
 
+Valide o Caddyfile na imagem cuja versão e digest estão fixados no compose:
+```bash
+docker compose -f compose.prod.yaml run --rm --no-deps caddy \
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+```
+A validação deve terminar com `Valid configuration` antes de subir os serviços.
+
 ---
 
 ## 3. Subir
