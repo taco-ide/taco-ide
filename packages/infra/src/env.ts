@@ -22,8 +22,23 @@ const envSchema = z.object({
   // Cloudflare Turnstile (optional)
   CLOUDFLARE_TURNSTILE_SECRET: z.string().optional(),
 
-  // OpenRouter (LLM)
+  // OpenRouter (LLM) — fallback for reference solutions and auto-review
+  // whenever the PDC API is disabled or fails.
   OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_FALLBACK_MODEL: z.string().default("openai/gpt-6-luna"),
+
+  // PDC workflow_taco API (reference solutions + auto-review). Without a URL
+  // both generators go straight to the OpenRouter fallback. Keep the URL out
+  // of versioned files: the partner asked for it not to be shared.
+  PDC_API_URL: z.string().url().optional(),
+  PDC_GABARITO_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  PDC_REVIEW_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
 
   // Embedding
   EMBEDDING_PROVIDER: z.enum(["openai", "azure"]).optional(),
@@ -39,10 +54,6 @@ const envSchema = z.object({
     .default("https://taco-ide-resource.openai.azure.com/openai/v1/"),
   // Azure OpenAI deployment name — must match a deployed model in the Azure resource
   LLM_MODEL_NAME: z.string().default("gpt-4o-mini"),
-  // Deployment used by non-conversational generators (reference solutions,
-  // auto-review). Must be a non-reasoning model that accepts arbitrary
-  // temperature values so we can request closer-to-deterministic output.
-  LLM_DETERMINISTIC_MODEL_NAME: z.string().default("gpt-4o-mini"),
   LLM_API_KEY: z.string(),
   CODE_EXEC_API_URL: z
     .string()

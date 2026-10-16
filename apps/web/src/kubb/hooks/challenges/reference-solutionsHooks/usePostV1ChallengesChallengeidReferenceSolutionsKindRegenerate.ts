@@ -14,7 +14,7 @@ export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutation
 export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationKey = ReturnType<typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationKey>
 
 /**
- * @description Regenerate a reference solution with 409 (already running) and 429 (cooldown) guards
+ * @description Starts regenerating a reference solution in the background and answers 202 with status=running; poll the list endpoint for the result. 409 (already running) and 429 (cooldown) guards apply.
  * @summary Regenerate reference solution
  * {@link /v1/challenges/:challengeId/reference-solutions/:kind/regenerate}
  */
@@ -26,7 +26,7 @@ export async function postV1ChallengesChallengeidReferenceSolutionsKindRegenerat
 }
 
 /**
- * @description Regenerate a reference solution with 409 (already running) and 429 (cooldown) guards
+ * @description Starts regenerating a reference solution in the background and answers 202 with status=running; poll the list endpoint for the result. 409 (already running) and 429 (cooldown) guards apply.
  * @summary Regenerate reference solution
  * {@link /v1/challenges/:challengeId/reference-solutions/:kind/regenerate}
  */

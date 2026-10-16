@@ -23,11 +23,11 @@ export type PostV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathParam
     kind: PostV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathParamsKindEnum;
 };
 
-export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate200SuccessEnum = {
+export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate202SuccessEnum = {
     "true": true
 } as const;
 
-export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate200SuccessEnum = (typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate200SuccessEnum)[keyof typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate200SuccessEnum];
+export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202SuccessEnum = (typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate202SuccessEnum)[keyof typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate202SuccessEnum];
 
 export const dataKindEnum4 = {
     "brute_force": "brute_force",
@@ -55,11 +55,11 @@ export type DataCreatedByEnum3 = (typeof dataCreatedByEnum3)[keyof typeof dataCr
 /**
  * @description Default Response
 */
-export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate200 = {
+export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202 = {
     /**
      * @type boolean
     */
-    success: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate200SuccessEnum;
+    success: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202SuccessEnum;
     /**
      * @type string | undefined
     */
@@ -254,10 +254,10 @@ export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429 = {
     };
 };
 
-export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponse = PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate200;
+export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponse = PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202;
 
 export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutation = {
-    Response: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate200;
+    Response: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202;
     PathParams: PostV1ChallengesChallengeidReferenceSolutionsKindRegeneratePathParams;
     Errors: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate401 | PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate403 | PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate404 | PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate409 | PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429;
 };
