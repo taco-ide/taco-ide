@@ -1,7 +1,5 @@
 -- Better Auth credential account identifiers must match the owning user id.
 -- Preserve identities, password hashes, timestamps, and non-credential providers.
--- This sequence extends main at 0009. Coordinate journal numbering with PRs #110
--- and #112 (both introduce 0010); rebase/renumber before combining migrations.
 DO $migration$
 BEGIN
   LOCK TABLE "account" IN SHARE ROW EXCLUSIVE MODE;

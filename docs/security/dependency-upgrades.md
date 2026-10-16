@@ -15,11 +15,11 @@ The lockfile pins the verified versions. Cross-platform optional binary entries 
 
 ## Credential compatibility and deployment order
 
-Better Auth's credential provider now requires `account.account_id` to equal the owning `user.id`. Application-created CSV accounts, test factories and development/admin seeds now write this canonical value. Existing credential accounts need the data-only migration `0010_credential_account_identifiers.sql` before running the upgraded authentication provider.
+Better Auth's credential provider now requires `account.account_id` to equal the owning `user.id`. Application-created CSV accounts, test factories and development/admin seeds now write this canonical value. Existing credential accounts need the data-only migration `0011_credential_account_identifiers.sql` before running the upgraded authentication provider.
 
 The migration changes only credential account identifiers. It preserves account ids, password hashes, timestamps and OAuth accounts. It locks the account table and aborts atomically if a user has multiple credential accounts; resolve that ambiguity deliberately before retrying. Re-running the normalization is safe. Take the normal database backup, run the migration, then start the upgraded application. `db:push` does not apply this data migration and is insufficient for existing accounts.
 
-Main currently ends at migration 0009. Open PRs #110 and #112 also introduce 0010. Rebase and renumber the SQL filenames and journal entries in merge order before combining those branches; verify the entire sequence on a disposable database before deployment. Do not publish a release with conflicting journal indices.
+The credential migration follows main's `0010_mature_silver_surfer` as migration 0011. PR #110 still introduces migration 0010 and must be renumbered when integrated; verify the entire sequence on a disposable database before deployment. Do not publish a release with conflicting journal indices.
 
 Seed normalization preserves existing passwords, including changed demo passwords. The platform-admin seed keeps its explicit rotation contract: changing `PLATFORM_ADMIN_PASSWORD` rotates that administrator's password; reusing the same configured password preserves the hash. Duplicate credentials fail without partially promoting an existing user.
 

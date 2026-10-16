@@ -16,7 +16,7 @@ import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
 } from "../../../../services/work-session-access";
-import { generateReferenceSolutions } from "../../../../../agents/teachers-companion/reference-solution";
+import { startReferenceSolutions } from "../../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
 
@@ -53,10 +53,10 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
         tags: ["challenges/reference-solutions"],
         summary: "Regenerate reference solution",
         description:
-          "Regenerate a reference solution with 409 (already running) and 429 (cooldown) guards",
+          "Starts regenerating a reference solution in the background and answers 202 with status=running; poll the list endpoint for the result. 409 (already running) and 429 (cooldown) guards apply.",
         params: ParamsSchema,
         response: {
-          200: RegenerateResponseSchema,
+          202: RegenerateResponseSchema,
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
@@ -126,10 +126,17 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
         }
       }
 
-      // Fire generator (awaited, so response includes final state)
-      await generateReferenceSolutions(challengeId, [kind as "brute_force" | "refined"]);
+      // The PDC can take minutes, longer than proxies keep a request open:
+      // wait only for the claim, then generate in the background.
+      const { claimed } = await startReferenceSolutions(challengeId, [kind]);
+      if (claimed.length === 0) {
+        return reply.status(409).send({
+          success: false as const,
+          message: "Geração já em execução",
+        });
+      }
 
-      // Re-read and return the row
+      // Re-read and return the row (now running)
       const [row] = await db
         .select({
           kind: challengeReferenceSolution.kind,
@@ -157,7 +164,7 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
         });
       }
 
-      return reply.status(200).send({
+      return reply.status(202).send({
         success: true as const,
         data: {
           kind: row.kind as "brute_force" | "refined",

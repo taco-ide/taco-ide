@@ -23,7 +23,7 @@ const repositoryPath = fileURLToPath(
 );
 const normalization = readFileSync(
   new URL(
-    "../../../../../../../../packages/infra/drizzle/0010_credential_account_identifiers.sql",
+    "../../../../../../../../packages/infra/drizzle/0011_credential_account_identifiers.sql",
     import.meta.url,
   ),
   "utf8",

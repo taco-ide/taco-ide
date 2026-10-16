@@ -15,8 +15,7 @@ taco-ide/
 │   ├── infra/        # Shared infrastructure (DB, Auth, Docker)
 │   ├── types/        # Shared TypeScript types
 │   ├── eslint-config/
-│   ├── typescript-config/
-│   └── ui/           # Shared UI components
+│   └── typescript-config/
 └── docs/             # Documentation
 ```
 
@@ -31,7 +30,7 @@ taco-ide/
 - **Kubb** - Code generation for types and React Query hooks
 
 ### Frontend (`apps/web`)
-- **Next.js 14** - React framework with App Router
+- **Next.js 16** - React framework with App Router
 - **Tailwind CSS** - Utility-first CSS framework
 - **Radix UI** - Accessible component primitives
 - **Zustand** - State management
@@ -47,7 +46,7 @@ taco-ide/
 
 ### Prerequisites
 
-- Node.js 22.12+ (CI uses Node 22)
+- Node.js 22.12+ (compatible with npm 11; Docker deployment uses Node.js 22)
 - Docker & Docker Compose
 - npm 11+
 
@@ -190,6 +189,9 @@ This generates:
 | `npm run dev` | Start all apps in development |
 | `npm run build` | Build all apps |
 | `npm run lint` | Lint all packages |
+| `npm run check-types` | Type-check API, web, infrastructure and browser tests |
+| `npm test` | Run API tests against a dedicated database derived from `DATABASE_URL` with a `_test` suffix |
+| `npm run test:e2e` | Run browser tests against the local stack; requires Chromium (`npx playwright install chromium`) and dev fixtures |
 
 ### packages/infra
 | Script | Description |
@@ -221,7 +223,7 @@ This generates:
 
 - [Backend API Guide](apps/api/CLAUDE.md)
 - [Frontend Guide](apps/web/CLAUDE.md)
-- [Architecture Document](docs/new-architecture.md)
+- [Quality checks and CI](docs/quality-checks.md)
 
 ## License
 
