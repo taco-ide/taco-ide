@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3344";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export interface ChatMessage {
   role: "user" | "assistant";

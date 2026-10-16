@@ -1,0 +1,30 @@
+# Single public origin for TACO-IDE: web + API behind one HTTPS domain.
+# Caddy terminates TLS (auto Let's Encrypt/ZeroSSL) and routes by path:
+#   /v1/*, /api/*, /docs  -> api:4000
+#   everything else       -> web:4001
+# It also sets X-Forwarded-Proto/Host, which the API trusts (trustProxy: true).
+#
+# $DOMAIN is injected from the environment (see compose.prod.yaml).
+# To use a contact email for ACME, uncomment the global block and set $ACME_EMAIL.
+
+# {
+#     email {$ACME_EMAIL}
+# }
+
+{$DOMAIN} {
+    encode zstd gzip
+
+    # Allow Knowledge Base uploads (API multipart cap is 10MB).
+    request_body {
+        max_size 12MB
+    }
+
+    @api path /v1/* /api/* /docs /docs/*
+    handle @api {
+        reverse_proxy api:4000
+    }
+
+    handle {
+        reverse_proxy web:4001
+    }
+}

@@ -1,0 +1,108 @@
+# TACO-IDE — LOCAL full stack for Docker Desktop.
+#
+#   docker compose up --build
+#
+# Brings up: db (pgvector) -> migrate (schema + seed, runs once) -> api -> web.
+# Open http://localhost:4001 (web) and http://localhost:4000/docs (API).
+#
+# Secrets/extra config are read from a root `.env` if present (optional locally;
+# sane defaults below let a fresh clone boot). For PRODUCTION on the VMs use
+# compose.prod.yaml instead (no db service, external Postgres, Caddy + HTTPS).
+
+name: taco-ide
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taco
+    ports:
+      # Host 5433 -> container 5432 (avoids clashing with a local Postgres on
+      # 5432). Only for host access/debugging; the app talks to db:5432 inside.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taco"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # One-shot: applies drizzle migrations (incl. CREATE EXTENSION vector) then
+  # seeds base data + dev fixtures (demo professor/aluno accounts). Exits 0.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    restart: "no"
+    # Optional: layer real keys from a root .env (PLATFORM_ADMIN_*, EMBEDDING_*, ...)
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/taco
+      BETTER_AUTH_URL: http://localhost:4000
+      FRONTEND_URL: http://localhost:4001
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-local-dev-better-auth-secret-change-me-0123456789}
+      LLM_API_KEY: ${LLM_API_KEY:-local-dev-placeholder}
+    command:
+      - sh
+      - -c
+      - npx drizzle-kit migrate --config ./drizzle.config.ts && npx tsx src/db/seeds/base.ts && npx tsx src/db/seeds/dev.ts
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runner
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/taco
+      BETTER_AUTH_URL: http://localhost:4000
+      FRONTEND_URL: http://localhost:4001
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-local-dev-better-auth-secret-change-me-0123456789}
+      LLM_API_KEY: ${LLM_API_KEY:-local-dev-placeholder}
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads:/repo/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Baked into the client bundle at build time. Browser talks to the API
+        # on the host-published port, so localhost:4000 is correct locally.
+        NEXT_PUBLIC_API_URL: http://localhost:4000
+    restart: unless-stopped
+    environment:
+      PORT: "4001"
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "4001:4001"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  uploads:
