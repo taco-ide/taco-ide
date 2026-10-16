@@ -1,5 +1,6 @@
+import { assertKnowledgeBaseResourceAccess } from "../../../services/knowledge-base-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema204,
@@ -50,39 +51,15 @@ export async function deleteKnowledgeBaseRoute(app: FastifyTypedInstance) {
 
       const { kbId } = request.params;
 
-      const existing = await db
-        .select({
-          id: knowledgeBase.id,
-          organizationId: knowledgeBase.organizationId,
-          createdByUserId: knowledgeBase.createdByUserId,
-        })
-        .from(knowledgeBase)
-        .where(and(eq(knowledgeBase.id, kbId), isNull(knowledgeBase.deletedAt)))
-        .limit(1);
-
-      if (!existing[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Knowledge base not found",
-        });
-      }
-
-      if (existing[0].organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Knowledge base does not belong to your active organization",
-        });
-      }
-
-      if (
-        usr.role === "teacher" &&
-        existing[0].createdByUserId !== usr.id
-      ) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only delete your own knowledge bases",
-        });
-      }
+      const access = await assertKnowledgeBaseResourceAccess(
+        usr,
+        kbId,
+        "manage"
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       await db
         .update(knowledgeBase)

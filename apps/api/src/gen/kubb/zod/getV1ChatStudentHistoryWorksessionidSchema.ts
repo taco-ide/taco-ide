@@ -45,6 +45,17 @@ export const getV1ChatStudentHistoryWorksessionid401Schema = z.object({
 /**
  * @description Default Response
  */
+export const getV1ChatStudentHistoryWorksessionid403Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const getV1ChatStudentHistoryWorksessionid404Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),

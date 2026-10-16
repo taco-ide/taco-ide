@@ -1,15 +1,19 @@
+import {
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
+  getMembershipRole,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
-  ResponseSchema200,
   ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { classroom, userClassroom, member } from "@repo/infra/db/schema";
+import { userClassroom } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -63,88 +67,28 @@ export async function enrollClassroomRoute(app: FastifyTypedInstance) {
       const { id: classroomId } = request.params;
       const targetUserId = request.body?.userId ?? usr.id;
 
-      const cls = await db
-        .select({
-          id: classroom.id,
-          organizationId: classroom.organizationId,
-          teacherUserId: classroom.teacherUserId,
-        })
-        .from(classroom)
-        .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
-        .limit(1);
-
-      if (!cls[0]) {
-        return reply.status(404).send({
+      const ctx = await loadClassroomAccessContext(classroomId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      if (targetUserId !== usr.id) {
+        const access = await assertCanAccessClassroom(usr, ctx, "manage");
+        if (!access.ok)
+          return reply
+            .status(access.status)
+            .send({ success: false as const, message: access.message });
+      } else if (!(await getMembershipRole(usr.id, ctx.organizationId))) {
+        return reply.status(403).send({
           success: false as const,
-          message: "Classroom not found",
+          message: "You must be a member of this organization",
         });
       }
-
-      const isSelfEnroll = targetUserId === usr.id;
-
-      if (!isSelfEnroll) {
-        const membership = await db
-          .select({ role: member.role })
-          .from(member)
-          .where(
-            and(
-              eq(member.userId, usr.id),
-              eq(member.organizationId, cls[0].organizationId)
-            )
-          )
-          .limit(1);
-
-        if (!membership[0]) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "You must be a member of the organization to enroll others",
-          });
-        }
-
-        const isCoordinatorPlus = ["coordinator", "admin"].includes(membership[0].role);
-        const isLeadTeacher = cls[0].teacherUserId === usr.id;
-        if (!isCoordinatorPlus && !isLeadTeacher) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Only coordinator or the assigned teacher can enroll other users",
-          });
-        }
-
-        const targetMember = await db
-          .select({ id: member.id })
-          .from(member)
-          .where(
-            and(
-              eq(member.userId, targetUserId),
-              eq(member.organizationId, cls[0].organizationId)
-            )
-          )
-          .limit(1);
-        if (!targetMember[0]) {
-          return reply.status(400).send({
-            success: false as const,
-            message: "Target user must be a member of the classroom's organization",
-          });
-        }
-      } else {
-        const userMember = await db
-          .select({ id: member.id })
-          .from(member)
-          .where(
-            and(
-              eq(member.userId, usr.id),
-              eq(member.organizationId, cls[0].organizationId)
-            )
-          )
-          .limit(1);
-
-        if (!userMember[0]) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "You must be a member of the organization to enroll in this classroom",
-          });
-        }
-      }
+      if (!(await getMembershipRole(targetUserId, ctx.organizationId)))
+        return reply.status(400).send({
+          success: false as const,
+          message: "Target user must be a member of this organization",
+        });
 
       const existing = await db
         .select()

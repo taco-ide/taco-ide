@@ -1,3 +1,7 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanListChallengeWorkSessions,
+} from "../../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
@@ -9,13 +13,8 @@ import {
   ResponseSchema404,
   ResponseSchema409,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import {
-  challenge,
-  knowledgeBase,
-  challengeKnowledgeBase,
-} from "@repo/infra/db/schema";
+import { knowledgeBase, challengeKnowledgeBase } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -46,7 +45,6 @@ export async function linkKnowledgeBaseRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenge-knowledge-bases"],
         summary: "Link knowledge base to challenge",
@@ -76,34 +74,19 @@ export async function linkKnowledgeBaseRoute(app: FastifyTypedInstance) {
       const { challengeId } = request.params;
       const { knowledgeBaseId } = request.body;
 
-      // 1. Fetch challenge, validate exists and not deleted
-      const ch = await db
-        .select({
-          id: challenge.id,
-          classroomId: challenge.classroomId,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
-
-      // 2. IDOR: teacher can only manage own challenges
-      if (usr.role === "teacher" && ch[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only manage knowledge bases for your own challenges",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       // 3. Challenge must belong to a classroom
-      if (!ch[0].classroomId) {
+      if (!ctx.classroomId) {
         return reply.status(400).send({
           success: false as const,
           message:
@@ -121,7 +104,8 @@ export async function linkKnowledgeBaseRoute(app: FastifyTypedInstance) {
         .where(
           and(
             eq(knowledgeBase.id, knowledgeBaseId),
-            isNull(knowledgeBase.deletedAt)
+            isNull(knowledgeBase.deletedAt),
+            eq(knowledgeBase.organizationId, ctx.organizationId ?? "")
           )
         )
         .limit(1);
@@ -134,7 +118,7 @@ export async function linkKnowledgeBaseRoute(app: FastifyTypedInstance) {
       }
 
       // 5. KB must belong to same classroom as challenge
-      if (kb[0].classroomId !== ch[0].classroomId) {
+      if (kb[0].classroomId !== ctx.classroomId) {
         return reply.status(400).send({
           success: false as const,
           message:

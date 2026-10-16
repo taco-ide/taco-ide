@@ -6,7 +6,7 @@
 import fetch from "@/lib/apiClient";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1ClassroomsIdQueryResponse, GetV1ClassroomsIdPathParams, GetV1ClassroomsId401, GetV1ClassroomsId404 } from "../../../../../../packages/types/kubb/GetV1ClassroomsId.ts";
+import type { GetV1ClassroomsIdQueryResponse, GetV1ClassroomsIdPathParams, GetV1ClassroomsId401, GetV1ClassroomsId403, GetV1ClassroomsId404 } from "../../../../../../packages/types/kubb/GetV1ClassroomsId.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ClassroomsIdQueryKey = (id: GetV1ClassroomsIdPathParams["id"]) => [{ url: '/v1/classrooms/:id/', params: {id:id} }] as const
@@ -21,13 +21,13 @@ export type GetV1ClassroomsIdQueryKey = ReturnType<typeof getV1ClassroomsIdQuery
 export async function getV1ClassroomsId(id: GetV1ClassroomsIdPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId404>, unknown>({ method : "GET", url : `/v1/classrooms/${id}/`, ... requestConfig })  
+  const res = await request<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId403 | GetV1ClassroomsId404>, unknown>({ method : "GET", url : `/v1/classrooms/${id}/`, ... requestConfig })
   return res.data
 }
 
 export function getV1ClassroomsIdQueryOptions(id: GetV1ClassroomsIdPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ClassroomsIdQueryKey(id)
-  return queryOptions<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId404>, GetV1ClassroomsIdQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId403 | GetV1ClassroomsId404>, GetV1ClassroomsIdQueryResponse, typeof queryKey>({
    enabled: !!(id),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ClassroomsIdQueryOptions(id: GetV1ClassroomsIdPathParams["i
  */
 export function useGetV1ClassroomsId<TData = GetV1ClassroomsIdQueryResponse, TQueryData = GetV1ClassroomsIdQueryResponse, TQueryKey extends QueryKey = GetV1ClassroomsIdQueryKey>(id: GetV1ClassroomsIdPathParams["id"], options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1ClassroomsIdQueryResponse, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId403 | GetV1ClassroomsId404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ClassroomsId<TData = GetV1ClassroomsIdQueryResponse, TQu
    ...getV1ClassroomsIdQueryOptions(id, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ClassroomsId401 | GetV1ClassroomsId403 | GetV1ClassroomsId404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

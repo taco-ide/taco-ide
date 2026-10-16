@@ -41,6 +41,17 @@ export const postV1ChatTeacherMessage404Schema = z.object({
 /**
  * @description Default Response
  */
+export const postV1ChatTeacherMessage429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
 export const postV1ChatTeacherMessage500Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
@@ -51,7 +62,7 @@ export const postV1ChatTeacherMessage500Schema = z.object({
 
 export const postV1ChatTeacherMessageMutationRequestSchema = z.object({
     "classroomId": z.string(),
-"message": z.string().min(1)
+"message": z.string().min(1).max(10000)
     })
 
 export const postV1ChatTeacherMessageMutationResponseSchema = z.any()

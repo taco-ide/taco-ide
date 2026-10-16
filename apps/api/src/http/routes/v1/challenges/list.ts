@@ -1,14 +1,10 @@
+import { challengeReadCondition } from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, inArray, and, desc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, isNull, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import { ResponseSchema200, ResponseSchema401 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  challenge,
-  classroom,
-  member,
-  user,
-} from "@repo/infra/db/schema";
+import { challenge, classroom, user } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -73,24 +69,24 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const { scope, classroomId, difficulty, tags, page, perPage } = request.query;
+      const { scope, classroomId, difficulty, tags, page, perPage } =
+        request.query;
       const tagsArray = tags ? tags.split(",").map((t) => t.trim()) : undefined;
       const offset = (page - 1) * perPage;
 
-      const conditions = [isNull(challenge.deletedAt)];
+      const conditions = [challengeReadCondition(usr)];
 
-      if (classroomId) {
-        conditions.push(eq(challenge.classroomId, classroomId));
-      } else if (scope === "public") {
-        conditions.push(isNull(challenge.classroomId));
-      } else if (scope === "mine") {
-        const userClassroomIds = db
-          .select({ id: classroom.id })
-          .from(classroom)
-          .innerJoin(member, eq(classroom.organizationId, member.organizationId))
-          .where(and(eq(member.userId, usr.id), isNull(classroom.deletedAt)));
-
-        conditions.push(inArray(challenge.classroomId, userClassroomIds));
+      if (classroomId) conditions.push(eq(challenge.classroomId, classroomId));
+      if (scope === "public") conditions.push(isNull(challenge.classroomId));
+      if (scope === "mine")
+        conditions.push(sql`${challenge.classroomId} is not null`);
+      if (tagsArray && tagsArray.length > 0) {
+        conditions.push(
+          sql`${challenge.tags} ?| ARRAY[${sql.join(
+            tagsArray.map((tag) => sql`${tag}`),
+            sql`, `
+          )}]::text[]`
+        );
       }
 
       if (difficulty) {
@@ -104,13 +100,6 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
         .from(challenge)
         .where(whereClause);
       const total = Number(countResult[0]?.count ?? 0);
-
-      let tagsCondition = undefined;
-      if (tagsArray && tagsArray.length > 0) {
-        tagsCondition = sql`${challenge.tags} ?| ${tagsArray}`;
-      }
-      const finalWhere =
-        tagsCondition ? and(whereClause, tagsCondition) : whereClause;
 
       const challenges = await db
         .select({
@@ -126,7 +115,7 @@ export async function listChallengesRoute(app: FastifyTypedInstance) {
         .from(challenge)
         .leftJoin(classroom, eq(challenge.classroomId, classroom.id))
         .leftJoin(user, eq(challenge.createdByUserId, user.id))
-        .where(finalWhere)
+        .where(whereClause)
         .orderBy(desc(challenge.createdAt))
         .limit(perPage)
         .offset(offset);

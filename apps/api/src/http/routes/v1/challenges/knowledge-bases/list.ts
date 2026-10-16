@@ -1,3 +1,7 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanListChallengeWorkSessions,
+} from "../../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
@@ -7,10 +11,8 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
-  challenge,
   knowledgeBase,
   knowledgeBaseDocument,
   challengeKnowledgeBase,
@@ -45,7 +47,6 @@ export async function listChallengeKnowledgeBasesRoute(
   }>(
     "/",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenge-knowledge-bases"],
         summary: "List knowledge bases linked to challenge",
@@ -71,31 +72,16 @@ export async function listChallengeKnowledgeBasesRoute(
 
       const { challengeId } = request.params;
 
-      // Fetch challenge, validate exists and not deleted
-      const ch = await db
-        .select({
-          id: challenge.id,
-          createdByUserId: challenge.createdByUserId,
-        })
-        .from(challenge)
-        .where(and(eq(challenge.id, challengeId), isNull(challenge.deletedAt)))
-        .limit(1);
-
-      if (!ch[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Challenge not found",
-        });
-      }
-
-      // IDOR: teacher can only view own challenges' KBs
-      if (usr.role === "teacher" && ch[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message:
-            "You can only view knowledge bases for your own challenges",
-        });
-      }
+      const ctx = await loadChallengeWorkAccessContext(challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanListChallengeWorkSessions(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       // Document count subquery
       const docCountSubquery = db
@@ -130,7 +116,17 @@ export async function listChallengeKnowledgeBasesRoute(
           docCountSubquery,
           eq(knowledgeBase.id, docCountSubquery.knowledgeBaseId)
         )
-        .where(eq(challengeKnowledgeBase.challengeId, challengeId));
+        .where(
+          and(
+            eq(challengeKnowledgeBase.challengeId, challengeId),
+            ctx.classroomId
+              ? and(
+                  eq(knowledgeBase.classroomId, ctx.classroomId),
+                  eq(knowledgeBase.organizationId, ctx.organizationId ?? "")
+                )
+              : sql`false`
+          )
+        );
 
       return reply.status(200).send({
         success: true as const,

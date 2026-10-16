@@ -6,7 +6,7 @@
 import fetch from "@/lib/apiClient";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChallengesIdSolutionQueryResponse, GetV1ChallengesIdSolutionPathParams, GetV1ChallengesIdSolution401, GetV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdSolution.ts";
+import type { GetV1ChallengesIdSolutionQueryResponse, GetV1ChallengesIdSolutionPathParams, GetV1ChallengesIdSolution401, GetV1ChallengesIdSolution403, GetV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/GetV1ChallengesIdSolution.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1ChallengesIdSolutionQueryKey = (id: GetV1ChallengesIdSolutionPathParams["id"]) => [{ url: '/v1/challenges/:id/solution/', params: {id:id} }] as const
@@ -21,13 +21,13 @@ export type GetV1ChallengesIdSolutionQueryKey = ReturnType<typeof getV1Challenge
 export async function getV1ChallengesIdSolution(id: GetV1ChallengesIdSolutionPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution404>, unknown>({ method : "GET", url : `/v1/challenges/${id}/solution/`, ... requestConfig })  
+  const res = await request<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution403 | GetV1ChallengesIdSolution404>, unknown>({ method : "GET", url : `/v1/challenges/${id}/solution/`, ... requestConfig })
   return res.data
 }
 
 export function getV1ChallengesIdSolutionQueryOptions(id: GetV1ChallengesIdSolutionPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ChallengesIdSolutionQueryKey(id)
-  return queryOptions<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution404>, GetV1ChallengesIdSolutionQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution403 | GetV1ChallengesIdSolution404>, GetV1ChallengesIdSolutionQueryResponse, typeof queryKey>({
    enabled: !!(id),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ChallengesIdSolutionQueryOptions(id: GetV1ChallengesIdSolut
  */
 export function useGetV1ChallengesIdSolution<TData = GetV1ChallengesIdSolutionQueryResponse, TQueryData = GetV1ChallengesIdSolutionQueryResponse, TQueryKey extends QueryKey = GetV1ChallengesIdSolutionQueryKey>(id: GetV1ChallengesIdSolutionPathParams["id"], options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1ChallengesIdSolutionQueryResponse, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution403 | GetV1ChallengesIdSolution404>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ChallengesIdSolution<TData = GetV1ChallengesIdSolutionQu
    ...getV1ChallengesIdSolutionQueryOptions(id, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution404>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1ChallengesIdSolution401 | GetV1ChallengesIdSolution403 | GetV1ChallengesIdSolution404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

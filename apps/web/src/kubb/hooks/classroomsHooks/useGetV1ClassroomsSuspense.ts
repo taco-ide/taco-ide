@@ -14,7 +14,7 @@ export const getV1ClassroomsSuspenseQueryKey = (params?: GetV1ClassroomsQueryPar
 export type GetV1ClassroomsSuspenseQueryKey = ReturnType<typeof getV1ClassroomsSuspenseQueryKey>
 
 /**
- * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all accessible active classrooms.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */
@@ -38,7 +38,7 @@ export function getV1ClassroomsSuspenseQueryOptions(params?: GetV1ClassroomsQuer
 }
 
 /**
- * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all non-deleted.
+ * @description List classrooms. scope=mine: user's enrolled or lead teacher; scope=org: from active org; scope=all: all accessible active classrooms.
  * @summary List classrooms
  * {@link /v1/classrooms/}
  */

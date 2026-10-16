@@ -11,11 +11,16 @@ function getBucketKey(req: FastifyRequest): string | null {
   const usr = req.user;
   if (!usr) return null;
   const id = (req.params as { id?: string }).id;
-  return `${usr.id}:${id ?? ""}`;
+  const body = req.body as
+    | { workSessionId?: string; classroomId?: string }
+    | undefined;
+  const resourceId =
+    id ?? body?.workSessionId ?? `teacher:${body?.classroomId ?? ""}`;
+  return `${usr.id}:${resourceId}`;
 }
 
 /**
- * In-memory rate limit for POST /work-sessions/:id/chat (per user + session).
+ * In-memory rate limit shared by JSON and SSE chat (per user + resource).
  */
 export async function workSessionChatRateLimitPreHandler(
   request: FastifyRequest,

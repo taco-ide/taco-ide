@@ -1,5 +1,8 @@
+import {
+  assertCanAccessClassroom,
+  loadClassroomAccessContext,
+} from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -11,7 +14,7 @@ import {
 } from "../../_responses/types";
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { knowledgeBase, classroom } from "@repo/infra/db/schema";
+import { knowledgeBase } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -69,38 +72,18 @@ export async function createKnowledgeBaseRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const organizationId = usr.activeOrganizationId;
-      if (!organizationId) {
-        return reply.status(400).send({
-          success: false as const,
-          message: "User must have an active organization",
-        });
-      }
-
       const { title, description, classroomId } = request.body;
-
-      const cl = await db
-        .select({
-          id: classroom.id,
-          organizationId: classroom.organizationId,
-        })
-        .from(classroom)
-        .where(and(eq(classroom.id, classroomId), isNull(classroom.deletedAt)))
-        .limit(1);
-
-      if (!cl[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Classroom not found",
-        });
-      }
-
-      if (cl[0].organizationId !== organizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Classroom does not belong to your active organization",
-        });
-      }
+      const ctx = await loadClassroomAccessContext(classroomId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      const access = await assertCanAccessClassroom(usr, ctx, "manage");
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+      const organizationId = ctx.organizationId;
 
       const id = randomUUID();
 

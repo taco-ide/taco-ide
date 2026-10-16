@@ -1,3 +1,4 @@
+import { assertKnowledgeBaseResourceAccess } from "../../../../services/knowledge-base-access";
 import { z } from "zod";
 import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
@@ -7,10 +8,7 @@ import {
   ResponseSchema404,
 } from "../../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  knowledgeBase,
-  knowledgeBaseDocument,
-} from "@repo/infra/db/schema";
+import { knowledgeBaseDocument } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -83,28 +81,11 @@ export async function listDocumentsRoute(app: FastifyTypedInstance) {
 
       const { kbId } = request.params;
 
-      const kb = await db
-        .select({
-          id: knowledgeBase.id,
-          organizationId: knowledgeBase.organizationId,
-        })
-        .from(knowledgeBase)
-        .where(and(eq(knowledgeBase.id, kbId), isNull(knowledgeBase.deletedAt)))
-        .limit(1);
-
-      if (!kb[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Knowledge base not found",
-        });
-      }
-
-      if (kb[0].organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Knowledge base does not belong to your active organization",
-        });
-      }
+      const access = await assertKnowledgeBaseResourceAccess(usr, kbId, "read");
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       const { page, perPage } = request.query;
       const offset = (page - 1) * perPage;

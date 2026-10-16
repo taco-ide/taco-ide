@@ -6,7 +6,7 @@
 import fetch from "@/lib/apiClient";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1ChatStudentHistoryWorksessionidQueryResponse, GetV1ChatStudentHistoryWorksessionidPathParams, GetV1ChatStudentHistoryWorksessionid401, GetV1ChatStudentHistoryWorksessionid404 } from "../../../../../../packages/types/kubb/GetV1ChatStudentHistoryWorksessionid.ts";
+import type { GetV1ChatStudentHistoryWorksessionidQueryResponse, GetV1ChatStudentHistoryWorksessionidPathParams, GetV1ChatStudentHistoryWorksessionid401, GetV1ChatStudentHistoryWorksessionid403, GetV1ChatStudentHistoryWorksessionid404 } from "../../../../../../packages/types/kubb/GetV1ChatStudentHistoryWorksessionid.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1ChatStudentHistoryWorksessionidSuspenseQueryKey = (workSessionId: GetV1ChatStudentHistoryWorksessionidPathParams["workSessionId"]) => [{ url: '/v1/chat/student/history/:workSessionId', params: {workSessionId:workSessionId} }] as const
@@ -21,13 +21,13 @@ export type GetV1ChatStudentHistoryWorksessionidSuspenseQueryKey = ReturnType<ty
 export async function getV1ChatStudentHistoryWorksessionidSuspense(workSessionId: GetV1ChatStudentHistoryWorksessionidPathParams["workSessionId"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid404>, unknown>({ method : "GET", url : `/v1/chat/student/history/${workSessionId}`, ... requestConfig })  
+  const res = await request<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid403 | GetV1ChatStudentHistoryWorksessionid404>, unknown>({ method : "GET", url : `/v1/chat/student/history/${workSessionId}`, ... requestConfig })
   return res.data
 }
 
 export function getV1ChatStudentHistoryWorksessionidSuspenseQueryOptions(workSessionId: GetV1ChatStudentHistoryWorksessionidPathParams["workSessionId"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1ChatStudentHistoryWorksessionidSuspenseQueryKey(workSessionId)
-  return queryOptions<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid404>, GetV1ChatStudentHistoryWorksessionidQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid403 | GetV1ChatStudentHistoryWorksessionid404>, GetV1ChatStudentHistoryWorksessionidQueryResponse, typeof queryKey>({
    enabled: !!(workSessionId),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1ChatStudentHistoryWorksessionidSuspenseQueryOptions(workSes
  */
 export function useGetV1ChatStudentHistoryWorksessionidSuspense<TData = GetV1ChatStudentHistoryWorksessionidQueryResponse, TQueryKey extends QueryKey = GetV1ChatStudentHistoryWorksessionidSuspenseQueryKey>(workSessionId: GetV1ChatStudentHistoryWorksessionidPathParams["workSessionId"], options: 
 {
-  query?: Partial<UseSuspenseQueryOptions<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid404>, TData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<UseSuspenseQueryOptions<GetV1ChatStudentHistoryWorksessionidQueryResponse, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid403 | GetV1ChatStudentHistoryWorksessionid404>, TData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1ChatStudentHistoryWorksessionidSuspense<TData = GetV1Cha
    ...getV1ChatStudentHistoryWorksessionidSuspenseQueryOptions(workSessionId, config),
    queryKey,
    ...queryOptions
-  } as unknown as UseSuspenseQueryOptions, queryClient) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid404>> & { queryKey: TQueryKey }
+  } as unknown as UseSuspenseQueryOptions, queryClient) as UseSuspenseQueryResult<TData, ResponseErrorConfig<GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid403 | GetV1ChatStudentHistoryWorksessionid404>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

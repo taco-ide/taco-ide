@@ -107,6 +107,32 @@ export type GetV1ChatStudentHistoryWorksessionid401 = {
     };
 };
 
+export const getV1ChatStudentHistoryWorksessionid403SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1ChatStudentHistoryWorksessionid403SuccessEnum = (typeof getV1ChatStudentHistoryWorksessionid403SuccessEnum)[keyof typeof getV1ChatStudentHistoryWorksessionid403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1ChatStudentHistoryWorksessionid403 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1ChatStudentHistoryWorksessionid403SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const getV1ChatStudentHistoryWorksessionid404SuccessEnum = {
     "false": false
 } as const;
@@ -138,5 +164,5 @@ export type GetV1ChatStudentHistoryWorksessionidQueryResponse = GetV1ChatStudent
 export type GetV1ChatStudentHistoryWorksessionidQuery = {
     Response: GetV1ChatStudentHistoryWorksessionid200;
     PathParams: GetV1ChatStudentHistoryWorksessionidPathParams;
-    Errors: GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid404;
+    Errors: GetV1ChatStudentHistoryWorksessionid401 | GetV1ChatStudentHistoryWorksessionid403 | GetV1ChatStudentHistoryWorksessionid404;
 };

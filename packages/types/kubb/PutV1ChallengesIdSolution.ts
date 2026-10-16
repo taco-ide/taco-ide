@@ -151,6 +151,32 @@ export type PutV1ChallengesIdSolution401 = {
     };
 };
 
+export const putV1ChallengesIdSolution403SuccessEnum = {
+    "false": false
+} as const;
+
+export type PutV1ChallengesIdSolution403SuccessEnum = (typeof putV1ChallengesIdSolution403SuccessEnum)[keyof typeof putV1ChallengesIdSolution403SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PutV1ChallengesIdSolution403 = {
+    /**
+     * @type boolean
+    */
+    success: PutV1ChallengesIdSolution403SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const putV1ChallengesIdSolution404SuccessEnum = {
     "false": false
 } as const;
@@ -199,5 +225,5 @@ export type PutV1ChallengesIdSolutionMutation = {
     Response: PutV1ChallengesIdSolution200 | PutV1ChallengesIdSolution201;
     Request: PutV1ChallengesIdSolutionMutationRequest;
     PathParams: PutV1ChallengesIdSolutionPathParams;
-    Errors: PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution404;
+    Errors: PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution403 | PutV1ChallengesIdSolution404;
 };

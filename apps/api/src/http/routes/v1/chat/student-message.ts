@@ -1,3 +1,8 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanParticipateInChallengeWorkSession,
+} from "../../../services/work-session-access";
+import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
@@ -7,6 +12,7 @@ import {
   ResponseSchema403,
   ResponseSchema404,
   ResponseSchema500,
+  ResponseSchema429,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import {
@@ -17,12 +23,23 @@ import {
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
 import { eq, desc, and, isNull } from "drizzle-orm";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import {
+  AIMessage,
+  HumanMessage,
+  SystemMessage,
+} from "@langchain/core/messages";
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
+import {
+  createLlm,
+  AGENT_TIMEOUT_MS,
+  AgentTimeoutError,
+} from "../../../../agents/llm-factory";
+import {
+  AGENT_FALLBACK_RESPONSE,
+  TA_HISTORY_TURN_CAP,
+} from "../../../../agents/constants";
 import { formatSSEEvent } from "../../../../agents/sse-events";
 import { formatSupportMaterials } from "../../../../agents/support-materials";
 import { detectLanguageHint } from "../../../../agents/language-detect";
@@ -42,6 +59,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
   app.post(
     "/student/message",
     {
+      preHandler: [workSessionChatRateLimitPreHandler],
       schema: {
         tags: ["chat"],
         summary: "Send a message to the teaching assistant agent (SSE)",
@@ -55,6 +73,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           403: ResponseSchema403,
           404: ResponseSchema404,
           500: ResponseSchema500,
+          429: ResponseSchema429,
         },
       },
     },
@@ -93,11 +112,27 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           .send({ success: false as const, message: "Work session has ended" });
       }
 
+      const ctx = await loadChallengeWorkAccessContext(ws[0].challengeId);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanParticipateInChallengeWorkSession(
+        user,
+        ctx
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+
       // Load challenge
       const ch = await db
         .select()
         .from(challenge)
-        .where(and(eq(challenge.id, ws[0].challengeId), isNull(challenge.deletedAt)))
+        .where(
+          and(eq(challenge.id, ws[0].challengeId), isNull(challenge.deletedAt))
+        )
         .limit(1);
 
       if (!ch[0]) {
@@ -112,6 +147,12 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         .from(teachingAssistant)
         .where(eq(teachingAssistant.id, ws[0].teachingAssistantId))
         .limit(1);
+
+      if (!ta[0]?.isActive)
+        return reply.status(404).send({
+          success: false as const,
+          message: "Teaching assistant not found",
+        });
 
       let modelParams: Record<string, unknown> = {};
       if (ta[0]?.modelId) {
@@ -149,16 +190,6 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       };
 
       // HTTP status is committed here — all subsequent errors must use the SSE error event type
-      reply.raw.writeHead(200, {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
-      });
-
-      let fullResponse = "";
-      let streamErrored = false;
-
       const langfuseCallback = getLangfuseCallback({
         userId: user.id,
         sessionId: workSessionId,
@@ -169,6 +200,16 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         },
       });
 
+      reply.raw.writeHead(200, {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
+
+      let fullResponse = "";
+      let streamErrored = false;
+
       try {
         // Load recent conversation history for context memory
         const historyRows = await db
@@ -177,40 +218,37 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           .where(
             and(
               eq(userInteractionOnChallenge.workSessionId, workSessionId),
-              eq(userInteractionOnChallenge.interactionType, "chat"),
-            ),
+              eq(userInteractionOnChallenge.interactionType, "chat")
+            )
           )
-          .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
+          .orderBy(
+            desc(userInteractionOnChallenge.createdAt),
+            desc(userInteractionOnChallenge.id)
+          )
           .limit(TA_HISTORY_TURN_CAP);
 
         // Reverse to chronological order and build message pairs
-        const historyMessages = historyRows
-          .reverse()
-          .flatMap((row) => {
-            const msgs: (HumanMessage | AIMessage)[] = [];
-            // Only include pairs where modelResponse is non-empty (defensive)
-            if (row.userPrompt) {
-              msgs.push(new HumanMessage(row.userPrompt));
-            }
-            if (row.modelResponse?.trim()) {
-              msgs.push(new AIMessage(row.modelResponse));
-            }
-            return msgs;
-          });
+        const historyMessages = historyRows.reverse().flatMap((row) => {
+          const msgs: (HumanMessage | AIMessage)[] = [];
+          // Only include pairs where modelResponse is non-empty (defensive)
+          if (row.userPrompt) {
+            msgs.push(new HumanMessage(row.userPrompt));
+          }
+          if (row.modelResponse?.trim()) {
+            msgs.push(new AIMessage(row.modelResponse));
+          }
+          return msgs;
+        });
 
         // Create LLM instance with model parameters applied
         const llmInstance = createLlm(modelParams);
         const agent = buildTeachingAssistantAgent(llmInstance);
 
-
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         // Use AbortController to enforce timeout
         const controller = new AbortController();
-        const timeout = setTimeout(
-          () => controller.abort(),
-          AGENT_TIMEOUT_MS,
-        );
+        const timeout = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS);
 
         try {
           const stream = agent.streamEvents(
@@ -232,7 +270,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
               version: "v2",
               signal: controller.signal,
               callbacks,
-            },
+            }
           );
 
           for await (const event of stream) {
@@ -255,10 +293,14 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           // If the agent returned nothing (e.g. guardrail triggered), send a fallback
           if (!fullResponse) {
             fullResponse = AGENT_FALLBACK_RESPONSE;
-            reply.raw.write(formatSSEEvent({ type: "text", content: fullResponse }));
+            reply.raw.write(
+              formatSSEEvent({ type: "text", content: fullResponse })
+            );
           }
 
-          reply.raw.write(formatSSEEvent({ type: "done", full_response: fullResponse }));
+          reply.raw.write(
+            formatSSEEvent({ type: "done", full_response: fullResponse })
+          );
         } finally {
           clearTimeout(timeout);
         }
@@ -273,27 +315,43 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           : "Agent invocation failed";
         reply.raw.write(formatSSEEvent({ type: "error", content: errorMsg }));
       } finally {
-        if (langfuseCallback) {
-          await langfuseCallback.flushAsync();
+        try {
+          await langfuseCallback?.flushAsync();
+        } catch (err) {
+          request.log.error({ err }, "Chat observability flush failed");
         }
       }
 
-      // Persist interaction to DB (skip if fallback response or stream errored mid-flight)
-      if (fullResponse && fullResponse !== AGENT_FALLBACK_RESPONSE && !streamErrored) {
-        const interactionId = randomUUID();
-        await db.insert(userInteractionOnChallenge).values({
-          id: interactionId,
-          workSessionId,
-          challengeId: ws[0].challengeId,
-          interactionType: "chat",
-          userPrompt: message,
-          modelResponse: fullResponse,
-          code: currentCode ?? null,
-          stdout: stdout ?? null,
-        });
+      try {
+        // Persist interaction to DB (skip if fallback response or stream errored mid-flight)
+        if (
+          fullResponse &&
+          fullResponse !== AGENT_FALLBACK_RESPONSE &&
+          !streamErrored
+        ) {
+          const interactionId = randomUUID();
+          await db.insert(userInteractionOnChallenge).values({
+            id: interactionId,
+            workSessionId,
+            challengeId: ws[0].challengeId,
+            interactionType: "chat",
+            userPrompt: message,
+            modelResponse: fullResponse,
+            code: currentCode ?? null,
+            stdout: stdout ?? null,
+          });
+        }
+      } catch (err) {
+        request.log.error({ err }, "Chat interaction persistence failed");
+        reply.raw.write(
+          formatSSEEvent({
+            type: "error",
+            content: "Unable to save chat interaction",
+          })
+        );
+      } finally {
+        reply.raw.end();
       }
-
-      reply.raw.end();
-    },
+    }
   );
 }

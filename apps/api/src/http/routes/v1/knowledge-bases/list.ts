@@ -1,5 +1,6 @@
+import { knowledgeBaseReadCondition } from "../../../services/knowledge-base-access";
 import { z } from "zod";
-import { eq, and, desc, isNull, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -7,10 +8,7 @@ import {
   ResponseSchema401,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  knowledgeBase,
-  knowledgeBaseDocument,
-} from "@repo/infra/db/schema";
+import { knowledgeBase } from "@repo/infra/db/schema";
 
 // ==================== SCHEMAS ====================
 
@@ -76,7 +74,7 @@ export async function listKnowledgeBasesRoute(app: FastifyTypedInstance) {
 
       const whereClause = and(
         eq(knowledgeBase.classroomId, classroomId),
-        isNull(knowledgeBase.deletedAt)
+        knowledgeBaseReadCondition(usr)
       );
 
       const countResult = await db

@@ -6,7 +6,7 @@
 import fetch from "@/lib/apiClient";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PutV1ChallengesIdSolutionMutationRequest, PutV1ChallengesIdSolutionMutationResponse, PutV1ChallengesIdSolutionPathParams, PutV1ChallengesIdSolution401, PutV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/PutV1ChallengesIdSolution.ts";
+import type { PutV1ChallengesIdSolutionMutationRequest, PutV1ChallengesIdSolutionMutationResponse, PutV1ChallengesIdSolutionPathParams, PutV1ChallengesIdSolution401, PutV1ChallengesIdSolution403, PutV1ChallengesIdSolution404 } from "../../../../../../packages/types/kubb/PutV1ChallengesIdSolution.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1ChallengesIdSolutionMutationKey = () => [{ url: '/v1/challenges/:id/solution/' }] as const
@@ -23,7 +23,7 @@ export async function putV1ChallengesIdSolution(id: PutV1ChallengesIdSolutionPat
   
   const requestData = data  
   
-  const res = await request<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution404>, PutV1ChallengesIdSolutionMutationRequest>({ method : "PUT", url : `/v1/challenges/${id}/solution/`, data : requestData, ... requestConfig })  
+  const res = await request<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution403 | PutV1ChallengesIdSolution404>, PutV1ChallengesIdSolutionMutationRequest>({ method : "PUT", url : `/v1/challenges/${id}/solution/`, data : requestData, ... requestConfig })
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function putV1ChallengesIdSolution(id: PutV1ChallengesIdSolutionPat
  */
 export function usePutV1ChallengesIdSolution<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution404>, {id: PutV1ChallengesIdSolutionPathParams["id"], data?: PutV1ChallengesIdSolutionMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution403 | PutV1ChallengesIdSolution404>, {id: PutV1ChallengesIdSolutionPathParams["id"], data?: PutV1ChallengesIdSolutionMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PutV1ChallengesIdSolutionMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePutV1ChallengesIdSolution<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? putV1ChallengesIdSolutionMutationKey()
 
-  return useMutation<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution404>, {id: PutV1ChallengesIdSolutionPathParams["id"], data?: PutV1ChallengesIdSolutionMutationRequest}, TContext>({
+  return useMutation<PutV1ChallengesIdSolutionMutationResponse, ResponseErrorConfig<PutV1ChallengesIdSolution401 | PutV1ChallengesIdSolution403 | PutV1ChallengesIdSolution404>, {id: PutV1ChallengesIdSolutionPathParams["id"], data?: PutV1ChallengesIdSolutionMutationRequest}, TContext>({
     mutationFn: async({ id, data }) => {
       return putV1ChallengesIdSolution(id, data, config)
     },

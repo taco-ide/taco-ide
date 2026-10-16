@@ -108,6 +108,32 @@ export type PostV1ChatStudentMessage404 = {
     };
 };
 
+export const postV1ChatStudentMessage429SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1ChatStudentMessage429SuccessEnum = (typeof postV1ChatStudentMessage429SuccessEnum)[keyof typeof postV1ChatStudentMessage429SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1ChatStudentMessage429 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1ChatStudentMessage429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1ChatStudentMessage500SuccessEnum = {
     "false": false
 } as const;
@@ -162,5 +188,5 @@ export type PostV1ChatStudentMessageMutationResponse = any;
 export type PostV1ChatStudentMessageMutation = {
     Response: any;
     Request: PostV1ChatStudentMessageMutationRequest;
-    Errors: PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage500;
+    Errors: PostV1ChatStudentMessage400 | PostV1ChatStudentMessage401 | PostV1ChatStudentMessage403 | PostV1ChatStudentMessage404 | PostV1ChatStudentMessage429 | PostV1ChatStudentMessage500;
 };

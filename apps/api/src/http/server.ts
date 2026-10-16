@@ -43,7 +43,8 @@ app.setErrorHandler((error, request, reply) => {
   if (hasZodFastifySchemaValidationErrors(error)) {
     const errors: Record<string, string[]> = {};
     for (const issue of error.validation) {
-      const path = issue.instancePath.replace(/^\//, "").replace(/\//g, ".") || "_";
+      const path =
+        issue.instancePath.replace(/^\//, "").replace(/\//g, ".") || "_";
       (errors[path] ??= []).push(issue.message);
     }
     return reply.status(400).send({
@@ -81,19 +82,27 @@ app.setErrorHandler((error, request, reply) => {
     }
     return reply.status(apiStatus).send({
       success: false,
-      message: apiErr.message || "Authentication error",
+      message:
+        apiStatus >= 500
+          ? "Internal Server Error"
+          : apiErr.message || "Authentication error",
     });
   }
 
   const fastifyError = error as { statusCode?: number; message?: string };
   const statusCode =
-    fastifyError.statusCode && fastifyError.statusCode >= 400 ? fastifyError.statusCode : 500;
+    fastifyError.statusCode && fastifyError.statusCode >= 400
+      ? fastifyError.statusCode
+      : 500;
   if (statusCode >= 500) {
     request.log.error({ err: error }, "Unhandled error");
   }
   return reply.status(statusCode).send({
     success: false,
-    message: fastifyError.message || "Internal Server Error",
+    message:
+      statusCode >= 500
+        ? "Internal Server Error"
+        : fastifyError.message || "Request failed",
   });
 });
 
@@ -157,8 +166,14 @@ app.register(fastifySwagger, {
       { name: "auth", description: "Authentication endpoints" },
       { name: "users", description: "User management endpoints" },
       { name: "status", description: "Health check endpoints" },
-      { name: "classrooms", description: "Classroom management and enrollment endpoints" },
-      { name: "organizations", description: "Organization members and invitations" },
+      {
+        name: "classrooms",
+        description: "Classroom management and enrollment endpoints",
+      },
+      {
+        name: "organizations",
+        description: "Organization members and invitations",
+      },
       { name: "chat", description: "Chat agent endpoints" },
     ],
   },

@@ -1,9 +1,14 @@
+import {
+  loadClassroomAccessContext,
+  assertCanAccessClassroom,
+} from "../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
@@ -58,6 +63,7 @@ export async function getClassroomByIdRoute(app: FastifyTypedInstance) {
         response: {
           200: GetClassroomResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -72,6 +78,18 @@ export async function getClassroomByIdRoute(app: FastifyTypedInstance) {
       }
 
       const { id } = request.params;
+
+      const ctx = await loadClassroomAccessContext(id);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Classroom not found" });
+      const access = await assertCanAccessClassroom(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
+      const rosterAccess = await assertCanAccessClassroom(usr, ctx, "manage");
 
       const result = await db
         .select({
@@ -111,7 +129,10 @@ export async function getClassroomByIdRoute(app: FastifyTypedInstance) {
         .where(
           and(
             eq(userClassroom.classroomId, id),
-            isNull(userClassroom.deletedAt)
+            isNull(userClassroom.deletedAt),
+            eq(user.isActive, true),
+            isNull(user.deletedAt),
+            ...(rosterAccess.ok ? [] : [eq(userClassroom.userId, usr.id)])
           )
         );
 

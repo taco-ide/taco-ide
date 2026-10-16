@@ -1,5 +1,6 @@
+import { assertKnowledgeBaseResourceAccess } from "../../../../services/knowledge-base-access";
 import { z } from "zod";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../../types";
 import {
@@ -10,7 +11,7 @@ import {
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { knowledgeBase, knowledgeBaseChunk } from "@repo/infra/db/schema";
+import { knowledgeBaseChunk } from "@repo/infra/db/schema";
 import { generateEmbedding } from "../../../../../services/embedding";
 
 // ==================== SCHEMAS ====================
@@ -48,7 +49,8 @@ export async function createEntryRoute(app: FastifyTypedInstance) {
       schema: {
         tags: ["knowledge-bases"],
         summary: "Create manual knowledge base entry",
-        description: "Create a manual chunk entry in the knowledge base (no document)",
+        description:
+          "Create a manual chunk entry in the knowledge base (no document)",
         params: CreateEntryParamsSchema,
         body: CreateEntryBodySchema,
         response: {
@@ -70,36 +72,15 @@ export async function createEntryRoute(app: FastifyTypedInstance) {
 
       const { kbId } = request.params;
 
-      const kb = await db
-        .select({
-          id: knowledgeBase.id,
-          organizationId: knowledgeBase.organizationId,
-          createdByUserId: knowledgeBase.createdByUserId,
-        })
-        .from(knowledgeBase)
-        .where(and(eq(knowledgeBase.id, kbId), isNull(knowledgeBase.deletedAt)))
-        .limit(1);
-
-      if (!kb[0]) {
-        return reply.status(404).send({
-          success: false as const,
-          message: "Knowledge base not found",
-        });
-      }
-
-      if (kb[0].organizationId !== usr.activeOrganizationId) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "Knowledge base does not belong to your active organization",
-        });
-      }
-
-      if (usr.role === "teacher" && kb[0].createdByUserId !== usr.id) {
-        return reply.status(403).send({
-          success: false as const,
-          message: "You can only manage entries in your own knowledge bases",
-        });
-      }
+      const access = await assertKnowledgeBaseResourceAccess(
+        usr,
+        kbId,
+        "manage"
+      );
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       const { content } = request.body;
 

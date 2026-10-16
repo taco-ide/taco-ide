@@ -1,9 +1,14 @@
+import {
+  loadChallengeWorkAccessContext,
+  assertCanParticipateInChallengeWorkSession,
+} from "../../../services/work-session-access";
 import { z } from "zod";
 import { eq, and, isNull, desc } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
   ResponseSchema401,
+  ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
@@ -62,6 +67,7 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
         response: {
           200: GetChallengeResponseSchema,
           401: ResponseSchema401,
+          403: ResponseSchema403,
           404: ResponseSchema404,
         },
       },
@@ -76,6 +82,17 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
       }
 
       const { id } = request.params;
+
+      const ctx = await loadChallengeWorkAccessContext(id);
+      if (!ctx)
+        return reply
+          .status(404)
+          .send({ success: false as const, message: "Challenge not found" });
+      const access = await assertCanParticipateInChallengeWorkSession(usr, ctx);
+      if (!access.ok)
+        return reply
+          .status(access.status)
+          .send({ success: false as const, message: access.message });
 
       const result = await db
         .select({
@@ -115,7 +132,10 @@ export async function getChallengeByIdRoute(app: FastifyTypedInstance) {
         .from(challengeTeachingAssistant)
         .innerJoin(
           teachingAssistant,
-          eq(challengeTeachingAssistant.teachingAssistantId, teachingAssistant.id)
+          eq(
+            challengeTeachingAssistant.teachingAssistantId,
+            teachingAssistant.id
+          )
         )
         .where(eq(challengeTeachingAssistant.challengeId, id))
         .orderBy(desc(challengeTeachingAssistant.isDefault));
