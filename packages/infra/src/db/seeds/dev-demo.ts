@@ -17,10 +17,9 @@
  * only renders the markdown fallback when JSON is absent.
  */
 import { randomUUID } from "node:crypto";
-import { hashPassword } from "better-auth/crypto";
+import { seedCredential } from "./credentials";
 import { db } from "../index";
 import {
-  account,
   challenge,
   challengeReferenceSolution,
   challengeTeachingAssistant,
@@ -898,8 +897,6 @@ function minutesAgo(min: number): Date {
   return new Date(Date.now() - min * 60_000);
 }
 
-const credential = "credential";
-
 const DEV_PASSWORD = "Teste123!@";
 
 // ===== Main entry =====
@@ -921,8 +918,6 @@ export async function seedPasswordDemoScenario({
     "\n[dev-demo] Seeding password-validator demo (challenge + 3 student journeys)..."
   );
 
-  const passwordHash = await hashPassword(DEV_PASSWORD);
-
   // --- New students: Maria (strong), João (struggling) ---
   await safeInsert("user maria (strong student)", () =>
     db.insert(user).values({
@@ -943,24 +938,16 @@ export async function seedPasswordDemoScenario({
     })
   );
 
-  await safeInsert("account maria", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_STUDENT_MARIA,
-      accountId: "maria@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_STUDENT_MARIA,
-      password: passwordHash,
-    })
-  );
-  await safeInsert("account joao", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_STUDENT_JOAO,
-      accountId: "joao@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_STUDENT_JOAO,
-      password: passwordHash,
-    })
-  );
+  await seedCredential({
+    userId: SEED_USER_STUDENT_MARIA,
+    credentialId: SEED_ACCOUNT_STUDENT_MARIA,
+    password: DEV_PASSWORD,
+  });
+  await seedCredential({
+    userId: SEED_USER_STUDENT_JOAO,
+    credentialId: SEED_ACCOUNT_STUDENT_JOAO,
+    password: DEV_PASSWORD,
+  });
 
   await safeInsert("member maria", () =>
     db.insert(member).values({
@@ -999,24 +986,16 @@ export async function seedPasswordDemoScenario({
     })
   );
 
-  await safeInsert("account mary", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_STUDENT_MARY,
-      accountId: "mary@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_STUDENT_MARY,
-      password: passwordHash,
-    })
-  );
-  await safeInsert("account john", () =>
-    db.insert(account).values({
-      id: SEED_ACCOUNT_STUDENT_JOHN,
-      accountId: "john@taco-demo.local",
-      providerId: credential,
-      userId: SEED_USER_STUDENT_JOHN,
-      password: passwordHash,
-    })
-  );
+  await seedCredential({
+    userId: SEED_USER_STUDENT_MARY,
+    credentialId: SEED_ACCOUNT_STUDENT_MARY,
+    password: DEV_PASSWORD,
+  });
+  await seedCredential({
+    userId: SEED_USER_STUDENT_JOHN,
+    credentialId: SEED_ACCOUNT_STUDENT_JOHN,
+    password: DEV_PASSWORD,
+  });
 
   await safeInsert("member mary", () =>
     db.insert(member).values({
@@ -1226,7 +1205,7 @@ export async function seedPasswordDemoScenario({
 
   console.log("[dev-demo] Password-validator demo seeded.");
   console.log(
-    `  Students added: maria@taco-demo.local, joao@taco-demo.local, mary@taco-demo.local, john@taco-demo.local (senha: ${DEV_PASSWORD})`
+    `  Students added: maria@taco-demo.local, joao@taco-demo.local, mary@taco-demo.local, john@taco-demo.local (initial password: ${DEV_PASSWORD}; existing passwords are preserved)`
   );
   console.log(
     `  Challenge: Strong password validator (id ${SEED_CHALLENGE_PASSWORD})`

@@ -33,7 +33,7 @@ taco-ide/
 ## Development Setup
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 22.12+
 - Docker & Docker Compose
 - npm 11+
 - Pandoc (`brew install pandoc`) - required for document processing in Knowledge Base
