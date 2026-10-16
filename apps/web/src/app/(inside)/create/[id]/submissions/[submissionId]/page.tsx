@@ -75,7 +75,14 @@ function SubmissionDetailContent() {
     useGetV1ChallengesChallengeidSubmissionsSubmissionid(
       challengeId,
       submissionId,
-      { query: { enabled: !!challengeId && !!submissionId } }
+      {
+        query: {
+          enabled: !!challengeId && !!submissionId,
+          // The review runs in the background; poll until it settles.
+          refetchInterval: (query) =>
+            query.state.data?.data?.autoReviewStatus === "running" ? 3000 : false,
+        },
+      }
     );
 
   const { data: challengeData } = useGetV1ChallengesId(challengeId, {
@@ -85,25 +92,22 @@ function SubmissionDetailContent() {
   const submission = submissionData?.data;
   const challenge = challengeData?.data;
 
+  // Depend on the persisted values, not the object: the auto-review polling
+  // refetches the submission and must not wipe what the teacher is typing.
+  const persistedGrade = submission?.grade;
+  const persistedComment = submission?.gradingComment;
+  const loadedSubmissionId = submission?.submissionId;
   useEffect(() => {
-    if (submission) {
-      setGradeInput(submission.grade ?? "");
-      setCommentInput(submission.gradingComment ?? "");
+    if (loadedSubmissionId) {
+      setGradeInput(persistedGrade ?? "");
+      setCommentInput(persistedComment ?? "");
     }
-  }, [submission]);
+  }, [loadedSubmissionId, persistedGrade, persistedComment]);
 
   const rerunMutation = usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview({
     mutation: {
-      onSuccess: (resp) => {
-        const generated = resp?.data?.generated;
-        setAutoReviewFeedback(
-          generated
-            ? { type: "success", message: t("autoReview.regenerated") }
-            : {
-                type: "error",
-                message: t("autoReview.noResult"),
-              }
-        );
+      onSuccess: () => {
+        // 202: the review is now running; the polling above shows the result.
         queryClient.invalidateQueries({
           queryKey: getV1ChallengesChallengeidSubmissionsSubmissionidQueryKey(
             challengeId,

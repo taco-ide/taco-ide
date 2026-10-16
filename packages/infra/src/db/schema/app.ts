@@ -212,6 +212,18 @@ export const referenceSolutionStatusEnum = [
 ] as const;
 export const referenceSolutionCreatedByEnum = ["ai", "manual"] as const;
 
+// Which path produced an AI reference solution or auto-review: the PDC API,
+// optionally post-processed (OpenRouter adapter, deterministic parser or raw
+// markdown), or the OpenRouter fallback alone.
+export const generationProviderEnum = [
+  "pdc",
+  "pdc+openrouter",
+  "pdc+parser",
+  "pdc+raw",
+  "openrouter",
+] as const;
+export type GenerationProvider = (typeof generationProviderEnum)[number];
+
 // ==================== USER INTERACTIONS ON CHALLENGES ====================
 
 export const userInteractionOnChallenge = pgTable(
@@ -456,6 +468,10 @@ export const submission = pgTable(
       .default("pending")
       .$type<(typeof autoReviewStatusEnum)[number]>(),
     autoReviewError: text("auto_review_error"),
+    autoReviewProvider: varchar("auto_review_provider", {
+      length: 16,
+      enum: generationProviderEnum,
+    }),
   },
   (table) => [
     uniqueIndex("submission_work_session_idx").on(table.workSessionId),
@@ -495,6 +511,7 @@ export const challengeReferenceSolution = pgTable(
     })
       .notNull()
       .default("ai"),
+    provider: varchar("provider", { length: 16, enum: generationProviderEnum }),
     generatedAt: timestamp("generated_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

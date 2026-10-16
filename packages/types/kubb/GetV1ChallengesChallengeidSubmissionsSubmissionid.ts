@@ -132,10 +132,9 @@ export type GetV1ChallengesChallengeidSubmissionsSubmissionid200 = {
                 */
                 tipo: string;
                 /**
-                 * @description Gravidade pedagógica do problema.
                  * @type string
                 */
-                gravidade: ProblemasGravidadeEnum;
+                gravidade?: ProblemasGravidadeEnum | null;
                 /**
                  * @description Linha aproximada do código, quando aplicável.
                  * @type integer

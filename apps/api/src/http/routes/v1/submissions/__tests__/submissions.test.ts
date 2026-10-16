@@ -24,9 +24,18 @@ import {
   TEST_PASSWORD,
 } from "../../../../../test/helpers/factories";
 
-// Mock auto-review so submit() doesn't try to call the real LLM.
+// Mock auto-review so submit() doesn't try to call the real LLM. start only
+// claims the row (status=running), like the real one before it hands the
+// review to the background.
 vi.mock("../../../../../agents/teachers-companion/auto-review", () => ({
   runAutoReview: vi.fn(async () => {}),
+  startAutoReview: vi.fn(async (submissionId: string) => {
+    await db
+      .update(submission)
+      .set({ autoReviewStatus: "running" })
+      .where(eq(submission.id, submissionId));
+    return { started: true, done: Promise.resolve() };
+  }),
 }));
 
 describe("submission lifecycle", () => {
@@ -230,6 +239,73 @@ describe("submission lifecycle", () => {
     const body = res.json() as { data: { code: string | null; studentName: string | null } };
     expect(body.data.code).toBe("print('test')");
     expect(body.data.studentName).toBe(student.name);
+  });
+
+  it("getById returns a structured review whose problems lack gravidade", async () => {
+    const session = await createWorkSession({
+      userId: student.id,
+      challengeId: challengeRow.id,
+      classroomId: classroom.id,
+      teachingAssistantId: ta.id,
+      endedAt: new Date(),
+    });
+    const sub = await createSubmission({
+      workSessionId: session.id,
+      challengeId: challengeRow.id,
+      studentUserId: student.id,
+    });
+    const review = {
+      pontosFortes: [],
+      problemas: [{ tipo: "melhoria", descricao: "Converter com int()." }],
+      sugestoes: ["Praticar conversões."],
+      avaliacaoGeral: "Leu a entrada corretamente.",
+    };
+    await db
+      .update(submission)
+      .set({
+        autoReviewJson: review,
+        autoReviewStatus: "complete",
+        autoReviewProvider: "pdc+parser",
+      })
+      .where(eq(submission.id, sub.id));
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/v1/challenges/${challengeRow.id}/submissions/${sub.id}`,
+      headers: { cookie: teacherCookie },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect((res.json() as { data: { autoReviewJson: unknown } }).data.autoReviewJson).toEqual(
+      review,
+    );
+  });
+
+  // ===== re-run auto-review =====
+
+  it("re-run answers 202 with status=running without waiting for the review", async () => {
+    const session = await createWorkSession({
+      userId: student.id,
+      challengeId: challengeRow.id,
+      classroomId: classroom.id,
+      teachingAssistantId: ta.id,
+      endedAt: new Date(),
+    });
+    const sub = await createSubmission({
+      workSessionId: session.id,
+      challengeId: challengeRow.id,
+      studentUserId: student.id,
+    });
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/v1/challenges/${challengeRow.id}/submissions/${sub.id}/auto-review`,
+      headers: { cookie: teacherCookie },
+    });
+
+    expect(res.statusCode).toBe(202);
+    const body = res.json() as { data: { autoReviewStatus: string } };
+    expect(body.data.autoReviewStatus).toBe("running");
   });
 
   it("getById 404s when submission belongs to a different challenge", async () => {

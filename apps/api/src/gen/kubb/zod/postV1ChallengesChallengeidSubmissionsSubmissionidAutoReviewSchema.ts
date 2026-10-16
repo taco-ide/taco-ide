@@ -13,7 +13,7 @@ export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewPathPar
 /**
  * @description Default Response
  */
-export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200Schema = z.object({
+export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
@@ -21,8 +21,7 @@ export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200Sche
 "autoReview": z.string().nullable(),
 "autoReviewAt": z.string().nullable(),
 "autoReviewStatus": z.enum(["pending", "running", "complete", "failed"]),
-"autoReviewError": z.string().nullable(),
-"generated": z.boolean()
+"autoReviewError": z.string().nullable()
     }),
 "pagination": z.object({
     "total": z.number(),
@@ -98,4 +97,4 @@ export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500Sche
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
-export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponseSchema = z.lazy(() => postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview200Schema)
+export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationResponseSchema = z.lazy(() => postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview202Schema)

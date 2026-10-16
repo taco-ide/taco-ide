@@ -1,27 +1,35 @@
 /**
- * Tests for runAutoReview. Mocks the llm-factory so we don't hit the real
- * LLM and so we can simulate success / schema-failure / error paths.
+ * Tests for runAutoReview. Mocks the OpenRouter factory and the PDC client so
+ * we don't hit real services and can simulate every fallback path.
  */
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@repo/infra/db";
 import { submission } from "@repo/infra/db/schema";
+import { PDC_REVIEW_WITH_LIST } from "./fixtures/pdc-responses";
 
-// Provide a controllable mock of createLlm before importing the module
-// under test. createLlm returns an object whose withStructuredOutput()
+// Provide a controllable mock of createOpenRouterLlm before importing the
+// module under test. It returns an object whose withStructuredOutput()
 // returns the structured-LLM whose `invoke` is rewired per-test via
 // invokeMock.
 const invokeMock = vi.fn();
+const isPdcEnabledMock = vi.fn((_flow: string) => false);
+const runPdcWorkflowMock = vi.fn();
 
 vi.mock("../../llm-factory", async () => {
   const actual = (await vi.importActual("../../llm-factory")) as Record<string, unknown>;
   return {
     ...actual,
-    createLlm: () => ({
+    createOpenRouterLlm: () => ({
       withStructuredOutput: () => ({ invoke: invokeMock }),
     }),
   };
 });
+
+vi.mock("../../pdc-client", () => ({
+  isPdcEnabled: (flow: string) => isPdcEnabledMock(flow),
+  runPdcWorkflow: (...args: unknown[]) => runPdcWorkflowMock(...args),
+}));
 
 import { runAutoReview } from "../auto-review";
 import {
@@ -66,6 +74,8 @@ describe("runAutoReview", () => {
 
   beforeEach(async () => {
     invokeMock.mockReset();
+    isPdcEnabledMock.mockReset().mockReturnValue(false);
+    runPdcWorkflowMock.mockReset();
     org = await createOrg();
     teacher = await createUser();
     student = await createUser();
@@ -119,6 +129,93 @@ describe("runAutoReview", () => {
     expect(row!.autoReview).toContain("Avaliação geral");
     expect(row!.autoReview).toContain("Pontos fortes");
     expect(row!.autoReviewAt).toBeInstanceOf(Date);
+    expect(row!.autoReviewProvider).toBe("openrouter");
+  });
+
+  describe("with the PDC enabled", () => {
+    const readRow = async () =>
+      (await db.select().from(submission).where(eq(submission.id, sub.id)))[0]!;
+
+    beforeEach(() => {
+      isPdcEnabledMock.mockReturnValue(true);
+    });
+
+    it("sends only the statement and code, then adapts the PDC review", async () => {
+      runPdcWorkflowMock.mockResolvedValueOnce(PDC_REVIEW_WITH_LIST);
+      invokeMock.mockResolvedValueOnce(VALID_REVIEW);
+
+      await runAutoReview(sub.id);
+
+      const [payload] = runPdcWorkflowMock.mock.calls[0]!;
+      expect(payload).toEqual({
+        codigo_aluno: "print(42)",
+        exercicio: {
+          challenge: {
+            title: ch.title,
+            description: ch.description,
+            language: "python",
+          },
+        },
+      });
+      const [messages] = invokeMock.mock.calls[0]!;
+      const human = String(messages[1].content);
+      expect(human).toContain("# Revisão original");
+      expect(human).toContain("como começo?");
+
+      const row = await readRow();
+      expect(row.autoReviewStatus).toBe("complete");
+      expect(row.autoReviewProvider).toBe("pdc+openrouter");
+      expect(row.autoReviewJson).toMatchObject({ avaliacaoGeral: VALID_REVIEW.avaliacaoGeral });
+    });
+
+    it("parses the PDC markdown when the OpenRouter adapter fails", async () => {
+      runPdcWorkflowMock.mockResolvedValueOnce(PDC_REVIEW_WITH_LIST);
+      invokeMock.mockRejectedValueOnce(new Error("OpenRouter down"));
+
+      await runAutoReview(sub.id);
+
+      const row = await readRow();
+      expect(row.autoReviewStatus).toBe("complete");
+      expect(row.autoReviewProvider).toBe("pdc+parser");
+      const json = row.autoReviewJson as { problemas: Array<{ gravidade?: string }> };
+      expect(json.problemas[0]!.gravidade).toBeUndefined();
+      expect(row.autoReview).toContain("Avaliação geral");
+    });
+
+    it("stores the raw PDC markdown when it cannot be parsed", async () => {
+      runPdcWorkflowMock.mockResolvedValueOnce("Revisão em formato inesperado.");
+      invokeMock.mockRejectedValueOnce(new Error("OpenRouter down"));
+
+      await runAutoReview(sub.id);
+
+      const row = await readRow();
+      expect(row.autoReviewStatus).toBe("complete");
+      expect(row.autoReviewProvider).toBe("pdc+raw");
+      expect(row.autoReviewJson).toBeNull();
+      expect(row.autoReview).toBe("Revisão em formato inesperado.");
+    });
+
+    it("falls back to a full OpenRouter review when the PDC fails", async () => {
+      runPdcWorkflowMock.mockRejectedValueOnce(new Error("PDC down"));
+      invokeMock.mockResolvedValueOnce(VALID_REVIEW);
+
+      await runAutoReview(sub.id);
+
+      const [messages] = invokeMock.mock.calls[0]!;
+      expect(String(messages[1].content)).not.toContain("# Revisão original");
+      const row = await readRow();
+      expect(row.autoReviewProvider).toBe("openrouter");
+    });
+
+    it("skips the PDC when the submission has no code", async () => {
+      await db.update(submission).set({ code: null }).where(eq(submission.id, sub.id));
+      invokeMock.mockResolvedValueOnce(VALID_REVIEW);
+
+      await runAutoReview(sub.id);
+
+      expect(runPdcWorkflowMock).not.toHaveBeenCalled();
+      expect((await readRow()).autoReviewProvider).toBe("openrouter");
+    });
   });
 
   it("marks as failed when the LLM returns a payload that fails validation", async () => {

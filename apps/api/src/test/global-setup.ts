@@ -15,9 +15,14 @@ import path from "node:path";
 
 function deriveTestDbUrl(baseUrl: string): { url: string; dbName: string } {
   const u = new URL(baseUrl);
-  const originalDb = u.pathname.replace(/^\//, "");
+  const originalDb = decodeURIComponent(u.pathname.replace(/^\//, ""));
   const testDb = `${originalDb}_test`;
-  u.pathname = `/${testDb}`;
+  if (!originalDb || Buffer.byteLength(testDb, "utf8") > 63) {
+    throw new Error(
+      "DATABASE_URL must name a database that leaves room for the _test suffix (63 bytes maximum).",
+    );
+  }
+  u.pathname = `/${encodeURIComponent(testDb)}`;
   return { url: u.toString(), dbName: testDb };
 }
 
@@ -25,7 +30,7 @@ export default async function setup() {
   const baseUrl = process.env.DATABASE_URL;
   if (!baseUrl) {
     throw new Error(
-      "DATABASE_URL is not set. Run tests via `npm test` (which loads .env)."
+      "DATABASE_URL is not set. Run tests via `npm test` (which loads .env).",
     );
   }
 
@@ -45,8 +50,8 @@ export default async function setup() {
       FROM pg_stat_activity
       WHERE datname = ${dbName} AND pid <> pg_backend_pid();
     `;
-    await admin.unsafe(`DROP DATABASE IF EXISTS "${dbName}";`);
-    await admin.unsafe(`CREATE DATABASE "${dbName}";`);
+    await admin`DROP DATABASE IF EXISTS ${admin(dbName)};`;
+    await admin`CREATE DATABASE ${admin(dbName)};`;
   } finally {
     await admin.end();
   }
@@ -62,14 +67,11 @@ export default async function setup() {
   // Push schema using drizzle-kit. We invoke it as a CLI in the infra package
   // with DATABASE_URL pointing at the test DB.
   const infraPath = path.resolve(__dirname, "../../../../packages/infra");
-  execSync(
-    `npx drizzle-kit push --config ./drizzle.config.ts --force`,
-    {
-      cwd: infraPath,
-      env: { ...process.env, DATABASE_URL: testUrl },
-      stdio: "inherit",
-    }
-  );
+  execSync(`npx drizzle-kit push --config ./drizzle.config.ts --force`, {
+    cwd: infraPath,
+    env: { ...process.env, DATABASE_URL: testUrl },
+    stdio: "inherit",
+  });
 
   return async () => {
     // teardown: nothing — the test DB is recreated on next run.

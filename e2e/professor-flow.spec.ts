@@ -31,7 +31,9 @@ test.beforeAll(async () => {
 });
 
 test.describe("Professor workflow", () => {
-  test("professor can login, view a submission, and grade it", async ({ page }, testInfo) => {
+  test("professor can login, view a submission, and grade it", async ({
+    page,
+  }, testInfo) => {
     const shot = makeShooter(page, testInfo);
 
     // ---- 1. Login ----
@@ -55,37 +57,35 @@ test.describe("Professor workflow", () => {
     await shot("submissions-list");
 
     // ---- 3. Open the submission detail ----
-    await page.goto(
-      `/create/${SEED_CHALLENGE_ID}/submissions/${submissionId}`
-    );
+    await page.goto(`/create/${SEED_CHALLENGE_ID}/submissions/${submissionId}`);
     await expect(
-      page.getByRole("heading", { name: /Submissão de Alex Morgan/i })
+      page.getByRole("heading", {
+        name: "Submission by Alex Morgan",
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(page.getByText(/print\('hello world'\)/)).toBeVisible();
     await shot("submission-detail");
 
     // ---- 4. Enter a grade and save ----
-    const gradeInput = page.getByLabel(/nota \(ex/i);
+    const gradeInput = page.getByLabel(/^grade \(e\.g\./i);
     await gradeInput.fill("9.5");
 
-    const commentInput = page.getByLabel(/comentário/i);
-    await commentInput.fill("Bom trabalho — E2E test grading.");
+    const commentInput = page.getByLabel("Comment (optional)", { exact: true });
+    await commentInput.fill("Good work — E2E test grading.");
 
-    await page.getByRole("button", { name: /salvar nota/i }).click();
+    await page.getByRole("button", { name: "Save grade", exact: true }).click();
 
-    // Success feedback should appear (the exact "Nota salva" alert, not the
-    // "Última nota salva em ..." timestamp line that also appears).
-    await expect(page.getByText("Nota salva", { exact: true })).toBeVisible({
+    // Match the success alert without matching the last-saved timestamp.
+    await expect(page.getByText("Grade saved", { exact: true })).toBeVisible({
       timeout: 10_000,
     });
     await shot("grade-saved");
 
     // ---- 5. Reload and confirm persistence ----
     await page.reload();
-    await expect(page.getByLabel(/nota \(ex/i)).toHaveValue("9.5");
-    await expect(page.getByLabel(/comentário/i)).toHaveValue(
-      "Bom trabalho — E2E test grading."
-    );
+    await expect(gradeInput).toHaveValue("9.5");
+    await expect(commentInput).toHaveValue("Good work — E2E test grading.");
 
     // The grade should also appear in the list view.
     await page.goto(`/create/${SEED_CHALLENGE_ID}/submissions`);
