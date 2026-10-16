@@ -27,9 +27,11 @@ Seed normalization preserves existing passwords, including changed demo password
 
 The `npm audit --omit=dev` snapshots taken for this change reported 42 alerts before the update (2 critical, 25 high, 15 moderate) and 26 afterward (0 critical, 15 high, 11 moderate). Counts include dependency paths pulled into workspace tooling and are not a measure of reachable production vulnerabilities.
 
-The complete audit including development packages reports 36 remaining alerts (0 critical, 22 high, 14 moderate), after fixing shell-quote. The API Docker image currently includes the full workspace dependency tree for its source/loader setup; development labels alone do not exclude packages from that image. Evaluate the full report when assessing the image, and track reducing its dependency footprint in #119. The runtime-only snapshot and full-tree snapshot have different scopes.
+The original complete audit snapshot including development packages reported 36 remaining alerts (0 critical, 22 high, 14 moderate), after fixing shell-quote. The API Docker image currently includes the full workspace dependency tree for its source/loader setup; development labels alone do not exclude packages from that image. Evaluate the full report when assessing the image, and track reducing its dependency footprint in #119. The runtime-only snapshot and full-tree snapshot have different scopes.
 
-Remaining reports involve the Tailwind 3 plugin/build chain, Drizzle Kit/esbuild and Vitest/coverage tooling. Resolving them requires separate version and compatibility work; automatic force-fix suggestions include disruptive migrations or downgrades and were not applied. Issue #119 tracks that follow-up separately from the runtime update in #114. The absence of critical alerts does not mean the complete dependency tree is free of advisories.
+The review-time `npm audit --omit=dev` snapshot on 2026-10-16 reported 25 alerts (0 critical, 13 high, 12 moderate). It also flags Fastify busboy/static, URI parsing and LangSmith dependency paths, alongside the Tailwind 3 plugin/build chain, Drizzle Kit/esbuild and Vitest/coverage tooling. Remaining advisories therefore include runtime dependency paths, not only development tooling. Counts can change as advisories are published or revised, even with the same lockfile.
+
+Remaining dependency remediation requires separate version and compatibility verification; automatic force-fix suggestions include disruptive migrations or downgrades and were not applied. Issue #119 tracks that follow-up separately from the runtime update in #114. The absence of critical alerts does not mean the complete dependency tree is free of advisories.
 
 ## Verification
 
