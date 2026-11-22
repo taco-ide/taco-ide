@@ -74,6 +74,13 @@ const envSchema = z.object({
 
   // Server
   PORT: z.coerce.number().default(4000),
+  // Git SHA of the deployed API, stored with every teaching-assistant turn
+  // (ta_turn_context.app_version) so a turn can be tied to the prompt
+  // template and tool definitions that produced it. Set by the deploy.
+  APP_VERSION: z
+    .string()
+    .optional()
+    .transform((v) => v || undefined),
 
   // Platform admin seed (all optional; seed skips with a warning if any is missing)
   PLATFORM_ADMIN_EMAIL: z.string().email().optional(),

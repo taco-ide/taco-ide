@@ -183,6 +183,18 @@ Teaching assistants are scoped to an organization (`createdByOrganizationId`).
 Any teacher or coordinator in the organization can use any active TA in that 
 organization — there is no per-user filtering of available TAs.
 
+## Research data: what the TA received per turn
+
+- `ta_turn_context` (1:1 with a chat row in `user_interaction_on_challenge`)
+  stores everything the teaching assistant received and did on that turn:
+  rendered system prompt, the `buildTeachingAssistantPrompt` input object,
+  history interaction ids, retrieved KB chunks (with text), requested and
+  resolved model, tool-call trajectory, `APP_VERSION` and Langfuse trace id.
+  jsonb shapes and their Zod schemas live in `src/db/schema/ta-turn-context.ts`;
+  bump `TA_TURN_CONTEXT_SCHEMA_VERSION` when a shape changes. The API writes
+  it with the interaction in one transaction
+  (`apps/api/src/agents/teaching-assistant/turn-context.ts`).
+
 ## Important Notes
 
 - This is a shared package - changes affect both apps

@@ -1,7 +1,12 @@
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { env } from "@repo/infra/env";
-import { searchChallengeKnowledgeBases } from "../../services/knowledge-base-search";
+import {
+  searchChallengeKnowledgeBases,
+  type KBSearchResult,
+} from "../../services/knowledge-base-search";
+import { TA_KB_SEARCH_LIMIT, TA_KB_SIMILARITY_THRESHOLD } from "../constants";
+import { getTurnCollector, toRetrieval } from "./turn-context";
 
 const RUN_CODE_TIMEOUT_MS = 30000; // 30 seconds per tool execution
 
@@ -122,17 +127,32 @@ export const getChallengeInfo = tool(
 
 export const searchKnowledgeBase = tool(
   async ({ query }, config) => {
+    // Records what the model got back, with chunk ids, for ta_turn_context.
+    const collector = getTurnCollector(config.configurable);
+    const record = (results: KBSearchResult[], error?: string) =>
+      collector?.toolRetrievals.push(
+        toRetrieval({
+          query,
+          limit: TA_KB_SEARCH_LIMIT,
+          threshold: TA_KB_SIMILARITY_THRESHOLD,
+          results,
+          error,
+        })
+      );
     try {
       const challengeId = config.configurable?.challengeId as string | undefined;
       if (!challengeId) {
+        record([], "No challenge in context");
         return JSON.stringify({ results: [] });
       }
 
       const results = await searchChallengeKnowledgeBases({
         challengeId,
         query,
-        limit: 5,
+        limit: TA_KB_SEARCH_LIMIT,
+        similarityThreshold: TA_KB_SIMILARITY_THRESHOLD,
       });
+      record(results);
 
       return JSON.stringify({
         results: results.map((r) => ({
@@ -146,6 +166,7 @@ export const searchKnowledgeBase = tool(
       const errorMessage =
         err instanceof Error ? err.message : "Unknown knowledge base search error";
       console.warn("Knowledge base search failed:", errorMessage);
+      record([], errorMessage);
       return JSON.stringify({
         results: [],
         error: errorMessage,
