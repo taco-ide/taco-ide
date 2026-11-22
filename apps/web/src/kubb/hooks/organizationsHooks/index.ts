@@ -10,6 +10,10 @@ export type { GetV1OrganizationsIdInvitationsSuspenseQueryKey } from "./useGetV1
 export type { GetV1OrganizationsIdMembersQueryKey } from "./useGetV1OrganizationsIdMembers.ts";
 export type { GetV1OrganizationsIdMembersSuspenseQueryKey } from "./useGetV1OrganizationsIdMembersSuspense.ts";
 export type { GetV1OrganizationsIdSuspenseQueryKey } from "./useGetV1OrganizationsIdSuspense.ts";
+export type { GetV1OrganizationsIdTeachingAssistantEvaluationsExportQueryKey } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsExport.ts";
+export type { GetV1OrganizationsIdTeachingAssistantEvaluationsExportSuspenseQueryKey } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsExportSuspense.ts";
+export type { GetV1OrganizationsIdTeachingAssistantEvaluationsStatsQueryKey } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsStats.ts";
+export type { GetV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryKey } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspense.ts";
 export type { GetV1OrganizationsMineQueryKey } from "./useGetV1OrganizationsMine.ts";
 export type { GetV1OrganizationsMineSuspenseQueryKey } from "./useGetV1OrganizationsMineSuspense.ts";
 export type { GetV1OrganizationsSuspenseQueryKey } from "./useGetV1OrganizationsSuspense.ts";
@@ -35,6 +39,10 @@ export { getV1OrganizationsIdInvitationsSuspenseQueryKey, getV1OrganizationsIdIn
 export { getV1OrganizationsIdMembersQueryKey, getV1OrganizationsIdMembers, getV1OrganizationsIdMembersQueryOptions, useGetV1OrganizationsIdMembers } from "./useGetV1OrganizationsIdMembers.ts";
 export { getV1OrganizationsIdMembersSuspenseQueryKey, getV1OrganizationsIdMembersSuspense, getV1OrganizationsIdMembersSuspenseQueryOptions, useGetV1OrganizationsIdMembersSuspense } from "./useGetV1OrganizationsIdMembersSuspense.ts";
 export { getV1OrganizationsIdSuspenseQueryKey, getV1OrganizationsIdSuspense, getV1OrganizationsIdSuspenseQueryOptions, useGetV1OrganizationsIdSuspense } from "./useGetV1OrganizationsIdSuspense.ts";
+export { getV1OrganizationsIdTeachingAssistantEvaluationsExportQueryKey, getV1OrganizationsIdTeachingAssistantEvaluationsExport, getV1OrganizationsIdTeachingAssistantEvaluationsExportQueryOptions, useGetV1OrganizationsIdTeachingAssistantEvaluationsExport } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsExport.ts";
+export { getV1OrganizationsIdTeachingAssistantEvaluationsExportSuspenseQueryKey, getV1OrganizationsIdTeachingAssistantEvaluationsExportSuspense, getV1OrganizationsIdTeachingAssistantEvaluationsExportSuspenseQueryOptions, useGetV1OrganizationsIdTeachingAssistantEvaluationsExportSuspense } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsExportSuspense.ts";
+export { getV1OrganizationsIdTeachingAssistantEvaluationsStatsQueryKey, getV1OrganizationsIdTeachingAssistantEvaluationsStats, getV1OrganizationsIdTeachingAssistantEvaluationsStatsQueryOptions, useGetV1OrganizationsIdTeachingAssistantEvaluationsStats } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsStats.ts";
+export { getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryKey, getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspense, getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryOptions, useGetV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspense } from "./useGetV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspense.ts";
 export { getV1OrganizationsMineQueryKey, getV1OrganizationsMine, getV1OrganizationsMineQueryOptions, useGetV1OrganizationsMine } from "./useGetV1OrganizationsMine.ts";
 export { getV1OrganizationsMineSuspenseQueryKey, getV1OrganizationsMineSuspense, getV1OrganizationsMineSuspenseQueryOptions, useGetV1OrganizationsMineSuspense } from "./useGetV1OrganizationsMineSuspense.ts";
 export { getV1OrganizationsSuspenseQueryKey, getV1OrganizationsSuspense, getV1OrganizationsSuspenseQueryOptions, useGetV1OrganizationsSuspense } from "./useGetV1OrganizationsSuspense.ts";
