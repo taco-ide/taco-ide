@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { db } from "../db";
 import * as schema from "../db/schema";
@@ -254,6 +254,24 @@ export const auth = betterAuth({
 
             const rule = rules[0];
             if (!rule) return;
+
+            // A pending invitation to the same organization wins over the
+            // domain rule: the person is about to accept it with the role the
+            // inviter chose, and an auto-created membership would make that
+            // accept fail on the (organization, user) unique index.
+            const pendingInvites = await db
+              .select({ id: schema.invitation.id })
+              .from(schema.invitation)
+              .where(
+                and(
+                  eq(schema.invitation.organizationId, rule.organizationId),
+                  eq(sql`lower(${schema.invitation.email})`, email.toLowerCase()),
+                  eq(schema.invitation.status, "pending"),
+                  gt(schema.invitation.expiresAt, new Date())
+                )
+              )
+              .limit(1);
+            if (pendingInvites[0]) return;
 
             // Defense-in-depth: cap the effective auto-link role at
             // "teacher". Even if a legacy row in `organization_email_domain`
