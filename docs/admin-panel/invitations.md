@@ -396,7 +396,7 @@ Mostrado quando a lista de pendentes esta vazia (e nao houve erro). Mesmo botao 
 
 ## 6. Email de convite
 
-> Esta secao detalha o disparo de email. Para a configuracao consolidada do transporte de email (Resend, fallback dev, variaveis), veja [`emails.md`](./emails.md). <!-- TODO: criar emails.md se nao existir ainda -->
+> Esta secao detalha o disparo de email. Para a configuracao consolidada do transporte de email (Resend, fallback dev, variaveis), veja [`emails.md`](./emails.md).
 
 ### 6.1 Quando e disparado
 

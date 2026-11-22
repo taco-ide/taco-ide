@@ -34,8 +34,12 @@ A plataforma combina dois eixos de autorização:
 
 > **Owner não é uma role separada no schema.** Quando a documentação se
 > refere a "Owner", trata-se na prática do `admin` da organização (o criador
-> recebe `creatorRole=admin` ao criar a org via Better Auth).
-> <!-- TODO: confirmar se haverá um papel `owner` distinto no futuro. -->
+> recebe `creatorRole=admin` ao criar a org via Better Auth). O plugin ainda
+> aceita `owner` (e `member`) como aliases legados do Better Auth: `owner`
+> tem as mesmas permissões de `admin` e a API o normaliza para `admin`
+> (`member` vira `student`) em `normalizeOrgMemberRole`
+> (`apps/api/src/http/services/work-session-access.ts`). Nenhum fluxo atual
+> cria membros com esses valores.
 
 | Persona | Escopo | Onde é usada |
 | --- | --- | --- |
@@ -154,7 +158,7 @@ Códigos mais comuns no Admin Panel:
 Criar uma organização (apenas PA):
 
 ```bash
-curl -X POST http://localhost:3344/v1/organizations \
+curl -X POST http://localhost:4000/v1/organizations \
   -H 'Content-Type: application/json' \
   -b 'better-auth.session_token=...' \
   -d '{"name":"Escola Alfa","slug":"escola-alfa"}'
@@ -163,7 +167,7 @@ curl -X POST http://localhost:3344/v1/organizations \
 Toggle do flag Platform Admin:
 
 ```bash
-curl -X PATCH http://localhost:3344/v1/users/USER_ID/platform-admin \
+curl -X PATCH http://localhost:4000/v1/users/USER_ID/platform-admin \
   -H 'Content-Type: application/json' \
   -b 'better-auth.session_token=...' \
   -d '{"isPlatformAdmin": true}'
@@ -180,8 +184,13 @@ curl -X PATCH http://localhost:3344/v1/users/USER_ID/platform-admin \
   terminar com hifen.
 - **`organizationId` vs `activeOrganizationId`** — no caminho não-PA, várias
   rotas exigem que o `:id` da URL seja igual ao `session.activeOrganizationId`.
-  Use `POST /v1/organizations/:id/set-active` antes para trocar o contexto.
-  <!-- TODO: confirmar nome final da rota de set-active quando documentada. -->
+  Para trocar o contexto, use a rota do plugin de organização do Better Auth,
+  `POST /v1/auth/organization/set-active` (alias `/api/auth/...`) com body
+  `{ "organizationId": "..." }` — no web, `authClient.organization.setActive`.
+  Não confundir com `PATCH /v1/organizations/:id/active`, que ativa/desativa
+  a org. Quando a sessão não tem org ativa (ou aponta para uma org
+  desativada), o middleware de auth usa a membership mais antiga em org
+  ativa; sem nenhuma, o usuário vê a tela de primeiro acesso (#66).
 - **React Query** — o `QueryProvider`
   (`apps/web/src/lib/query-provider.tsx`) configura `retry` para **não
   repetir** respostas 4xx. Logo, erros de permissão e validação não geram
@@ -196,6 +205,7 @@ curl -X PATCH http://localhost:3344/v1/users/USER_ID/platform-admin \
 
 ## Links rápidos
 
+- [Modelo operacional de acesso](../operacao/modelo-de-acesso.md) (guia curto de onboarding de instituições)
 - [Organizações (CRUD)](./organizations.md)
 - [Membros e roles](./members-and-roles.md)
 - [Importação CSV](./csv-import.md)
