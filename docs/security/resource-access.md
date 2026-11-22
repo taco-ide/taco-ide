@@ -17,6 +17,8 @@ Challenge knowledge-base management checks the target challenge for every role. 
 
 The legacy student and teacher SSE chat endpoints enforce the same current access policy. Student SSE and JSON chat share a per-user/work-session limit of 25 messages per minute; teacher SSE uses the same limiter per user/classroom. The limiter is process-local, so a multi-instance deployment needs shared storage. Observability failure is logged and cannot prevent stream termination; interaction persistence failure also terminates the stream. Internal 5xx errors, including authentication errors, return a generic message while details remain in server logs.
 
+Anonymous teaching-assistant rating statistics and their CSV export (`/v1/organizations/:id/teaching-assistant-evaluations/*`, #99) require a platform administrator or a current teacher, coordinator or administrator of the active organization. Ratings are scoped through the TA's owning organization; global TAs are excluded. Responses never join ratings to users, work sessions or classrooms.
+
 ## Regression verification
 
 Tests use the real Fastify app, Better Auth sessions and a disposable PostgreSQL database. LLM agents, embeddings/search and observability are simulated to avoid external calls. Coverage includes cross-organization list/detail/management access, assignment-only changes, source/destination authorization, current enrollment and roster privacy, `owner` normalization, platform administrators, knowledge-base management, deleted classrooms/inactive organizations, SSE access, telemetry failures, shared rate limits and generic error responses.
