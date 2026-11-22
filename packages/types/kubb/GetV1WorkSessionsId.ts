@@ -18,6 +18,14 @@ export const getV1WorkSessionsId200SuccessEnum = {
 
 export type GetV1WorkSessionsId200SuccessEnum = (typeof getV1WorkSessionsId200SuccessEnum)[keyof typeof getV1WorkSessionsId200SuccessEnum];
 
+export const dataActivityStatusEnum3 = {
+    "active": "active",
+    "inactive": "inactive",
+    "submitted": "submitted"
+} as const;
+
+export type DataActivityStatusEnum3 = (typeof dataActivityStatusEnum3)[keyof typeof dataActivityStatusEnum3];
+
 /**
  * @description Default Response
 */
@@ -62,6 +70,14 @@ export type GetV1WorkSessionsId200 = {
          * @type string
         */
         endedAt: string | null;
+        /**
+         * @type string
+        */
+        lastActivityAt: string;
+        /**
+         * @type string
+        */
+        activityStatus: DataActivityStatusEnum3;
         /**
          * @type array
         */

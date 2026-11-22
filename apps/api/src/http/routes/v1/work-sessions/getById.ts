@@ -11,12 +11,19 @@ import { db } from "@repo/infra/db";
 import {
   workSession,
   userInteractionOnChallenge,
+  challengeSolution,
 } from "@repo/infra/db/schema";
 import {
   assertCanParticipateInChallengeWorkSession,
   assertStaffCanAccessChallengeWorkSessions,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
+import {
+  deriveWorkSessionStatus,
+  lastActivityAtSql,
+  workSessionActivityStatuses,
+  workSessionSolutionJoin,
+} from "../../../services/work-session-activity";
 
 // ==================== SCHEMAS ====================
 
@@ -44,6 +51,9 @@ const GetWorkSessionResponseSchema = ResponseSchema200.extend({
     createdAt: z.string(),
     lastMessageAt: z.string().nullable(),
     endedAt: z.string().nullable(),
+    /** Latest student activity (session start, chat, code run or solution save). */
+    lastActivityAt: z.string(),
+    activityStatus: z.enum(workSessionActivityStatuses),
     interactions: z.array(InteractionSchema),
   }),
 });
@@ -80,19 +90,21 @@ export async function getWorkSessionByIdRoute(app: FastifyTypedInstance) {
 
       const { id } = request.params;
 
-      const [session] = await db
-        .select()
+      const [row] = await db
+        .select({ session: workSession, lastActivityAt: lastActivityAtSql })
         .from(workSession)
+        .leftJoin(challengeSolution, workSessionSolutionJoin)
         .where(eq(workSession.id, id))
         .limit(1);
 
-      if (!session) {
+      if (!row) {
         return reply.status(404).send({
           success: false as const,
           message: "Work session not found",
         });
       }
 
+      const { session, lastActivityAt } = row;
       const isOwner = session.userId === usr.id;
 
       const ctx = await loadChallengeWorkAccessContext(session.challengeId);
@@ -141,6 +153,11 @@ export async function getWorkSessionByIdRoute(app: FastifyTypedInstance) {
           createdAt: session.createdAt.toISOString(),
           lastMessageAt: session.lastMessageAt?.toISOString() ?? null,
           endedAt: session.endedAt?.toISOString() ?? null,
+          lastActivityAt: lastActivityAt.toISOString(),
+          activityStatus: deriveWorkSessionStatus({
+            endedAt: session.endedAt,
+            lastActivityAt,
+          }),
           interactions: interactions.map((i) => ({
             id: i.id,
             interactionType: i.interactionType,

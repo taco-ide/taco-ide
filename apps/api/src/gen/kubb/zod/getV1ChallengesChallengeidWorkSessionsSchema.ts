@@ -13,6 +13,7 @@ export const getV1ChallengesChallengeidWorkSessionsQueryParamsSchema = z.object(
     "page": z.coerce.number().min(1).default(1),
 "perPage": z.coerce.number().min(1).max(50).default(20),
 "submittedOnly": z.union([z.enum(["true"]), z.enum(["false"])]).optional(),
+"activityStatus": z.enum(["active", "inactive", "submitted"]).optional(),
 "search": z.string().optional()
     })
 
@@ -28,7 +29,9 @@ export const getV1ChallengesChallengeidWorkSessions200Schema = z.object({
 "studentName": z.string(),
 "createdAt": z.string(),
 "lastMessageAt": z.string().nullable(),
-"endedAt": z.string().nullable()
+"endedAt": z.string().nullable(),
+"lastActivityAt": z.string(),
+"activityStatus": z.enum(["active", "inactive", "submitted"])
     })),
 "pagination": z.object({
     "total": z.number(),

@@ -18,6 +18,14 @@ export const getV1WorkSessionsByChallenge200SuccessEnum = {
 
 export type GetV1WorkSessionsByChallenge200SuccessEnum = (typeof getV1WorkSessionsByChallenge200SuccessEnum)[keyof typeof getV1WorkSessionsByChallenge200SuccessEnum];
 
+export const dataActivityStatusEnum2 = {
+    "active": "active",
+    "inactive": "inactive",
+    "submitted": "submitted"
+} as const;
+
+export type DataActivityStatusEnum2 = (typeof dataActivityStatusEnum2)[keyof typeof dataActivityStatusEnum2];
+
 /**
  * @description Default Response
 */
@@ -62,6 +70,14 @@ export type GetV1WorkSessionsByChallenge200 = {
          * @type string
         */
         endedAt: string | null;
+        /**
+         * @type string
+        */
+        lastActivityAt: string;
+        /**
+         * @type string
+        */
+        activityStatus: DataActivityStatusEnum2;
     } | null;
     /**
      * @type object | undefined

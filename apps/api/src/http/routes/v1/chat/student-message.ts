@@ -340,6 +340,14 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
             code: currentCode ?? null,
             stdout: stdout ?? null,
           });
+
+          // Keep lastMessageAt in step with the other interaction routes; the
+          // derived active/inactive status reads it.
+          const now = new Date();
+          await db
+            .update(workSession)
+            .set({ updatedAt: now, lastMessageAt: now })
+            .where(eq(workSession.id, workSessionId));
         }
       } catch (err) {
         request.log.error({ err }, "Chat interaction persistence failed");

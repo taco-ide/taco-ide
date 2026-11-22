@@ -16,11 +16,20 @@ import {
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { workSession, user } from "@repo/infra/db/schema";
+import { workSession, user, challengeSolution } from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
 } from "../../../../services/work-session-access";
+import {
+  deriveWorkSessionStatus,
+  inactivityCutoff,
+  inactivityThresholdMs,
+  lastActivityAtSql,
+  workSessionActivityStatuses,
+  workSessionSolutionJoin,
+  workSessionStatusFilter,
+} from "../../../../services/work-session-activity";
 
 const ListWorkSessionsParamsSchema = z.object({
   challengeId: z.string().uuid(),
@@ -33,6 +42,8 @@ const ListWorkSessionsQuerySchema = z.object({
     .union([z.literal("true"), z.literal("false")])
     .optional()
     .transform((v) => v === "true"),
+  /** Derived activity status; `submitted` is equivalent to `submittedOnly=true`. */
+  activityStatus: z.enum(workSessionActivityStatuses).optional(),
   search: z.string().optional(),
 });
 
@@ -43,6 +54,9 @@ const WorkSessionRowSchema = z.object({
   createdAt: z.string(),
   lastMessageAt: z.string().nullable(),
   endedAt: z.string().nullable(),
+  /** Latest student activity (session start, chat, code run or solution save). */
+  lastActivityAt: z.string(),
+  activityStatus: z.enum(workSessionActivityStatuses),
 });
 
 const ListWorkSessionsResponseSchema = ResponseSchema200.extend({
@@ -74,7 +88,7 @@ export async function listChallengeWorkSessionsRoute(
         tags: ["challenge-work-sessions"],
         summary: "List work sessions for challenge (staff)",
         description:
-          "Paginated list of student work sessions for a challenge. Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.",
+          "Paginated list of student work sessions for a challenge, each with a derived activity status (active, inactive after WORK_SESSION_INACTIVITY_HOURS without student activity, or submitted). Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.",
         params: ListWorkSessionsParamsSchema,
         querystring: ListWorkSessionsQuerySchema,
         response: {
@@ -95,7 +109,7 @@ export async function listChallengeWorkSessionsRoute(
       }
 
       const { challengeId } = request.params;
-      const { page, perPage, submittedOnly, search } = request.query;
+      const { page, perPage, submittedOnly, activityStatus, search } = request.query;
       const offset = (page - 1) * perPage;
 
       const ctx = await loadChallengeWorkAccessContext(challengeId);
@@ -114,10 +128,19 @@ export async function listChallengeWorkSessionsRoute(
         });
       }
 
+      const now = new Date();
+      const thresholdMs = inactivityThresholdMs();
+
       const sessionFilters = [eq(workSession.challengeId, challengeId)];
 
       if (submittedOnly) {
         sessionFilters.push(isNotNull(workSession.endedAt));
+      }
+
+      if (activityStatus) {
+        sessionFilters.push(
+          workSessionStatusFilter(activityStatus, inactivityCutoff(now, thresholdMs))
+        );
       }
 
       const nameSearch = search ? sanitizeNameSearch(search) : "";
@@ -131,6 +154,7 @@ export async function listChallengeWorkSessionsRoute(
         .select({ count: sql<number>`count(*)::int` })
         .from(workSession)
         .innerJoin(user, eq(workSession.userId, user.id))
+        .leftJoin(challengeSolution, workSessionSolutionJoin)
         .where(whereSessions);
 
       const total = Number(countResult[0]?.count ?? 0);
@@ -144,9 +168,11 @@ export async function listChallengeWorkSessionsRoute(
           createdAt: workSession.createdAt,
           lastMessageAt: workSession.lastMessageAt,
           endedAt: workSession.endedAt,
+          lastActivityAt: lastActivityAtSql,
         })
         .from(workSession)
         .innerJoin(user, eq(workSession.userId, user.id))
+        .leftJoin(challengeSolution, workSessionSolutionJoin)
         .where(whereSessions)
         .orderBy(desc(workSession.createdAt))
         .limit(perPage)
@@ -161,6 +187,8 @@ export async function listChallengeWorkSessionsRoute(
           createdAt: r.createdAt.toISOString(),
           lastMessageAt: r.lastMessageAt?.toISOString() ?? null,
           endedAt: r.endedAt?.toISOString() ?? null,
+          lastActivityAt: r.lastActivityAt.toISOString(),
+          activityStatus: deriveWorkSessionStatus(r, now, thresholdMs),
         })),
         pagination: { total, page, perPage, totalPages },
       });

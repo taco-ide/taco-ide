@@ -22,7 +22,9 @@ export const getV1WorkSessionsByChallenge200Schema = z.object({
 "classroomId": z.string().nullable(),
 "createdAt": z.string(),
 "lastMessageAt": z.string().nullable(),
-"endedAt": z.string().nullable()
+"endedAt": z.string().nullable(),
+"lastActivityAt": z.string(),
+"activityStatus": z.enum(["active", "inactive", "submitted"])
     }).nullable(),
 "pagination": z.object({
     "total": z.number(),

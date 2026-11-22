@@ -173,6 +173,8 @@ export async function createWorkSession(overrides: {
   classroomId?: string | null;
   teachingAssistantId: string;
   endedAt?: Date | null;
+  createdAt?: Date;
+  lastMessageAt?: Date | null;
   id?: string;
 }) {
   const id = overrides.id ?? randomUUID();
@@ -185,6 +187,8 @@ export async function createWorkSession(overrides: {
       classroomId: overrides.classroomId ?? null,
       teachingAssistantId: overrides.teachingAssistantId,
       endedAt: overrides.endedAt ?? null,
+      lastMessageAt: overrides.lastMessageAt ?? null,
+      ...(overrides.createdAt ? { createdAt: overrides.createdAt } : {}),
     })
     .returning();
   return row!;
