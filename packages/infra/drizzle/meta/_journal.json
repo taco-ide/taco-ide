@@ -85,6 +85,13 @@
       "when": 1791846544134,
       "tag": "0011_credential_account_identifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795374661669,
+      "tag": "0012_teaching_assistant_soft_delete",
+      "breakpoints": true
     }
   ]
 }

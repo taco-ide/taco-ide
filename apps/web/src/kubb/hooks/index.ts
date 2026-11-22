@@ -85,6 +85,13 @@ export type { GetV1ChallengesChallengeidSubmissionsSubmissionidSuspenseQueryKey 
 export type { GetV1ChallengesChallengeidSubmissionsSuspenseQueryKey } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSuspense.ts";
 export type { PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey } from "./submissionsHooks/usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview.ts";
 export type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
+export type { DeleteV1TeachingAssistantsIdMutationKey } from "./teaching-assistantsHooks/useDeleteV1TeachingAssistantsId.ts";
+export type { GetV1TeachingAssistantsQueryKey } from "./teaching-assistantsHooks/useGetV1TeachingAssistants.ts";
+export type { GetV1TeachingAssistantsIdQueryKey } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsId.ts";
+export type { GetV1TeachingAssistantsIdSuspenseQueryKey } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsIdSuspense.ts";
+export type { GetV1TeachingAssistantsSuspenseQueryKey } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsSuspense.ts";
+export type { PatchV1TeachingAssistantsIdMutationKey } from "./teaching-assistantsHooks/usePatchV1TeachingAssistantsId.ts";
+export type { PostV1TeachingAssistantsMutationKey } from "./teaching-assistantsHooks/usePostV1TeachingAssistants.ts";
 export type { GetV1UsersQueryKey } from "./usersHooks/useGetV1Users.ts";
 export type { GetV1UsersMeQueryKey } from "./usersHooks/useGetV1UsersMe.ts";
 export type { GetV1UsersMeSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeSuspense.ts";
@@ -188,6 +195,13 @@ export { getV1ChallengesChallengeidSubmissionsSubmissionidSuspenseQueryKey, getV
 export { getV1ChallengesChallengeidSubmissionsSuspenseQueryKey, getV1ChallengesChallengeidSubmissionsSuspense, getV1ChallengesChallengeidSubmissionsSuspenseQueryOptions, useGetV1ChallengesChallengeidSubmissionsSuspense } from "./submissionsHooks/useGetV1ChallengesChallengeidSubmissionsSuspense.ts";
 export { postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey, postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview, usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview } from "./submissionsHooks/usePostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview.ts";
 export { putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey, putV1ChallengesChallengeidSubmissionsSubmissionidGrade, usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
+export { deleteV1TeachingAssistantsIdMutationKey, deleteV1TeachingAssistantsId, useDeleteV1TeachingAssistantsId } from "./teaching-assistantsHooks/useDeleteV1TeachingAssistantsId.ts";
+export { getV1TeachingAssistantsQueryKey, getV1TeachingAssistants, getV1TeachingAssistantsQueryOptions, useGetV1TeachingAssistants } from "./teaching-assistantsHooks/useGetV1TeachingAssistants.ts";
+export { getV1TeachingAssistantsIdQueryKey, getV1TeachingAssistantsId, getV1TeachingAssistantsIdQueryOptions, useGetV1TeachingAssistantsId } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsId.ts";
+export { getV1TeachingAssistantsIdSuspenseQueryKey, getV1TeachingAssistantsIdSuspense, getV1TeachingAssistantsIdSuspenseQueryOptions, useGetV1TeachingAssistantsIdSuspense } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsIdSuspense.ts";
+export { getV1TeachingAssistantsSuspenseQueryKey, getV1TeachingAssistantsSuspense, getV1TeachingAssistantsSuspenseQueryOptions, useGetV1TeachingAssistantsSuspense } from "./teaching-assistantsHooks/useGetV1TeachingAssistantsSuspense.ts";
+export { patchV1TeachingAssistantsIdMutationKey, patchV1TeachingAssistantsId, usePatchV1TeachingAssistantsId } from "./teaching-assistantsHooks/usePatchV1TeachingAssistantsId.ts";
+export { postV1TeachingAssistantsMutationKey, postV1TeachingAssistants, usePostV1TeachingAssistants } from "./teaching-assistantsHooks/usePostV1TeachingAssistants.ts";
 export { getV1UsersQueryKey, getV1Users, getV1UsersQueryOptions, useGetV1Users } from "./usersHooks/useGetV1Users.ts";
 export { getV1UsersMeQueryKey, getV1UsersMe, getV1UsersMeQueryOptions, useGetV1UsersMe } from "./usersHooks/useGetV1UsersMe.ts";
 export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspenseQueryOptions, useGetV1UsersMeSuspense } from "./usersHooks/useGetV1UsersMeSuspense.ts";

@@ -18,6 +18,7 @@ export const postV1Challenges201Schema = z.object({
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
 "classroomId": z.string().nullable(),
+"teachingAssistantId": z.string().nullable(),
 "createdAt": z.string()
     })
     })
@@ -73,7 +74,8 @@ export const postV1ChallengesMutationRequestSchema = z.object({
 "classroomId": z.string().min(1),
 "tags": z.array(z.string()).optional(),
 "supportMaterials": z.any().optional(),
-"generateReferenceSolutions": z.boolean().default(true)
+"generateReferenceSolutions": z.boolean().default(true),
+"teachingAssistantId": z.string().min(1).optional()
     })
 
 export const postV1ChallengesMutationResponseSchema = z.lazy(() => postV1Challenges201Schema)

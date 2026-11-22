@@ -106,12 +106,17 @@ export const teachingAssistant = pgTable(
       { onDelete: "set null" }
     ),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    // Soft delete: deleted assistants stay referenced by past work sessions,
+    // replays and evaluations, but are hidden and can never be reactivated.
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [
-    uniqueIndex("teaching_assistant_alias_version_idx").on(
-      table.alias,
-      table.version
-    ),
+    // Aliases are unique per organization (and version) among non-deleted
+    // assistants, so different organizations can reuse the same name.
+    uniqueIndex("teaching_assistant_org_alias_version_idx")
+      .on(table.createdByOrganizationId, table.alias, table.version)
+      .where(sql`${table.deletedAt} is null`),
   ]
 );
 

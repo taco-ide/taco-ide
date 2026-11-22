@@ -3,7 +3,6 @@ import {
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -14,11 +13,11 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
+import { challenge, challengeTeachingAssistant } from "@repo/infra/db/schema";
 import {
-  challenge,
-  teachingAssistant,
-  challengeTeachingAssistant,
-} from "@repo/infra/db/schema";
+  findAssignableTeachingAssistant,
+  findDefaultTeachingAssistant,
+} from "../../../services/teaching-assistant-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
 
 // ==================== SCHEMAS ====================
@@ -32,6 +31,8 @@ const CreateChallengeBodySchema = z
     tags: z.array(z.string()).optional(),
     supportMaterials: z.unknown().optional(),
     generateReferenceSolutions: z.boolean().optional().default(true),
+    /** Defaults to the organization's oldest active teaching assistant. */
+    teachingAssistantId: z.string().min(1).optional(),
   })
   .strict();
 
@@ -42,6 +43,7 @@ const ChallengeCreatedSchema = z.object({
   difficulty: z.string().nullable(),
   tags: z.array(z.string()).nullable(),
   classroomId: z.string().nullable(),
+  teachingAssistantId: z.string().nullable(),
   createdAt: z.string(),
 });
 
@@ -88,6 +90,7 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         tags,
         supportMaterials,
         generateReferenceSolutions: shouldGenerateRefSolutions,
+        teachingAssistantId,
       } = request.body;
 
       const cl = await loadClassroomAccessContext(classroomId);
@@ -101,6 +104,19 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           .status(access.status)
           .send({ success: false as const, message: access.message });
       const organizationId = cl.organizationId;
+
+      const chosenTA = teachingAssistantId
+        ? await findAssignableTeachingAssistant(
+            teachingAssistantId,
+            organizationId
+          )
+        : await findDefaultTeachingAssistant(organizationId);
+      if (teachingAssistantId && !chosenTA)
+        return reply.status(400).send({
+          success: false as const,
+          message:
+            "Teaching assistant not found, inactive or from another organization",
+        });
 
       const id = randomUUID();
 
@@ -125,22 +141,10 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      // Auto-link default Teaching Assistant from the same classroom
-      const [classroomTA] = await db
-        .select({ id: teachingAssistant.id })
-        .from(teachingAssistant)
-        .where(
-          and(
-            eq(teachingAssistant.createdByOrganizationId, organizationId),
-            eq(teachingAssistant.isActive, true)
-          )
-        )
-        .limit(1);
-
-      if (classroomTA) {
+      if (chosenTA) {
         await db.insert(challengeTeachingAssistant).values({
           challengeId: created.id,
-          teachingAssistantId: classroomTA.id,
+          teachingAssistantId: chosenTA.id,
           isDefault: true,
         });
       }
@@ -159,6 +163,7 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           difficulty: created.difficulty,
           tags: created.tags ?? null,
           classroomId: created.classroomId,
+          teachingAssistantId: chosenTA?.id ?? null,
           createdAt: created.createdAt.toISOString(),
         },
       });

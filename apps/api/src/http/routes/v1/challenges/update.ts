@@ -9,7 +9,8 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { challenge } from "@repo/infra/db/schema";
+import { challenge, challengeTeachingAssistant } from "@repo/infra/db/schema";
+import { findAssignableTeachingAssistant } from "../../../services/teaching-assistant-access";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -32,6 +33,11 @@ const UpdateChallengeBodySchema = z
     tags: z.array(z.string()).nullable().optional(),
     classroomId: z.string().min(1).nullable().optional(),
     generateReferenceSolutions: z.boolean().optional(),
+    /**
+     * Replaces the challenge's teaching assistant. `null` removes the link so
+     * new work sessions use the organization's default assistant.
+     */
+    teachingAssistantId: z.string().min(1).nullable().optional(),
   })
   .strict();
 
@@ -43,6 +49,7 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
     description: z.string().nullable(),
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
+    teachingAssistantId: z.string().nullable().optional(),
     message: z.string(),
   }),
 });
@@ -60,7 +67,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         tags: ["challenges"],
         summary: "Update challenge",
         description:
-          "Update challenge content or classroom assignment. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.",
+          "Update challenge content, teaching assistant or classroom assignment. The teaching assistant must be active and belong to the challenge's organization. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.",
         params: ChallengeParamsSchema,
         body: UpdateChallengeBodySchema,
         response: {
@@ -139,6 +146,33 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
+      const wantsTeachingAssistantChange = body.teachingAssistantId !== undefined;
+      if (wantsTeachingAssistantChange && body.teachingAssistantId) {
+        // The organization the challenge will belong to after this update.
+        const targetOrganizationId =
+          wantsClassroomChange && classroomId
+            ? (await loadClassroomAccessContext(classroomId))?.organizationId
+            : wantsClassroomChange
+              ? null
+              : ctx.organizationId;
+        if (!targetOrganizationId)
+          return reply.status(400).send({
+            success: false as const,
+            message:
+              "Assign the challenge to a classroom before choosing a teaching assistant",
+          });
+        const ta = await findAssignableTeachingAssistant(
+          body.teachingAssistantId,
+          targetOrganizationId
+        );
+        if (!ta)
+          return reply.status(400).send({
+            success: false as const,
+            message:
+              "Teaching assistant not found, inactive or from another organization",
+          });
+      }
+
       const setValues: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
       };
@@ -149,18 +183,32 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
 
-      const [updated] = await db
-        .update(challenge)
-        .set(setValues)
-        .where(eq(challenge.id, challengeId))
-        .returning({
-          id: challenge.id,
-          classroomId: challenge.classroomId,
-          title: challenge.title,
-          description: challenge.description,
-          difficulty: challenge.difficulty,
-          tags: challenge.tags,
-        });
+      const updated = await db.transaction(async (tx) => {
+        const [row] = await tx
+          .update(challenge)
+          .set(setValues)
+          .where(eq(challenge.id, challengeId))
+          .returning({
+            id: challenge.id,
+            classroomId: challenge.classroomId,
+            title: challenge.title,
+            description: challenge.description,
+            difficulty: challenge.difficulty,
+            tags: challenge.tags,
+          });
+        if (row && wantsTeachingAssistantChange) {
+          await tx
+            .delete(challengeTeachingAssistant)
+            .where(eq(challengeTeachingAssistant.challengeId, challengeId));
+          if (body.teachingAssistantId)
+            await tx.insert(challengeTeachingAssistant).values({
+              challengeId,
+              teachingAssistantId: body.teachingAssistantId,
+              isDefault: true,
+            });
+        }
+        return row;
+      });
 
       if (!updated) {
         return reply.status(500).send({
@@ -183,6 +231,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           description: updated.description ?? null,
           difficulty: updated.difficulty ?? null,
           tags: (updated.tags as string[] | null) ?? null,
+          ...(wantsTeachingAssistantChange
+            ? { teachingAssistantId: body.teachingAssistantId ?? null }
+            : {}),
           message: wantsClassroomChange
             ? classroomId
               ? "Challenge assigned to classroom"

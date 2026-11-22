@@ -53,6 +53,10 @@ export type PostV1Challenges201 = {
         /**
          * @type string
         */
+        teachingAssistantId: string | null;
+        /**
+         * @type string
+        */
         createdAt: string;
     };
 };
@@ -199,6 +203,11 @@ export type PostV1ChallengesMutationRequest = {
      * @type boolean | undefined
     */
     generateReferenceSolutions?: boolean;
+    /**
+     * @minLength 1
+     * @type string | undefined
+    */
+    teachingAssistantId?: string;
 };
 
 export type PostV1ChallengesMutationResponse = PostV1Challenges201;

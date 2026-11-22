@@ -1,0 +1,14 @@
+export type { DeleteV1TeachingAssistantsIdMutationKey } from "./useDeleteV1TeachingAssistantsId.ts";
+export type { GetV1TeachingAssistantsQueryKey } from "./useGetV1TeachingAssistants.ts";
+export type { GetV1TeachingAssistantsIdQueryKey } from "./useGetV1TeachingAssistantsId.ts";
+export type { GetV1TeachingAssistantsIdSuspenseQueryKey } from "./useGetV1TeachingAssistantsIdSuspense.ts";
+export type { GetV1TeachingAssistantsSuspenseQueryKey } from "./useGetV1TeachingAssistantsSuspense.ts";
+export type { PatchV1TeachingAssistantsIdMutationKey } from "./usePatchV1TeachingAssistantsId.ts";
+export type { PostV1TeachingAssistantsMutationKey } from "./usePostV1TeachingAssistants.ts";
+export { deleteV1TeachingAssistantsIdMutationKey, deleteV1TeachingAssistantsId, useDeleteV1TeachingAssistantsId } from "./useDeleteV1TeachingAssistantsId.ts";
+export { getV1TeachingAssistantsQueryKey, getV1TeachingAssistants, getV1TeachingAssistantsQueryOptions, useGetV1TeachingAssistants } from "./useGetV1TeachingAssistants.ts";
+export { getV1TeachingAssistantsIdQueryKey, getV1TeachingAssistantsId, getV1TeachingAssistantsIdQueryOptions, useGetV1TeachingAssistantsId } from "./useGetV1TeachingAssistantsId.ts";
+export { getV1TeachingAssistantsIdSuspenseQueryKey, getV1TeachingAssistantsIdSuspense, getV1TeachingAssistantsIdSuspenseQueryOptions, useGetV1TeachingAssistantsIdSuspense } from "./useGetV1TeachingAssistantsIdSuspense.ts";
+export { getV1TeachingAssistantsSuspenseQueryKey, getV1TeachingAssistantsSuspense, getV1TeachingAssistantsSuspenseQueryOptions, useGetV1TeachingAssistantsSuspense } from "./useGetV1TeachingAssistantsSuspense.ts";
+export { patchV1TeachingAssistantsIdMutationKey, patchV1TeachingAssistantsId, usePatchV1TeachingAssistantsId } from "./usePatchV1TeachingAssistantsId.ts";
+export { postV1TeachingAssistantsMutationKey, postV1TeachingAssistants, usePostV1TeachingAssistants } from "./usePostV1TeachingAssistants.ts";

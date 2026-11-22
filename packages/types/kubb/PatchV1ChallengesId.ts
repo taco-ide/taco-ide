@@ -61,6 +61,10 @@ export type PatchV1ChallengesId200 = {
         /**
          * @type string
         */
+        teachingAssistantId?: string | null;
+        /**
+         * @type string
+        */
         message: string;
     };
     /**
@@ -226,6 +230,11 @@ export type PatchV1ChallengesIdMutationRequest = {
      * @type boolean | undefined
     */
     generateReferenceSolutions?: boolean;
+    /**
+     * @minLength 1
+     * @type string
+    */
+    teachingAssistantId?: string | null;
 };
 
 export type PatchV1ChallengesIdMutationResponse = PatchV1ChallengesId200;

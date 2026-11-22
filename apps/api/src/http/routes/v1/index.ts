@@ -9,6 +9,7 @@ import { classroomsRoutes } from "./classrooms/index";
 import { organizationsRoutes } from "./organizations/index";
 import { chatRoutes } from "./chat/index";
 import { submissionsRoutes } from "./submissions/index";
+import { teachingAssistantsRoutes } from "./teaching-assistants/index";
 
 const routes = [
   authRoutes,
@@ -21,6 +22,7 @@ const routes = [
   knowledgeBasesRoutes,
   chatRoutes,
   submissionsRoutes,
+  teachingAssistantsRoutes,
 ] as const;
 
 export async function registerRoutes(app: FastifyTypedInstance) {
