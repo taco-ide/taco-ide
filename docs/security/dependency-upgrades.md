@@ -33,6 +33,33 @@ The review-time `npm audit --omit=dev` snapshot on 2026-10-16 reported 25 alerts
 
 Remaining dependency remediation requires separate version and compatibility verification; automatic force-fix suggestions include disruptive migrations or downgrades and were not applied. Issue #119 tracks that follow-up separately from the runtime update in #114. The absence of critical alerts does not mean the complete dependency tree is free of advisories.
 
+## Follow-up advisory remediation (#119, 2026-11-22)
+
+Snapshot before this change, on the same lockfile as main: `npm audit --omit=dev` reported 26 alerts (1 critical, 10 high, 14 moderate, 1 low). The critical was a newly published Next.js advisory set for 16.0.0-16.4.4, including unauthenticated RCE in the image optimizer. The complete tree reported 45 alerts (1 critical, 20 high, 23 moderate, 1 low).
+
+Changes, all without `npm audit fix --force` and without new `overrides`:
+
+- Next.js, `@next/eslint-plugin-next` and `eslint-config-next` 16.4.6 (deployed web runtime).
+- `@fastify/swagger-ui` 6.1.5, which moves `@fastify/static` from 9.0.0 to 10.1.12 to fix its path-traversal and route-guard bypass advisories (deployed API runtime, serves `/docs`). Swagger UI 6 only removes the deprecated `useUnsafeMarkdown` option, which the API does not use.
+- In-range lockfile refreshes for API runtime paths: `@fastify/busboy` 3.2.6 (multipart uploads), Fastify 5.12.8, `fast-uri` 3.1.9/4.2.3, `defu` 6.1.7 (Better Auth), LangSmith 0.13.1 (LangChain core; drops the vulnerable `uuid` 10 path), `picomatch`, `yaml` and `baseline-browser-mapping`.
+- Test tooling: Vitest and `@vitest/coverage-v8` 4.1.12, Vite 8.3.8 (same majors; all Rolldown platform bindings retained).
+- Build tooling, in range: turbo 2.11.13, typescript-eslint 8.73.0, hono 4.13.20, `@humanfs/node`, `brace-expansion`, browserslist, lodash, `path-to-regexp` and `ws`.
+
+Snapshot after: `npm audit --omit=dev` reports 8 alerts (0 critical, 2 high, 6 moderate); the complete tree reports 14 (0 critical, 7 high, 7 moderate).
+
+Remaining advisories, recorded explicitly:
+
+| Package | Severity | Path | Usage | Why not fixed here |
+| --- | --- | --- | --- | --- |
+| `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5) and `fastify-type-provider-zod` <= 4.0.2 | high | API, web, infra, Kubb UI | Deployed runtime (request validation) | No patched 3.x release. Requires the Zod 4 migration together with `fastify-type-provider-zod` 6 or 7 (both require `zod` >= 4.1.5), Kubb-generated Zod schemas and web form schemas. Plan as its own change. |
+| `postcss-selector-parser` <= 6.1.4 via `tailwindcss` 3 and `@tailwindcss/typography` | moderate | web | Build only (CSS compilation of trusted sources) | The fix requires the Tailwind 4 plugin chain; plan that migration separately with browser regression coverage. |
+| `esbuild` <= 0.24.2 via `@esbuild-kit/*` in `drizzle-kit` 0.31.x | moderate | infra | Migration/development CLI | The advisory concerns esbuild's development server, which drizzle-kit does not start. Every 0.31.x release, including the latest 0.31.11, still depends on `@esbuild-kit`; only the 1.0 release candidates drop it. Re-evaluate when drizzle-kit 1.0 is stable and verify `db:generate`, `db:migrate` and `db:push` before adopting it. |
+| `@hono/node-server` <= 2.1.2 via `@kubb/ui` 3.18.3 | moderate | API devDependency | Code generation only | Kubb 3.18.3 is the newest 3.x release; the fix needs Kubb 4. |
+
+The lockfile was regenerated with npm 11 (the `edgesOut` arborist error in npm 11.3.0 blocks updating the Vitest peer set) and installs cleanly with `npm ci` on npm 11.3.0. Platform-specific optional entries (Next SWC, esbuild, Rolldown, LightningCSS, sharp, Parcel watcher, turbo) are retained for macOS, Linux and Windows.
+
+The API image footprint work described above (separating generation, test, build and migration-only dependencies from the runner image) is not part of this change and remains open under #119.
+
 ## Verification
 
 The upgraded packages passed strict workspace types, lint and all production builds on Node 22. Tests use real authentication sessions and a disposable PostgreSQL database; compatibility coverage includes both auth namespaces, CSV-created users, migration preservation and ambiguity handling, explicit administrator password rotation, and repeated development/demo seeds. Run the combined authentication and resource suites after integrating their independent PRs, and run the Chromium grade-persistence and challenge-wizard flows.
