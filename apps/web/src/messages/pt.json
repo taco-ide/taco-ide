@@ -1552,5 +1552,20 @@
       "student": "Aluno"
     },
     "title": "Sessões dos alunos"
+  },
+  "workSessionActivity": {
+    "filterLabel": "Atividade",
+    "all": "Todas as sessões",
+    "lastActivity": "Última atividade",
+    "status": {
+      "active": "Ativa",
+      "inactive": "Inativa",
+      "submitted": "Submetida"
+    },
+    "hint": {
+      "active": "O aluno trabalhou nesta sessão recentemente.",
+      "inactive": "Sem atividade do aluno há algum tempo (24 h por padrão). A sessão continua aberta e o aluno pode retomá-la.",
+      "submitted": "O aluno submeteu esta sessão."
+    }
   }
 }

@@ -1552,5 +1552,20 @@
       "student": "Student"
     },
     "title": "Student sessions"
+  },
+  "workSessionActivity": {
+    "filterLabel": "Activity",
+    "all": "All sessions",
+    "lastActivity": "Last activity",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "submitted": "Submitted"
+    },
+    "hint": {
+      "active": "The student worked on this session recently.",
+      "inactive": "No student activity for a while (24 h by default). The session is still open and the student can resume it.",
+      "submitted": "The student submitted this session."
+    }
   }
 }
