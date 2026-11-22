@@ -14,7 +14,7 @@ export const getV1ChallengesChallengeidKnowledgeBasesSearchQueryKey = (challenge
 export type GetV1ChallengesChallengeidKnowledgeBasesSearchQueryKey = ReturnType<typeof getV1ChallengesChallengeidKnowledgeBasesSearchQueryKey>
 
 /**
- * @description Search across all knowledge bases linked to a challenge using semantic similarity.
+ * @description Search across all knowledge bases linked to a challenge using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.
  * @summary Semantic search across challenge knowledge bases
  * {@link /v1/challenges/:challengeId/knowledge-bases/search}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesChallengeidKnowledgeBasesSearchQueryOptions(chall
 }
 
 /**
- * @description Search across all knowledge bases linked to a challenge using semantic similarity.
+ * @description Search across all knowledge bases linked to a challenge using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.
  * @summary Semantic search across challenge knowledge bases
  * {@link /v1/challenges/:challengeId/knowledge-bases/search}
  */

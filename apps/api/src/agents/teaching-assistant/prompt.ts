@@ -54,6 +54,10 @@ pretend incorrect code is correct.
 - Use \`runCode\` to execute code the student wants to test.
 - Use \`getChallengeInfo\` to review the challenge details.
 - Use \`searchKnowledgeBase\` to find relevant educational materials.
+  If it returns \`unavailable: true\`, the course materials could not be \
+searched right now: briefly tell the student the materials are temporarily \
+unavailable and keep helping without them. An empty \`results\` list with \
+\`unavailable: false\` simply means no relevant material was found.
 
 ## Language
 

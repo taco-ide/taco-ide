@@ -25,6 +25,7 @@ import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages
 import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
+import { EmbeddingUnavailableError } from "../../../../services/embedding-errors";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
 import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
 import {
@@ -209,8 +210,15 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const code = bodyCode ?? solution?.code ?? null;
       const stdout = bodyStdout ?? solution?.stdout ?? null;
 
-      // RAG: Search challenge knowledge bases for relevant context
+      // RAG: Search challenge knowledge bases for relevant context.
+      // kbRetrieval distinguishes "searched, nothing relevant" (ok, 0 results)
+      // from "retrieval failed" (unavailable) in logs and Langfuse metadata.
       let kbContext = "";
+      let kbRetrieval: {
+        status: "ok" | "unavailable";
+        resultCount: number;
+        failureReason?: string;
+      } = { status: "ok", resultCount: 0 };
       try {
         const kbResults = await searchChallengeKnowledgeBases({
           challengeId: session.challengeId,
@@ -218,6 +226,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           limit: 5,
         });
 
+        kbRetrieval = { status: "ok", resultCount: kbResults.length };
         if (kbResults.length > 0) {
           const formattedChunks = kbResults.map((result) => {
             const hierarchy = result.metadata?.titleHierarchy ?? [];
@@ -231,9 +240,19 @@ export async function chatRoute(app: FastifyTypedInstance) {
           kbContext = formattedChunks.join("\n\n---\n\n");
         }
       } catch (err) {
+        const failureReason =
+          err instanceof EmbeddingUnavailableError
+            ? `embedding_${err.reason}`
+            : "search_error";
+        kbRetrieval = { status: "unavailable", resultCount: 0, failureReason };
         request.server.log.warn(
-          { err },
-          "KB search failed during chat, proceeding without RAG"
+          {
+            err,
+            challengeId: session.challengeId,
+            workSessionId,
+            kbRetrievalFailure: failureReason,
+          },
+          "KB retrieval failed during chat, proceeding without RAG context"
         );
       }
 
@@ -262,8 +281,15 @@ export async function chatRoute(app: FastifyTypedInstance) {
       const langfuseCallback = getLangfuseCallback({
         userId: usr.id,
         sessionId: workSessionId,
-        tags: ["agent:ta"],
-        metadata: { challengeId: session.challengeId, workSessionId },
+        tags:
+          kbRetrieval.status === "unavailable"
+            ? ["agent:ta", "rag:unavailable"]
+            : ["agent:ta"],
+        metadata: {
+          challengeId: session.challengeId,
+          workSessionId,
+          kbRetrieval,
+        },
       });
 
       let modelResponse: string;

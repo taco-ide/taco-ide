@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("../../../../../services/embedding", () => ({
   generateEmbedding: mocks.embedding,
+  generateQueryEmbedding: mocks.embedding,
   generateEmbeddings: vi.fn(async () => []),
 }));
 vi.mock("../../../../../services/file-storage", () => ({
