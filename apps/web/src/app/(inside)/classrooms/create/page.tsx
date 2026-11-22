@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { DriveStep } from "driver.js";
 import { useUser } from "@/contexts/UserContext";
 import {
   usePostV1Classrooms,
@@ -24,7 +25,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RoleGuard } from "@/components/guards/RoleGuard";
-import { ArrowLeft, Loader2, Save, ShieldAlert, X } from "lucide-react";
+import { useTutorial } from "@/hooks/useTutorial";
+import { useHasMinimumRole } from "@/hooks/usePermission";
+import {
+  ArrowLeft,
+  HelpCircle,
+  Info,
+  Loader2,
+  Save,
+  ShieldAlert,
+  UserPlus,
+  X,
+} from "lucide-react";
 
 const TEACHER_NONE_VALUE = "__none__";
 
@@ -49,6 +61,8 @@ export default function CreateClassroomPage() {
   const { user } = useUser();
   const t = useTranslations("classrooms");
   const c = useTranslations("common");
+  const tOnboarding = useTranslations("classroomOnboarding");
+  const tour = useTranslations("classroomOnboarding.tour");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -56,8 +70,10 @@ export default function CreateClassroomPage() {
 
   const orgId = user?.activeOrganizationId ?? null;
   const isCoordinatorPlus = user?.role === "coordinator" || user?.role === "admin";
+  const canCreate = useHasMinimumRole("teacher");
 
-  const { data: orgMembersData } = useGetV1OrganizationsIdMembers(
+  const { data: orgMembersData, isFetched: membersFetched } =
+    useGetV1OrganizationsIdMembers(
     orgId ?? "",
     undefined,
     {
@@ -68,6 +84,53 @@ export default function CreateClassroomPage() {
     orgMembersData?.data?.filter((m) =>
       ["teacher", "coordinator", "admin"].includes(m.role)
     ) ?? [];
+  const showTeacherPicker = isCoordinatorPlus && teachersInOrg.length > 0;
+
+  // Guided tour: what a classroom is -> name it -> pick the lead teacher ->
+  // create it and continue on the classroom page (students + challenges).
+  const tourSteps = useMemo<DriveStep[]>(() => {
+    const steps: DriveStep[] = [
+      {
+        element: '[data-tour="classroom-intro"]',
+        popover: {
+          title: tour("create.intro.title"),
+          description: tour("create.intro.description"),
+        },
+      },
+      {
+        element: '[data-tour="classroom-title"]',
+        popover: {
+          title: tour("create.title.title"),
+          description: tour("create.title.description"),
+        },
+      },
+    ];
+    if (showTeacherPicker) {
+      steps.push({
+        element: '[data-tour="classroom-teacher"]',
+        popover: {
+          title: tour("create.teacher.title"),
+          description: tour("create.teacher.description"),
+        },
+      });
+    }
+    steps.push({
+      element: '[data-tour="classroom-submit"]',
+      popover: {
+        title: tour("create.submit.title"),
+        description: tour("create.submit.description"),
+      },
+    });
+    return steps;
+  }, [tour, showTeacherPicker]);
+
+  const { startTour } = useTutorial("classroom-teacher-add", tourSteps, {
+    // Wait for the member list so the teacher-picker step is not skipped.
+    autoStart: canCreate && !!orgId && (!isCoordinatorPlus || membersFetched),
+    nextBtnText: tour("buttons.next"),
+    prevBtnText: tour("buttons.back"),
+    doneBtnText: tour("buttons.done"),
+  });
 
   const createMutation = usePostV1Classrooms({
     mutation: {
@@ -142,9 +205,33 @@ export default function CreateClassroomPage() {
               </div>
 
               <div className="space-y-6 max-w-3xl mx-auto">
+                <div
+                  data-tour="classroom-intro"
+                  className="flex items-start gap-3 rounded-lg border border-sky-500/30 bg-sky-500/10 p-4"
+                >
+                  <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-300" />
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <p className="text-sm font-semibold text-sky-100">
+                      {tOnboarding("create.intro.title")}
+                    </p>
+                    <p className="text-sm leading-relaxed text-sky-200/80">
+                      {tOnboarding("create.intro.body")}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={startTour}
+                    className="shrink-0 text-sky-200 hover:bg-sky-500/10 hover:text-sky-100"
+                  >
+                    <HelpCircle className="mr-1.5 h-4 w-4" />
+                    {tOnboarding("showTutorial")}
+                  </Button>
+                </div>
                 <Card className="p-6 bg-slate-800 border-slate-700">
                   <div className="space-y-4">
-                    <div>
+                    <div data-tour="classroom-title">
                       <Label className="text-slate-200">
                         {t("create.fields.title.label")}
                       </Label>
@@ -171,8 +258,8 @@ export default function CreateClassroomPage() {
                         disabled={createMutation.isPending}
                       />
                     </div>
-                    {isCoordinatorPlus && teachersInOrg.length > 0 && (
-                      <div>
+                    {showTeacherPicker && (
+                      <div data-tour="classroom-teacher">
                         <Label className="text-slate-200">
                           {t("create.fields.teacher.label")}
                         </Label>
@@ -205,7 +292,18 @@ export default function CreateClassroomPage() {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-slate-500 mt-1">
-                          {t("create.fields.teacher.hint")}
+                          {t("create.fields.teacher.hint")}{" "}
+                          {tOnboarding("create.teacherEffect")}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {tOnboarding("create.inviteTeacher.prompt")}{" "}
+                          <Link
+                            href="/team"
+                            className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300"
+                          >
+                            <UserPlus className="h-3 w-3" />
+                            {tOnboarding("create.inviteTeacher.link")}
+                          </Link>
                         </p>
                       </div>
                     )}
@@ -234,6 +332,7 @@ export default function CreateClassroomPage() {
                 </Button>
                 <Button
                   type="submit"
+                  data-tour="classroom-submit"
                   disabled={createMutation.isPending || !title.trim()}
                   className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium transition-all duration-200 flex items-center gap-2"
                 >

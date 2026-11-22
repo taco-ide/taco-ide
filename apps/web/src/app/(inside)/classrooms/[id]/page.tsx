@@ -1,9 +1,10 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { DriveStep } from "driver.js";
 import {
   useGetV1ClassroomsId,
   usePutV1ClassroomsId,
@@ -17,6 +18,8 @@ import {
 } from "@/kubb/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/UserContext";
+import { useTutorial } from "@/hooks/useTutorial";
+import { useHasPermission } from "@/hooks/usePermission";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +49,7 @@ import {
   Check,
   X,
   BookOpen,
+  HelpCircle,
   Plus,
 } from "lucide-react";
 
@@ -68,6 +72,9 @@ export default function ClassroomPage() {
   const { user } = useUser();
   const t = useTranslations("classrooms");
   const c = useTranslations("common");
+  const tOnboarding = useTranslations("classroomOnboarding");
+  const tour = useTranslations("classroomOnboarding.tour");
+  const canCreateChallenge = useHasPermission("challenge", "create");
   const id = params.id as string;
 
   const [editingTitle, setEditingTitle] = useState(false);
@@ -92,7 +99,8 @@ export default function ClassroomPage() {
   const canSetTeacher = isCoordinatorPlus;
   const canAssignChallenges = isCoordinatorPlus || isLeadTeacher;
 
-  const { data: classroomChallengesData } = useGetV1Challenges(
+  const { data: classroomChallengesData, isFetched: challengesFetched } =
+    useGetV1Challenges(
     { classroomId: id, page: 1, perPage: 50 },
     { query: { enabled: !!id } }
   );
@@ -114,6 +122,53 @@ export default function ClassroomPage() {
   const teachersInOrg = orgMembers.filter((m) =>
     ["teacher", "coordinator", "admin"].includes(m.role)
   );
+  const showTeacherSelect =
+    canSetTeacher && !!orgId && orgId === user?.activeOrganizationId;
+  const isEmptyClassroom =
+    !!classroom &&
+    challengesFetched &&
+    !classroom.enrollments?.length &&
+    classroomChallenges.length === 0;
+
+  // Second half of the classroom onboarding: once a classroom exists, show
+  // managers where to enroll students and attach challenges. Auto-starts only
+  // on an empty classroom so it never interrupts day-to-day management.
+  const nextStepsTour = useMemo<DriveStep[]>(() => {
+    const steps: DriveStep[] = [];
+    if (showTeacherSelect) {
+      steps.push({
+        element: '[data-tour="classroom-teacher-select"]',
+        popover: {
+          title: tour("detail.teacher.title"),
+          description: tour("detail.teacher.description"),
+        },
+      });
+    }
+    steps.push(
+      {
+        element: '[data-tour="classroom-students"]',
+        popover: {
+          title: tour("detail.students.title"),
+          description: tour("detail.students.description"),
+        },
+      },
+      {
+        element: '[data-tour="classroom-problems"]',
+        popover: {
+          title: tour("detail.problems.title"),
+          description: tour("detail.problems.description"),
+        },
+      }
+    );
+    return steps;
+  }, [tour, showTeacherSelect]);
+
+  const { startTour } = useTutorial("classroom-next-steps", nextStepsTour, {
+    autoStart: canManageEnrollments && isEmptyClassroom,
+    nextBtnText: tour("buttons.next"),
+    prevBtnText: tour("buttons.back"),
+    doneBtnText: tour("buttons.done"),
+  });
 
   const putMutation = usePutV1ClassroomsId({
     mutation: {
@@ -293,6 +348,23 @@ export default function ClassroomPage() {
           <p className="text-slate-500 text-sm mt-2">
             {t("detail.manageHint")}
           </p>
+          {canManageEnrollments && (
+            <div className="mt-4 space-y-2">
+              <p className="text-slate-500 text-xs max-w-2xl mx-auto">
+                {tOnboarding("detail.whoManages")}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={startTour}
+                className="text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+              >
+                <HelpCircle className="mr-1.5 h-4 w-4" />
+                {tOnboarding("showTutorial")}
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-0 max-w-5xl mx-auto">
@@ -358,8 +430,11 @@ export default function ClassroomPage() {
                 </div>
               )}
 
-              {canSetTeacher && orgId === user?.activeOrganizationId && (
-                <div className="pt-4 border-t border-slate-700">
+              {showTeacherSelect && (
+                <div
+                  data-tour="classroom-teacher-select"
+                  className="pt-4 border-t border-slate-700"
+                >
                   <Label className="text-slate-200 block mb-2">
                     {t("teacher.label")}
                   </Label>
@@ -398,7 +473,10 @@ export default function ClassroomPage() {
 
           <SectionDivider label={t("detail.sections.students")} />
 
-          <Card className="p-6 bg-slate-800 border-slate-700">
+          <Card
+            data-tour="classroom-students"
+            className="p-6 bg-slate-800 border-slate-700"
+          >
             <CardContent className="p-0 space-y-4">
               {canManageEnrollments && availableToEnroll.length > 0 && (
                 <div className="flex flex-wrap gap-2">
@@ -437,7 +515,35 @@ export default function ClassroomPage() {
                 </div>
               )}
               {!classroom.enrollments?.length ? (
-                <p className="text-slate-400 py-2">{t("students.empty")}</p>
+                <div className="py-2 space-y-2">
+                  <p className="text-slate-400">{t("students.empty")}</p>
+                  {canManageEnrollments &&
+                    (availableToEnroll.length > 0 ? (
+                      <p className="text-sm text-slate-500">
+                        {tOnboarding("detail.students.pickAbove")}
+                      </p>
+                    ) : isCoordinatorPlus ? (
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="text-sm text-slate-500">
+                          {tOnboarding("detail.students.noneAvailable")}
+                        </p>
+                        <Button
+                          asChild
+                          size="sm"
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium"
+                        >
+                          <Link href="/team">
+                            <UserPlus className="mr-1.5 h-4 w-4" />
+                            {tOnboarding("detail.students.invite")}
+                          </Link>
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500">
+                        {tOnboarding("detail.students.askCoordinator")}
+                      </p>
+                    ))}
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -485,7 +591,10 @@ export default function ClassroomPage() {
 
           <SectionDivider label={t("detail.sections.problems")} />
 
-          <Card className="p-6 bg-slate-800 border-slate-700">
+          <Card
+            data-tour="classroom-problems"
+            className="p-6 bg-slate-800 border-slate-700"
+          >
             <CardContent className="p-0 space-y-4">
               <div className="flex items-center gap-2 text-lg font-semibold text-slate-100">
                 <div className="flex items-center justify-center rounded-lg bg-slate-900/80 ring-1 ring-slate-700/80 p-2">
@@ -539,7 +648,30 @@ export default function ClassroomPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-slate-400 py-2">{t("problems.empty")}</p>
+                <div className="py-2 space-y-2">
+                  <p className="text-slate-400">{t("problems.empty")}</p>
+                  {canAssignChallenges && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      {canCreateChallenge && (
+                        <Button
+                          asChild
+                          size="sm"
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium"
+                        >
+                          <Link href="/create">
+                            <Plus className="mr-1.5 h-4 w-4" />
+                            {tOnboarding("detail.problems.create")}
+                          </Link>
+                        </Button>
+                      )}
+                      {unassignedChallenges.length > 0 && (
+                        <p className="text-sm text-slate-500">
+                          {tOnboarding("detail.problems.orAssign")}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
               {canAssignChallenges && unassignedChallenges.length > 0 && (
                 <div className="pt-4 border-t border-slate-700">
