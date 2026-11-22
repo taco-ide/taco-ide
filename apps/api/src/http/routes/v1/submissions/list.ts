@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -9,7 +9,7 @@ import {
 } from "../../_responses/types";
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
-import { submission, user } from "@repo/infra/db/schema";
+import { submission, user, workSession } from "@repo/infra/db/schema";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -100,7 +100,23 @@ export async function listSubmissionsRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const whereSub = eq(submission.challengeId, challengeId);
+      // Submissions of sessions archived by a reset stay in the database but
+      // are no longer the student's current submission.
+      const whereSub = and(
+        eq(submission.challengeId, challengeId),
+        inArray(
+          submission.workSessionId,
+          db
+            .select({ id: workSession.id })
+            .from(workSession)
+            .where(
+              and(
+                eq(workSession.challengeId, challengeId),
+                isNull(workSession.archivedAt)
+              )
+            )
+        )
+      );
 
       const countResult = await db
         .select({ count: sql<number>`count(*)::int` })

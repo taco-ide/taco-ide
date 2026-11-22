@@ -194,6 +194,9 @@ organization — there is no per-user filtering of available TAs.
   bump `TA_TURN_CONTEXT_SCHEMA_VERSION` when a shape changes. The API writes
   it with the interaction in one transaction
   (`apps/api/src/agents/teaching-assistant/turn-context.ts`).
+- `work_session.archived_at` — reset archives a session instead of deleting
+  it, so its interactions and turn contexts are kept. The
+  `(user_id, challenge_id)` unique index only covers non-archived sessions.
 
 ## Important Notes
 

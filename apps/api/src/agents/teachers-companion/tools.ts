@@ -8,7 +8,7 @@ import {
   challenge,
 } from "@repo/infra/db/schema";
 import { user } from "@repo/infra/db/schema";
-import { eq, asc, and } from "drizzle-orm";
+import { eq, asc, and, isNull } from "drizzle-orm";
 import { workSession } from "@repo/infra/db/schema";
 import { createLlm } from "../llm-factory";
 
@@ -176,6 +176,8 @@ export const evaluateSubmission = tool(
         and(
           eq(userInteractionOnChallenge.challengeId, solution.challengeId),
           eq(workSession.userId, solution.userId),
+          // Sessions archived by a reset are not part of the current attempt.
+          isNull(workSession.archivedAt),
         ),
       )
       .orderBy(asc(userInteractionOnChallenge.createdAt))

@@ -90,6 +90,10 @@ export type GetV1ChallengesChallengeidWorkSessions200 = {
          * @type string
         */
         endedAt: string | null;
+        /**
+         * @type string
+        */
+        archivedAt: string | null;
     }[];
     /**
      * @type object

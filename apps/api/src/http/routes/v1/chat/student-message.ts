@@ -94,6 +94,12 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           .send({ success: false as const, message: "Not authorized" });
       }
 
+      if (ws[0].archivedAt) {
+        return reply
+          .status(400)
+          .send({ success: false as const, message: "Work session was reset" });
+      }
+
       if (ws[0].endedAt != null) {
         return reply
           .status(400)

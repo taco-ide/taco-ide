@@ -16,7 +16,7 @@ export const deleteV1WorkSessionsIdReset200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
-    "deleted": z.literal(true)
+    "archived": z.literal(true)
     }),
 "pagination": z.object({
     "total": z.number(),
@@ -24,6 +24,17 @@ export const deleteV1WorkSessionsIdReset200Schema = z.object({
 "perPage": z.number(),
 "totalPages": z.number()
     }).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const deleteV1WorkSessionsIdReset400Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
 /**

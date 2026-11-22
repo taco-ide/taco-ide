@@ -147,7 +147,9 @@ function WorkSessionsListContent() {
                         {row.studentName}
                       </TableCell>
                       <TableCell className="text-slate-300">
-                        {row.endedAt ? (
+                        {row.archivedAt ? (
+                          <span className="text-rose-400/90">{t("state.reset")}</span>
+                        ) : row.endedAt ? (
                           <span className="text-emerald-400/90">{t("state.submitted")}</span>
                         ) : (
                           <span className="text-amber-400/90">{t("state.inProgress")}</span>

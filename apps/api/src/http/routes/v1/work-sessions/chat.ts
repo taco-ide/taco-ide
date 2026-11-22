@@ -105,6 +105,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           challengeId: workSession.challengeId,
           teachingAssistantId: workSession.teachingAssistantId,
           endedAt: workSession.endedAt,
+          archivedAt: workSession.archivedAt,
         })
         .from(workSession)
         .where(eq(workSession.id, workSessionId))
@@ -121,6 +122,13 @@ export async function chatRoute(app: FastifyTypedInstance) {
         return reply.status(403).send({
           success: false as const,
           message: "Not authorized to use this work session",
+        });
+      }
+
+      if (session.archivedAt) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was reset",
         });
       }
 

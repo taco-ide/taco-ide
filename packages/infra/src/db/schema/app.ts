@@ -185,12 +185,15 @@ export const workSession = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
     lastMessageAt: timestamp("last_message_at"),
     endedAt: timestamp("ended_at"),
+    // Set by reset. The session and its interactions stay for research data,
+    // but the student starts a new session and this one takes no more writes.
+    archivedAt: timestamp("archived_at"),
   },
   (table) => [
-    uniqueIndex("work_session_user_challenge_idx").on(
-      table.userId,
-      table.challengeId
-    ),
+    // One active session per student and challenge; archived ones don't count.
+    uniqueIndex("work_session_user_challenge_idx")
+      .on(table.userId, table.challengeId)
+      .where(sql`archived_at IS NULL`),
   ]
 );
 

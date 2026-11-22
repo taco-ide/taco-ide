@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, isNull, desc, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -169,8 +169,10 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
           teachingAssistantId,
           classroomId: ctx.classroomId,
         })
+        // Matches the partial unique index: only one active (non-archived) session.
         .onConflictDoNothing({
           target: [workSession.userId, workSession.challengeId],
+          where: sql`archived_at IS NULL`,
         })
         .returning();
 
@@ -182,7 +184,8 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
           .where(
             and(
               eq(workSession.userId, usr.id),
-              eq(workSession.challengeId, challengeId)
+              eq(workSession.challengeId, challengeId),
+              isNull(workSession.archivedAt)
             )
           )
           .limit(1);
