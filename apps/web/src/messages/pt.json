@@ -1466,6 +1466,49 @@
     "viewReplay": "Ver histórico (replay)",
     "viewStudentSessions": "Ver sessões dos alunos"
   },
+  "taRatings": {
+    "accessDenied": "Apenas professores, coordenadores e administradores podem ver as avaliações do assistente de ensino.",
+    "back": "Voltar ao painel",
+    "byAssistant": {
+      "assistant": "Assistente de ensino",
+      "inactive": "(inativo)",
+      "title": "Por assistente de ensino"
+    },
+    "distribution": {
+      "count": "{count} ({pct}%)",
+      "title": "Avaliações por estrelas"
+    },
+    "empty": "Ainda não há avaliações para os filtros selecionados. Os alunos avaliam o assistente de ensino de forma anônima ao enviar um desafio.",
+    "export": {
+      "button": "Exportar CSV",
+      "error": "Não foi possível exportar as avaliações. Tente novamente."
+    },
+    "filters": {
+      "allAssistants": "Todos os assistentes",
+      "assistant": "Assistente de ensino",
+      "from": "De",
+      "invalidRange": "A data inicial deve ser igual ou anterior à data final.",
+      "to": "Até"
+    },
+    "loadError": "Não foi possível carregar as avaliações.",
+    "noOrganization": "Selecione uma organização para ver as avaliações dos assistentes de ensino.",
+    "privacyNote": "As avaliações são anônimas: guardamos apenas o assistente, a nota e a semana, nunca o aluno, a sessão ou a turma. As semanas começam na segunda-feira.",
+    "quickAction": {
+      "description": "Veja como os alunos avaliam os assistentes de ensino de IA da sua organização.",
+      "title": "Avaliações do assistente"
+    },
+    "stats": {
+      "mean": "Nota média",
+      "total": "Avaliações"
+    },
+    "subtitle": "Avaliações anônimas que os alunos dão ao assistente de ensino de IA ao enviar um desafio.",
+    "title": "Avaliações do assistente de ensino",
+    "weekly": {
+      "subtitle": "Nota média por semana (1–5); n é o número de avaliações.",
+      "title": "Média semanal",
+      "tooltip": "Semana de {week}: média {mean} em {count} avaliações"
+    }
+  },
   "ui": {
     "carousel": {
       "nextSlide": "Próximo slide",

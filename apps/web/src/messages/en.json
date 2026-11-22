@@ -1466,6 +1466,49 @@
     "viewReplay": "View history (replay)",
     "viewStudentSessions": "View student sessions"
   },
+  "taRatings": {
+    "accessDenied": "Only teachers, coordinators and administrators can view teaching assistant ratings.",
+    "back": "Back to dashboard",
+    "byAssistant": {
+      "assistant": "Teaching assistant",
+      "inactive": "(inactive)",
+      "title": "By teaching assistant"
+    },
+    "distribution": {
+      "count": "{count} ({pct}%)",
+      "title": "Ratings by stars"
+    },
+    "empty": "No ratings yet for the selected filters. Students rate the teaching assistant anonymously when they submit a challenge.",
+    "export": {
+      "button": "Export CSV",
+      "error": "Could not export the ratings. Try again."
+    },
+    "filters": {
+      "allAssistants": "All teaching assistants",
+      "assistant": "Teaching assistant",
+      "from": "From",
+      "invalidRange": "The start date must be on or before the end date.",
+      "to": "To"
+    },
+    "loadError": "Could not load the ratings.",
+    "noOrganization": "Select an organization to view its teaching assistant ratings.",
+    "privacyNote": "Ratings are anonymous: only the teaching assistant, the grade and the week are stored, never the student, session or classroom. Weeks start on Monday.",
+    "quickAction": {
+      "description": "See how students rate your organization's AI teaching assistants.",
+      "title": "Teaching assistant ratings"
+    },
+    "stats": {
+      "mean": "Average rating",
+      "total": "Ratings"
+    },
+    "subtitle": "Anonymous ratings students give the AI teaching assistant when they submit a challenge.",
+    "title": "Teaching assistant ratings",
+    "weekly": {
+      "subtitle": "Average rating per week (1–5); n is the number of ratings.",
+      "title": "Weekly average",
+      "tooltip": "Week of {week}: average {mean} from {count} ratings"
+    }
+  },
   "ui": {
     "carousel": {
       "nextSlide": "Next slide",

@@ -11,6 +11,7 @@ import {
   Plus,
   ShieldCheck,
   Sparkles,
+  Star,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,7 @@ function TeacherChallenges() {
 function DashboardContent() {
   const t = useTranslations("dashboard");
   const tour = useTranslations("dashboard.tour");
+  const tRatings = useTranslations("taRatings");
   const { user, isLoading, getFirstName } = useUser();
 
   const roleKey = user
@@ -446,6 +448,20 @@ function DashboardContent() {
               />
             </>
           )}
+          {/* Issue #99: anonymous TA rating stats, staff of the active org. */}
+          {user.activeOrganizationId &&
+            (user.isPlatformAdmin ||
+              ["teacher", "coordinator", "admin", "owner"].includes(
+                user.role ?? ""
+              )) && (
+              <QuickAction
+                href="/dashboard/ta-ratings"
+                icon={Star}
+                title={tRatings("quickAction.title")}
+                description={tRatings("quickAction.description")}
+                accent="violet"
+              />
+            )}
         </div>
       </section>
 
