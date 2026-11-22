@@ -81,6 +81,35 @@ Middleware behavior:
 - Returns 401 if unauthenticated
 - Attaches user info to request context
 
+### rate-limit.ts
+API rate limiting (issue #14), built on `@fastify/rate-limit` with its
+in-memory LRU store. Limits come from `@repo/infra/env` (defaults below) and
+are read per request from the exported `rateLimitSettings`.
+
+| Layer | Key | Default | Applies to |
+|-------|-----|---------|------------|
+| Global | user id, else client IP | 300/min (`RATE_LIMIT_GLOBAL_PER_MINUTE`) | every route except the Better Auth bridge |
+| `aiChat` | user id | 10/min, 200/day | `POST /v1/work-sessions/:id/chat`, `POST /v1/chat/student/message`, `POST /v1/chat/teacher/message` |
+| `aiGeneration` | user id | 5/min, 100/day | `POST /v1/challenges` (unless `generateReferenceSolutions: false`), `PATCH /v1/challenges/:id` (only with `generateReferenceSolutions: true`), reference-solution regenerate, auto-review re-run |
+| `embedding` | user id | 30/min, 500/day | both knowledge base search routes, manual entry create/update, document upload |
+| Better Auth | client IP + auth path | sign-in/sign-up/change-password/change-email 30/min; password reset and verification email 10/hour; other auth paths 100/10 s | `/v1/auth/*`, `/api/auth/*` (configured in `packages/infra/src/auth/index.ts`) |
+
+- Add a cost policy to a route with `preHandler: [rateLimitPolicy("aiChat")]`
+  (after `requirePermission(...)` when present). Each policy's budget is
+  shared by all its routes, so it does not grow with sessions or classrooms.
+  Requests that fail validation are not counted.
+- Over the limit: `429`, `Retry-After` and `x-ratelimit-*` headers, body
+  `{ success: false, message, code: "RATE_LIMITED", retryAfterSeconds }`
+  (`ResponseSchema429`). Better Auth answers its own 429 with `X-Retry-After`.
+- Better Auth limits by the IP Fastify resolved (`request.ip`), which the
+  bridge passes in the `x-taco-client-ip` header. Fastify runs with
+  `trustProxy: true`, so deploy behind a proxy that sets `X-Forwarded-For`.
+- `RATE_LIMIT_ENABLED=false` turns off the API layers; Better Auth's limiter
+  is off by default under `NODE_ENV=test`.
+- State is per process. Before running more than one API instance, add a
+  Redis store (`redis` option in `globalRateLimitOptions`, and Better Auth
+  `secondaryStorage`).
+
 ## routes/
 
 Route handlers organized by version and module.

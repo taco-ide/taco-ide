@@ -48,12 +48,53 @@ export { hashPassword } from "better-auth/crypto";
 // to clean HTTP responses without depending on `better-auth` directly.
 export { APIError } from "better-auth/api";
 
+/**
+ * Header the API's Better Auth bridge sets to the client IP Fastify resolved.
+ * The bridge overwrites any value a client sends, so Better Auth can trust it
+ * for rate limiting and session IP tracking. Without it, a request with no
+ * (or a multi-hop) X-Forwarded-For has no IP, and Better Auth falls back to a
+ * single bucket shared by every client.
+ */
+export const AUTH_CLIENT_IP_HEADER = "x-taco-client-ip";
+
 // ==================== AUTH INSTANCE ====================
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [env.FRONTEND_URL, env.BETTER_AUTH_URL],
+
+  // Per client IP and auth path, in memory (single API instance). Keys are
+  // Better Auth paths relative to its base path (/api/auth). Limits allow a
+  // classroom behind one NAT address to sign in at once while still bounding
+  // credential guessing and email spam. Move to `storage: "secondary-storage"`
+  // (Redis) when the API runs on more than one instance.
+  rateLimit: {
+    enabled: env.AUTH_RATE_LIMIT_ENABLED,
+    storage: "memory",
+    window: 10,
+    max: 100,
+    customRules: {
+      "/sign-in/*": { window: 60, max: env.AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE },
+      "/sign-up/*": { window: 60, max: env.AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE },
+      "/change-password": {
+        window: 60,
+        max: env.AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE,
+      },
+      "/change-email": {
+        window: 60,
+        max: env.AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE,
+      },
+      "/request-password-reset": {
+        window: 3600,
+        max: env.AUTH_RATE_LIMIT_EMAIL_PER_HOUR,
+      },
+      "/send-verification-email": {
+        window: 3600,
+        max: env.AUTH_RATE_LIMIT_EMAIL_PER_HOUR,
+      },
+    },
+  },
 
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -294,6 +335,7 @@ export const auth = betterAuth({
   },
 
   advanced: {
+    ipAddress: { ipAddressHeaders: [AUTH_CLIENT_IP_HEADER] },
     useSecureCookies: env.NODE_ENV === "production",
     crossSubDomainCookies: {
       enabled: env.NODE_ENV === "production",

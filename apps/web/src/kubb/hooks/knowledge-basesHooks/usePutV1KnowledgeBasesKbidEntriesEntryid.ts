@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest, PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, PutV1KnowledgeBasesKbidEntriesEntryidPathParams, PutV1KnowledgeBasesKbidEntriesEntryid401, PutV1KnowledgeBasesKbidEntriesEntryid403, PutV1KnowledgeBasesKbidEntriesEntryid404, PutV1KnowledgeBasesKbidEntriesEntryid429 } from "../../../../../../packages/types/kubb/PutV1KnowledgeBasesKbidEntriesEntryid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest, PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, PutV1KnowledgeBasesKbidEntriesEntryidPathParams, PutV1KnowledgeBasesKbidEntriesEntryid401, PutV1KnowledgeBasesKbidEntriesEntryid403, PutV1KnowledgeBasesKbidEntriesEntryid404 } from "../../../../../../packages/types/kubb/PutV1KnowledgeBasesKbidEntriesEntryid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1KnowledgeBasesKbidEntriesEntryidMutationKey = () => [{ url: '/v1/knowledge-bases/:kbId/entries/:entryId' }] as const
@@ -23,7 +23,7 @@ export async function putV1KnowledgeBasesKbidEntriesEntryid(kbId: PutV1Knowledge
   
   const requestData = data  
   
-  const res = await request<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404>, PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest>({ method : "PUT", url : `/v1/knowledge-bases/${kbId}/entries/${entryId}`, data : requestData, ... requestConfig })  
+  const res = await request<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404 | PutV1KnowledgeBasesKbidEntriesEntryid429>, PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest>({ method : "PUT", url : `/v1/knowledge-bases/${kbId}/entries/${entryId}`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function putV1KnowledgeBasesKbidEntriesEntryid(kbId: PutV1Knowledge
  */
 export function usePutV1KnowledgeBasesKbidEntriesEntryid<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404>, {kbId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["kbId"], entryId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["entryId"], data: PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404 | PutV1KnowledgeBasesKbidEntriesEntryid429>, {kbId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["kbId"], entryId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["entryId"], data: PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePutV1KnowledgeBasesKbidEntriesEntryid<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? putV1KnowledgeBasesKbidEntriesEntryidMutationKey()
 
-  return useMutation<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404>, {kbId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["kbId"], entryId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["entryId"], data: PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest}, TContext>({
+  return useMutation<PutV1KnowledgeBasesKbidEntriesEntryidMutationResponse, ResponseErrorConfig<PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404 | PutV1KnowledgeBasesKbidEntriesEntryid429>, {kbId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["kbId"], entryId: PutV1KnowledgeBasesKbidEntriesEntryidPathParams["entryId"], data: PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest}, TContext>({
     mutationFn: async({ kbId, entryId, data }) => {
       return putV1KnowledgeBasesKbidEntriesEntryid(kbId, entryId, data, config)
     },

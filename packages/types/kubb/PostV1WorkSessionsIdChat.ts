@@ -176,6 +176,12 @@ export const postV1WorkSessionsIdChat429SuccessEnum = {
 
 export type PostV1WorkSessionsIdChat429SuccessEnum = (typeof postV1WorkSessionsIdChat429SuccessEnum)[keyof typeof postV1WorkSessionsIdChat429SuccessEnum];
 
+export const postV1WorkSessionsIdChat429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1WorkSessionsIdChat429CodeEnum = (typeof postV1WorkSessionsIdChat429CodeEnum)[keyof typeof postV1WorkSessionsIdChat429CodeEnum];
+
 /**
  * @description Default Response
 */
@@ -194,6 +200,15 @@ export type PostV1WorkSessionsIdChat429 = {
     errors?: {
         [key: string]: (string[] | string);
     };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1WorkSessionsIdChat429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
 };
 
 export const postV1WorkSessionsIdChat500SuccessEnum = {

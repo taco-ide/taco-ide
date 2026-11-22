@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1KnowledgeBasesKbidSearchQueryResponse, GetV1KnowledgeBasesKbidSearchPathParams, GetV1KnowledgeBasesKbidSearchQueryParams, GetV1KnowledgeBasesKbidSearch401, GetV1KnowledgeBasesKbidSearch403, GetV1KnowledgeBasesKbidSearch404, GetV1KnowledgeBasesKbidSearch429, GetV1KnowledgeBasesKbidSearch503 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidSearch.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1KnowledgeBasesKbidSearchQueryResponse, GetV1KnowledgeBasesKbidSearchPathParams, GetV1KnowledgeBasesKbidSearchQueryParams, GetV1KnowledgeBasesKbidSearch401, GetV1KnowledgeBasesKbidSearch403, GetV1KnowledgeBasesKbidSearch404, GetV1KnowledgeBasesKbidSearch503 } from "../../../../../../packages/types/kubb/GetV1KnowledgeBasesKbidSearch.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1KnowledgeBasesKbidSearchQueryKey = (kbId: GetV1KnowledgeBasesKbidSearchPathParams["kbId"], params: GetV1KnowledgeBasesKbidSearchQueryParams) => [{ url: '/v1/knowledge-bases/:kbId/search', params: {kbId:kbId} }, ...(params ? [params] : [])] as const
@@ -21,13 +21,13 @@ export type GetV1KnowledgeBasesKbidSearchQueryKey = ReturnType<typeof getV1Knowl
 export async function getV1KnowledgeBasesKbidSearch(kbId: GetV1KnowledgeBasesKbidSearchPathParams["kbId"], params: GetV1KnowledgeBasesKbidSearchQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch503>, unknown>({ method : "GET", url : `/v1/knowledge-bases/${kbId}/search`, params, ... requestConfig })  
+  const res = await request<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch429 | GetV1KnowledgeBasesKbidSearch503>, unknown>({ method : "GET", url : `/v1/knowledge-bases/${kbId}/search`, params, ... requestConfig })  
   return res.data
 }
 
 export function getV1KnowledgeBasesKbidSearchQueryOptions(kbId: GetV1KnowledgeBasesKbidSearchPathParams["kbId"], params: GetV1KnowledgeBasesKbidSearchQueryParams, config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const queryKey = getV1KnowledgeBasesKbidSearchQueryKey(kbId, params)
-  return queryOptions<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch503>, GetV1KnowledgeBasesKbidSearchQueryResponse, typeof queryKey>({
+  return queryOptions<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch429 | GetV1KnowledgeBasesKbidSearch503>, GetV1KnowledgeBasesKbidSearchQueryResponse, typeof queryKey>({
    enabled: !!(kbId&& params),
    queryKey,
    queryFn: async ({ signal }) => {
@@ -44,7 +44,7 @@ export function getV1KnowledgeBasesKbidSearchQueryOptions(kbId: GetV1KnowledgeBa
  */
 export function useGetV1KnowledgeBasesKbidSearch<TData = GetV1KnowledgeBasesKbidSearchQueryResponse, TQueryData = GetV1KnowledgeBasesKbidSearchQueryResponse, TQueryKey extends QueryKey = GetV1KnowledgeBasesKbidSearchQueryKey>(kbId: GetV1KnowledgeBasesKbidSearchPathParams["kbId"], params: GetV1KnowledgeBasesKbidSearchQueryParams, options: 
 {
-  query?: Partial<QueryObserverOptions<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch503>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
+  query?: Partial<QueryObserverOptions<GetV1KnowledgeBasesKbidSearchQueryResponse, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch429 | GetV1KnowledgeBasesKbidSearch503>, TData, TQueryData, TQueryKey>> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch }
 }
  = {}) {
@@ -56,7 +56,7 @@ export function useGetV1KnowledgeBasesKbidSearch<TData = GetV1KnowledgeBasesKbid
    ...getV1KnowledgeBasesKbidSearchQueryOptions(kbId, params, config),
    queryKey,
    ...queryOptions
-  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch503>> & { queryKey: TQueryKey }
+  } as unknown as QueryObserverOptions, queryClient) as UseQueryResult<TData, ResponseErrorConfig<GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch429 | GetV1KnowledgeBasesKbidSearch503>> & { queryKey: TQueryKey }
 
   query.queryKey = queryKey as TQueryKey
 

@@ -6,9 +6,11 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
   ResponseSchema503,
 } from "../../_responses/types";
 import { searchKnowledgeBase } from "../../../../services/knowledge-base-search";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -18,7 +20,8 @@ const SearchKnowledgeBaseParamsSchema = z.object({
 
 const SearchKnowledgeBaseQuerySchema = z
   .object({
-    q: z.string().min(1),
+    // Bounded: the query is embedded on every request.
+    q: z.string().trim().min(1).max(1000),
     limit: z.coerce.number().min(1).max(50).default(10),
   })
   .strict();
@@ -51,6 +54,7 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
   }>(
     "/:kbId/search",
     {
+      preHandler: [rateLimitPolicy("embedding")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Semantic search knowledge base",
@@ -62,6 +66,7 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
           503: ResponseSchema503,
         },
       },

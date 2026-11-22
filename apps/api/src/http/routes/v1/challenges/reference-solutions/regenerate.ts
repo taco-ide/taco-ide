@@ -17,6 +17,7 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../../services/work-session-access";
 import { startReferenceSolutions } from "../../../../../agents/teachers-companion/reference-solution";
+import { rateLimitPolicy } from "../../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -48,7 +49,10 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
   }>(
     "/:kind/regenerate",
     {
-      preHandler: [requirePermission("challenge", "update")],
+      preHandler: [
+        requirePermission("challenge", "update"),
+        rateLimitPolicy("aiGeneration"),
+      ],
       schema: {
         tags: ["challenges/reference-solutions"],
         summary: "Regenerate reference solution",

@@ -38,7 +38,12 @@ export const ResponseSchema401 = BaseErrorResponseSchema;
 export const ResponseSchema403 = BaseErrorResponseSchema;
 export const ResponseSchema404 = BaseErrorResponseSchema;
 export const ResponseSchema409 = BaseErrorResponseSchema;
-export const ResponseSchema429 = BaseErrorResponseSchema;
+// Rate limiter responses add `code` and `retryAfterSeconds` (also sent as the
+// Retry-After header); route-specific cooldowns send the base shape.
+export const ResponseSchema429 = BaseErrorResponseSchema.extend({
+  code: z.literal("RATE_LIMITED").optional(),
+  retryAfterSeconds: z.number().int().nonnegative().optional(),
+});
 export const ResponseSchema413 = BaseErrorResponseSchema;
 export const ResponseSchema500 = BaseErrorResponseSchema;
 export const ResponseSchema503 = BaseErrorResponseSchema;

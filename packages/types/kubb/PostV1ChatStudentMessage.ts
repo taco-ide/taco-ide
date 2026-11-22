@@ -114,6 +114,12 @@ export const postV1ChatStudentMessage429SuccessEnum = {
 
 export type PostV1ChatStudentMessage429SuccessEnum = (typeof postV1ChatStudentMessage429SuccessEnum)[keyof typeof postV1ChatStudentMessage429SuccessEnum];
 
+export const postV1ChatStudentMessage429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1ChatStudentMessage429CodeEnum = (typeof postV1ChatStudentMessage429CodeEnum)[keyof typeof postV1ChatStudentMessage429CodeEnum];
+
 /**
  * @description Default Response
 */
@@ -132,6 +138,15 @@ export type PostV1ChatStudentMessage429 = {
     errors?: {
         [key: string]: (string[] | string);
     };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1ChatStudentMessage429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
 };
 
 export const postV1ChatStudentMessage500SuccessEnum = {

@@ -76,6 +76,19 @@ export const patchV1ChallengesId404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const patchV1ChallengesId429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
+    })
+
 export const patchV1ChallengesIdMutationRequestSchema = z.object({
     "title": z.string().min(1).max(200).optional(),
 "description": z.string().nullable().nullish(),

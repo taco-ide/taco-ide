@@ -12,6 +12,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import {
@@ -20,6 +21,7 @@ import {
   challengeTeachingAssistant,
 } from "@repo/infra/db/schema";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -49,6 +51,11 @@ const CreateChallengeResponseSchema = ResponseSchema201.extend({
   data: ChallengeCreatedSchema,
 });
 
+// Reference solutions are generated unless the body opts out.
+const generatesReferenceSolutions = (request: { body: unknown }) =>
+  (request.body as { generateReferenceSolutions?: boolean })
+    .generateReferenceSolutions !== false;
+
 // ==================== ROUTE ====================
 
 export async function createChallengeRoute(app: FastifyTypedInstance) {
@@ -57,6 +64,9 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
+      preHandler: [
+        rateLimitPolicy("aiGeneration", { when: generatesReferenceSolutions }),
+      ],
       schema: {
         tags: ["challenges"],
         summary: "Create challenge",
@@ -68,6 +78,7 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
         },
       },
     },

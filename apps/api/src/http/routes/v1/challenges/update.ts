@@ -7,6 +7,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import { challenge } from "@repo/infra/db/schema";
@@ -17,6 +18,7 @@ import {
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -47,6 +49,11 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
   }),
 });
 
+// Only updates that request reference solutions spend LLM budget.
+const generatesReferenceSolutions = (request: { body: unknown }) =>
+  (request.body as { generateReferenceSolutions?: boolean })
+    .generateReferenceSolutions === true;
+
 // ==================== ROUTE ====================
 
 export async function updateChallengeRoute(app: FastifyTypedInstance) {
@@ -56,6 +63,9 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
   }>(
     "/:id",
     {
+      preHandler: [
+        rateLimitPolicy("aiGeneration", { when: generatesReferenceSolutions }),
+      ],
       schema: {
         tags: ["challenges"],
         summary: "Update challenge",
@@ -69,6 +79,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
         },
       },
     },

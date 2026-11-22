@@ -8,6 +8,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
   ResponseSchema413,
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
@@ -20,6 +21,7 @@ import { parseDocument } from "../../../../../services/document-parser";
 import { chunkText } from "../../../../../services/chunking";
 import { saveFile } from "../../../../../services/file-storage";
 import { generateEmbeddings } from "../../../../../services/embedding";
+import { rateLimitPolicy } from "../../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -194,7 +196,10 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("knowledgeBase", "create")],
+      preHandler: [
+        requirePermission("knowledgeBase", "create"),
+        rateLimitPolicy("embedding"),
+      ],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Upload document to knowledge base",
@@ -207,6 +212,7 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
           413: ResponseSchema413,
         },
       },

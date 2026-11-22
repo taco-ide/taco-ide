@@ -14,6 +14,7 @@ import {
   userInteractionOnChallenge,
 } from "@repo/infra/db/schema";
 import { getApp } from "../../../../../test/helpers/app";
+import { rateLimitSettings } from "../../../../middlewares/rate-limit";
 import { loginAs } from "../../../../../test/helpers/auth";
 import {
   addMember,
@@ -647,7 +648,7 @@ describe("current resource access across organizations", () => {
       endedAt: new Date(),
     });
     const headers = { cookie: cookies.learner };
-    for (let i = 0; i < 25; i++)
+    for (let i = 0; i < rateLimitSettings.aiChat.perMinute; i++)
       expect(
         (
           await app.inject({

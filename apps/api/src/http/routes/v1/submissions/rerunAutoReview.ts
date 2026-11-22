@@ -18,6 +18,7 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
 import { startAutoReview } from "../../../../agents/teachers-companion/auto-review";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 
 const ParamsSchema = z.object({
   challengeId: z.string().uuid(),
@@ -38,7 +39,10 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
   app.post<{ Params: z.infer<typeof ParamsSchema> }>(
     "/:submissionId/auto-review",
     {
-      preHandler: [requirePermission("challenge", "update")],
+      preHandler: [
+        requirePermission("challenge", "update"),
+        rateLimitPolicy("aiGeneration"),
+      ],
       schema: {
         tags: ["submissions"],
         summary: "Re-run auto review",

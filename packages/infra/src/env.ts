@@ -75,6 +75,52 @@ const envSchema = z.object({
   // Server
   PORT: z.coerce.number().default(4000),
 
+  // API rate limits (in-memory, per process). Authenticated requests are
+  // counted per user, anonymous ones per client IP. See
+  // apps/api/src/http/middlewares/rate-limit.ts for what each budget covers.
+  RATE_LIMIT_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  RATE_LIMIT_GLOBAL_PER_MINUTE: z.coerce.number().int().positive().default(300),
+  RATE_LIMIT_AI_CHAT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  RATE_LIMIT_AI_CHAT_PER_DAY: z.coerce.number().int().positive().default(200),
+  RATE_LIMIT_AI_GENERATION_PER_MINUTE: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(5),
+  RATE_LIMIT_AI_GENERATION_PER_DAY: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(100),
+  RATE_LIMIT_EMBEDDING_PER_MINUTE: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30),
+  RATE_LIMIT_EMBEDDING_PER_DAY: z.coerce.number().int().positive().default(500),
+
+  // Better Auth rate limits (per client IP and auth path). Disabled by
+  // default under NODE_ENV=test so suites can sign in freely.
+  AUTH_RATE_LIMIT_ENABLED: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) =>
+      v === undefined ? process.env.NODE_ENV !== "test" : v === "true"
+    ),
+  AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(30),
+  AUTH_RATE_LIMIT_EMAIL_PER_HOUR: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(10),
+
   // Platform admin seed (all optional; seed skips with a warning if any is missing)
   PLATFORM_ADMIN_EMAIL: z.string().email().optional(),
   PLATFORM_ADMIN_PASSWORD: z.string().min(12).optional(),

@@ -1,19 +1,26 @@
 import { FastifyTypedInstance } from "../../../types";
-import { auth } from "@repo/infra/auth";
+import { auth, AUTH_CLIENT_IP_HEADER } from "@repo/infra/auth";
 
 /**
  * Helper to convert Fastify request to Web Request and handle Better Auth response
  */
 async function handleBetterAuth(
-  request: { url: string; method: string; headers: unknown; body?: unknown; protocol: string; hostname: string },
+  request: { url: string; method: string; headers: unknown; body?: unknown; protocol: string; hostname: string; ip: string },
   reply: { header: (key: string, value: string) => void; status: (code: number) => void; send: (body: string) => unknown },
   urlPath: string
 ) {
   const url = new URL(urlPath, `${request.protocol}://${request.hostname}`);
 
+  // Better Auth rate-limits per client IP. Hand it the address Fastify
+  // resolved, overwriting any value the client sent in the same header.
+  const headers = {
+    ...(request.headers as Record<string, string>),
+    [AUTH_CLIENT_IP_HEADER]: request.ip,
+  };
+
   const webRequest = new Request(url.toString(), {
     method: request.method,
-    headers: request.headers as Record<string, string>,
+    headers,
     body:
       request.method !== "GET" && request.method !== "HEAD"
         ? JSON.stringify(request.body)
@@ -37,7 +44,9 @@ async function handleBetterAuth(
  * This is the standard path that Better Auth client uses
  */
 export async function apiAuthRoutes(app: FastifyTypedInstance) {
-  app.all("/auth/*", async (request, reply) => {
+  // Better Auth applies its own per-IP, per-path limits (see
+  // packages/infra/src/auth/index.ts), so skip the API-wide limiter here.
+  app.all("/auth/*", { config: { rateLimit: false } }, async (request, reply) => {
     return handleBetterAuth(request, reply, request.url);
   });
 }
@@ -55,7 +64,7 @@ export async function authRoutes(app: FastifyTypedInstance) {
   // POST /v1/auth/reset-password
   // GET  /v1/auth/session
 
-  app.all("/auth/*", async (request, reply) => {
+  app.all("/auth/*", { config: { rateLimit: false } }, async (request, reply) => {
     const urlPath = request.url.replace("/v1/auth", "/api/auth");
     return handleBetterAuth(request, reply, urlPath);
   });

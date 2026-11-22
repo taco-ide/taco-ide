@@ -204,7 +204,7 @@ Custom email templates in `email.ts`:
 - Email verification required for login in production
 - Session tokens are HTTP-only cookies
 - CSRF protection built-in
-- Rate limiting (configure as needed)
+- Rate limiting per client IP and auth path (`rateLimit` in `index.ts`, tuned by `AUTH_RATE_LIMIT_*` envs); see `apps/api/src/http/CLAUDE.md`
 
 ## Self-Service and Organization-Creation Boundaries
 

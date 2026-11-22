@@ -10,7 +10,7 @@ export const getV1ChallengesChallengeidKnowledgeBasesSearchPathParamsSchema = z.
     })
 
 export const getV1ChallengesChallengeidKnowledgeBasesSearchQueryParamsSchema = z.object({
-    "q": z.string().min(1),
+    "q": z.string().min(1).max(1000),
 "limit": z.coerce.number().min(1).max(50).default(10)
     })
 
@@ -72,6 +72,19 @@ export const getV1ChallengesChallengeidKnowledgeBasesSearch404Schema = z.object(
 "errors": z.object({
     
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    })
+
+/**
+ * @description Default Response
+ */
+export const getV1ChallengesChallengeidKnowledgeBasesSearch429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
     })
 
 /**
