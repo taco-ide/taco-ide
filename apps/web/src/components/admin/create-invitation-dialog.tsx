@@ -29,12 +29,17 @@ import { ApiError } from "@/lib/apiClient";
 import { usePostV1OrganizationsIdInvitations } from "@/kubb/hooks/organizationsHooks/usePostV1OrganizationsIdInvitations";
 import { getV1OrganizationsIdInvitationsQueryKey } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdInvitations";
 import type { AdminRole } from "@/components/admin/role-badge";
-import { getRoleLabel } from "@/components/admin/role-badge";
 
 interface CreateInvitationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationId: string;
+  /**
+   * Roles offered in the role picker. Defaults to every role (platform-admin
+   * console). Org-scoped screens pass a narrower list so a coordinator is
+   * never offered a role above their own.
+   */
+  roleOptions?: AdminRole[];
 }
 
 // Explicit invitations may grant any role, including admin. This differs from
@@ -55,22 +60,27 @@ export function CreateInvitationDialog({
   open,
   onOpenChange,
   organizationId,
+  roleOptions = ROLE_OPTIONS,
 }: CreateInvitationDialogProps) {
   const t = useTranslations("adminInvitations");
   const c = useTranslations("common");
+  const tRole = useTranslations("adminShared.role");
   const queryClient = useQueryClient();
+  const defaultRole = roleOptions.includes(DEFAULT_ROLE)
+    ? DEFAULT_ROLE
+    : (roleOptions[0] ?? DEFAULT_ROLE);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<AdminRole>(DEFAULT_ROLE);
+  const [role, setRole] = useState<AdminRole>(defaultRole);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
       // Reset state when dialog closes so the next opening starts fresh.
       setEmail("");
-      setRole(DEFAULT_ROLE);
+      setRole(defaultRole);
       setError(null);
     }
-  }, [open]);
+  }, [open, defaultRole]);
 
   const createMutation = usePostV1OrganizationsIdInvitations({
     mutation: {
@@ -190,9 +200,9 @@ export function CreateInvitationDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-slate-700 bg-slate-900 text-white">
-                {ROLE_OPTIONS.map((value) => (
+                {roleOptions.map((value) => (
                   <SelectItem key={value} value={value}>
-                    {getRoleLabel(value)}
+                    {tRole(value)}
                   </SelectItem>
                 ))}
               </SelectContent>

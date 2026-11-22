@@ -1466,6 +1466,98 @@
     "viewReplay": "View history (replay)",
     "viewStudentSessions": "View student sessions"
   },
+  "teamInvitations": {
+    "dashboard": {
+      "description": "Invite teachers and students by email and track pending invitations.",
+      "title": "Invite people"
+    },
+    "empty": {
+      "action": "Send the first invitation",
+      "body": "Invite a teacher to lead a classroom, or students who are not in your organization yet.",
+      "title": "No pending invitations"
+    },
+    "fallbackOrgName": "Your organization",
+    "loadError": "Could not load the invitations.",
+    "methods": {
+      "adminOnly": "Platform admin",
+      "availableHere": "Available here",
+      "csv": {
+        "body": "Creates accounts for a whole group at once from a spreadsheet. Imports are run by a platform administrator — ask them when you need to onboard a full class.",
+        "title": "Bulk CSV import"
+      },
+      "domain": {
+        "body": "Anyone who signs up with an address from a mapped domain (e.g. @yourschool.edu) joins automatically as a student or teacher. Domains are configured by a platform administrator.",
+        "title": "Automatic email domain"
+      },
+      "invite": {
+        "body": "Send a personal invitation with a chosen role. The person gets an email with a link, valid for 7 days, to accept it and join with that role.",
+        "title": "Email invitation"
+      },
+      "selfSignup": "Anyone can create an account, but without an invitation or a mapped email domain they will not join your organization.",
+      "title": "How people join your organization"
+    },
+    "navLabel": "Team",
+    "newInvitation": "Invite someone",
+    "notAllowed": {
+      "adminConsole": "Open the admin console",
+      "description": "Only coordinators and administrators of the active organization can invite people. Ask a coordinator if someone needs access.",
+      "title": "Invitations are managed by coordinators"
+    },
+    "onboardingStep": {
+      "description": "Bring teachers and students into your organization by email. The Team page also explains when to use email domains or a CSV import.",
+      "title": "Invite your team"
+    },
+    "pending": {
+      "description": "{count, plural, =0 {No invitations waiting for an answer.} one {# invitation waiting for an answer.} other {# invitations waiting for an answer.}} Resend one if the email got lost, or cancel it to invalidate the link.",
+      "title": "Pending invitations"
+    },
+    "roles": {
+      "admin": "Everything a coordinator can do, plus organization settings. Reserved for the people responsible for the school.",
+      "coordinator": "Creates classrooms, assigns lead teachers and invites people. Sees every classroom in the organization.",
+      "notOfferedToYou": "Only an administrator can invite someone as {role}.",
+      "student": "Joins classrooms, solves challenges and talks to the AI teaching assistant. Cannot create content.",
+      "teacher": "Creates challenges and leads the classrooms assigned to them: enrolls students and reviews submissions.",
+      "title": "What each role can do"
+    },
+    "showTutorial": "Show tutorial",
+    "subtitle": "Invite teachers and students, and see who has not accepted yet.",
+    "title": "Team and invitations",
+    "tour": {
+      "buttons": {
+        "back": "Back",
+        "done": "Got it",
+        "next": "Next"
+      },
+      "csv": {
+        "description": "For a whole class at once, a platform administrator can import a CSV with names, emails and roles. It is not available on this page.",
+        "title": "Bulk import (admin only)"
+      },
+      "domain": {
+        "description": "If your school has its own email domain, a platform administrator can map it so new sign-ups join automatically as students or teachers — no invitation needed.",
+        "title": "Email domain (admin only)"
+      },
+      "invite": {
+        "description": "The way you invite people from here: one email, one role. Use it for teachers, coordinators or a handful of students.",
+        "title": "Email invitation"
+      },
+      "newInvitation": {
+        "description": "Click here, type the email and choose the role. They receive a link that is valid for 7 days.",
+        "title": "Send an invitation"
+      },
+      "pending": {
+        "description": "Invitations that have not been accepted yet show up here. Resend one if it expired or got lost, or cancel it to invalidate the link.",
+        "title": "Track pending invitations"
+      },
+      "roles": {
+        "description": "The role decides what the person can do once they join. Teachers lead classrooms; students only solve challenges.",
+        "title": "Pick the right role"
+      },
+      "welcome": {
+        "description": "There are three ways for teachers and students to join your organization. Let's see when to use each one.",
+        "title": "Bringing people in"
+      }
+    }
+  },
   "ui": {
     "carousel": {
       "nextSlide": "Next slide",

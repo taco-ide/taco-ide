@@ -11,6 +11,7 @@ import {
   Plus,
   ShieldCheck,
   Sparkles,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,7 @@ function TeacherChallenges() {
 function DashboardContent() {
   const t = useTranslations("dashboard");
   const tour = useTranslations("dashboard.tour");
+  const tTeam = useTranslations("teamInvitations");
   const { user, isLoading, getFirstName } = useUser();
 
   const roleKey = user
@@ -312,6 +314,13 @@ function DashboardContent() {
         popover: {
           title: tour("coordinator.quickActions.title"),
           description: tour("coordinator.quickActions.description"),
+        },
+      },
+      {
+        element: '[data-tour="invite-people"]',
+        popover: {
+          title: tTeam("onboardingStep.title"),
+          description: tTeam("onboardingStep.description"),
         },
       },
       {
@@ -405,6 +414,15 @@ function DashboardContent() {
           )}
           {roleKey === "coordinator" && (
             <>
+              <div data-tour="invite-people">
+                <QuickAction
+                  href="/team"
+                  icon={UserPlus}
+                  title={tTeam("dashboard.title")}
+                  description={tTeam("dashboard.description")}
+                  accent="violet"
+                />
+              </div>
               <QuickAction
                 href="/classrooms"
                 icon={BookOpen}

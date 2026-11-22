@@ -5,10 +5,12 @@ import { useUser } from "@/contexts/UserContext";
 import { useState, useRef, useEffect } from "react";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
 import { PlatformAdminGuard } from "@/components/guards/PlatformAdminGuard";
+import { RoleGuard } from "@/components/guards/RoleGuard";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 const Navbar = () => {
   const t = useTranslations("nav");
+  const tTeam = useTranslations("teamInvitations");
   const { user, getFirstName, logout } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -76,6 +78,14 @@ const Navbar = () => {
                 {t("create")}
               </Link>
             </PermissionGuard>
+            <RoleGuard minimumRole="coordinator">
+              <Link
+                href="/team"
+                className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+              >
+                {tTeam("navLabel")}
+              </Link>
+            </RoleGuard>
             <PlatformAdminGuard>
               <Link
                 href="/admin"
