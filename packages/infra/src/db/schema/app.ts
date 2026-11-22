@@ -13,6 +13,13 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { user, organization } from "./auth";
+import type {
+  TaPromptContext,
+  TaStoredMessage,
+  TaTurnChallenge,
+  TaTurnLlm,
+  TaTurnRetrieval,
+} from "./ta-turn-context";
 
 // ==================== CUSTOM TYPES ====================
 
@@ -247,6 +254,38 @@ export const userInteractionOnChallenge = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   }
 );
+
+// ==================== TA TURN CONTEXT (AE inputs per chat turn) ====================
+//
+// Everything the teaching assistant received and did on one chat turn, so a
+// re-execution can reproduce the original conditions. 1:1 with the chat row
+// in user_interaction_on_challenge; kept in its own table because history
+// loading and the session endpoint read whole interaction rows, and these
+// payloads are large. jsonb shapes live in ./ta-turn-context.ts.
+
+export const taTurnContext = pgTable("ta_turn_context", {
+  interactionId: text("interaction_id")
+    .primaryKey()
+    .references(() => userInteractionOnChallenge.id, { onDelete: "cascade" }),
+  schemaVersion: integer("schema_version").notNull(),
+  // Git SHA of the deployed API: pins the prompt template, tool definitions
+  // and the rule that turns history rows into messages.
+  appVersion: text("app_version"),
+  teachingAssistantId: text("teaching_assistant_id")
+    .notNull()
+    .references(() => teachingAssistant.id),
+  systemPrompt: text("system_prompt").notNull(),
+  promptContext: jsonb("prompt_context").$type<TaPromptContext>().notNull(),
+  challenge: jsonb("challenge").$type<TaTurnChallenge>().notNull(),
+  historyInteractionIds: jsonb("history_interaction_ids")
+    .$type<string[]>()
+    .notNull(),
+  retrieval: jsonb("retrieval").$type<TaTurnRetrieval>().notNull(),
+  llm: jsonb("llm").$type<TaTurnLlm>().notNull(),
+  trajectory: jsonb("trajectory").$type<TaStoredMessage[]>().notNull(),
+  langfuseTraceId: text("langfuse_trace_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
 
 // ==================== CHALLENGE SOLUTIONS (Current State) ====================
 
@@ -541,6 +580,10 @@ export type WorkSession = typeof workSession.$inferSelect;
 export type NewWorkSession = typeof workSession.$inferInsert;
 export type UserInteractionOnChallenge =
   typeof userInteractionOnChallenge.$inferSelect;
+export type NewUserInteractionOnChallenge =
+  typeof userInteractionOnChallenge.$inferInsert;
+export type TaTurnContext = typeof taTurnContext.$inferSelect;
+export type NewTaTurnContext = typeof taTurnContext.$inferInsert;
 export type ChallengeSolution = typeof challengeSolution.$inferSelect;
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
 export type NewKnowledgeBase = typeof knowledgeBase.$inferInsert;
