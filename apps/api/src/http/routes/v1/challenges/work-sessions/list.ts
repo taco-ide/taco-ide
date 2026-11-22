@@ -14,7 +14,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { workSession, user } from "@repo/infra/db/schema";
 import {
@@ -69,7 +68,6 @@ export async function listChallengeWorkSessionsRoute(
   }>(
     "/",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenge-work-sessions"],
         summary: "List work sessions for challenge (staff)",

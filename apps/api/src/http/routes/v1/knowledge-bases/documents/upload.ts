@@ -10,7 +10,6 @@ import {
   ResponseSchema404,
   ResponseSchema413,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
   knowledgeBaseDocument,
@@ -194,7 +193,6 @@ export async function uploadDocumentRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("knowledgeBase", "create")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Upload document to knowledge base",

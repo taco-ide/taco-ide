@@ -8,7 +8,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { submission } from "@repo/infra/db/schema";
 import {
@@ -45,7 +44,6 @@ export async function gradeSubmissionRoute(app: FastifyTypedInstance) {
   }>(
     "/:submissionId/grade",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["submissions"],
         summary: "Grade a submission",

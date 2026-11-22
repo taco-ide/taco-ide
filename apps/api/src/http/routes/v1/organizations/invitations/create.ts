@@ -1,17 +1,19 @@
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema201,
   ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
+  ResponseSchema404,
   ResponseSchema409,
 } from "../../../_responses/types";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
 import { auth } from "@repo/infra/auth";
-import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
+import { isValidRole } from "@repo/infra/auth";
 import { sendInvitationEmail } from "@repo/infra/auth/invitation-email";
 import { db } from "@repo/infra/db";
 import { invitation, member, organization, user } from "@repo/infra/db/schema";
@@ -51,11 +53,12 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
   }>(
     "/invitations",
     {
+      preHandler: requirePlatformAdminOrOrgRole("coordinator"),
       schema: {
         tags: ["organizations"],
         summary: "Create invitation",
         description:
-          "Invite a user to the organization by email. Requires coordinator+ role.",
+          "Invite a user to the organization by email. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).",
         params: OrgParamsSchema,
         body: CreateInvitationBodySchema,
         response: {
@@ -63,6 +66,7 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
           400: ResponseSchema400,
           401: ResponseSchema401,
           403: ResponseSchema403,
+          404: ResponseSchema404,
           409: ResponseSchema409,
         },
       },
@@ -78,22 +82,6 @@ export async function createInvitationRoute(app: FastifyTypedInstance) {
 
       const { id: organizationId } = request.params;
       const { email, role } = request.body;
-
-      // Platform admins bypass the active-organization + role check.
-      if (!usr.isPlatformAdmin) {
-        if (organizationId !== usr.activeOrganizationId) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Organization ID must match your active organization",
-          });
-        }
-        if (!usr.role || !hasMinimumRole(usr.role, "coordinator")) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Insufficient role permissions",
-          });
-        }
-      }
 
       if (!isValidRole(role)) {
         return reply.status(400).send({

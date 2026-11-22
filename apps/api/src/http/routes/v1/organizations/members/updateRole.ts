@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -13,7 +14,7 @@ import { getRequestHeaders } from "../../../../lib/requestHeaders";
 import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { member } from "@repo/infra/db/schema";
-import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
+import { isValidRole } from "@repo/infra/auth";
 
 // ==================== SCHEMAS ====================
 
@@ -43,11 +44,12 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
   }>(
     "/members/:userId",
     {
+      preHandler: requirePlatformAdminOrOrgRole("coordinator"),
       schema: {
         tags: ["organizations"],
         summary: "Update member role",
         description:
-          "Update a member's role in the organization. Requires coordinator+ role.",
+          "Update a member's role in the organization. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).",
         params: OrgMembersParamsSchema,
         body: UpdateRoleBodySchema,
         response: {
@@ -71,22 +73,6 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
 
       const { id: organizationId, userId } = request.params;
       const { role } = request.body;
-
-      // Platform admins bypass the active-organization + role check.
-      if (!usr.isPlatformAdmin) {
-        if (organizationId !== usr.activeOrganizationId) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Organization ID must match your active organization",
-          });
-        }
-        if (!usr.role || !hasMinimumRole(usr.role, "coordinator")) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Insufficient role permissions",
-          });
-        }
-      }
 
       if (!isValidRole(role)) {
         return reply.status(400).send({

@@ -129,21 +129,17 @@ a primeira ocorrência prevalece, ocorrências posteriores são marcadas como
 
 ## 5. Permissões
 
-O pre-handler `requirePlatformAdminOrCoordinator` aplica:
+O pre-handler compartilhado `requirePlatformAdminOrOrgRole("coordinator")`
+aplica:
 
 1. Sem sessão -> `401 Not authenticated`.
-2. Usuário com `isPlatformAdmin === true` -> autorizado.
-3. Caso contrário, exige:
-   - `activeOrganizationId` definido na sessão;
-   - `activeOrganizationId === params.id` (o id da URL deve coincidir com
-     a org ativa);
-   - role mínima `coordinator` (`hasMinimumRole(usr.role, "coordinator")`).
+2. Organização `:id` inexistente -> `404 Organization not found`.
+3. Usuário com `isPlatformAdmin === true` -> autorizado.
+4. Caso contrário, exige role mínima `coordinator` na organização `:id`
+   (membership atual, org ativa, `owner` tratado como `admin`). A
+   organização ativa da sessão não importa (#118).
 
-Falhas dessas validações retornam `403` com mensagens específicas:
-
-- `No active organization selected`
-- `Organization ID must match your active organization`
-- `Insufficient role permissions`
+Falha retorna `403 Platform admin or coordinator of this organization required`.
 
 ---
 
@@ -306,9 +302,8 @@ devolveu. Valores são escapados (aspas duplas dobradas) quando contêm
 | `400` | Falha de parse do CSV | `Failed to parse CSV: <detalhe>` |
 | `400` | Coluna obrigatória ausente | `Missing required column(s): name, email, role` |
 | `401` | Sem sessão válida | `Not authenticated` |
-| `403` | Sem org ativa | `No active organization selected` |
-| `403` | Org ativa diferente do `id` da URL | `Organization ID must match your active organization` |
-| `403` | Role abaixo de `coordinator` | `Insufficient role permissions` |
+| `403` | Role abaixo de `coordinator` na org `:id` | `Platform admin or coordinator of this organization required` |
+| `404` | Org `:id` inexistente | `Organization not found` |
 | `413` | Arquivo > 1 MB | `CSV file exceeds maximum size of 1MB` |
 | `413` | > 100 linhas | `CSV exceeds maximum of 100 rows` |
 

@@ -26,7 +26,7 @@
 | Arquivo | Descricao |
 |---------|-----------|
 | `.env.example` | Template de variaveis de ambiente |
-| `apps/api/src/http/middlewares/authorization.ts` | Factories `requireRole()` e `requirePermission()` |
+| `apps/api/src/http/middlewares/authorization.ts` | Factories `requireRole()` e `requirePermission()` (removidas em #118: avaliavam o papel da org ativa; ver `docs/security/resource-access.md`) |
 | `apps/api/src/http/routes/v1/users/update.ts` | `PUT /v1/users/me` - atualizar perfil |
 | `apps/web/src/hooks/usePermission.ts` | Hooks `useRole()`, `useHasMinimumRole()`, `useHasPermission()` |
 | `apps/web/src/components/guards/RoleGuard.tsx` | Guard component por hierarquia de role |

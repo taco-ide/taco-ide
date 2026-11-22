@@ -8,7 +8,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { knowledgeBaseChunk } from "@repo/infra/db/schema";
 
@@ -27,7 +26,6 @@ export async function deleteEntryRoute(app: FastifyTypedInstance) {
   }>(
     "/:entryId",
     {
-      preHandler: [requirePermission("knowledgeBase", "delete")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Delete manual knowledge base entry",

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
 import { randomBytes, randomUUID } from "node:crypto";
 import { parse as parseCsv } from "csv-parse/sync";
-import { FastifyRequest, FastifyReply } from "fastify";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -12,7 +12,7 @@ import {
   ResponseSchema404,
   ResponseSchema413,
 } from "../../../_responses/types";
-import { hasMinimumRole, hashPassword } from "@repo/infra/auth";
+import { hashPassword } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { account, member, user } from "@repo/infra/db/schema";
 
@@ -160,53 +160,6 @@ type ValidatedRow = {
   data: CsvRow;
 };
 
-// ==================== AUTHORIZATION HELPER ====================
-
-/**
- * Allows the request when the user is a platform admin OR has at least
- * coordinator role on the target organization (active organization must
- * match the path parameter for the role check).
- */
-function requirePlatformAdminOrCoordinator() {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
-    const usr = request.user;
-    if (!usr) {
-      return reply.status(401).send({
-        success: false as const,
-        message: "Not authenticated",
-      });
-    }
-
-    if (usr.isPlatformAdmin) {
-      return;
-    }
-
-    const params = request.params as { id?: string };
-    const organizationId = params.id;
-
-    if (!usr.activeOrganizationId || !usr.role) {
-      return reply.status(403).send({
-        success: false as const,
-        message: "No active organization selected",
-      });
-    }
-
-    if (organizationId !== usr.activeOrganizationId) {
-      return reply.status(403).send({
-        success: false as const,
-        message: "Organization ID must match your active organization",
-      });
-    }
-
-    if (!hasMinimumRole(usr.role, "coordinator")) {
-      return reply.status(403).send({
-        success: false as const,
-        message: "Insufficient role permissions",
-      });
-    }
-  };
-}
-
 // ==================== ROUTE ====================
 
 export async function importCsvMembersRoute(app: FastifyTypedInstance) {
@@ -216,7 +169,7 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
   }>(
     "/members/import-csv",
     {
-      preHandler: [requirePlatformAdminOrCoordinator()],
+      preHandler: [requirePlatformAdminOrOrgRole("coordinator")],
       schema: {
         tags: ["organizations"],
         summary: "Bulk import members from a CSV file",

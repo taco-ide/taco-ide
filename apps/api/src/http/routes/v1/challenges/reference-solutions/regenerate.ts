@@ -9,7 +9,6 @@ import {
   ResponseSchema409,
   ResponseSchema429,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challengeReferenceSolution } from "@repo/infra/db/schema";
 import {
@@ -48,7 +47,6 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
   }>(
     "/:kind/regenerate",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges/reference-solutions"],
         summary: "Regenerate reference solution",

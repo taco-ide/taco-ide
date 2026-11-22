@@ -7,7 +7,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { submission, user } from "@repo/infra/db/schema";
 import {
@@ -55,7 +54,6 @@ export async function listSubmissionsRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["submissions"],
         summary: "List submissions for a challenge (staff)",

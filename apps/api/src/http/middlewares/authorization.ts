@@ -1,13 +1,16 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { and, eq } from "drizzle-orm";
-import {
-  hasMinimumRole,
-  isValidRole,
-  roleHasPermission,
-} from "@repo/infra/auth";
+import { eq } from "drizzle-orm";
+import { hasMinimumRole } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
-import { member, organization } from "@repo/infra/db/schema";
-import type { RoleName, Resource, ActionFor } from "@repo/infra/auth";
+import { organization } from "@repo/infra/db/schema";
+import type { RoleName } from "@repo/infra/auth";
+import { getMembershipRole } from "../services/work-session-access";
+
+// Staff authorization is evaluated against the caller's role in the
+// organization that owns the target (the `:id` organization here, or the
+// resource's organization inside the resource-access services). The session's
+// active organization (`request.user.role`) is a UI preference and must never
+// gate access to another organization's resources (#118).
 
 /**
  * Middleware that allows only platform admins. The platform admin flag
@@ -33,76 +36,14 @@ export function requirePlatformAdmin() {
 }
 
 /**
- * Middleware factory that checks if the user has at least the specified role
- * in the hierarchy: student < teacher < coordinator < admin
- */
-export function requireRole(minimumRole: RoleName) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
-    if (!request.user) {
-      return reply.status(401).send({
-        success: false,
-        message: "Not authenticated",
-      });
-    }
-
-    if (request.user.isPlatformAdmin) return;
-
-    if (!request.user.activeOrganizationId || !request.user.role) {
-      return reply.status(403).send({
-        success: false,
-        message: "No active organization selected",
-      });
-    }
-
-    if (!hasMinimumRole(request.user.role, minimumRole)) {
-      return reply.status(403).send({
-        success: false,
-        message: "Insufficient role permissions",
-      });
-    }
-  };
-}
-
-/**
- * Middleware factory that checks if the user's role has a specific permission
- * on a resource via the AccessControl statements
- */
-export function requirePermission<R extends Resource>(
-  resource: R,
-  action: ActionFor<R>
-) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
-    if (!request.user) {
-      return reply.status(401).send({
-        success: false,
-        message: "Not authenticated",
-      });
-    }
-
-    if (request.user.isPlatformAdmin) return;
-
-    if (!request.user.activeOrganizationId || !request.user.role) {
-      return reply.status(403).send({
-        success: false,
-        message: "No active organization selected",
-      });
-    }
-
-    if (!roleHasPermission(request.user.role, resource, action)) {
-      return reply.status(403).send({
-        success: false,
-        message: `Missing permission: ${action} on ${resource}`,
-      });
-    }
-  };
-}
-
-/**
  * Middleware factory for routes scoped to an organization in the URL params
  * (e.g. `/v1/organizations/:id/...`). Authorizes the request when the user is:
  *   - authenticated, AND
- *   - either a platform admin, or a member of the organization with at least
- *     `minimumRole`.
+ *   - either a platform admin, or a current member of the (active)
+ *     organization with at least `minimumRole` in that organization.
+ *
+ * The caller's active organization is irrelevant. Better Auth `owner` counts
+ * as `admin`; inactive organizations and users never pass the role check.
  *
  * Returns 401 unauthenticated, 403 forbidden, or 404 if the organization is
  * missing. The org row is fetched here so route handlers can rely on the
@@ -110,7 +51,7 @@ export function requirePermission<R extends Resource>(
  */
 export function requirePlatformAdminOrOrgRole(
   minimumRole: RoleName,
-  options: { paramName?: string } = {}
+  options: { paramName?: string } = {},
 ) {
   const paramName = options.paramName ?? "id";
 
@@ -146,23 +87,8 @@ export function requirePlatformAdminOrOrgRole(
 
     if (request.user.isPlatformAdmin) return;
 
-    const memberRow = await db
-      .select({ role: member.role })
-      .from(member)
-      .where(
-        and(
-          eq(member.organizationId, organizationId),
-          eq(member.userId, request.user.id)
-        )
-      )
-      .limit(1);
-
-    const memberRole = memberRow[0]?.role;
-    if (
-      !memberRole ||
-      !isValidRole(memberRole) ||
-      !hasMinimumRole(memberRole, minimumRole)
-    ) {
+    const memberRole = await getMembershipRole(request.user.id, organizationId);
+    if (!memberRole || !hasMinimumRole(memberRole, minimumRole)) {
       return reply.status(403).send({
         success: false,
         message: `Platform admin or ${minimumRole} of this organization required`,

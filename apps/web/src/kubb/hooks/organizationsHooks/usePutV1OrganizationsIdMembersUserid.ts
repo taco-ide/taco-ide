@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404, PutV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PutV1OrganizationsIdMembersUseridMutationRequest, PutV1OrganizationsIdMembersUseridMutationResponse, PutV1OrganizationsIdMembersUseridPathParams, PutV1OrganizationsIdMembersUserid400, PutV1OrganizationsIdMembersUserid401, PutV1OrganizationsIdMembersUserid403, PutV1OrganizationsIdMembersUserid404, PutV1OrganizationsIdMembersUserid409 } from "../../../../../../packages/types/kubb/PutV1OrganizationsIdMembersUserid.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const putV1OrganizationsIdMembersUseridMutationKey = () => [{ url: '/v1/organizations/:id/members/:userId' }] as const
@@ -14,7 +14,7 @@ export const putV1OrganizationsIdMembersUseridMutationKey = () => [{ url: '/v1/o
 export type PutV1OrganizationsIdMembersUseridMutationKey = ReturnType<typeof putV1OrganizationsIdMembersUseridMutationKey>
 
 /**
- * @description Update a member's role in the organization. Requires coordinator+ role.
+ * @description Update a member's role in the organization. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).
  * @summary Update member role
  * {@link /v1/organizations/:id/members/:userId}
  */
@@ -28,7 +28,7 @@ export async function putV1OrganizationsIdMembersUserid(id: PutV1OrganizationsId
 }
 
 /**
- * @description Update a member's role in the organization. Requires coordinator+ role.
+ * @description Update a member's role in the organization. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).
  * @summary Update member role
  * {@link /v1/organizations/:id/members/:userId}
  */

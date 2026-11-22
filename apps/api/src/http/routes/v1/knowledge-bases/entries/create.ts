@@ -9,7 +9,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { knowledgeBaseChunk } from "@repo/infra/db/schema";
 import { generateEmbedding } from "../../../../../services/embedding";
@@ -45,7 +44,6 @@ export async function createEntryRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("knowledgeBase", "create")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Create manual knowledge base entry",
