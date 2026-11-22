@@ -32,6 +32,9 @@ export default defineConfig({
       output: {
         path: "./zod",
       },
+      // Routes accept ISO timestamps with offsets (datetime({ offset: true })),
+      // so the generated schemas must too.
+      dateType: "stringOffset",
       // Exclude Better Auth wildcard routes
       exclude: [
         { type: "path", pattern: "/api/auth" },

@@ -18,6 +18,13 @@ export const getV1ChallengesId200SuccessEnum = {
 
 export type GetV1ChallengesId200SuccessEnum = (typeof getV1ChallengesId200SuccessEnum)[keyof typeof getV1ChallengesId200SuccessEnum];
 
+export const dataLatePolicyEnum3 = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type DataLatePolicyEnum3 = (typeof dataLatePolicyEnum3)[keyof typeof dataLatePolicyEnum3];
+
 /**
  * @description Default Response
 */
@@ -75,6 +82,18 @@ export type GetV1ChallengesId200 = {
          * @type string
         */
         classroomTeacherUserId: string | null;
+        /**
+         * @type string
+        */
+        releaseAt: string | null;
+        /**
+         * @type string
+        */
+        dueAt: string | null;
+        /**
+         * @type string
+        */
+        latePolicy: DataLatePolicyEnum3;
         /**
          * @type array
         */

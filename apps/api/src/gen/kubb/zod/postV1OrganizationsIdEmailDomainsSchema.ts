@@ -19,7 +19,7 @@ export const postV1OrganizationsIdEmailDomains201Schema = z.object({
     "id": z.string(),
 "domain": z.string(),
 "role": z.enum(["student", "teacher", "coordinator"]),
-"createdAt": z.string().datetime()
+"createdAt": z.string().datetime({ offset: true })
     })
     })
 

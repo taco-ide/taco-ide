@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   index,
   customType,
+  check,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { user, organization } from "./auth";
@@ -119,23 +120,50 @@ export const teachingAssistant = pgTable(
 
 export const challengeDifficultyEnum = ["easy", "medium", "hard"] as const;
 
-export const challenge = pgTable("challenge", {
-  id: text("id").primaryKey(),
-  classroomId: text("classroom_id").references(() => classroom.id, {
-    onDelete: "set null",
-  }),
-  title: text("title").notNull(),
-  description: text("description"),
-  difficulty: varchar("difficulty", { length: 20 }),
-  tags: jsonb("tags").$type<string[]>(),
-  supportMaterials: jsonb("support_materials"),
-  createdByUserId: text("created_by_user_id").references(() => user.id, {
-    onDelete: "set null",
-  }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  deletedAt: timestamp("deleted_at"),
-});
+export const challengeLatePolicyEnum = ["allow_late", "block"] as const;
+
+export const CHALLENGE_SCHEDULE_WINDOW_CHECK =
+  "challenge_schedule_window_check";
+
+export const challenge = pgTable(
+  "challenge",
+  {
+    id: text("id").primaryKey(),
+    classroomId: text("classroom_id").references(() => classroom.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    description: text("description"),
+    difficulty: varchar("difficulty", { length: 20 }),
+    tags: jsonb("tags").$type<string[]>(),
+    supportMaterials: jsonb("support_materials"),
+    // Scheduling window (timestamptz, so comparisons with now() are absolute
+    // regardless of the session TimeZone).
+    // null releaseAt = visible immediately; null dueAt = no deadline.
+    releaseAt: timestamp("release_at", { withTimezone: true }),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    latePolicy: varchar("late_policy", { length: 16 })
+      .$type<(typeof challengeLatePolicyEnum)[number]>()
+      .notNull()
+      .default("allow_late"),
+    createdByUserId: text("created_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at"),
+  },
+  (t) => [
+    check(
+      CHALLENGE_SCHEDULE_WINDOW_CHECK,
+      sql`${t.dueAt} IS NULL OR ${t.releaseAt} IS NULL OR ${t.dueAt} > ${t.releaseAt}`
+    ),
+    check(
+      "challenge_late_policy_check",
+      sql`${t.latePolicy} IN ('allow_late', 'block')`
+    ),
+  ]
+);
 
 // ==================== CHALLENGE <-> TEACHING ASSISTANT (M2M) ====================
 

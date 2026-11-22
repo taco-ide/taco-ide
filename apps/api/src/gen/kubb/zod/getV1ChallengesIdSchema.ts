@@ -27,6 +27,9 @@ export const getV1ChallengesId200Schema = z.object({
 "createdByUserId": z.string().nullable(),
 "classroomId": z.string().nullable(),
 "classroomTeacherUserId": z.string().nullable(),
+"releaseAt": z.string().nullable(),
+"dueAt": z.string().nullable(),
+"latePolicy": z.enum(["allow_late", "block"]),
 "teachingAssistants": z.array(z.object({
     "id": z.string(),
 "alias": z.string(),
@@ -60,7 +63,7 @@ export const getV1ChallengesId403Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
-
+    
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 

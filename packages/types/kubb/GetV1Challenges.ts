@@ -60,6 +60,13 @@ export const getV1Challenges200SuccessEnum = {
 
 export type GetV1Challenges200SuccessEnum = (typeof getV1Challenges200SuccessEnum)[keyof typeof getV1Challenges200SuccessEnum];
 
+export const dataLatePolicyEnum = {
+    "allow_late": "allow_late",
+    "block": "block"
+} as const;
+
+export type DataLatePolicyEnum = (typeof dataLatePolicyEnum)[keyof typeof dataLatePolicyEnum];
+
 /**
  * @description Default Response
 */
@@ -104,6 +111,18 @@ export type GetV1Challenges200 = {
          * @type string
         */
         classroomTitle: string | null;
+        /**
+         * @type string
+        */
+        releaseAt: string | null;
+        /**
+         * @type string
+        */
+        dueAt: string | null;
+        /**
+         * @type string
+        */
+        latePolicy: DataLatePolicyEnum;
         /**
          * @type string
         */
