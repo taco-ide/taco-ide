@@ -1,4 +1,72 @@
 {
+  "acceptInvitation": {
+    "accept": "Aceitar convite",
+    "accepting": "Entrando...",
+    "decline": "Recusar",
+    "declining": "Recusando...",
+    "details": {
+      "email": "E-mail convidado",
+      "expires": "Expira em",
+      "invitedBy": "Convidado por",
+      "organization": "Organização",
+      "role": "Papel"
+    },
+    "errors": {
+      "action": "Não foi possível concluir esta ação. Tente novamente.",
+      "load": "Não foi possível carregar este convite. Verifique sua conexão e tente novamente."
+    },
+    "goToDashboard": "Ir para o painel",
+    "loading": "Carregando convite...",
+    "pending": {
+      "signedInAs": "Conectado como <strong>{email}</strong>.",
+      "subtitle": "Você foi convidado(a) para participar de <strong>{organization}</strong> no TACO como {role}.",
+      "title": "Você recebeu um convite"
+    },
+    "retry": "Tentar novamente",
+    "roles": {
+      "admin": "Administrador(a)",
+      "coordinator": "Coordenador(a)",
+      "student": "Aluno(a)",
+      "teacher": "Professor(a)"
+    },
+    "signedOut": {
+      "createAccount": "Criar conta",
+      "hint": "Entre ou crie uma conta com <strong>{email}</strong> para aceitar.",
+      "signIn": "Entrar para aceitar"
+    },
+    "states": {
+      "accepted": {
+        "description": "Este convite para {organization} já foi aceito.",
+        "title": "Convite já aceito"
+      },
+      "canceled": {
+        "description": "Este convite para {organization} foi cancelado. Peça a quem convidou você para enviar um novo.",
+        "title": "Convite cancelado"
+      },
+      "expired": {
+        "description": "Este convite para {organization} expirou em {date}. Peça a quem convidou você para enviar um novo.",
+        "title": "Convite expirado"
+      },
+      "invalidLink": {
+        "description": "Este link não contém o código do convite. Abra novamente o link do e-mail de convite.",
+        "title": "Link de convite inválido"
+      },
+      "notFound": {
+        "description": "Não encontramos este convite. Ele pode ter sido removido. Peça a quem convidou você para enviar um novo.",
+        "title": "Convite não encontrado"
+      },
+      "rejected": {
+        "description": "Você recusou o convite para {organization}. Se foi um engano, peça um novo convite.",
+        "title": "Convite recusado"
+      },
+      "wrongAccount": {
+        "description": "Este convite foi enviado para <strong>{invited}</strong>, mas você está conectado como <strong>{current}</strong>. Saia e continue com o e-mail convidado.",
+        "switchAccount": "Sair e trocar de conta",
+        "switching": "Saindo...",
+        "title": "Conta diferente"
+      }
+    }
+  },
   "admin": {
     "accessDenied": {
       "backToApp": "Voltar para o app",

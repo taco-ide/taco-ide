@@ -3,6 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 // Auth routes (login, signup, etc.) - logged in users should be redirected away
 const authPaths = ["/auth"];
 
+// Auth routes that logged-in users must still reach. The accept-invitation
+// page is opened from an email link by people who may already be signed in.
+const authPathsForLoggedInUsers = ["/auth/accept-invitation"];
+
 // Public paths that don't require authentication
 const publicPaths = [
   "/", // Only the exact home page
@@ -28,7 +32,10 @@ export async function middleware(request: NextRequest) {
     ) || isAuthPath;
 
   // If user is logged in and trying to access auth routes, redirect to dashboard
-  if (isLoggedIn && isAuthPath) {
+  const isAllowedWhileLoggedIn = authPathsForLoggedInUsers.some((path) =>
+    pathname.startsWith(path)
+  );
+  if (isLoggedIn && isAuthPath && !isAllowedWhileLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -40,7 +47,9 @@ export async function middleware(request: NextRequest) {
   // If no session token on protected route, redirect to login
   if (!sessionToken) {
     const url = new URL("/auth/login", request.url);
-    url.searchParams.set("redirect", encodeURIComponent(pathname));
+    // URLSearchParams encodes the value; encoding it again here would make
+    // the login page see "%2F..." instead of a path.
+    url.searchParams.set("redirect", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 

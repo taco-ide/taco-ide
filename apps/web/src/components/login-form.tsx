@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
+import { authPageHref, getSafeRedirect } from "@/lib/safe-redirect";
 
 export function LoginForm({
   className,
@@ -23,6 +24,8 @@ export function LoginForm({
   const searchParams = useSearchParams();
   const sessionExpiredReason =
     searchParams.get("reason") === "session_expired";
+  const redirectTo = getSafeRedirect(searchParams.get("redirect"));
+  const prefilledEmail = searchParams.get("email") ?? "";
 
   const {
     register,
@@ -30,10 +33,11 @@ export function LoginForm({
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { email: prefilledEmail },
   });
 
   const onSubmit = async (data: LoginFormData) => {
-    await login(data);
+    await login(data, redirectTo);
   };
 
   return (
@@ -96,7 +100,13 @@ export function LoginForm({
           </Button>
           <div className="text-center text-sm">
             {t("login.noAccount")}{" "}
-            <Link href="/auth/signup" className="underline underline-offset-4">
+            <Link
+              href={authPageHref("signup", {
+                redirect: redirectTo,
+                email: prefilledEmail,
+              })}
+              className="underline underline-offset-4"
+            >
               {t("login.signUpLink")}
             </Link>
           </div>
