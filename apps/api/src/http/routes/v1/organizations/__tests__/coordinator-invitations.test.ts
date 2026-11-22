@@ -97,6 +97,15 @@ describe("coordinator invitation management", () => {
     expect(studentInvite.statusCode).toBe(201);
     expect(mocks.sendInvitationEmail).toHaveBeenCalledTimes(2);
 
+    // Same 7-day window as the platform-admin path and the resend route.
+    const expiresAt = new Date(
+      (teacherInvite.json() as { data: { expiresAt: string } }).data.expiresAt
+    ).getTime();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    expect(Math.abs(expiresAt - (Date.now() + sevenDays))).toBeLessThan(
+      60 * 60 * 1000
+    );
+
     const list = await app.inject({
       method: "GET",
       url: `/v1/organizations/${orgId}/invitations`,
