@@ -191,7 +191,7 @@ describe("teaching assistant turn capture", () => {
     return rows[0]!;
   }
 
-  it.each<Route>(["json"])(
+  it.each<Route>(["json", "sse"])(
     "records everything the AE received and did on a %s turn",
     async (route) => {
       const ws = await startSession();
@@ -308,7 +308,7 @@ describe("teaching assistant turn capture", () => {
     expect(context!.promptContext).toMatchObject({ currentCode: "print('saved')", stdout: "saved" });
   });
 
-  it.each<Route>(["json"])("writes nothing on a %s fallback turn", async (route) => {
+  it.each<Route>(["json", "sse"])("writes nothing on a %s fallback turn", async (route) => {
     const ws = await startSession();
     mocks.createLlm.mockImplementation(() => new ScriptedChatModel([{ content: "" }]));
 
@@ -322,5 +322,26 @@ describe("teaching assistant turn capture", () => {
         .where(eq(userInteractionOnChallenge.workSessionId, ws.id))
     ).toHaveLength(0);
     expect(await db.select().from(taTurnContext)).toHaveLength(0);
+  });
+
+  it("gives the AE the same inputs on both routes for the same body", async () => {
+    const jsonSession = await startSession(0);
+    const sseSession = await startSession(1);
+    mocks.search.mockResolvedValue([PREFETCH_CHUNK]);
+    mocks.createLlm.mockImplementation(() => new ScriptedChatModel([{ content: ANSWER }]));
+    const body = {
+      message: "How do I loop n times?",
+      code: "for i in range(n): pass",
+      stdout: "",
+    };
+
+    expect((await sendTurn("json", jsonSession.id, body, 0)).statusCode).toBe(200);
+    expect((await sendTurn("sse", sseSession.id, body, 1)).statusCode).toBe(200);
+
+    const json = (await latestTurn(jsonSession.id)).ta_turn_context!;
+    const sse = (await latestTurn(sseSession.id)).ta_turn_context!;
+    expect(sse.promptContext).toEqual(json.promptContext);
+    expect(sse.systemPrompt).toBe(json.systemPrompt);
+    expect(sse.retrieval.prefetch).toEqual(json.retrieval.prefetch);
   });
 });

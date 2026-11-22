@@ -15,34 +15,22 @@ import {
   ResponseSchema429,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
+import { env } from "@repo/infra/env";
+import { workSession, challenge, teachingAssistant } from "@repo/infra/db/schema";
+import { eq, and, isNull } from "drizzle-orm";
+import { AIMessage, type BaseMessage } from "@langchain/core/messages";
+import { prepareTeachingAssistantTurn } from "../../../../agents/teaching-assistant/prepare-turn";
 import {
-  workSession,
-  challenge,
-  teachingAssistant,
-  model,
-  userInteractionOnChallenge,
-} from "@repo/infra/db/schema";
-import { eq, desc, and, isNull } from "drizzle-orm";
-import {
-  AIMessage,
-  HumanMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
-import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
+  buildTurnContext,
+  persistTurn,
+} from "../../../../agents/teaching-assistant/turn-context";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
 import {
-  createLlm,
   AGENT_TIMEOUT_MS,
   AgentTimeoutError,
 } from "../../../../agents/llm-factory";
-import {
-  AGENT_FALLBACK_RESPONSE,
-  TA_HISTORY_TURN_CAP,
-} from "../../../../agents/constants";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 import { formatSSEEvent } from "../../../../agents/sse-events";
-import { formatSupportMaterials } from "../../../../agents/support-materials";
-import { detectLanguageHint } from "../../../../agents/language-detect";
 
 // ==================== SCHEMAS ====================
 
@@ -154,40 +142,20 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           message: "Teaching assistant not found",
         });
 
-      let modelParams: Record<string, unknown> = {};
-      if (ta[0]?.modelId) {
-        const m = await db
-          .select()
-          .from(model)
-          .where(eq(model.id, ta[0].modelId))
-          .limit(1);
-        if (m[0]) {
-          modelParams = (m[0].modelParameters as Record<string, unknown>) ?? {};
-        }
-      }
-
-      const formattedSupportMaterials = formatSupportMaterials(
-        ch[0]?.supportMaterials
-      );
-
-      // Build system prompt
-      const systemPrompt = buildTeachingAssistantPrompt({
-        systemPrompt: ta[0]?.systemPrompt ?? "",
-        targetAudience: ta[0]?.targetAudience ?? "",
-        challengeTitle: ch[0]?.title ?? "",
-        challengeDescription: ch[0]?.description ?? "",
-        supportMaterials: formattedSupportMaterials,
-        currentCode: currentCode ?? "",
-        stdout: stdout ?? "",
-        detectedLanguage: detectLanguageHint(message),
+      const turn = await prepareTeachingAssistantTurn({
+        workSessionId,
+        userId: user.id,
+        challengeId: ws[0].challengeId,
+        ta: ta[0],
+        challenge: ch[0],
+        message,
+        body: { code: currentCode, stdout },
+        onPrefetchError: (err) =>
+          request.log.warn(
+            { err },
+            "KB search failed during chat, proceeding without RAG"
+          ),
       });
-
-      // Challenge context for tools
-      const challengeContext = {
-        title: ch[0]?.title ?? "",
-        description: ch[0]?.description ?? "",
-        supportMaterials: formattedSupportMaterials,
-      };
 
       // HTTP status is committed here — all subsequent errors must use the SSE error event type
       const langfuseCallback = getLangfuseCallback({
@@ -209,41 +177,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
 
       let fullResponse = "";
       let streamErrored = false;
+      // Final graph state; streamEvents only exposes it on the root run's end event.
+      let finalMessages: BaseMessage[] | undefined;
 
       try {
-        // Load recent conversation history for context memory
-        const historyRows = await db
-          .select()
-          .from(userInteractionOnChallenge)
-          .where(
-            and(
-              eq(userInteractionOnChallenge.workSessionId, workSessionId),
-              eq(userInteractionOnChallenge.interactionType, "chat")
-            )
-          )
-          .orderBy(
-            desc(userInteractionOnChallenge.createdAt),
-            desc(userInteractionOnChallenge.id)
-          )
-          .limit(TA_HISTORY_TURN_CAP);
-
-        // Reverse to chronological order and build message pairs
-        const historyMessages = historyRows.reverse().flatMap((row) => {
-          const msgs: (HumanMessage | AIMessage)[] = [];
-          // Only include pairs where modelResponse is non-empty (defensive)
-          if (row.userPrompt) {
-            msgs.push(new HumanMessage(row.userPrompt));
-          }
-          if (row.modelResponse?.trim()) {
-            msgs.push(new AIMessage(row.modelResponse));
-          }
-          return msgs;
-        });
-
-        // Create LLM instance with model parameters applied
-        const llmInstance = createLlm(modelParams);
-        const agent = buildTeachingAssistantAgent(llmInstance);
-
         const callbacks = langfuseCallback ? [langfuseCallback] : [];
 
         // Use AbortController to enforce timeout
@@ -251,20 +188,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
         const timeout = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS);
 
         try {
-          const stream = agent.streamEvents(
+          const stream = turn.agent.streamEvents(
+            { messages: turn.inputMessages },
             {
-              messages: [
-                new SystemMessage(systemPrompt),
-                ...historyMessages,
-                new HumanMessage(message),
-              ],
-            },
-            {
-              configurable: {
-                thread_id: workSessionId,
-                challengeId: ws[0].challengeId,
-                challengeContext,
-              },
+              configurable: turn.configurable,
               recursionLimit: 25,
               streamMode: "messages",
               version: "v2",
@@ -273,7 +200,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
             }
           );
 
+          // The first event is the root graph's start; its end carries the final state.
+          let rootRunId: string | undefined;
           for await (const event of stream) {
+            rootRunId ??= event.run_id;
             if (
               event.event === "on_chat_model_stream" &&
               event.data?.chunk?.content
@@ -286,6 +216,16 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
               if (content) {
                 fullResponse += content;
                 reply.raw.write(formatSSEEvent({ type: "text", content }));
+              }
+            } else if (
+              event.event === "on_chain_end" &&
+              event.run_id === rootRunId
+            ) {
+              const output = event.data?.output as
+                | { messages?: BaseMessage[] }
+                | undefined;
+              if (Array.isArray(output?.messages)) {
+                finalMessages = output.messages;
               }
             }
           }
@@ -330,16 +270,40 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           !streamErrored
         ) {
           const interactionId = randomUUID();
-          await db.insert(userInteractionOnChallenge).values({
-            id: interactionId,
-            workSessionId,
-            challengeId: ws[0].challengeId,
-            interactionType: "chat",
-            userPrompt: message,
-            modelResponse: fullResponse,
-            code: currentCode ?? null,
-            stdout: stdout ?? null,
-          });
+          await persistTurn(
+            {
+              id: interactionId,
+              workSessionId,
+              challengeId: ws[0].challengeId,
+              interactionType: "chat",
+              userPrompt: message,
+              modelResponse: fullResponse,
+              ...turn.workspace,
+            },
+            buildTurnContext({
+              interactionId,
+              appVersion: env.APP_VERSION ?? null,
+              teachingAssistantId: ta[0].id,
+              challengeId: ws[0].challengeId,
+              systemPrompt: turn.systemPrompt,
+              promptContext: turn.promptContext,
+              historyInteractionIds: turn.historyInteractionIds,
+              prefetch: turn.prefetch,
+              collector: turn.collector,
+              llm: turn.llm,
+              // Without the final state, keep at least the streamed answer.
+              producedMessages: finalMessages
+                ? finalMessages.slice(turn.inputMessages.length)
+                : [new AIMessage(fullResponse)],
+              langfuseTraceId: langfuseCallback?.getTraceId?.() ?? null,
+            })
+          );
+
+          const now = new Date();
+          await db
+            .update(workSession)
+            .set({ updatedAt: now, lastMessageAt: now })
+            .where(eq(workSession.id, workSessionId));
         }
       } catch (err) {
         request.log.error({ err }, "Chat interaction persistence failed");
