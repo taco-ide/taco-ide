@@ -6,6 +6,8 @@ const authPaths = ["/auth"];
 // Public paths that don't require authentication
 const publicPaths = [
   "/", // Only the exact home page
+  "/terms",
+  "/privacy",
 ];
 
 // This function is executed for all requests

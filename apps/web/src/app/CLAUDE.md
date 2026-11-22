@@ -13,6 +13,7 @@ app/
 │   ├── create/       # Create exercises page
 │   ├── explore/      # Explore exercises page
 │   └── _components/  # Shared inside components
+├── (legal)/          # Public /terms and /privacy (DRAFT legal text, see TODO(legal))
 ├── auth/             # Authentication pages
 │   ├── login/        # Login page
 │   ├── signup/       # Registration page
@@ -40,6 +41,13 @@ Authenticated user area:
 - Requires valid session token
 - Has its own layout with navbar/footer
 - Contains exercise creation and exploration
+
+### `(legal)`
+Public Terms of Use (`/terms`) and LGPD Privacy Notice (`/privacy`):
+- Whitelisted in `middleware.ts`; readable without a session
+- Text lives under `legal` in `src/messages/{en,pt}.json` and is a DRAFT
+  pending legal/ethics review; `[BRACKETED]` placeholders are highlighted
+- Keep the privacy data inventory in sync when adding data or processors
 
 ### `auth`
 Authentication flow pages:
