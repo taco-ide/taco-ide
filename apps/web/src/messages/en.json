@@ -664,6 +664,12 @@
       "title": {
         "label": "Problem Title",
         "placeholder": "e.g. Quick Sort Implementation"
+      },
+      "teachingAssistant": {
+        "default": "Organization default",
+        "help": "The AI tutor students chat with in this challenge. \"Organization default\" uses your organization's oldest active assistant.",
+        "inactive": "{name} (inactive)",
+        "label": "Teaching assistant"
       }
     },
     "confirm": {
@@ -1266,7 +1272,8 @@
     "profile": "Profile",
     "resources": "Resources",
     "signOut": "Sign out",
-    "userMenu": "User menu"
+    "userMenu": "User menu",
+    "teachingAssistants": "Assistants"
   },
   "problem": {
     "description": {
@@ -1552,5 +1559,61 @@
       "student": "Student"
     },
     "title": "Student sessions"
+  },
+  "teachingAssistants": {
+    "accessDenied": {
+      "description": "Only teachers, coordinators and administrators can manage teaching assistants.",
+      "title": "Access denied"
+    },
+    "delete": {
+      "description": "The assistant is hidden and can no longer be used. Past conversations are kept.",
+      "inUse": "This assistant is still used by active challenges. Choose another assistant for them before deleting it:",
+      "title": "Delete \"{name}\"?"
+    },
+    "empty": "No teaching assistants yet. Create one to customize how the AI tutor guides students.",
+    "form": {
+      "alias": "Name",
+      "aliasConflict": "An assistant with this name already exists in your organization.",
+      "aliasPlaceholder": "e.g. Socratic Tutor",
+      "aliasRequired": "Enter a name (up to 50 characters).",
+      "createTitle": "New teaching assistant",
+      "deactivateWarning": "{count, plural, one {# active challenge uses} other {# active challenges use}} this assistant. If you deactivate it, students in those challenges cannot chat with it.",
+      "description": "The instructions define how the assistant talks to students. Changes apply to new messages in every challenge that uses it.",
+      "descriptionLabel": "Description",
+      "editTitle": "Edit teaching assistant",
+      "isActive": "Active (available for challenges and student chat)",
+      "modelParameters": "Model parameters",
+      "modelParametersHelp": "Leave blank to use the platform defaults.",
+      "paramRange": "Enter a number between {min} and {max}.",
+      "params": {
+        "frequency_penalty": "Frequency penalty (-2–2)",
+        "max_tokens": "Max tokens",
+        "presence_penalty": "Presence penalty (-2–2)",
+        "temperature": "Temperature (0–2)",
+        "top_p": "Top P (0–1)"
+      },
+      "systemPrompt": "Instructions (system prompt)",
+      "systemPromptHelp": "Sent to the AI model before every conversation, together with the challenge statement and the student's code.",
+      "systemPromptPlaceholder": "You are a patient programming tutor. Guide students with questions instead of giving the answer...",
+      "systemPromptRequired": "Instructions are required.",
+      "targetAudience": "Target audience",
+      "targetAudiencePlaceholder": "e.g. beginner"
+    },
+    "loadError": "Could not load teaching assistants.",
+    "new": "New assistant",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "subtitle": "Configure the AI tutors that guide students in your organization's challenges.",
+    "title": "Teaching assistants",
+    "toast": {
+      "created": "Teaching assistant created.",
+      "deleteError": "Could not delete the teaching assistant.",
+      "deleted": "Teaching assistant deleted.",
+      "saveError": "Could not save the teaching assistant.",
+      "updated": "Teaching assistant updated."
+    },
+    "usage": "{count, plural, =0 {Not used by any active challenge} one {Used by # active challenge} other {Used by # active challenges}}"
   }
 }

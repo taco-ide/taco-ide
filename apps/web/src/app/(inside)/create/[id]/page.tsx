@@ -68,6 +68,10 @@ export default function EditChallengePage() {
                     difficulty: (challenge.difficulty as "easy" | "medium" | "hard") ?? "easy",
                     classroomId: (challenge as Record<string, unknown>).classroomId as string ?? "",
                     tags: challenge.tags ?? [],
+                    teachingAssistantId:
+                        challenge.teachingAssistants?.find((ta) => ta.isDefault)?.id ??
+                        challenge.teachingAssistants?.[0]?.id ??
+                        "",
                 }}
                 initialTags={challenge.tags ?? []}
             />

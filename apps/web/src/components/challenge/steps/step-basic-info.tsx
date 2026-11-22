@@ -24,10 +24,13 @@ import {
     useGetV1Classrooms,
     usePostV1Classrooms,
     getV1ClassroomsQueryKey,
+    useGetV1TeachingAssistants,
 } from "@/kubb/hooks";
 import { useUser } from "@/contexts/UserContext";
 
 const CREATE_NEW_VALUE = "__create_new__";
+// Radix Select cannot use "" as an item value; the form stores "" for default.
+const DEFAULT_TA_VALUE = "__default__";
 
 interface StepBasicInfoProps {
     tags: string[];
@@ -56,6 +59,10 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
     );
 
     const classrooms = classroomsData?.data ?? [];
+
+    const { data: assistantsData, isLoading: isLoadingAssistants } =
+        useGetV1TeachingAssistants();
+    const assistants = assistantsData?.data ?? [];
 
     const createClassroomMutation = usePostV1Classrooms({
         mutation: {
@@ -283,6 +290,50 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                             {t("basicInfo.classroom.createError")}
                         </p>
                     )}
+                </div>
+
+                <div>
+                    <Label className="text-slate-200">{t("basicInfo.teachingAssistant.label")}</Label>
+                    <Controller
+                        control={control}
+                        name="teachingAssistantId"
+                        render={({ field }) => (
+                            <Select
+                                onValueChange={(value: string) =>
+                                    field.onChange(value === DEFAULT_TA_VALUE ? "" : value)
+                                }
+                                value={field.value ? field.value : DEFAULT_TA_VALUE}
+                                disabled={isLoadingAssistants}
+                            >
+                                <SelectTrigger className="bg-slate-900 border-slate-700 text-slate-200">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-700">
+                                    <SelectItem
+                                        value={DEFAULT_TA_VALUE}
+                                        className="text-slate-200 focus:bg-slate-700"
+                                    >
+                                        {t("basicInfo.teachingAssistant.default")}
+                                    </SelectItem>
+                                    {assistants.map((ta) => (
+                                        <SelectItem
+                                            key={ta.id}
+                                            value={ta.id}
+                                            disabled={!ta.isActive}
+                                            className="text-slate-200 focus:bg-slate-700"
+                                        >
+                                            {ta.isActive
+                                                ? ta.alias
+                                                : t("basicInfo.teachingAssistant.inactive", { name: ta.alias })}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                        {t("basicInfo.teachingAssistant.help")}
+                    </p>
                 </div>
 
                 <div>

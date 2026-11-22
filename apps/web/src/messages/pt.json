@@ -664,6 +664,12 @@
       "title": {
         "label": "Título do problema",
         "placeholder": "Ex: Quick Sort Implementation"
+      },
+      "teachingAssistant": {
+        "default": "Padrão da organização",
+        "help": "O tutor de IA com quem os alunos conversam neste desafio. \"Padrão da organização\" usa o assistente ativo mais antigo da sua organização.",
+        "inactive": "{name} (inativo)",
+        "label": "Assistente de ensino"
       }
     },
     "confirm": {
@@ -1266,7 +1272,8 @@
     "profile": "Perfil",
     "resources": "Recursos",
     "signOut": "Sair",
-    "userMenu": "Menu do usuário"
+    "userMenu": "Menu do usuário",
+    "teachingAssistants": "Assistentes"
   },
   "problem": {
     "description": {
@@ -1552,5 +1559,61 @@
       "student": "Aluno"
     },
     "title": "Sessões dos alunos"
+  },
+  "teachingAssistants": {
+    "accessDenied": {
+      "description": "Somente professores, coordenadores e administradores podem gerenciar assistentes de ensino.",
+      "title": "Acesso negado"
+    },
+    "delete": {
+      "description": "O assistente fica oculto e não pode mais ser usado. As conversas anteriores são mantidas.",
+      "inUse": "Este assistente ainda é usado por desafios ativos. Escolha outro assistente para eles antes de excluí-lo:",
+      "title": "Excluir \"{name}\"?"
+    },
+    "empty": "Nenhum assistente de ensino ainda. Crie um para personalizar como o tutor de IA orienta os alunos.",
+    "form": {
+      "alias": "Nome",
+      "aliasConflict": "Já existe um assistente com este nome na sua organização.",
+      "aliasPlaceholder": "ex.: Tutor Socrático",
+      "aliasRequired": "Informe um nome (até 50 caracteres).",
+      "createTitle": "Novo assistente de ensino",
+      "deactivateWarning": "{count, plural, one {# desafio ativo usa} other {# desafios ativos usam}} este assistente. Se você desativá-lo, os alunos desses desafios não poderão conversar com ele.",
+      "description": "As instruções definem como o assistente conversa com os alunos. As alterações valem para novas mensagens em todos os desafios que o usam.",
+      "descriptionLabel": "Descrição",
+      "editTitle": "Editar assistente de ensino",
+      "isActive": "Ativo (disponível para desafios e para o chat dos alunos)",
+      "modelParameters": "Parâmetros do modelo",
+      "modelParametersHelp": "Deixe em branco para usar os padrões da plataforma.",
+      "paramRange": "Informe um número entre {min} e {max}.",
+      "params": {
+        "frequency_penalty": "Penalidade de frequência (-2–2)",
+        "max_tokens": "Máximo de tokens",
+        "presence_penalty": "Penalidade de presença (-2–2)",
+        "temperature": "Temperatura (0–2)",
+        "top_p": "Top P (0–1)"
+      },
+      "systemPrompt": "Instruções (prompt de sistema)",
+      "systemPromptHelp": "Enviado ao modelo de IA antes de cada conversa, junto com o enunciado do desafio e o código do aluno.",
+      "systemPromptPlaceholder": "Você é um tutor de programação paciente. Oriente os alunos com perguntas em vez de dar a resposta...",
+      "systemPromptRequired": "As instruções são obrigatórias.",
+      "targetAudience": "Público-alvo",
+      "targetAudiencePlaceholder": "ex.: iniciante"
+    },
+    "loadError": "Não foi possível carregar os assistentes de ensino.",
+    "new": "Novo assistente",
+    "status": {
+      "active": "Ativo",
+      "inactive": "Inativo"
+    },
+    "subtitle": "Configure os tutores de IA que orientam os alunos nos desafios da sua organização.",
+    "title": "Assistentes de ensino",
+    "toast": {
+      "created": "Assistente de ensino criado.",
+      "deleteError": "Não foi possível excluir o assistente de ensino.",
+      "deleted": "Assistente de ensino excluído.",
+      "saveError": "Não foi possível salvar o assistente de ensino.",
+      "updated": "Assistente de ensino atualizado."
+    },
+    "usage": "{count, plural, =0 {Não é usado por nenhum desafio ativo} one {Usado por # desafio ativo} other {Usado por # desafios ativos}}"
   }
 }
