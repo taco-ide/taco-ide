@@ -87,6 +87,8 @@ export type { PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutati
 export type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export type { GetV1UsersQueryKey } from "./usersHooks/useGetV1Users.ts";
 export type { GetV1UsersMeQueryKey } from "./usersHooks/useGetV1UsersMe.ts";
+export type { GetV1UsersMeAccessStatusQueryKey } from "./usersHooks/useGetV1UsersMeAccessStatus.ts";
+export type { GetV1UsersMeAccessStatusSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeAccessStatusSuspense.ts";
 export type { GetV1UsersMeSuspenseQueryKey } from "./usersHooks/useGetV1UsersMeSuspense.ts";
 export type { GetV1UsersSuspenseQueryKey } from "./usersHooks/useGetV1UsersSuspense.ts";
 export type { PatchV1UsersIdPlatformAdminMutationKey } from "./usersHooks/usePatchV1UsersIdPlatformAdmin.ts";
@@ -190,6 +192,8 @@ export { postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey
 export { putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey, putV1ChallengesChallengeidSubmissionsSubmissionidGrade, usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade } from "./submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export { getV1UsersQueryKey, getV1Users, getV1UsersQueryOptions, useGetV1Users } from "./usersHooks/useGetV1Users.ts";
 export { getV1UsersMeQueryKey, getV1UsersMe, getV1UsersMeQueryOptions, useGetV1UsersMe } from "./usersHooks/useGetV1UsersMe.ts";
+export { getV1UsersMeAccessStatusQueryKey, getV1UsersMeAccessStatus, getV1UsersMeAccessStatusQueryOptions, useGetV1UsersMeAccessStatus } from "./usersHooks/useGetV1UsersMeAccessStatus.ts";
+export { getV1UsersMeAccessStatusSuspenseQueryKey, getV1UsersMeAccessStatusSuspense, getV1UsersMeAccessStatusSuspenseQueryOptions, useGetV1UsersMeAccessStatusSuspense } from "./usersHooks/useGetV1UsersMeAccessStatusSuspense.ts";
 export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspenseQueryOptions, useGetV1UsersMeSuspense } from "./usersHooks/useGetV1UsersMeSuspense.ts";
 export { getV1UsersSuspenseQueryKey, getV1UsersSuspense, getV1UsersSuspenseQueryOptions, useGetV1UsersSuspense } from "./usersHooks/useGetV1UsersSuspense.ts";
 export { patchV1UsersIdPlatformAdminMutationKey, patchV1UsersIdPlatformAdmin, usePatchV1UsersIdPlatformAdmin } from "./usersHooks/usePatchV1UsersIdPlatformAdmin.ts";

@@ -35,6 +35,7 @@ export type { GetV1OrganizationsMine200SuccessEnum, GetV1OrganizationsMine200, G
 export type { GetV1Status200SuccessEnum, GetV1Status200, GetV1StatusQueryResponse, GetV1StatusQuery } from "../../../../../packages/types/kubb/GetV1Status.ts";
 export type { GetV1UsersQueryParams, GetV1Users200SuccessEnum, GetV1Users200, GetV1Users401SuccessEnum, GetV1Users401, GetV1Users403SuccessEnum, GetV1Users403, GetV1UsersQueryResponse, GetV1UsersQuery } from "../../../../../packages/types/kubb/GetV1Users.ts";
 export type { GetV1UsersMe200SuccessEnum, GetV1UsersMe200, GetV1UsersMe401SuccessEnum, GetV1UsersMe401, GetV1UsersMeQueryResponse, GetV1UsersMeQuery } from "../../../../../packages/types/kubb/GetV1UsersMe.ts";
+export type { GetV1UsersMeAccessStatus200SuccessEnum, GetV1UsersMeAccessStatus200, GetV1UsersMeAccessStatus401SuccessEnum, GetV1UsersMeAccessStatus401, GetV1UsersMeAccessStatusQueryResponse, GetV1UsersMeAccessStatusQuery } from "../../../../../packages/types/kubb/GetV1UsersMeAccessStatus.ts";
 export type { GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge200SuccessEnum, GetV1WorkSessionsByChallenge200, GetV1WorkSessionsByChallenge401SuccessEnum, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge403SuccessEnum, GetV1WorkSessionsByChallenge403, GetV1WorkSessionsByChallenge404SuccessEnum, GetV1WorkSessionsByChallenge404, GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQuery } from "../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 export type { GetV1WorkSessionsIdPathParams, GetV1WorkSessionsId200SuccessEnum, GetV1WorkSessionsId200, GetV1WorkSessionsId401SuccessEnum, GetV1WorkSessionsId401, GetV1WorkSessionsId403SuccessEnum, GetV1WorkSessionsId403, GetV1WorkSessionsId404SuccessEnum, GetV1WorkSessionsId404, GetV1WorkSessionsIdQueryResponse, GetV1WorkSessionsIdQuery } from "../../../../../packages/types/kubb/GetV1WorkSessionsId.ts";
 export type { PatchV1ChallengesIdPathParams, PatchV1ChallengesId200SuccessEnum, PatchV1ChallengesId200, PatchV1ChallengesId400SuccessEnum, PatchV1ChallengesId400, PatchV1ChallengesId401SuccessEnum, PatchV1ChallengesId401, PatchV1ChallengesId403SuccessEnum, PatchV1ChallengesId403, PatchV1ChallengesId404SuccessEnum, PatchV1ChallengesId404, PatchV1ChallengesIdMutationRequestDifficultyEnum, PatchV1ChallengesIdMutationRequest, PatchV1ChallengesIdMutationResponse, PatchV1ChallengesIdMutation } from "../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
@@ -162,6 +163,8 @@ export type { PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutati
 export type { PutV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey } from "../../../../web/src/kubb/hooks/submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export type { GetV1UsersQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1Users.ts";
 export type { GetV1UsersMeQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMe.ts";
+export type { GetV1UsersMeAccessStatusQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeAccessStatus.ts";
+export type { GetV1UsersMeAccessStatusSuspenseQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeAccessStatusSuspense.ts";
 export type { GetV1UsersMeSuspenseQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeSuspense.ts";
 export type { GetV1UsersSuspenseQueryKey } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersSuspense.ts";
 export type { PatchV1UsersIdPlatformAdminMutationKey } from "../../../../web/src/kubb/hooks/usersHooks/usePatchV1UsersIdPlatformAdmin.ts";
@@ -213,6 +216,7 @@ export { getV1OrganizationsMine200SuccessEnum, getV1OrganizationsMine401SuccessE
 export { getV1Status200SuccessEnum } from "../../../../../packages/types/kubb/GetV1Status.ts";
 export { getV1Users200SuccessEnum, getV1Users401SuccessEnum, getV1Users403SuccessEnum } from "../../../../../packages/types/kubb/GetV1Users.ts";
 export { getV1UsersMe200SuccessEnum, getV1UsersMe401SuccessEnum } from "../../../../../packages/types/kubb/GetV1UsersMe.ts";
+export { getV1UsersMeAccessStatus200SuccessEnum, getV1UsersMeAccessStatus401SuccessEnum } from "../../../../../packages/types/kubb/GetV1UsersMeAccessStatus.ts";
 export { getV1WorkSessionsByChallenge200SuccessEnum, getV1WorkSessionsByChallenge401SuccessEnum, getV1WorkSessionsByChallenge403SuccessEnum, getV1WorkSessionsByChallenge404SuccessEnum } from "../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 export { getV1WorkSessionsId200SuccessEnum, getV1WorkSessionsId401SuccessEnum, getV1WorkSessionsId403SuccessEnum, getV1WorkSessionsId404SuccessEnum } from "../../../../../packages/types/kubb/GetV1WorkSessionsId.ts";
 export { patchV1ChallengesId200SuccessEnum, patchV1ChallengesId400SuccessEnum, patchV1ChallengesId401SuccessEnum, patchV1ChallengesId403SuccessEnum, patchV1ChallengesId404SuccessEnum, patchV1ChallengesIdMutationRequestDifficultyEnum } from "../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
@@ -340,6 +344,8 @@ export { postV1ChallengesChallengeidSubmissionsSubmissionidAutoReviewMutationKey
 export { putV1ChallengesChallengeidSubmissionsSubmissionidGradeMutationKey, putV1ChallengesChallengeidSubmissionsSubmissionidGrade, usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade } from "../../../../web/src/kubb/hooks/submissionsHooks/usePutV1ChallengesChallengeidSubmissionsSubmissionidGrade.ts";
 export { getV1UsersQueryKey, getV1Users, getV1UsersQueryOptions, useGetV1Users } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1Users.ts";
 export { getV1UsersMeQueryKey, getV1UsersMe, getV1UsersMeQueryOptions, useGetV1UsersMe } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMe.ts";
+export { getV1UsersMeAccessStatusQueryKey, getV1UsersMeAccessStatus, getV1UsersMeAccessStatusQueryOptions, useGetV1UsersMeAccessStatus } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeAccessStatus.ts";
+export { getV1UsersMeAccessStatusSuspenseQueryKey, getV1UsersMeAccessStatusSuspense, getV1UsersMeAccessStatusSuspenseQueryOptions, useGetV1UsersMeAccessStatusSuspense } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeAccessStatusSuspense.ts";
 export { getV1UsersMeSuspenseQueryKey, getV1UsersMeSuspense, getV1UsersMeSuspenseQueryOptions, useGetV1UsersMeSuspense } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersMeSuspense.ts";
 export { getV1UsersSuspenseQueryKey, getV1UsersSuspense, getV1UsersSuspenseQueryOptions, useGetV1UsersSuspense } from "../../../../web/src/kubb/hooks/usersHooks/useGetV1UsersSuspense.ts";
 export { patchV1UsersIdPlatformAdminMutationKey, patchV1UsersIdPlatformAdmin, usePatchV1UsersIdPlatformAdmin } from "../../../../web/src/kubb/hooks/usersHooks/usePatchV1UsersIdPlatformAdmin.ts";
@@ -389,6 +395,7 @@ export { getV1OrganizationsIdPathParamsSchema, getV1OrganizationsId200Schema, ge
 export { getV1OrganizationsMine200Schema, getV1OrganizationsMine401Schema, getV1OrganizationsMineQueryResponseSchema } from "./zod/getV1OrganizationsMineSchema.ts";
 export { getV1OrganizationsQueryParamsSchema, getV1Organizations200Schema, getV1Organizations401Schema, getV1Organizations403Schema, getV1OrganizationsQueryResponseSchema } from "./zod/getV1OrganizationsSchema.ts";
 export { getV1Status200Schema, getV1StatusQueryResponseSchema } from "./zod/getV1StatusSchema.ts";
+export { getV1UsersMeAccessStatus200Schema, getV1UsersMeAccessStatus401Schema, getV1UsersMeAccessStatusQueryResponseSchema } from "./zod/getV1UsersMeAccessStatusSchema.ts";
 export { getV1UsersMe200Schema, getV1UsersMe401Schema, getV1UsersMeQueryResponseSchema } from "./zod/getV1UsersMeSchema.ts";
 export { getV1UsersQueryParamsSchema, getV1Users200Schema, getV1Users401Schema, getV1Users403Schema, getV1UsersQueryResponseSchema } from "./zod/getV1UsersSchema.ts";
 export { getV1WorkSessionsByChallengeQueryParamsSchema, getV1WorkSessionsByChallenge200Schema, getV1WorkSessionsByChallenge401Schema, getV1WorkSessionsByChallenge403Schema, getV1WorkSessionsByChallenge404Schema, getV1WorkSessionsByChallengeQueryResponseSchema } from "./zod/getV1WorkSessionsByChallengeSchema.ts";
