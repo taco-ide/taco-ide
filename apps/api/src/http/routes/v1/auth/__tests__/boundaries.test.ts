@@ -142,74 +142,95 @@ for (const prefix of ["/api/auth", "/v1/auth"]) {
     });
   });
 
-  describe(`organization creation boundaries through ${prefix}`, () => {
+  describe(`organization creation through ${prefix}`, () => {
     let app: Awaited<ReturnType<typeof getApp>>;
 
     beforeAll(async () => {
       app = await getApp();
     });
 
-    async function requestCreation(cookie?: string) {
-      return app.inject({
+    // Direct HTTP creation is closed for everyone (#140); the admin panel uses
+    // POST /v1/organizations. The creation policy itself is covered below
+    // through server-side calls.
+    it.each([
+      { label: "anonymous callers", isPlatformAdmin: null },
+      { label: "organization admins", isPlatformAdmin: false },
+      { label: "platform admins", isPlatformAdmin: true },
+    ])("denies $label", async ({ isPlatformAdmin }) => {
+      let cookie: string | undefined;
+      if (isPlatformAdmin !== null) {
+        const actor = await createUser({ isPlatformAdmin });
+        const existingOrg = await createOrg();
+        await addMember(actor.id, existingOrg.id, "admin");
+        cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
+      }
+
+      const response = await app.inject({
         method: "POST",
         url: `${prefix}/organization/create`,
         headers: cookie ? { cookie } : {},
         payload: { name: "New organization", slug: "new-organization" },
       });
-    }
 
-    it("requires authentication", async () => {
-      expect((await requestCreation()).statusCode).toBe(401);
-      expect(await db.select().from(organization)).toHaveLength(0);
-    });
-
-    it("denies organization admins without platform privileges", async () => {
-      const actor = await createUser();
-      const existingOrg = await createOrg();
-      await addMember(actor.id, existingOrg.id, "admin");
-      const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
-
-      expect((await requestCreation(cookie)).statusCode).toBe(403);
+      expect(response.statusCode).toBe(403);
       expect(await db.select().from(organization).where(eq(organization.slug, "new-organization"))).toHaveLength(0);
-    });
-
-    it("allows an active platform admin and retains the creator's admin membership", async () => {
-      const actor = await createUser({ isPlatformAdmin: true });
-      const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
-
-      expect((await requestCreation(cookie)).statusCode).toBe(200);
-      const [created] = await db.select().from(organization).where(eq(organization.slug, "new-organization"));
-      expect(created?.isActive).toBe(true);
-      const memberships = await db.select().from(member).where(eq(member.organizationId, created!.id));
-      expect(memberships).toHaveLength(1);
-      expect(memberships[0]).toMatchObject({ userId: actor.id, role: "admin" });
-    });
-
-    it("uses current privileges after promotion instead of stale session claims", async () => {
-      const actor = await createUser();
-      const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
-      await db.update(user).set({ isPlatformAdmin: true }).where(eq(user.id, actor.id));
-
-      expect((await requestCreation(cookie)).statusCode).toBe(200);
-    });
-
-    it.each([
-      { isPlatformAdmin: false },
-      { isActive: false },
-      { deletedAt: new Date("2026-10-01T00:00:00.000Z") },
-    ])("denies revoked eligibility %j despite an existing admin cookie", async (changes) => {
-      const actor = await createUser({ isPlatformAdmin: true });
-      const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
-      await db.update(user).set(changes).where(eq(user.id, actor.id));
-
-      expect((await requestCreation(cookie)).statusCode).toBe(403);
-      expect(await db.select().from(organization)).toHaveLength(0);
-      expect(await db.select().from(member)).toHaveLength(0);
     });
   });
 }
 
 describe("server-side organization creation", () => {
+  async function requestCreation(cookie: string) {
+    return (await auth.api.createOrganization({
+      body: { name: "New organization", slug: "new-organization" },
+      headers: new Headers({ cookie }),
+      asResponse: true,
+    })) as Response;
+  }
+
+  it("denies organization admins without platform privileges", async () => {
+    const actor = await createUser();
+    const existingOrg = await createOrg();
+    await addMember(actor.id, existingOrg.id, "admin");
+    const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
+
+    expect((await requestCreation(cookie)).status).toBe(403);
+    expect(await db.select().from(organization).where(eq(organization.slug, "new-organization"))).toHaveLength(0);
+  });
+
+  it("allows an active platform admin and retains the creator's admin membership", async () => {
+    const actor = await createUser({ isPlatformAdmin: true });
+    const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
+
+    expect((await requestCreation(cookie)).status).toBe(200);
+    const [created] = await db.select().from(organization).where(eq(organization.slug, "new-organization"));
+    expect(created?.isActive).toBe(true);
+    const memberships = await db.select().from(member).where(eq(member.organizationId, created!.id));
+    expect(memberships).toHaveLength(1);
+    expect(memberships[0]).toMatchObject({ userId: actor.id, role: "admin" });
+  });
+
+  it("uses current privileges after promotion instead of stale session claims", async () => {
+    const actor = await createUser();
+    const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
+    await db.update(user).set({ isPlatformAdmin: true }).where(eq(user.id, actor.id));
+
+    expect((await requestCreation(cookie)).status).toBe(200);
+  });
+
+  it.each([
+    { isPlatformAdmin: false },
+    { isActive: false },
+    { deletedAt: new Date("2026-10-01T00:00:00.000Z") },
+  ])("denies revoked eligibility %j despite an existing admin cookie", async (changes) => {
+    const actor = await createUser({ isPlatformAdmin: true });
+    const cookie = await loginAs({ email: actor.email, password: TEST_PASSWORD });
+    await db.update(user).set(changes).where(eq(user.id, actor.id));
+
+    expect((await requestCreation(cookie)).status).toBe(403);
+    expect(await db.select().from(organization)).toHaveLength(0);
+    expect(await db.select().from(member)).toHaveLength(0);
+  });
+
   it("applies the same policy to server-only userId calls", async () => {
     const actor = await createUser();
     const response = await auth.api.createOrganization({

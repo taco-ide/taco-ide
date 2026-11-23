@@ -14,7 +14,7 @@ export const putV1OrganizationsIdMembersUseridMutationKey = () => [{ url: '/v1/o
 export type PutV1OrganizationsIdMembersUseridMutationKey = ReturnType<typeof putV1OrganizationsIdMembersUseridMutationKey>
 
 /**
- * @description Update a member's role in the organization. Requires coordinator+ role.
+ * @description Update a member's role in the organization. Requires coordinator+ role. Granting or removing the admin role requires a platform admin or an admin of this organization.
  * @summary Update member role
  * {@link /v1/organizations/:id/members/:userId}
  */
@@ -28,7 +28,7 @@ export async function putV1OrganizationsIdMembersUserid(id: PutV1OrganizationsId
 }
 
 /**
- * @description Update a member's role in the organization. Requires coordinator+ role.
+ * @description Update a member's role in the organization. Requires coordinator+ role. Granting or removing the admin role requires a platform admin or an admin of this organization.
  * @summary Update member role
  * {@link /v1/organizations/:id/members/:userId}
  */

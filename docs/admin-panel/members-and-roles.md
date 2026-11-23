@@ -37,9 +37,18 @@ estritamente ordenada: `student < teacher < coordinator < admin`.
 | Role          | Hierarquia | O que pode fazer (resumo)                                                                                                          |
 | ------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `student`     | 0          | Acesso somente leitura aos recursos liberados pelo professor. Sem permissões de escrita.                                            |
-| `teacher`     | 1          | Cria/edita salas, desafios e bases de conhecimento; pode criar convites e adicionar membros, mas não remove nem altera papéis.      |
-| `coordinator` | 2          | Tudo do `teacher` + atualiza dados da org, gerencia membros (criar/atualizar/remover), cancela convites.                            |
-| `admin`       | 3          | Todas as permissões do `coordinator` + apagar a organização.                                                                       |
+| `teacher`     | 1          | Cria/edita salas, desafios e bases de conhecimento. Não convida, não adiciona membros e não altera papéis.                          |
+| `coordinator` | 2          | Tudo do `teacher` + convida e cancela convites, altera papéis (exceto conceder ou retirar `admin`), importa CSV sem linhas `admin`. |
+| `admin`       | 3          | Tudo do `coordinator` + concede e retira o papel `admin` na própria org.                                                           |
+
+Nenhum papel de organização remove membros, edita os dados da org ou
+apaga a org: remover membros e editar a org são rotas exclusivas de
+Platform Admin, e a exclusão está desativada (`disableOrganizationDeletion`;
+organizações são desativadas, não apagadas). Os endpoints de organização do
+Better Auth (`/api/auth/organization/*`, `/v1/auth/organization/*`) ficam
+fechados para chamadas HTTP diretas, exceto `set-active`,
+`accept-invitation` e `reject-invitation`; ver
+`docs/security/auth-boundaries.md`.
 
 O endpoint `PUT /v1/organizations/:id/members/:userId` exige no mínimo
 `coordinator` no escopo da org (ou Platform Admin). Já as rotas exclusivas
@@ -166,13 +175,19 @@ Quem pode chamar:
 
 ### Comportamento
 
-- Platform Admin: update direto em `member` via Drizzle.
-- Coordenador/admin da própria org: delega a `auth.api.updateMemberRole`
-  do Better Auth, que aplica as regras internas de RBAC.
+- Conceder ou retirar `admin` (promover para `admin` ou alterar o papel
+  de um admin) exige Platform Admin ou `admin` atual da org, lido do banco
+  (não do cookie). Coordenador recebe `403` com
+  `Only platform admins or organization admins can grant or remove the admin role`,
+  mesmo que exista outro admin.
+- Rebaixar um admin: aplicado direto em `member`, dentro de uma transação
+  com `SELECT ... FOR UPDATE` nos admins da org.
+- Demais mudanças: Platform Admin faz update direto em `member` via
+  Drizzle; coordenador/admin da própria org delega a
+  `auth.api.updateMemberRole` do Better Auth.
 
-Guard de último admin: <!-- TODO: `updateMemberRole` não tem guard
-explícito contra rebaixar o último admin. Confirmar se o Better Auth
-bloqueia internamente; caso contrário, documentar como gap conhecido. -->
+Guard de último admin: rebaixar o único admin retorna `409`
+(`Cannot demote the last admin of the organization. Promote another member first.`).
 
 Efeito em sessões: a rota **não** revoga sessões. O `member.role` é
 cacheado no cookie do Better Auth por até 5 minutos, então mudanças

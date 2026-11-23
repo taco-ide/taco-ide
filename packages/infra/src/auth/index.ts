@@ -14,6 +14,7 @@ import {
   requireActiveAccount,
   requireActivePlatformAdmin,
 } from "./boundaries";
+import { rejectDirectOrganizationEndpoint } from "./organization-endpoints";
 import {
   ac,
   studentRole,
@@ -149,6 +150,10 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // Organization management goes through the product routes; only the
+      // endpoints the browser needs stay reachable over HTTP.
+      rejectDirectOrganizationEndpoint(ctx);
+
       if (ctx.path !== "/sign-up/email" && ctx.path !== "/update-user") return;
 
       // Reject every supplied value, including false/null. input:false alone
@@ -183,6 +188,9 @@ export const auth = betterAuth({
         return true;
       },
       creatorRole: "admin",
+      // Organizations are deactivated through the product routes, never
+      // hard-deleted through the plugin.
+      disableOrganizationDeletion: true,
       sendInvitationEmail: async (data) => {
         try {
           await sendInvitationEmail({

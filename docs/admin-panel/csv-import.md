@@ -145,6 +145,14 @@ Falhas dessas validações retornam `403` com mensagens específicas:
 - `Organization ID must match your active organization`
 - `Insufficient role permissions`
 
+Linhas com role `admin` exigem Platform Admin ou `admin` atual da
+organização (lido do banco). Se um coordenador envia um CSV com qualquer
+linha `admin`, a importação inteira retorna `403` com
+`Only platform admins or organization admins can grant or remove the admin role`,
+inclusive com `?dryRun=true`, e nenhuma linha é gravada. As linhas são
+inseridas direto via Drizzle, sem passar pela regra de papel criador do
+Better Auth, por isso a rota faz essa checagem.
+
 ---
 
 ## 6. Fluxo da UI
@@ -309,6 +317,7 @@ devolveu. Valores são escapados (aspas duplas dobradas) quando contêm
 | `403` | Sem org ativa | `No active organization selected` |
 | `403` | Org ativa diferente do `id` da URL | `Organization ID must match your active organization` |
 | `403` | Role abaixo de `coordinator` | `Insufficient role permissions` |
+| `403` | Linha `admin` enviada por quem não é Platform Admin nem admin da org | `Only platform admins or organization admins can grant or remove the admin role` |
 | `413` | Arquivo > 1 MB | `CSV file exceeds maximum size of 1MB` |
 | `413` | > 100 linhas | `CSV exceeds maximum of 100 rows` |
 

@@ -22,6 +22,9 @@ const session = await auth.api.getSession({ headers })
 ### boundaries.ts
 Checks current account eligibility in the database and rejects administrative user fields in self-service requests.
 
+### organization-endpoints.ts
+Allowlist of Better Auth organization endpoints reachable over HTTP (`set-active`, `accept-invitation`, `reject-invitation`). Every other `/organization/*` endpoint returns 403; organizations, members and invitations are managed through `/v1/organizations/**`.
+
 ### client.ts
 Client-side Better Auth instance with the organization plugin for frontend use:
 
@@ -214,6 +217,8 @@ Custom email templates in `email.ts`:
 - Organization creation requires an active, non-deleted platform admin loaded from the current database row. Organization-level `admin` membership is not sufficient. Allowed creators receive the plugin's `admin` role.
 - The creation callback throws on denied eligibility so the same policy applies to server-only `userId` calls. Session-cookie caching cannot retain revoked creation privileges.
 - Administrative changes remain in dedicated management routes or trusted database operations. A Better Auth session alone is not sufficient application authorization.
+- Direct HTTP calls to organization plugin endpoints are denied except the allowlist in `organization-endpoints.ts`, for platform admins too. Server-side `auth.api.*` calls are not affected; product routes authorize before making them.
+- `disableOrganizationDeletion: true`: organizations are deactivated, never deleted. Role statements in `permissions.ts` follow the product rules (no `member:delete`, `organization:update` or `organization:delete` for any org role; teachers have no member or invitation permissions).
 
 See `docs/security/auth-boundaries.md` for the policy and real integration coverage of both auth aliases.
 

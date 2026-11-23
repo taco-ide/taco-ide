@@ -100,7 +100,9 @@ Cria um convite pendente e dispara o email.
 | `email` | `string` | `z.string().email()`. Caminho Platform Admin normaliza para lowercase.          |
 | `role`  | `enum`   | `student` \| `teacher` \| `coordinator` \| `admin`                              |
 
-> **Nota sobre `role: "admin"`**: convites explicitos podem conceder qualquer papel, inclusive `admin`. Isso difere das regras de auto-link por dominio de email (capadas em `coordinator` — feature F10). Aqui o admin esta selecionando deliberadamente o papel alvo.
+> **Nota sobre `role: "admin"`**: convites explicitos podem conceder qualquer papel, inclusive `admin`. Isso difere das regras de auto-link por dominio de email (capadas em `coordinator` — feature F10). Aqui o admin esta selecionando deliberadamente o papel alvo. Apenas Platform Admin ou `admin` da org podem convidar como `admin`: no caminho coordinator+, `auth.api.createInvitation` recusa o papel criador (`admin`) para quem nao e admin (`403`).
+>
+> **Endpoints diretos do Better Auth**: `/api/auth/organization/invite-member` e `/organization/cancel-invitation` (e os equivalentes em `/v1/auth`) retornam `403` para qualquer chamador. Convites so sao criados e cancelados por estas rotas REST. O convidado continua usando `accept-invitation` / `reject-invitation`. Ver `docs/security/auth-boundaries.md`.
 
 **Resposta 201**
 

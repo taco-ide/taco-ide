@@ -23,18 +23,26 @@ export const studentRole = ac.newRole({
   knowledgeBase: [],
 });
 
+// Role statements mirror the product rules. Better Auth's organization plugin
+// checks them in `auth.api.*` calls made by product routes, and the API and web
+// read them through `roleHasPermission`.
+//
+// - Inviting and changing roles are coordinator+ (product invitation and
+//   member-role routes); teachers have no member or invitation permissions.
+// - Removing members and updating the organization are platform-admin-only
+//   product routes, so no organization role has `member:delete` or
+//   `organization:update`.
+// - Organizations are deactivated, never deleted; no role has
+//   `organization:delete`, and plugin deletion is disabled.
 export const teacherRole = ac.newRole({
   classroom: ["create", "update"],
   challenge: ["create", "update", "delete"],
   teachingAssistant: ["create", "update"],
-  member: ["create"],
-  invitation: ["create"],
   knowledgeBase: ["create", "update", "delete"],
 });
 
 export const coordinatorRole = ac.newRole({
-  organization: ["update"],
-  member: ["create", "update", "delete"],
+  member: ["create", "update"],
   invitation: ["create", "cancel"],
   classroom: ["create", "update", "delete"],
   challenge: ["create", "update", "delete"],
@@ -43,8 +51,7 @@ export const coordinatorRole = ac.newRole({
 });
 
 export const adminRole = ac.newRole({
-  organization: ["update", "delete"],
-  member: ["create", "update", "delete"],
+  member: ["create", "update"],
   invitation: ["create", "cancel"],
   classroom: ["create", "update", "delete"],
   challenge: ["create", "update", "delete"],
