@@ -15,6 +15,10 @@ import {
 import { db } from "@repo/infra/db";
 import { knowledgeBase } from "@repo/infra/db/schema";
 import { searchChallengeKnowledgeBases } from "../../../../../services/knowledge-base-search";
+import {
+  EmbeddingUnavailableError,
+  embeddingUnavailableMessage,
+} from "../../../../../services/embedding-errors";
 
 // ==================== SCHEMAS ====================
 
@@ -64,7 +68,7 @@ export async function searchChallengeKnowledgeBasesRoute(
         tags: ["challenge-knowledge-bases"],
         summary: "Semantic search across challenge knowledge bases",
         description:
-          "Search across all knowledge bases linked to a challenge using semantic similarity.",
+          "Search across all knowledge bases linked to a challenge using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.",
         params: SearchChallengeKBParamsSchema,
         querystring: SearchChallengeKBQuerySchema,
         response: {
@@ -103,11 +107,24 @@ export async function searchChallengeKnowledgeBasesRoute(
 
       const { q, limit } = request.query;
 
-      const results = await searchChallengeKnowledgeBases({
-        challengeId,
-        query: q,
-        limit,
-      });
+      let results;
+      try {
+        results = await searchChallengeKnowledgeBases({
+          challengeId,
+          query: q,
+          limit,
+        });
+      } catch (err) {
+        if (!(err instanceof EmbeddingUnavailableError)) throw err;
+        request.log.warn(
+          { err, reason: err.reason, challengeId },
+          "Challenge knowledge base search failed: embedding service unavailable"
+        );
+        return reply.status(503).send({
+          success: false as const,
+          message: embeddingUnavailableMessage(err),
+        });
+      }
 
       if (results.length === 0) {
         return reply.status(200).send({

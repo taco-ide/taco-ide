@@ -8,7 +8,7 @@ import {
   classroom,
   organization,
 } from "@repo/infra/db/schema";
-import { generateEmbedding } from "./embedding";
+import { generateQueryEmbedding } from "./embedding";
 
 export interface KBSearchResult {
   id: string;
@@ -41,14 +41,9 @@ export async function searchKnowledgeBase({
   limit = 10,
   similarityThreshold = 0.3,
 }: SearchKnowledgeBaseInput): Promise<KBSearchResult[]> {
-  const queryEmbedding = await generateEmbedding(query);
-
-  if (!queryEmbedding) {
-    console.warn(
-      "[KB Search] Embedding generation failed, returning empty results"
-    );
-    return [];
-  }
+  // Throws EmbeddingUnavailableError when the embedding service fails, so
+  // callers can distinguish an outage from "no matching chunks".
+  const queryEmbedding = await generateQueryEmbedding(query);
 
   const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
 
@@ -127,14 +122,9 @@ export async function searchChallengeKnowledgeBases({
 
   const kbIds = linkedKBs.map((r) => r.knowledgeBaseId);
 
-  const queryEmbedding = await generateEmbedding(query);
-
-  if (!queryEmbedding) {
-    console.warn(
-      "[KB Search] Embedding generation failed, returning empty results"
-    );
-    return [];
-  }
+  // Throws EmbeddingUnavailableError when the embedding service fails, so
+  // callers can distinguish an outage from "no matching chunks".
+  const queryEmbedding = await generateQueryEmbedding(query);
 
   const queryEmbeddingString = `[${queryEmbedding.join(",")}]`;
 

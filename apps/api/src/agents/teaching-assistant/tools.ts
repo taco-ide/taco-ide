@@ -2,6 +2,7 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { env } from "@repo/infra/env";
 import { searchChallengeKnowledgeBases } from "../../services/knowledge-base-search";
+import { EmbeddingUnavailableError } from "../../services/embedding-errors";
 
 const RUN_CODE_TIMEOUT_MS = 30000; // 30 seconds per tool execution
 
@@ -120,12 +121,39 @@ export const getChallengeInfo = tool(
   },
 );
 
+export const KB_UNAVAILABLE_TOOL_MESSAGE =
+  "Course materials are temporarily unavailable (the knowledge base search service could not be reached). Tell the student the materials cannot be consulted right now, and continue helping without them.";
+
+export const KB_NOT_CONFIGURED_TOOL_MESSAGE =
+  "Course materials search is not available in this deployment (no embedding service is configured). Do not say it is temporary; if the student asks about course materials, tell them they cannot be searched here, and continue helping without them.";
+
+export const KB_SEARCH_FAILED_TOOL_MESSAGE =
+  "The course materials search failed. Tell the student the materials cannot be consulted right now, and continue helping without them.";
+
+function kbFailureToolMessage(err: unknown): string {
+  if (!(err instanceof EmbeddingUnavailableError)) {
+    return KB_SEARCH_FAILED_TOOL_MESSAGE;
+  }
+  return err.reason === "not_configured"
+    ? KB_NOT_CONFIGURED_TOOL_MESSAGE
+    : KB_UNAVAILABLE_TOOL_MESSAGE;
+}
+
+/**
+ * Tool output contract:
+ * - `unavailable: false` — search ran; `results` may be empty (no relevant
+ *   material found).
+ * - `unavailable: true` — search could not run; `results` is empty and
+ *   `error` tells the agent what to say instead of implying none exist:
+ *   temporarily unavailable (embedding service down), not available in this
+ *   deployment (embeddings not configured), or a generic search failure.
+ */
 export const searchKnowledgeBase = tool(
   async ({ query }, config) => {
     try {
       const challengeId = config.configurable?.challengeId as string | undefined;
       if (!challengeId) {
-        return JSON.stringify({ results: [] });
+        return JSON.stringify({ unavailable: false, results: [] });
       }
 
       const results = await searchChallengeKnowledgeBases({
@@ -135,6 +163,7 @@ export const searchKnowledgeBase = tool(
       });
 
       return JSON.stringify({
+        unavailable: false,
         results: results.map((r) => ({
           content: r.content,
           similarity: r.similarity,
@@ -145,17 +174,23 @@ export const searchKnowledgeBase = tool(
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Unknown knowledge base search error";
-      console.warn("Knowledge base search failed:", errorMessage);
+      console.warn(
+        "Knowledge base search failed:",
+        err instanceof EmbeddingUnavailableError
+          ? `embedding unavailable (${err.reason}): ${errorMessage}`
+          : errorMessage
+      );
       return JSON.stringify({
+        unavailable: true,
         results: [],
-        error: errorMessage,
+        error: kbFailureToolMessage(err),
       });
     }
   },
   {
     name: "searchKnowledgeBase",
     description:
-      "Search the knowledge base for relevant educational content matching the query.",
+      "Search the knowledge base for relevant educational content matching the query. If the result has `unavailable: true`, the materials could not be searched right now (not the same as no matches).",
     schema: z.object({
       query: z.string().describe("The search query string"),
     }),

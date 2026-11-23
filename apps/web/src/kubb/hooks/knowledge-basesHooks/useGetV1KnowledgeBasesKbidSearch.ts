@@ -14,7 +14,7 @@ export const getV1KnowledgeBasesKbidSearchQueryKey = (kbId: GetV1KnowledgeBasesK
 export type GetV1KnowledgeBasesKbidSearchQueryKey = ReturnType<typeof getV1KnowledgeBasesKbidSearchQueryKey>
 
 /**
- * @description Search knowledge base chunks using semantic similarity
+ * @description Search knowledge base chunks using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.
  * @summary Semantic search knowledge base
  * {@link /v1/knowledge-bases/:kbId/search}
  */
@@ -38,7 +38,7 @@ export function getV1KnowledgeBasesKbidSearchQueryOptions(kbId: GetV1KnowledgeBa
 }
 
 /**
- * @description Search knowledge base chunks using semantic similarity
+ * @description Search knowledge base chunks using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.
  * @summary Semantic search knowledge base
  * {@link /v1/knowledge-bases/:kbId/search}
  */

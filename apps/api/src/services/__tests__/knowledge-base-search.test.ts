@@ -15,11 +15,15 @@ import {
   createClassroom,
   createChallenge,
 } from "../../test/helpers/factories";
-import { searchChallengeKnowledgeBases } from "../knowledge-base-search";
+import {
+  searchChallengeKnowledgeBases,
+  searchKnowledgeBase,
+} from "../knowledge-base-search";
+import { EmbeddingUnavailableError } from "../embedding-errors";
 const mocks = vi.hoisted(() => ({
   embedding: vi.fn(async () => [1, ...Array<number>(1535).fill(0)]),
 }));
-vi.mock("../embedding", () => ({ generateEmbedding: mocks.embedding }));
+vi.mock("../embedding", () => ({ generateQueryEmbedding: mocks.embedding }));
 
 describe("agent knowledge-base search uses current classroom", () => {
   let classId: string;
@@ -91,5 +95,19 @@ describe("agent knowledge-base search uses current classroom", () => {
       await searchChallengeKnowledgeBases({ challengeId, query: "test" })
     ).toEqual([]);
     expect(mocks.embedding).not.toHaveBeenCalled();
+  });
+  it("propagates embedding outages instead of returning no results", async () => {
+    mocks.embedding.mockRejectedValueOnce(
+      new EmbeddingUnavailableError("http_error", "status 503", { status: 503 })
+    );
+    await expect(
+      searchChallengeKnowledgeBases({ challengeId, query: "test" })
+    ).rejects.toBeInstanceOf(EmbeddingUnavailableError);
+    mocks.embedding.mockRejectedValueOnce(
+      new EmbeddingUnavailableError("network_error", "fetch failed")
+    );
+    await expect(
+      searchKnowledgeBase({ kbId: knowledgeBaseId, query: "test" })
+    ).rejects.toBeInstanceOf(EmbeddingUnavailableError);
   });
 });

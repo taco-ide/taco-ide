@@ -9,6 +9,10 @@ import {
   ResponseSchema503,
 } from "../../_responses/types";
 import { searchKnowledgeBase } from "../../../../services/knowledge-base-search";
+import {
+  EmbeddingUnavailableError,
+  embeddingUnavailableMessage,
+} from "../../../../services/embedding-errors";
 
 // ==================== SCHEMAS ====================
 
@@ -54,7 +58,8 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
       schema: {
         tags: ["knowledge-bases"],
         summary: "Semantic search knowledge base",
-        description: "Search knowledge base chunks using semantic similarity",
+        description:
+          "Search knowledge base chunks using semantic similarity. Returns 200 with an empty array when nothing matches, and 503 when the embedding service is unavailable.",
         params: SearchKnowledgeBaseParamsSchema,
         querystring: SearchKnowledgeBaseQuerySchema,
         response: {
@@ -85,12 +90,18 @@ export async function searchKnowledgeBaseRoute(app: FastifyTypedInstance) {
 
       const { q, limit } = request.query;
 
-      const results = await searchKnowledgeBase({ kbId, query: q, limit });
-
-      if (results.length === 0) {
-        return reply.status(200).send({
-          success: true as const,
-          data: [],
+      let results;
+      try {
+        results = await searchKnowledgeBase({ kbId, query: q, limit });
+      } catch (err) {
+        if (!(err instanceof EmbeddingUnavailableError)) throw err;
+        request.log.warn(
+          { err, reason: err.reason, kbId },
+          "Knowledge base search failed: embedding service unavailable"
+        );
+        return reply.status(503).send({
+          success: false as const,
+          message: embeddingUnavailableMessage(err),
         });
       }
 
