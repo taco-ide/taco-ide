@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema204,
@@ -13,7 +13,7 @@ import { db } from "@repo/infra/db";
 import { teachingAssistant } from "@repo/infra/db/schema";
 import {
   assertCanAccessTeachingAssistantOrg,
-  listActiveLinkedChallenges,
+  listChallengesUsingTeachingAssistant,
   loadTeachingAssistant,
 } from "../../../services/teaching-assistant-access";
 import { TeachingAssistantParamsSchema } from "./shared";
@@ -27,7 +27,7 @@ export async function deleteTeachingAssistantRoute(app: FastifyTypedInstance) {
         tags: ["teaching-assistants"],
         summary: "Delete teaching assistant",
         description:
-          "Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while the assistant is linked to non-deleted challenges; `errors.challenges` lists their titles.",
+          "Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while a non-deleted challenge is linked to the assistant or has work sessions running on it; `errors.challenges` lists their titles.",
         params: TeachingAssistantParamsSchema,
         response: {
           204: ResponseSchema204,
@@ -62,19 +62,41 @@ export async function deleteTeachingAssistantRoute(app: FastifyTypedInstance) {
           .status(access.status)
           .send({ success: false as const, message: access.message });
 
-      const linked = await listActiveLinkedChallenges(ta.id);
-      if (linked.length > 0)
+      // Lock the row so links or work sessions created concurrently are
+      // either visible to the check below or wait for the delete to commit
+      // (challenge assignment re-checks the assistant under FOR SHARE).
+      const blocking = await db.transaction(async (tx) => {
+        const [locked] = await tx
+          .select({ id: teachingAssistant.id })
+          .from(teachingAssistant)
+          .where(
+            and(
+              eq(teachingAssistant.id, ta.id),
+              isNull(teachingAssistant.deletedAt)
+            )
+          )
+          .for("update");
+        if (!locked) return null;
+        const users = await listChallengesUsingTeachingAssistant(ta.id, tx);
+        if (users.length > 0) return users;
+        const now = new Date();
+        await tx
+          .update(teachingAssistant)
+          .set({ deletedAt: now, updatedAt: now, isActive: false })
+          .where(eq(teachingAssistant.id, ta.id));
+        return [];
+      });
+      if (!blocking)
+        return reply.status(404).send({
+          success: false as const,
+          message: "Teaching assistant not found",
+        });
+      if (blocking.length > 0)
         return reply.status(409).send({
           success: false as const,
-          message: `Teaching assistant is used by ${linked.length} active challenge(s). Assign another teaching assistant to them before deleting it.`,
-          errors: { challenges: linked.map((c) => c.title) },
+          message: `Teaching assistant is used by ${blocking.length} active challenge(s). Assign another teaching assistant to them before deleting it.`,
+          errors: { challenges: blocking.map((c) => c.title) },
         });
-
-      const now = new Date();
-      await db
-        .update(teachingAssistant)
-        .set({ deletedAt: now, updatedAt: now, isActive: false })
-        .where(eq(teachingAssistant.id, ta.id));
 
       return reply.status(204).send({ success: true as const });
     }

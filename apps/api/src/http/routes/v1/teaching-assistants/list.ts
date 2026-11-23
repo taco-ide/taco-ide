@@ -13,6 +13,7 @@ import { model, teachingAssistant } from "@repo/infra/db/schema";
 import {
   assertCanAccessTeachingAssistantOrg,
   countActiveLinkedChallenges,
+  findDefaultTeachingAssistant,
 } from "../../../services/teaching-assistant-access";
 import {
   TeachingAssistantSchema,
@@ -99,7 +100,10 @@ export async function listTeachingAssistantsRoute(app: FastifyTypedInstance) {
       const paramsByModel = new Map(
         models.map((m) => [m.id, parseModelParameters(m.modelParameters)])
       );
-      const counts = await countActiveLinkedChallenges(organizationId);
+      const [counts, defaultTa] = await Promise.all([
+        countActiveLinkedChallenges(organizationId),
+        findDefaultTeachingAssistant(organizationId),
+      ]);
 
       return reply.status(200).send({
         success: true as const,
@@ -107,7 +111,8 @@ export async function listTeachingAssistantsRoute(app: FastifyTypedInstance) {
           serializeTeachingAssistant(
             ta,
             ta.modelId ? (paramsByModel.get(ta.modelId) ?? null) : null,
-            counts.get(ta.id) ?? 0
+            counts.get(ta.id) ?? 0,
+            ta.id === defaultTa?.id
           )
         ),
       });

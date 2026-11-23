@@ -30,6 +30,11 @@ export const TeachingAssistantSchema = z.object({
   organizationId: z.string().nullable(),
   modelParameters: TeachingAssistantModelParametersSchema.nullable(),
   activeChallengeCount: z.number(),
+  /**
+   * The organization default: its oldest active assistant, used by
+   * challenges without a chosen one. Only coordinators and admins change it.
+   */
+  isDefault: z.boolean(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -40,9 +45,32 @@ export const TeachingAssistantParamsSchema = z.object({
 
 // ==================== HELPERS ====================
 
-/** Version prefix marking a model row owned by exactly one assistant. */
-const privateModelVersion = (teachingAssistantId: string) =>
+/**
+ * Version marking a model row owned by exactly one assistant:
+ * `ta:<assistantId>`, plus `:from:<modelId>` when it was copied from a shared
+ * row, so clearing the parameters can restore that row.
+ */
+const privateModelPrefix = (teachingAssistantId: string) =>
   `ta:${teachingAssistantId}`;
+const FROM_MARKER = ":from:";
+
+function privateModelVersion(
+  teachingAssistantId: string,
+  fromModelId?: string
+) {
+  const prefix = privateModelPrefix(teachingAssistantId);
+  return fromModelId ? `${prefix}${FROM_MARKER}${fromModelId}` : prefix;
+}
+
+function isPrivateModelOf(version: string, teachingAssistantId: string) {
+  const prefix = privateModelPrefix(teachingAssistantId);
+  return version === prefix || version.startsWith(`${prefix}${FROM_MARKER}`);
+}
+
+function sharedOrigin(version: string): string | null {
+  const at = version.indexOf(FROM_MARKER);
+  return at === -1 ? null : version.slice(at + FROM_MARKER.length);
+}
 
 /** Reads the stored parameters, keeping only keys the API exposes. */
 export async function loadModelParameters(
@@ -70,7 +98,10 @@ export function parseModelParameters(
  * Stores the assistant's parameters without touching model rows shared with
  * other assistants (the global seed model, for instance): the assistant's own
  * model row is updated in place, otherwise a private copy is created.
- * Returns the model id the assistant must reference.
+ * `null` clears custom parameters: an assistant on a shared row keeps it, and
+ * one on a private copy goes back to the shared row it was copied from (the
+ * model link is never dropped). Returns the model id the assistant must
+ * reference.
  */
 export async function saveModelParameters(
   tx: Pick<typeof db, "select" | "insert" | "update">,
@@ -78,41 +109,65 @@ export async function saveModelParameters(
   currentModelId: string | null,
   parameters: TeachingAssistantModelParameters | null
 ): Promise<string | null> {
-  const version = privateModelVersion(teachingAssistantId);
-  let name = "default";
-  if (currentModelId) {
-    const [current] = await tx
-      .select({ id: model.id, name: model.name, version: model.version })
-      .from(model)
-      .where(eq(model.id, currentModelId))
-      .limit(1);
-    if (current?.version === version) {
-      await tx
-        .update(model)
-        .set({ modelParameters: parameters })
-        .where(eq(model.id, current.id));
-      return current.id;
-    }
-    if (current) name = current.name;
-  }
-  // Clearing parameters of an assistant that uses a shared row: just detach.
-  if (!parameters) return null;
+  const [current] = currentModelId
+    ? await tx
+        .select({ id: model.id, name: model.name, version: model.version })
+        .from(model)
+        .where(eq(model.id, currentModelId))
+        .limit(1)
+    : [];
+  const isPrivate =
+    !!current && isPrivateModelOf(current.version, teachingAssistantId);
 
-  const id = randomUUID();
-  await tx.insert(model).values({
-    id,
-    name,
-    version,
-    description: "Teaching assistant parameters",
-    modelParameters: parameters,
-  });
-  return id;
+  if (!parameters) {
+    if (!current || !isPrivate) return current?.id ?? null;
+    const origin = sharedOrigin(current.version);
+    if (origin) {
+      const [shared] = await tx
+        .select({ id: model.id })
+        .from(model)
+        .where(eq(model.id, origin))
+        .limit(1);
+      if (shared) return shared.id;
+    }
+    await tx
+      .update(model)
+      .set({ modelParameters: null })
+      .where(eq(model.id, current.id));
+    return current.id;
+  }
+
+  if (current && isPrivate) {
+    await tx
+      .update(model)
+      .set({ modelParameters: parameters })
+      .where(eq(model.id, current.id));
+    return current.id;
+  }
+
+  // Reuses the private copy left behind by an earlier reset, if any.
+  const [row] = await tx
+    .insert(model)
+    .values({
+      id: randomUUID(),
+      name: current?.name ?? "default",
+      version: privateModelVersion(teachingAssistantId, current?.id),
+      description: "Teaching assistant parameters",
+      modelParameters: parameters,
+    })
+    .onConflictDoUpdate({
+      target: [model.name, model.version],
+      set: { modelParameters: parameters },
+    })
+    .returning({ id: model.id });
+  return row!.id;
 }
 
 export function serializeTeachingAssistant(
   ta: TeachingAssistant,
   modelParameters: TeachingAssistantModelParameters | null,
-  activeChallengeCount: number
+  activeChallengeCount: number,
+  isDefault: boolean
 ): z.infer<typeof TeachingAssistantSchema> {
   return {
     id: ta.id,
@@ -125,6 +180,7 @@ export function serializeTeachingAssistant(
     organizationId: ta.createdByOrganizationId,
     modelParameters,
     activeChallengeCount,
+    isDefault,
     createdAt: ta.createdAt.toISOString(),
     updatedAt: ta.updatedAt.toISOString(),
   };

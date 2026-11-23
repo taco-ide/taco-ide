@@ -105,6 +105,10 @@ export type GetV1TeachingAssistantsId200 = {
         */
         activeChallengeCount: number;
         /**
+         * @type boolean
+        */
+        isDefault: boolean;
+        /**
          * @type string
         */
         createdAt: string;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, ne, or } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -9,8 +9,16 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { challenge, challengeTeachingAssistant } from "@repo/infra/db/schema";
-import { findAssignableTeachingAssistant } from "../../../services/teaching-assistant-access";
+import {
+  challenge,
+  challengeTeachingAssistant,
+  teachingAssistant,
+} from "@repo/infra/db/schema";
+import {
+  findAssignableTeachingAssistant,
+  findDefaultTeachingAssistant,
+  replaceChallengeTeachingAssistant,
+} from "../../../services/teaching-assistant-access";
 import {
   assertCanListChallengeWorkSessions,
   loadChallengeWorkAccessContext,
@@ -18,6 +26,8 @@ import {
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
+
+class TeachingAssistantUnavailableError extends Error {}
 
 // ==================== SCHEMAS ====================
 
@@ -146,15 +156,18 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      const wantsTeachingAssistantChange = body.teachingAssistantId !== undefined;
-      if (wantsTeachingAssistantChange && body.teachingAssistantId) {
-        // The organization the challenge will belong to after this update.
-        const targetOrganizationId =
-          wantsClassroomChange && classroomId
-            ? (await loadClassroomAccessContext(classroomId))?.organizationId
-            : wantsClassroomChange
-              ? null
-              : ctx.organizationId;
+      // The organization the challenge will belong to after this update.
+      const targetOrganizationId =
+        wantsClassroomChange && classroomId
+          ? ((await loadClassroomAccessContext(classroomId))?.organizationId ??
+            null)
+          : wantsClassroomChange
+            ? null
+            : ctx.organizationId;
+
+      let wantsTeachingAssistantChange = body.teachingAssistantId !== undefined;
+      let newTeachingAssistantId = body.teachingAssistantId ?? null;
+      if (wantsTeachingAssistantChange && newTeachingAssistantId) {
         if (!targetOrganizationId)
           return reply.status(400).send({
             success: false as const,
@@ -162,7 +175,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
               "Assign the challenge to a classroom before choosing a teaching assistant",
           });
         const ta = await findAssignableTeachingAssistant(
-          body.teachingAssistantId,
+          newTeachingAssistantId,
           targetOrganizationId
         );
         if (!ta)
@@ -171,7 +184,49 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
             message:
               "Teaching assistant not found, inactive or from another organization",
           });
+      } else if (
+        !wantsTeachingAssistantChange &&
+        wantsClassroomChange &&
+        targetOrganizationId
+      ) {
+        // An unassigned challenge keeps its old link; moving it into another
+        // organization's classroom must not keep a foreign assistant.
+        const [foreign] = await db
+          .select({ id: teachingAssistant.id })
+          .from(challengeTeachingAssistant)
+          .innerJoin(
+            teachingAssistant,
+            eq(
+              teachingAssistant.id,
+              challengeTeachingAssistant.teachingAssistantId
+            )
+          )
+          .where(
+            and(
+              eq(challengeTeachingAssistant.challengeId, challengeId),
+              or(
+                isNull(teachingAssistant.createdByOrganizationId),
+                ne(
+                  teachingAssistant.createdByOrganizationId,
+                  targetOrganizationId
+                )
+              )
+            )
+          )
+          .limit(1);
+        if (foreign) {
+          wantsTeachingAssistantChange = true;
+          newTeachingAssistantId = null;
+        }
       }
+      // Work sessions follow the assistant the challenge uses from now on.
+      const sessionTeachingAssistantId = !wantsTeachingAssistantChange
+        ? null
+        : (newTeachingAssistantId ??
+          (targetOrganizationId
+            ? ((await findDefaultTeachingAssistant(targetOrganizationId))?.id ??
+              null)
+            : null));
 
       const setValues: Partial<typeof challenge.$inferInsert> = {
         updatedAt: new Date(),
@@ -183,32 +238,51 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
       if (body.difficulty !== undefined) setValues.difficulty = body.difficulty;
       if (body.tags !== undefined) setValues.tags = body.tags;
 
-      const updated = await db.transaction(async (tx) => {
-        const [row] = await tx
-          .update(challenge)
-          .set(setValues)
-          .where(eq(challenge.id, challengeId))
-          .returning({
-            id: challenge.id,
-            classroomId: challenge.classroomId,
-            title: challenge.title,
-            description: challenge.description,
-            difficulty: challenge.difficulty,
-            tags: challenge.tags,
-          });
-        if (row && wantsTeachingAssistantChange) {
-          await tx
-            .delete(challengeTeachingAssistant)
-            .where(eq(challengeTeachingAssistant.challengeId, challengeId));
-          if (body.teachingAssistantId)
-            await tx.insert(challengeTeachingAssistant).values({
-              challengeId,
-              teachingAssistantId: body.teachingAssistantId,
-              isDefault: true,
+      const updated = await db
+        .transaction(async (tx) => {
+          const [row] = await tx
+            .update(challenge)
+            .set(setValues)
+            .where(eq(challenge.id, challengeId))
+            .returning({
+              id: challenge.id,
+              classroomId: challenge.classroomId,
+              title: challenge.title,
+              description: challenge.description,
+              difficulty: challenge.difficulty,
+              tags: challenge.tags,
             });
-        }
-        return row;
-      });
+          if (row && wantsTeachingAssistantChange) {
+            // Re-check under a row lock so a concurrent delete cannot win.
+            if (
+              newTeachingAssistantId &&
+              !(await findAssignableTeachingAssistant(
+                newTeachingAssistantId,
+                targetOrganizationId!,
+                tx
+              ))
+            )
+              throw new TeachingAssistantUnavailableError();
+            await replaceChallengeTeachingAssistant(
+              tx,
+              challengeId,
+              newTeachingAssistantId,
+              sessionTeachingAssistantId
+            );
+          }
+          return row;
+        })
+        .catch((error: unknown) => {
+          if (error instanceof TeachingAssistantUnavailableError)
+            return "ta" as const;
+          throw error;
+        });
+      if (updated === "ta")
+        return reply.status(400).send({
+          success: false as const,
+          message:
+            "Teaching assistant not found, inactive or from another organization",
+        });
 
       if (!updated) {
         return reply.status(500).send({
@@ -232,7 +306,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
           difficulty: updated.difficulty ?? null,
           tags: (updated.tags as string[] | null) ?? null,
           ...(wantsTeachingAssistantChange
-            ? { teachingAssistantId: body.teachingAssistantId ?? null }
+            ? { teachingAssistantId: newTeachingAssistantId }
             : {}),
           message: wantsClassroomChange
             ? classroomId

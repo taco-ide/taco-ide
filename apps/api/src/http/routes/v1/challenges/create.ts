@@ -120,32 +120,50 @@ export async function createChallengeRoute(app: FastifyTypedInstance) {
 
       const id = randomUUID();
 
-      const [created] = await db
-        .insert(challenge)
-        .values({
-          id,
-          title,
-          description: description ?? null,
-          difficulty,
-          classroomId,
-          tags: tags ?? null,
-          supportMaterials: supportMaterials ?? null,
-          createdByUserId: usr.id,
-        })
-        .returning();
+      // Insert the challenge and its link together, re-checking the
+      // assistant under a row lock so a concurrent delete cannot slip in.
+      const created = await db.transaction(async (tx) => {
+        if (
+          chosenTA &&
+          !(await findAssignableTeachingAssistant(
+            chosenTA.id,
+            organizationId,
+            tx
+          ))
+        )
+          return "ta" as const;
+        const [row] = await tx
+          .insert(challenge)
+          .values({
+            id,
+            title,
+            description: description ?? null,
+            difficulty,
+            classroomId,
+            tags: tags ?? null,
+            supportMaterials: supportMaterials ?? null,
+            createdByUserId: usr.id,
+          })
+          .returning();
+        if (row && chosenTA)
+          await tx.insert(challengeTeachingAssistant).values({
+            challengeId: row.id,
+            teachingAssistantId: chosenTA.id,
+            isDefault: true,
+          });
+        return row;
+      });
 
+      if (created === "ta")
+        return reply.status(400).send({
+          success: false as const,
+          message:
+            "Teaching assistant not found, inactive or from another organization",
+        });
       if (!created) {
         return reply.status(500).send({
           success: false as const,
           message: "Failed to create challenge",
-        });
-      }
-
-      if (chosenTA) {
-        await db.insert(challengeTeachingAssistant).values({
-          challengeId: created.id,
-          teachingAssistantId: chosenTA.id,
-          isDefault: true,
         });
       }
 

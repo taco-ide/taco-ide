@@ -14,6 +14,8 @@ import { db } from "@repo/infra/db";
 import { teachingAssistant } from "@repo/infra/db/schema";
 import {
   assertCanAccessTeachingAssistantOrg,
+  assertCanChangeSharedTeachingAssistant,
+  isOrganizationDefault,
   listActiveLinkedChallenges,
   loadTeachingAssistant,
 } from "../../../services/teaching-assistant-access";
@@ -35,7 +37,13 @@ const UpdateTeachingAssistantBodySchema = z
     systemPrompt: z.string().trim().min(1).max(20000).optional(),
     targetAudience: z.string().trim().max(50).nullable().optional(),
     isActive: z.boolean().optional(),
-    modelParameters: TeachingAssistantModelParametersSchema.nullable().optional(),
+    /**
+     * Omitted: keep the current model. Object: store these parameters
+     * (in a row private to this assistant). `null`: drop custom parameters
+     * and go back to the shared model the assistant used before.
+     */
+    modelParameters:
+      TeachingAssistantModelParametersSchema.nullable().optional(),
   })
   .strict();
 
@@ -55,7 +63,7 @@ export async function updateTeachingAssistantRoute(app: FastifyTypedInstance) {
         tags: ["teaching-assistants"],
         summary: "Update teaching assistant",
         description:
-          "Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Deactivated assistants stop answering students in challenges that use them.",
+          "Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Teachers can only change assistants that are not the organization default and that serve no challenge they do not manage; coordinators and admins can change any. Omitting modelParameters keeps the current model; null restores the shared model. Deactivated assistants stop answering students in challenges that use them.",
         params: TeachingAssistantParamsSchema,
         body: UpdateTeachingAssistantBodySchema,
         response: {
@@ -93,6 +101,16 @@ export async function updateTeachingAssistantRoute(app: FastifyTypedInstance) {
           .send({ success: false as const, message: access.message });
 
       const body = request.body;
+      const shared = await assertCanChangeSharedTeachingAssistant(
+        usr,
+        ta,
+        body.isActive === true
+      );
+      if (!shared.ok)
+        return reply
+          .status(shared.status)
+          .send({ success: false as const, message: shared.message });
+
       const setValues: Partial<typeof teachingAssistant.$inferInsert> = {
         updatedAt: new Date(),
       };
@@ -128,7 +146,12 @@ export async function updateTeachingAssistantRoute(app: FastifyTypedInstance) {
         ]);
         return reply.status(200).send({
           success: true as const,
-          data: serializeTeachingAssistant(updated, params, linked.length),
+          data: serializeTeachingAssistant(
+            updated,
+            params,
+            linked.length,
+            await isOrganizationDefault(updated)
+          ),
         });
       } catch (error) {
         if (isAliasConflict(error))

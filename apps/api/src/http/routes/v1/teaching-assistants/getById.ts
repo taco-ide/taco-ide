@@ -8,6 +8,7 @@ import {
 } from "../../_responses/types";
 import {
   assertCanAccessTeachingAssistantOrg,
+  isOrganizationDefault,
   listActiveLinkedChallenges,
   loadTeachingAssistant,
 } from "../../../services/teaching-assistant-access";
@@ -71,7 +72,12 @@ export async function getTeachingAssistantRoute(app: FastifyTypedInstance) {
 
       return reply.status(200).send({
         success: true as const,
-        data: serializeTeachingAssistant(ta, params, linked.length),
+        data: serializeTeachingAssistant(
+          ta,
+          params,
+          linked.length,
+          await isOrganizationDefault(ta)
+        ),
       });
     }
   );

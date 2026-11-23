@@ -105,6 +105,10 @@ export type PatchV1TeachingAssistantsId200 = {
         */
         activeChallengeCount: number;
         /**
+         * @type boolean
+        */
+        isDefault: boolean;
+        /**
          * @type string
         */
         createdAt: string;

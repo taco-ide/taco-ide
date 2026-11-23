@@ -13,7 +13,10 @@ import {
 import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { teachingAssistant } from "@repo/infra/db/schema";
-import { assertCanAccessTeachingAssistantOrg } from "../../../services/teaching-assistant-access";
+import {
+  assertCanAccessTeachingAssistantOrg,
+  isOrganizationDefault,
+} from "../../../services/teaching-assistant-access";
 import {
   ALIAS_CONFLICT_MESSAGE,
   TeachingAssistantModelParametersSchema,
@@ -118,7 +121,8 @@ export async function createTeachingAssistantRoute(app: FastifyTypedInstance) {
           data: serializeTeachingAssistant(
             created,
             body.modelParameters ?? null,
-            0
+            0,
+            await isOrganizationDefault(created)
           ),
         });
       } catch (error) {

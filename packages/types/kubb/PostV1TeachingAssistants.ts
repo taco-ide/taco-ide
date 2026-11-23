@@ -97,6 +97,10 @@ export type PostV1TeachingAssistants201 = {
         */
         activeChallengeCount: number;
         /**
+         * @type boolean
+        */
+        isDefault: boolean;
+        /**
          * @type string
         */
         createdAt: string;

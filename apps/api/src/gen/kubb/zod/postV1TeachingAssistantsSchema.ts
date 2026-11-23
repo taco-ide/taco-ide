@@ -28,6 +28,7 @@ export const postV1TeachingAssistants201Schema = z.object({
 "presence_penalty": z.number().min(-2).max(2).optional()
     }).nullable(),
 "activeChallengeCount": z.number(),
+"isDefault": z.boolean(),
 "createdAt": z.string(),
 "updatedAt": z.string()
     })
