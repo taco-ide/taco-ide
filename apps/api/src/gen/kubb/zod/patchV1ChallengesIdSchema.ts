@@ -22,7 +22,12 @@ export const patchV1ChallengesId200Schema = z.object({
 "description": z.string().nullable(),
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
-"message": z.string()
+"message": z.string(),
+"referenceSolutionsSkipped": z.object({
+    "code": z.enum(["RATE_LIMITED"]),
+"message": z.string(),
+"retryAfterSeconds": z.number().int().min(0)
+    }).optional()
     }),
 "pagination": z.object({
     "total": z.number(),
@@ -74,19 +79,6 @@ export const patchV1ChallengesId404Schema = z.object({
 "errors": z.object({
     
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
-    })
-
-/**
- * @description Default Response
- */
-export const patchV1ChallengesId429Schema = z.object({
-    "success": z.literal(false),
-"message": z.string(),
-"errors": z.object({
-    
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
-"code": z.enum(["RATE_LIMITED"]).optional(),
-"retryAfterSeconds": z.number().int().min(0).optional()
     })
 
 export const patchV1ChallengesIdMutationRequestSchema = z.object({

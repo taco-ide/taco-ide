@@ -32,8 +32,15 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create Fastify instance with Zod Type Provider
-const app = fastify({ trustProxy: true }).withTypeProvider<ZodTypeProvider>();
+// Create Fastify instance with Zod Type Provider. TRUST_PROXY decides which
+// X-Forwarded-For entries request.ip may come from; the default (no proxy)
+// ignores the header, since its leftmost entries are chosen by the client.
+const app = fastify({ trustProxy: env.TRUST_PROXY }).withTypeProvider<ZodTypeProvider>();
+if (env.NODE_ENV === "production" && env.TRUST_PROXY === false) {
+  console.warn(
+    "TRUST_PROXY is not set: behind a reverse proxy every client shares the proxy's IP for rate limits. Set TRUST_PROXY to the proxy's address (e.g. 127.0.0.1 or uniquelocal)."
+  );
+}
 const theme = new SwaggerTheme();
 const darkCss = theme.getBuffer(SwaggerThemeNameEnum.DARK);
 

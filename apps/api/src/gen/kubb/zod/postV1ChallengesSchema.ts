@@ -18,7 +18,12 @@ export const postV1Challenges201Schema = z.object({
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
 "classroomId": z.string().nullable(),
-"createdAt": z.string()
+"createdAt": z.string(),
+"referenceSolutionsSkipped": z.object({
+    "code": z.enum(["RATE_LIMITED"]),
+"message": z.string(),
+"retryAfterSeconds": z.number().int().min(0)
+    }).optional()
     })
     })
 
@@ -64,19 +69,6 @@ export const postV1Challenges404Schema = z.object({
 "errors": z.object({
     
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
-    })
-
-/**
- * @description Default Response
- */
-export const postV1Challenges429Schema = z.object({
-    "success": z.literal(false),
-"message": z.string(),
-"errors": z.object({
-    
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
-"code": z.enum(["RATE_LIMITED"]).optional(),
-"retryAfterSeconds": z.number().int().min(0).optional()
     })
 
 export const postV1ChallengesMutationRequestSchema = z.object({

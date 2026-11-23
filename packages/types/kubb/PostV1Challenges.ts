@@ -10,6 +10,12 @@ export const postV1Challenges201SuccessEnum = {
 
 export type PostV1Challenges201SuccessEnum = (typeof postV1Challenges201SuccessEnum)[keyof typeof postV1Challenges201SuccessEnum];
 
+export const referenceSolutionsSkippedCodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type ReferenceSolutionsSkippedCodeEnum = (typeof referenceSolutionsSkippedCodeEnum)[keyof typeof referenceSolutionsSkippedCodeEnum];
+
 /**
  * @description Default Response
 */
@@ -54,6 +60,24 @@ export type PostV1Challenges201 = {
          * @type string
         */
         createdAt: string;
+        /**
+         * @type object | undefined
+        */
+        referenceSolutionsSkipped?: {
+            /**
+             * @type string
+            */
+            code: ReferenceSolutionsSkippedCodeEnum;
+            /**
+             * @type string
+            */
+            message: string;
+            /**
+             * @minLength 0
+             * @type integer
+            */
+            retryAfterSeconds: number;
+        };
     };
 };
 
@@ -161,47 +185,6 @@ export type PostV1Challenges404 = {
     };
 };
 
-export const postV1Challenges429SuccessEnum = {
-    "false": false
-} as const;
-
-export type PostV1Challenges429SuccessEnum = (typeof postV1Challenges429SuccessEnum)[keyof typeof postV1Challenges429SuccessEnum];
-
-export const postV1Challenges429CodeEnum = {
-    "RATE_LIMITED": "RATE_LIMITED"
-} as const;
-
-export type PostV1Challenges429CodeEnum = (typeof postV1Challenges429CodeEnum)[keyof typeof postV1Challenges429CodeEnum];
-
-/**
- * @description Default Response
-*/
-export type PostV1Challenges429 = {
-    /**
-     * @type boolean
-    */
-    success: PostV1Challenges429SuccessEnum;
-    /**
-     * @type string
-    */
-    message: string;
-    /**
-     * @type object | undefined
-    */
-    errors?: {
-        [key: string]: (string[] | string);
-    };
-    /**
-     * @type string | undefined
-    */
-    code?: PostV1Challenges429CodeEnum;
-    /**
-     * @minLength 0
-     * @type integer | undefined
-    */
-    retryAfterSeconds?: number;
-};
-
 export const postV1ChallengesMutationRequestDifficultyEnum = {
     "easy": "easy",
     "medium": "medium",
@@ -247,5 +230,5 @@ export type PostV1ChallengesMutationResponse = PostV1Challenges201;
 export type PostV1ChallengesMutation = {
     Response: PostV1Challenges201;
     Request: PostV1ChallengesMutationRequest;
-    Errors: PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404 | PostV1Challenges429;
+    Errors: PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404;
 };

@@ -49,9 +49,10 @@ export { hashPassword } from "better-auth/crypto";
 export { APIError } from "better-auth/api";
 
 /**
- * Header the API's Better Auth bridge sets to the client IP Fastify resolved.
- * The bridge overwrites any value a client sends, so Better Auth can trust it
- * for rate limiting and session IP tracking. Without it, a request with no
+ * Header the API's Better Auth bridge sets to the client IP Fastify resolved
+ * (request.ip, which honours X-Forwarded-For only from the proxies TRUST_PROXY
+ * names). The bridge overwrites any value a client sends, so Better Auth can
+ * trust it for rate limiting and session IP tracking. Without it, a request with no
  * (or a multi-hop) X-Forwarded-For has no IP, and Better Auth falls back to a
  * single bucket shared by every client.
  */
@@ -65,10 +66,15 @@ export const auth = betterAuth({
   trustedOrigins: [env.FRONTEND_URL, env.BETTER_AUTH_URL],
 
   // Per client IP and auth path, in memory (single API instance). Keys are
-  // Better Auth paths relative to its base path (/api/auth). Limits allow a
-  // classroom behind one NAT address to sign in at once while still bounding
-  // credential guessing and email spam. Move to `storage: "secondary-storage"`
-  // (Redis) when the API runs on more than one instance.
+  // Better Auth paths relative to its base path (/api/auth). The counter
+  // resets only after `window` seconds without an allowed request, so `max`
+  // is per burst of activity: once reached, the IP waits until one window
+  // after its last allowed request. The sign-in default (100) lets a class
+  // behind one NAT address sign in together while still bounding credential
+  // guessing; email routes bound spam. The client IP comes from the API
+  // bridge (see AUTH_CLIENT_IP_HEADER) and depends on TRUST_PROXY. Move to
+  // `storage: "secondary-storage"` (Redis) when the API runs on more than one
+  // instance.
   rateLimit: {
     enabled: env.AUTH_RATE_LIMIT_ENABLED,
     storage: "memory",

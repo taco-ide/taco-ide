@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PatchV1ChallengesIdMutationRequest, PatchV1ChallengesIdMutationResponse, PatchV1ChallengesIdPathParams, PatchV1ChallengesId400, PatchV1ChallengesId401, PatchV1ChallengesId403, PatchV1ChallengesId404, PatchV1ChallengesId429 } from "../../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
+import type { PatchV1ChallengesIdMutationRequest, PatchV1ChallengesIdMutationResponse, PatchV1ChallengesIdPathParams, PatchV1ChallengesId400, PatchV1ChallengesId401, PatchV1ChallengesId403, PatchV1ChallengesId404 } from "../../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"
   
   const requestData = data  
   
-  const res = await request<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404 | PatchV1ChallengesId429>, PatchV1ChallengesIdMutationRequest>({ method : "PATCH", url : `/v1/challenges/${id}`, data : requestData, ... requestConfig })  
+  const res = await request<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, PatchV1ChallengesIdMutationRequest>({ method : "PATCH", url : `/v1/challenges/${id}`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"
  */
 export function usePatchV1ChallengesId<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404 | PatchV1ChallengesId429>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PatchV1ChallengesIdMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePatchV1ChallengesId<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? patchV1ChallengesIdMutationKey()
 
-  return useMutation<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404 | PatchV1ChallengesId429>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext>({
+  return useMutation<PatchV1ChallengesIdMutationResponse, ResponseErrorConfig<PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404>, {id: PatchV1ChallengesIdPathParams["id"], data?: PatchV1ChallengesIdMutationRequest}, TContext>({
     mutationFn: async({ id, data }) => {
       return patchV1ChallengesId(id, data, config)
     },

@@ -90,22 +90,49 @@ are read per request from the exported `rateLimitSettings`.
 |-------|-----|---------|------------|
 | Global | user id, else client IP | 300/min (`RATE_LIMIT_GLOBAL_PER_MINUTE`) | every route except the Better Auth bridge |
 | `aiChat` | user id | 10/min, 200/day | `POST /v1/work-sessions/:id/chat`, `POST /v1/chat/student/message`, `POST /v1/chat/teacher/message` |
-| `aiGeneration` | user id | 5/min, 100/day | `POST /v1/challenges` (unless `generateReferenceSolutions: false`), `PATCH /v1/challenges/:id` (only with `generateReferenceSolutions: true`), reference-solution regenerate, auto-review re-run |
+| `aiGeneration` | user id | 5/min, 100/day | reference solutions from `POST /v1/challenges` (unless `generateReferenceSolutions: false`) and `PATCH /v1/challenges/:id` (only with `generateReferenceSolutions: true`), reference-solution regenerate, auto-review re-run, the auto-review started by `POST /v1/work-sessions/:id/submit` (counted against the student) |
 | `embedding` | user id | 30/min, 500/day | both knowledge base search routes, manual entry create/update, document upload |
-| Better Auth | client IP + auth path | sign-in/sign-up/change-password/change-email 30/min; password reset and verification email 10/hour; other auth paths 100/10 s | `/v1/auth/*`, `/api/auth/*` (configured in `packages/infra/src/auth/index.ts`) |
+| Better Auth | client IP + auth path | sign-in/sign-up/change-password/change-email 100/min; password reset and verification email 10/hour; other auth paths 100/10 s | `/v1/auth/*`, `/api/auth/*` (configured in `packages/infra/src/auth/index.ts`) |
 
 - Add a cost policy to a route with `preHandler: [rateLimitPolicy("aiChat")]`
   (after `requirePermission(...)` when present). Each policy's budget is
   shared by all its routes, so it does not grow with sessions or classrooms.
   Requests that fail validation are not counted.
+- When the route has its own refusals (409 already running, cooldown), call
+  `consumeRateLimit(request, policy)` in the handler after them and answer
+  with `sendRateLimited(reply, rejection)`, so refused requests spend no
+  budget (reference-solution regenerate, auto-review re-run).
+- When the costly work is optional, skip it instead of failing the request:
+  challenge create/update still save and return
+  `data.referenceSolutionsSkipped: { code: "RATE_LIMITED", message,
+  retryAfterSeconds }` (`RateLimitedSkipSchema`); submit still succeeds and
+  marks the submission's auto-review `failed` ("Auto-review skipped: …") so
+  staff can re-run it.
 - Over the limit: `429`, `Retry-After` and `x-ratelimit-*` headers, body
   `{ success: false, message, code: "RATE_LIMITED", retryAfterSeconds }`
   (`ResponseSchema429`). Better Auth answers its own 429 with `X-Retry-After`.
-- Better Auth limits by the IP Fastify resolved (`request.ip`), which the
-  bridge passes in the `x-taco-client-ip` header. Fastify runs with
-  `trustProxy: true`, so deploy behind a proxy that sets `X-Forwarded-For`.
+- Client IP: anonymous requests and Better Auth are keyed by `request.ip`
+  (the bridge passes it to Better Auth in the `x-taco-client-ip` header).
+  `TRUST_PROXY` sets Fastify's `trustProxy`: unset (default) ignores
+  `X-Forwarded-For`; in production list the reverse proxy's address(es), e.g.
+  `TRUST_PROXY=127.0.0.1` (nginx on the same host) or `uniquelocal` (proxy on
+  a private Docker network). The IP is then the rightmost entry not added by
+  a trusted proxy, so client-written entries are ignored. `true` and hop
+  counts are rejected (`true` trusts the client's leftmost entry; Fastify 5
+  treats hop counts as "trust nothing"). Without it, behind a proxy every
+  client shares the proxy's IP.
+- Better Auth's counter resets only after a full window without an allowed
+  request, so its limits are per burst: once an IP reaches `max`, it waits
+  until one window after its last allowed request.
 - `RATE_LIMIT_ENABLED=false` turns off the API layers; Better Auth's limiter
   is off by default under `NODE_ENV=test`.
+- Each limiter store is an LRU of `RATE_LIMIT_CACHE_SIZE` keys (default
+  10000). When more keys are active in a window, the least recently used are
+  evicted and their budgets reset; size it above the number of users active
+  in a day.
+- Web: `ApiError` carries `code` and `retryAfterSeconds`;
+  `useApiErrorMessage()` (`apps/web/src/hooks/useApiErrorMessage.ts`) turns
+  `RATE_LIMITED` into a translated "try again in …" message.
 - State is per process. Before running more than one API instance, add a
   Redis store (`redis` option in `globalRateLimitOptions`, and Better Auth
   `secondaryStorage`).

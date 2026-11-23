@@ -1,5 +1,32 @@
 import { z } from "zod";
 
+/**
+ * Parses TRUST_PROXY into Fastify's `trustProxy` option: the reverse proxies
+ * whose X-Forwarded-For entries the API believes. Unset, empty or "false"
+ * trust none (client IP = socket address). Otherwise a comma-separated list
+ * of proxy IPs/CIDRs, or proxy-addr's named ranges ("loopback", "linklocal",
+ * "uniquelocal"). The client IP is then the rightmost X-Forwarded-For entry
+ * not added by a trusted proxy, so entries a client puts in the header itself
+ * are ignored.
+ *
+ * "true" is rejected: it trusts the leftmost entry, which the client chooses.
+ * Hop counts are rejected too: Fastify 5 treats a numeric trustProxy as
+ * "trust nothing" because it cannot check that the peer really is a proxy.
+ */
+export function parseTrustProxy(value: string | undefined): false | string[] {
+  const v = value?.trim() ?? "";
+  if (v === "" || v === "false") return false;
+  if (v === "true" || /^\d+$/.test(v)) {
+    throw new Error(
+      "TRUST_PROXY must list the proxy addresses (e.g. 127.0.0.1, 10.0.0.0/8 or uniquelocal); true and hop counts are not supported"
+    );
+  }
+  return v
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -75,6 +102,22 @@ const envSchema = z.object({
   // Server
   PORT: z.coerce.number().default(4000),
 
+  // Reverse proxies whose X-Forwarded-For the API trusts when resolving the
+  // client IP (rate limits, Better Auth). Default: none. In production set
+  // the proxy's address, e.g. 127.0.0.1 for nginx on the same host or
+  // uniquelocal for a proxy on a private (Docker) network. See parseTrustProxy.
+  TRUST_PROXY: z
+    .string()
+    .optional()
+    .transform((v, ctx) => {
+      try {
+        return parseTrustProxy(v);
+      } catch (err) {
+        ctx.addIssue({ code: "custom", message: (err as Error).message });
+        return z.NEVER;
+      }
+    }),
+
   // API rate limits (in-memory, per process). Authenticated requests are
   // counted per user, anonymous ones per client IP. See
   // apps/api/src/http/middlewares/rate-limit.ts for what each budget covers.
@@ -101,9 +144,16 @@ const envSchema = z.object({
     .positive()
     .default(30),
   RATE_LIMIT_EMBEDDING_PER_DAY: z.coerce.number().int().positive().default(500),
+  // Entries per limiter store (LRU). When more keys than this are active in
+  // a window, the least recently used are evicted and their counts reset.
+  RATE_LIMIT_CACHE_SIZE: z.coerce.number().int().positive().default(10000),
 
   // Better Auth rate limits (per client IP and auth path). Disabled by
-  // default under NODE_ENV=test so suites can sign in freely.
+  // default under NODE_ENV=test so suites can sign in freely. Better Auth's
+  // counter resets only after a full window passes without an allowed
+  // request, so a limit is per burst of activity, not per calendar window:
+  // once it is reached, the IP waits until one window after its last allowed
+  // request.
   AUTH_RATE_LIMIT_ENABLED: z
     .enum(["true", "false"])
     .optional()
@@ -114,7 +164,7 @@ const envSchema = z.object({
     .number()
     .int()
     .positive()
-    .default(30),
+    .default(100),
   AUTH_RATE_LIMIT_EMAIL_PER_HOUR: z.coerce
     .number()
     .int()

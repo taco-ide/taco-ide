@@ -4,7 +4,7 @@
 */
 
 import fetch from "@/lib/apiClient";
-import type { PostV1ChallengesMutationRequest, PostV1ChallengesMutationResponse, PostV1Challenges400, PostV1Challenges401, PostV1Challenges403, PostV1Challenges404, PostV1Challenges429 } from "../../../../../../packages/types/kubb/PostV1Challenges.ts";
+import type { PostV1ChallengesMutationRequest, PostV1ChallengesMutationResponse, PostV1Challenges400, PostV1Challenges401, PostV1Challenges403, PostV1Challenges404 } from "../../../../../../packages/types/kubb/PostV1Challenges.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -23,7 +23,7 @@ export async function postV1Challenges(data: PostV1ChallengesMutationRequest, co
   
   const requestData = data  
   
-  const res = await request<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404 | PostV1Challenges429>, PostV1ChallengesMutationRequest>({ method : "POST", url : `/v1/challenges/`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404>, PostV1ChallengesMutationRequest>({ method : "POST", url : `/v1/challenges/`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function postV1Challenges(data: PostV1ChallengesMutationRequest, co
  */
 export function usePostV1Challenges<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404 | PostV1Challenges429>, {data: PostV1ChallengesMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404>, {data: PostV1ChallengesMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1ChallengesMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1Challenges<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1ChallengesMutationKey()
 
-  return useMutation<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404 | PostV1Challenges429>, {data: PostV1ChallengesMutationRequest}, TContext>({
+  return useMutation<PostV1ChallengesMutationResponse, ResponseErrorConfig<PostV1Challenges400 | PostV1Challenges401 | PostV1Challenges403 | PostV1Challenges404>, {data: PostV1ChallengesMutationRequest}, TContext>({
     mutationFn: async({ data }) => {
       return postV1Challenges(data, config)
     },

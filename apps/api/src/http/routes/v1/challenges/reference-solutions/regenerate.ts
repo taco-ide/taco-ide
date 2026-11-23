@@ -17,7 +17,10 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../../services/work-session-access";
 import { startReferenceSolutions } from "../../../../../agents/teachers-companion/reference-solution";
-import { rateLimitPolicy } from "../../../../middlewares/rate-limit";
+import {
+  consumeRateLimit,
+  sendRateLimited,
+} from "../../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -49,10 +52,7 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
   }>(
     "/:kind/regenerate",
     {
-      preHandler: [
-        requirePermission("challenge", "update"),
-        rateLimitPolicy("aiGeneration"),
-      ],
+      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges/reference-solutions"],
         summary: "Regenerate reference solution",
@@ -129,6 +129,10 @@ export async function regenerateRoute(app: FastifyTypedInstance) {
           });
         }
       }
+
+      // Spend AI budget only once the guards above let the work start.
+      const rateLimited = await consumeRateLimit(request, "aiGeneration");
+      if (rateLimited) return sendRateLimited(reply, rateLimited);
 
       // The PDC can take minutes, longer than proxies keep a request open:
       // wait only for the claim, then generate in the background.

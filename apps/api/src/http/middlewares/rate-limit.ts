@@ -11,18 +11,29 @@
  *    a per-day budget per user, shared by every route in that policy (a user's
  *    budget does not grow with the number of sessions or classrooms):
  *      - aiChat:       teaching assistant / teacher's companion chat
- *      - aiGeneration: reference solutions and auto-review re-runs
+ *      - aiGeneration: reference solutions and auto-reviews (re-runs and the
+ *                      automatic review of a student's submission)
  *      - embedding:    knowledge base search, manual entries, document upload
  *
  * Exceeded limits answer 429 with Retry-After, x-ratelimit-* headers and
  * `{ success: false, message, code: "RATE_LIMITED", retryAfterSeconds }`.
  *
- * Set RATE_LIMIT_ENABLED=false to turn both layers off. The store is per
- * process: with more than one API instance, add
+ * Routes that must not fail when the budget is exhausted (saving a
+ * challenge, submitting a session) call `consumeRateLimit` themselves and
+ * skip only the costly work.
+ *
+ * Anonymous requests are keyed by request.ip, which depends on TRUST_PROXY.
+ *
+ * Set RATE_LIMIT_ENABLED=false to turn both layers off. Each store is an LRU
+ * of RATE_LIMIT_CACHE_SIZE keys; evicting a key resets its counts. The store
+ * is per process: with more than one API instance, add
  * `redis: new Redis(env.REDIS_URL)` to `globalRateLimitOptions`; no route
  * changes are needed.
  */
-import type { RateLimitPluginOptions } from "@fastify/rate-limit";
+import type {
+  CreateRateLimitOptions,
+  RateLimitPluginOptions,
+} from "@fastify/rate-limit";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { env } from "@repo/infra/env";
 
@@ -103,9 +114,17 @@ export const globalRateLimitOptions: RateLimitPluginOptions = {
   timeWindow: MINUTE_MS,
   keyGenerator: rateLimitKey,
   hook: "onRequest",
+  cache: env.RATE_LIMIT_CACHE_SIZE,
   errorResponseBuilder: (_request, context) =>
     new RateLimitExceededError(GLOBAL_MESSAGE, Math.ceil(context.ttl / 1000)),
 };
+
+// Each policy store is a child of the plugin's store, which takes its LRU
+// size from the limiter options (the plugin-level `cache` is not inherited).
+// The option works at runtime but is missing from CreateRateLimitOptions.
+const policyStoreOptions = {
+  cache: env.RATE_LIMIT_CACHE_SIZE,
+} as CreateRateLimitOptions;
 
 // Policy limiters are created on first use from the plugin's decorator, one
 // store per policy and window, shared by every route in the policy.
@@ -131,45 +150,81 @@ function limitersFor(
       max: () => rateLimitSettings[policy].perMinute,
       timeWindow: MINUTE_MS,
       keyGenerator: rateLimitKey,
+      ...policyStoreOptions,
     }),
     factory({
       max: () => rateLimitSettings[policy].perDay,
       timeWindow: DAY_MS,
       keyGenerator: rateLimitKey,
+      ...policyStoreOptions,
     }),
   ]);
 }
 
+export type RateLimitRejection = {
+  limit: number;
+  retryAfterSeconds: number;
+  message: string;
+};
+
+/**
+ * Spends one unit of `policy`'s budget for the request's user. Returns null
+ * when allowed, or the rejection to report. Call it only once the costly work
+ * is certain to start (after access and conflict checks).
+ */
+export async function consumeRateLimit(
+  request: FastifyRequest,
+  policy: RateLimitPolicy
+): Promise<RateLimitRejection | null> {
+  const limiters = limitersFor(request.server, policy);
+  if (!limiters) return null;
+
+  // Minute window first: a burst rejected there does not use daily budget.
+  for (const limiter of limiters) {
+    const result = await limiter(request);
+    if (result.isAllowed || !result.isExceeded) continue;
+    return {
+      limit: result.max,
+      retryAfterSeconds: result.ttlInSeconds,
+      message: POLICY_MESSAGES[policy],
+    };
+  }
+  return null;
+}
+
+/** Response field for optional work skipped by a rejection (RateLimitedSkipSchema). */
+export function rateLimitedSkip(rejection: RateLimitRejection) {
+  return {
+    code: RATE_LIMITED_CODE,
+    message: rejection.message,
+    retryAfterSeconds: rejection.retryAfterSeconds,
+  };
+}
+
+/** Answers 429 with the rate-limit headers and body. */
+export function sendRateLimited(
+  reply: FastifyReply,
+  rejection: RateLimitRejection
+) {
+  return reply
+    .status(429)
+    .header("x-ratelimit-limit", rejection.limit)
+    .header("x-ratelimit-remaining", 0)
+    .header("x-ratelimit-reset", rejection.retryAfterSeconds)
+    .header("retry-after", rejection.retryAfterSeconds)
+    .send(rateLimitBody(rejection.message, rejection.retryAfterSeconds));
+}
+
 /**
  * preHandler enforcing a cost policy. Runs after auth and validation, so
- * malformed requests are rejected without spending budget. `when` limits
- * the check to requests that actually trigger the costly work.
+ * malformed requests are rejected without spending budget.
  */
-export function rateLimitPolicy(
-  policy: RateLimitPolicy,
-  options: { when?: (request: FastifyRequest) => boolean } = {}
-) {
+export function rateLimitPolicy(policy: RateLimitPolicy) {
   return async function rateLimitPolicyPreHandler(
     request: FastifyRequest,
     reply: FastifyReply
   ) {
-    if (options.when && !options.when(request)) return;
-    const limiters = limitersFor(request.server, policy);
-    if (!limiters) return;
-
-    // Minute window first: a burst rejected there does not use daily budget.
-    for (const limiter of limiters) {
-      const result = await limiter(request);
-      if (result.isAllowed) continue;
-      if (!result.isExceeded) continue;
-
-      return reply
-        .status(429)
-        .header("x-ratelimit-limit", result.max)
-        .header("x-ratelimit-remaining", 0)
-        .header("x-ratelimit-reset", result.ttlInSeconds)
-        .header("retry-after", result.ttlInSeconds)
-        .send(rateLimitBody(POLICY_MESSAGES[policy], result.ttlInSeconds));
-    }
+    const rejection = await consumeRateLimit(request, policy);
+    if (rejection) return sendRateLimited(reply, rejection);
   };
 }

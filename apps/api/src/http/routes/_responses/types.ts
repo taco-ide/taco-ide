@@ -44,6 +44,13 @@ export const ResponseSchema429 = BaseErrorResponseSchema.extend({
   code: z.literal("RATE_LIMITED").optional(),
   retryAfterSeconds: z.number().int().nonnegative().optional(),
 });
+// Success-response field for optional AI work that was skipped because the
+// user's rate-limit budget is exhausted (the main operation still succeeded).
+export const RateLimitedSkipSchema = z.object({
+  code: z.literal("RATE_LIMITED"),
+  message: z.string(),
+  retryAfterSeconds: z.number().int().nonnegative(),
+});
 export const ResponseSchema413 = BaseErrorResponseSchema;
 export const ResponseSchema500 = BaseErrorResponseSchema;
 export const ResponseSchema503 = BaseErrorResponseSchema;

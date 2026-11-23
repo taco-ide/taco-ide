@@ -1,7 +1,13 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { db } from "@repo/infra/db";
-import { challengeKnowledgeBase, knowledgeBase } from "@repo/infra/db/schema";
+import { eq } from "drizzle-orm";
+import {
+  challengeKnowledgeBase,
+  challengeReferenceSolution,
+  knowledgeBase,
+  submission,
+} from "@repo/infra/db/schema";
 import { getApp } from "../../../test/helpers/app";
 import { loginAs } from "../../../test/helpers/auth";
 import {
@@ -9,6 +15,7 @@ import {
   createChallenge,
   createClassroom,
   createOrg,
+  createSubmission,
   createTeachingAssistant,
   createUser,
   createWorkSession,
@@ -20,6 +27,9 @@ import { rateLimitSettings } from "../rate-limit";
 const mocks = vi.hoisted(() => ({
   agent: vi.fn(),
   generate: vi.fn(async () => {}),
+  startRefs: vi.fn(async (_id: string, kinds: string[]) => ({ claimed: kinds })),
+  runAutoReview: vi.fn(async () => {}),
+  startAutoReview: vi.fn(async () => ({ started: true })),
   searchKb: vi.fn(async () => []),
   searchChallengeKbs: vi.fn(async () => []),
 }));
@@ -37,7 +47,11 @@ vi.mock("../../../agents/teaching-assistant/agent", () => ({
 }));
 vi.mock("../../../agents/teachers-companion/reference-solution", () => ({
   generateReferenceSolutions: mocks.generate,
-  startReferenceSolutions: vi.fn(),
+  startReferenceSolutions: mocks.startRefs,
+}));
+vi.mock("../../../agents/teachers-companion/auto-review", () => ({
+  runAutoReview: mocks.runAutoReview,
+  startAutoReview: mocks.startAutoReview,
 }));
 
 const defaults = structuredClone(rateLimitSettings);
@@ -215,13 +229,14 @@ describe("API rate limits", () => {
     ).toBe(429);
   });
 
-  it("limits challenge creation only when it generates reference solutions", async () => {
+  it("saves challenges but skips reference solutions once the AI budget is spent", async () => {
     rateLimitSettings.aiGeneration = { perMinute: 1, perDay: 100 };
+    const headers = { cookie: cookies.teacher };
     const create = (generateReferenceSolutions?: boolean) =>
       app.inject({
         method: "POST",
         url: "/v1/challenges",
-        headers: { cookie: cookies.teacher },
+        headers,
         payload: {
           title: "Rate limited",
           difficulty: "easy",
@@ -232,13 +247,133 @@ describe("API rate limits", () => {
         },
       });
 
+    // Opting out spends no budget.
     expect((await create(false)).statusCode).toBe(201);
     expect((await create(false)).statusCode).toBe(201);
-    expect((await create()).statusCode).toBe(201);
-    const limited = await create();
+    const first = await create();
+    expect(first.statusCode).toBe(201);
+    expect(first.json().data.referenceSolutionsSkipped).toBeUndefined();
+
+    const skipped = await create();
+    expect(skipped.statusCode).toBe(201);
+    expect(skipped.json().data).toMatchObject({
+      title: "Rate limited",
+      referenceSolutionsSkipped: {
+        code: "RATE_LIMITED",
+        message: expect.any(String),
+        retryAfterSeconds: expect.any(Number),
+      },
+    });
+    expect(mocks.generate).toHaveBeenCalledTimes(1);
+
+    // Edits save too; only the generation is skipped.
+    const edited = await app.inject({
+      method: "PATCH",
+      url: `/v1/challenges/${challengeId}`,
+      headers,
+      payload: { title: "Edited", generateReferenceSolutions: true },
+    });
+    expect(edited.statusCode).toBe(200);
+    expect(edited.json().data).toMatchObject({
+      title: "Edited",
+      referenceSolutionsSkipped: { code: "RATE_LIMITED" },
+    });
+    expect(mocks.generate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not spend AI budget on regenerations refused as already running", async () => {
+    rateLimitSettings.aiGeneration = { perMinute: 1, perDay: 100 };
+    await db.insert(challengeReferenceSolution).values({
+      id: randomUUID(),
+      challengeId,
+      kind: "refined",
+      status: "running",
+    });
+    const regenerate = () =>
+      app.inject({
+        method: "POST",
+        url: `/v1/challenges/${challengeId}/reference-solutions/refined/regenerate`,
+        headers: { cookie: cookies.teacher },
+      });
+
+    expect((await regenerate()).statusCode).toBe(409);
+    expect((await regenerate()).statusCode).toBe(409);
+
+    await db
+      .update(challengeReferenceSolution)
+      .set({ status: "failed" })
+      .where(eq(challengeReferenceSolution.challengeId, challengeId));
+    expect((await regenerate()).statusCode).toBe(202);
+    const limited = await regenerate();
     expect(limited.statusCode).toBe(429);
     expect(limited.json()).toMatchObject({ code: "RATE_LIMITED" });
-    expect(mocks.generate).toHaveBeenCalledTimes(1);
+    expect(mocks.startRefs).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not spend AI budget on auto-review re-runs refused by the cooldown", async () => {
+    rateLimitSettings.aiGeneration = { perMinute: 1, perDay: 100 };
+    const ws = await endedSession();
+    const sub = await createSubmission({
+      workSessionId: ws.id,
+      challengeId,
+      studentUserId: student.id,
+    });
+    await db
+      .update(submission)
+      .set({ autoReviewStatus: "complete", autoReviewAt: new Date() })
+      .where(eq(submission.id, sub.id));
+    const rerun = () =>
+      app.inject({
+        method: "POST",
+        url: `/v1/challenges/${challengeId}/submissions/${sub.id}/auto-review`,
+        headers: { cookie: cookies.teacher },
+      });
+
+    for (let i = 0; i < 2; i++) {
+      const cooldown = await rerun();
+      expect(cooldown.statusCode).toBe(429);
+      expect(cooldown.json().code).toBeUndefined();
+    }
+
+    await db
+      .update(submission)
+      .set({ autoReviewAt: new Date(Date.now() - 120_000) })
+      .where(eq(submission.id, sub.id));
+    expect((await rerun()).statusCode).toBe(202);
+    expect((await rerun()).json()).toMatchObject({ code: "RATE_LIMITED" });
+    expect(mocks.startAutoReview).toHaveBeenCalledTimes(1);
+  });
+
+  it("limits submission auto-reviews per student without blocking the submit", async () => {
+    rateLimitSettings.aiGeneration = { perMinute: 1, perDay: 100 };
+    const submit = async () => {
+      // One work session per student and challenge.
+      const ch = await createChallenge({ classroomId, createdByUserId: teacher.id });
+      const ws = await createWorkSession({
+        userId: student.id,
+        challengeId: ch.id,
+        classroomId,
+        teachingAssistantId: taId,
+      });
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/work-sessions/${ws.id}/submit`,
+        headers: { cookie: cookies.student },
+        payload: {},
+      });
+      expect(res.statusCode).toBe(200);
+      const [row] = await db
+        .select()
+        .from(submission)
+        .where(eq(submission.id, res.json().data.submissionId));
+      return row!;
+    };
+
+    expect((await submit()).autoReviewStatus).toBe("pending");
+    const skipped = await submit();
+    expect(skipped.autoReviewStatus).toBe("failed");
+    expect(skipped.autoReviewError).toMatch(/skipped/i);
+    expect(mocks.runAutoReview).toHaveBeenCalledTimes(1);
   });
 
   it("limits knowledge base search per user across search routes", async () => {

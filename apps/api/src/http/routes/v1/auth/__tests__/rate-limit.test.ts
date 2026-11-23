@@ -1,13 +1,18 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Better Auth reads its limits when the auth module loads, and they are off
 // by default under NODE_ENV=test. Turn them on for this file only.
+// TRUST_PROXY stays unset (the default): no proxy is trusted.
 vi.hoisted(() => {
   process.env.AUTH_RATE_LIMIT_ENABLED = "true";
   process.env.AUTH_RATE_LIMIT_SIGN_IN_PER_MINUTE = "5";
+  delete process.env.TRUST_PROXY;
 });
 
 import { getApp } from "../../../../../test/helpers/app";
+import { rateLimitSettings } from "../../../../middlewares/rate-limit";
+
+const defaults = structuredClone(rateLimitSettings);
 
 describe("Better Auth rate limits", () => {
   let app: Awaited<ReturnType<typeof getApp>>;
@@ -16,11 +21,20 @@ describe("Better Auth rate limits", () => {
     app = await getApp();
   });
 
-  const signIn = (prefix: "/v1" | "/api", ip: string) =>
+  afterEach(() => {
+    Object.assign(rateLimitSettings, structuredClone(defaults));
+  });
+
+  const signIn = (
+    prefix: "/v1" | "/api",
+    remoteAddress: string,
+    headers: Record<string, string> = {}
+  ) =>
     app.inject({
       method: "POST",
       url: `${prefix}/auth/sign-in/email`,
-      headers: { "x-forwarded-for": ip },
+      remoteAddress,
+      headers,
       payload: { email: "nobody@test.local", password: "wrong-password" },
     });
 
@@ -37,15 +51,36 @@ describe("Better Auth rate limits", () => {
     // Other clients have their own budget, and a client-sent
     // x-taco-client-ip header is overwritten by the bridge.
     expect((await signIn("/v1", "203.0.113.11")).statusCode).toBe(401);
-    const spoofed = await app.inject({
-      method: "POST",
-      url: "/v1/auth/sign-in/email",
-      headers: {
-        "x-forwarded-for": "203.0.113.10",
-        "x-taco-client-ip": "198.51.100.1",
-      },
-      payload: { email: "nobody@test.local", password: "wrong-password" },
+    const spoofed = await signIn("/v1", "203.0.113.10", {
+      "x-taco-client-ip": "198.51.100.1",
     });
     expect(spoofed.statusCode).toBe(429);
+  });
+
+  it("ignores X-Forwarded-For when no proxy is trusted", async () => {
+    for (let i = 0; i < 5; i++) {
+      const res = await signIn("/v1", "203.0.113.20", {
+        "x-forwarded-for": `198.51.100.${i}`,
+      });
+      expect(res.statusCode).toBe(401);
+    }
+    const limited = await signIn("/v1", "203.0.113.20", {
+      "x-forwarded-for": "198.51.100.99",
+    });
+    expect(limited.statusCode).toBe(429);
+  });
+
+  it("keys anonymous API requests by socket address, not X-Forwarded-For", async () => {
+    rateLimitSettings.globalPerMinute = 2;
+    const status = (xff: string) =>
+      app.inject({
+        url: "/v1/status",
+        remoteAddress: "203.0.113.30",
+        headers: { "x-forwarded-for": xff },
+      });
+
+    expect((await status("198.51.100.1")).statusCode).toBe(200);
+    expect((await status("198.51.100.2")).statusCode).toBe(200);
+    expect((await status("198.51.100.3")).statusCode).toBe(429);
   });
 });

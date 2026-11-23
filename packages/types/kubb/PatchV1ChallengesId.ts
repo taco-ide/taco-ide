@@ -18,6 +18,12 @@ export const patchV1ChallengesId200SuccessEnum = {
 
 export type PatchV1ChallengesId200SuccessEnum = (typeof patchV1ChallengesId200SuccessEnum)[keyof typeof patchV1ChallengesId200SuccessEnum];
 
+export const referenceSolutionsSkippedCodeEnum2 = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type ReferenceSolutionsSkippedCodeEnum2 = (typeof referenceSolutionsSkippedCodeEnum2)[keyof typeof referenceSolutionsSkippedCodeEnum2];
+
 /**
  * @description Default Response
 */
@@ -62,6 +68,24 @@ export type PatchV1ChallengesId200 = {
          * @type string
         */
         message: string;
+        /**
+         * @type object | undefined
+        */
+        referenceSolutionsSkipped?: {
+            /**
+             * @type string
+            */
+            code: ReferenceSolutionsSkippedCodeEnum2;
+            /**
+             * @type string
+            */
+            message: string;
+            /**
+             * @minLength 0
+             * @type integer
+            */
+            retryAfterSeconds: number;
+        };
     };
     /**
      * @type object | undefined
@@ -190,47 +214,6 @@ export type PatchV1ChallengesId404 = {
     };
 };
 
-export const patchV1ChallengesId429SuccessEnum = {
-    "false": false
-} as const;
-
-export type PatchV1ChallengesId429SuccessEnum = (typeof patchV1ChallengesId429SuccessEnum)[keyof typeof patchV1ChallengesId429SuccessEnum];
-
-export const patchV1ChallengesId429CodeEnum = {
-    "RATE_LIMITED": "RATE_LIMITED"
-} as const;
-
-export type PatchV1ChallengesId429CodeEnum = (typeof patchV1ChallengesId429CodeEnum)[keyof typeof patchV1ChallengesId429CodeEnum];
-
-/**
- * @description Default Response
-*/
-export type PatchV1ChallengesId429 = {
-    /**
-     * @type boolean
-    */
-    success: PatchV1ChallengesId429SuccessEnum;
-    /**
-     * @type string
-    */
-    message: string;
-    /**
-     * @type object | undefined
-    */
-    errors?: {
-        [key: string]: (string[] | string);
-    };
-    /**
-     * @type string | undefined
-    */
-    code?: PatchV1ChallengesId429CodeEnum;
-    /**
-     * @minLength 0
-     * @type integer | undefined
-    */
-    retryAfterSeconds?: number;
-};
-
 export const patchV1ChallengesIdMutationRequestDifficultyEnum = {
     "easy": "easy",
     "medium": "medium",
@@ -275,5 +258,5 @@ export type PatchV1ChallengesIdMutation = {
     Response: PatchV1ChallengesId200;
     Request: PatchV1ChallengesIdMutationRequest;
     PathParams: PatchV1ChallengesIdPathParams;
-    Errors: PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404 | PatchV1ChallengesId429;
+    Errors: PatchV1ChallengesId400 | PatchV1ChallengesId401 | PatchV1ChallengesId403 | PatchV1ChallengesId404;
 };
