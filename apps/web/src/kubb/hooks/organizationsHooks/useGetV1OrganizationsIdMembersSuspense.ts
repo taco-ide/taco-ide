@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembersQueryParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, UseSuspenseQueryOptions, UseSuspenseQueryResult } from "@tanstack/react-query";
-import type { GetV1OrganizationsIdMembersQueryResponse, GetV1OrganizationsIdMembersPathParams, GetV1OrganizationsIdMembersQueryParams, GetV1OrganizationsIdMembers401, GetV1OrganizationsIdMembers403, GetV1OrganizationsIdMembers404 } from "../../../../../../packages/types/kubb/GetV1OrganizationsIdMembers.ts";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 
 export const getV1OrganizationsIdMembersSuspenseQueryKey = (id: GetV1OrganizationsIdMembersPathParams["id"], params?: GetV1OrganizationsIdMembersQueryParams) => [{ url: '/v1/organizations/:id/members', params: {id:id} }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1OrganizationsIdMembersSuspenseQueryKey = (id: GetV1Organizatio
 export type GetV1OrganizationsIdMembersSuspenseQueryKey = ReturnType<typeof getV1OrganizationsIdMembersSuspenseQueryKey>
 
 /**
- * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ in the org and the id must match the active organization.
+ * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ member of this organization (the active organization is irrelevant).
  * @summary List organization members
  * {@link /v1/organizations/:id/members}
  */
@@ -38,7 +38,7 @@ export function getV1OrganizationsIdMembersSuspenseQueryOptions(id: GetV1Organiz
 }
 
 /**
- * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ in the org and the id must match the active organization.
+ * @description List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ member of this organization (the active organization is irrelevant).
  * @summary List organization members
  * {@link /v1/organizations/:id/members}
  */

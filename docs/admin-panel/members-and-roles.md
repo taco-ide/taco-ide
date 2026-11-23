@@ -76,8 +76,9 @@ GET /v1/organizations/:id/members
 Quem pode chamar:
 
 - Platform Admin: qualquer organização.
-- Demais usuários: precisam ser `teacher`+ e a `:id` deve coincidir com a
-  `activeOrganizationId` da sessão.
+- Demais usuários: precisam ser membros `teacher`+ da organização `:id`
+  (`requirePlatformAdminOrOrgRole("teacher")`). A organização ativa da sessão
+  não importa (#118); org inexistente retorna `404`.
 
 ### Querystring
 
@@ -155,8 +156,9 @@ PUT /v1/organizations/:id/members/:userId
 Quem pode chamar:
 
 - Platform Admin (bypass total).
-- Caller com `member.role >= coordinator` cuja `activeOrganizationId` é
-  exatamente `:id`.
+- Caller com `member.role >= coordinator` na organização `:id`
+  (`requirePlatformAdminOrOrgRole("coordinator")`), independentemente da
+  organização ativa da sessão (#118).
 
 ### Body
 
@@ -314,7 +316,8 @@ Platform Admin). Retorna `id`, `name`, `email`, `isPlatformAdmin`,
 | Ação                                | Código | Cenário                                                                          |
 | ----------------------------------- | ------ | -------------------------------------------------------------------------------- |
 | Listar membros                      | `401`  | Sem sessão.                                                                      |
-|                                     | `403`  | Não é Platform Admin e a org não bate com `activeOrganizationId` ou role < teacher. |
+|                                     | `403`  | Não é Platform Admin e não tem role >= teacher na org `:id`.                     |
+|                                     | `404`  | Organização não encontrada.                                                      |
 | Vincular existente                  | `403`  | Caller não é Platform Admin.                                                     |
 |                                     | `404`  | Organização ou usuário não encontrado.                                           |
 |                                     | `409`  | Usuário já é membro (inclui corrida pelo `UNIQUE`).                              |

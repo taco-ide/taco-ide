@@ -9,7 +9,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import {
   knowledgeBaseDocument,
@@ -32,7 +31,6 @@ export async function deleteDocumentRoute(app: FastifyTypedInstance) {
   }>(
     "/:docId",
     {
-      preHandler: [requirePermission("knowledgeBase", "delete")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Delete knowledge base document",

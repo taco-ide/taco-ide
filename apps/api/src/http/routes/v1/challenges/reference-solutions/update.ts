@@ -9,7 +9,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { challengeReferenceSolution } from "@repo/infra/db/schema";
 import {
@@ -53,7 +52,6 @@ export async function updateRoute(app: FastifyTypedInstance) {
   }>(
     "/:kind",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["challenges/reference-solutions"],
         summary: "Manually override reference solution",

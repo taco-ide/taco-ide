@@ -10,7 +10,6 @@ import {
   ResponseSchema429,
   ResponseSchema500,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { submission, autoReviewStatusEnum } from "@repo/infra/db/schema";
 import {
@@ -38,7 +37,6 @@ export async function rerunAutoReviewRoute(app: FastifyTypedInstance) {
   app.post<{ Params: z.infer<typeof ParamsSchema> }>(
     "/:submissionId/auto-review",
     {
-      preHandler: [requirePermission("challenge", "update")],
       schema: {
         tags: ["submissions"],
         summary: "Re-run auto review",

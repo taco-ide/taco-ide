@@ -12,7 +12,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../_responses/types";
-import { requirePermission } from "../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { knowledgeBase } from "@repo/infra/db/schema";
 
@@ -48,7 +47,6 @@ export async function createKnowledgeBaseRoute(app: FastifyTypedInstance) {
   }>(
     "/",
     {
-      preHandler: [requirePermission("knowledgeBase", "create")],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Create knowledge base",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { and, eq, ilike, inArray, or } from "drizzle-orm";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -7,7 +8,6 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { hasMinimumRole } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import {
   invitation,
@@ -53,11 +53,12 @@ export async function listMembersRoute(app: FastifyTypedInstance) {
   }>(
     "/members",
     {
+      preHandler: requirePlatformAdminOrOrgRole("teacher"),
       schema: {
         tags: ["organizations"],
         summary: "List organization members",
         description:
-          "List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ in the org and the id must match the active organization.",
+          "List members of an organization. Platform admins can list members of any organization; otherwise the caller must be a teacher+ member of this organization (the active organization is irrelevant).",
         params: ListMembersParamsSchema,
         querystring: ListMembersQuerySchema,
         response: {
@@ -79,22 +80,6 @@ export async function listMembersRoute(app: FastifyTypedInstance) {
 
       const { id: organizationId } = request.params;
       const { q, role: roleFilter } = request.query;
-
-      // Platform admins bypass the active-organization + role check.
-      if (!usr.isPlatformAdmin) {
-        if (organizationId !== usr.activeOrganizationId) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Organization ID must match your active organization",
-          });
-        }
-        if (!usr.role || !hasMinimumRole(usr.role, "teacher")) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Insufficient role permissions",
-          });
-        }
-      }
 
       const conditions = [eq(member.organizationId, organizationId)];
 

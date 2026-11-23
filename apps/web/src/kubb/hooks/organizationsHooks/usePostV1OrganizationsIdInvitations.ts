@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1OrganizationsIdInvitationsMutationRequest, PostV1OrganizationsIdInvitationsMutationResponse, PostV1OrganizationsIdInvitationsPathParams, PostV1OrganizationsIdInvitations400, PostV1OrganizationsIdInvitations401, PostV1OrganizationsIdInvitations403, PostV1OrganizationsIdInvitations404, PostV1OrganizationsIdInvitations409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdInvitations.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1OrganizationsIdInvitationsMutationRequest, PostV1OrganizationsIdInvitationsMutationResponse, PostV1OrganizationsIdInvitationsPathParams, PostV1OrganizationsIdInvitations400, PostV1OrganizationsIdInvitations401, PostV1OrganizationsIdInvitations403, PostV1OrganizationsIdInvitations409 } from "../../../../../../packages/types/kubb/PostV1OrganizationsIdInvitations.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1OrganizationsIdInvitationsMutationKey = () => [{ url: '/v1/organizations/:id/invitations' }] as const
@@ -14,7 +14,7 @@ export const postV1OrganizationsIdInvitationsMutationKey = () => [{ url: '/v1/or
 export type PostV1OrganizationsIdInvitationsMutationKey = ReturnType<typeof postV1OrganizationsIdInvitationsMutationKey>
 
 /**
- * @description Invite a user to the organization by email. Requires coordinator+ role.
+ * @description Invite a user to the organization by email. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).
  * @summary Create invitation
  * {@link /v1/organizations/:id/invitations}
  */
@@ -23,18 +23,18 @@ export async function postV1OrganizationsIdInvitations(id: PostV1OrganizationsId
   
   const requestData = data  
   
-  const res = await request<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations409>, PostV1OrganizationsIdInvitationsMutationRequest>({ method : "POST", url : `/v1/organizations/${id}/invitations`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations404 | PostV1OrganizationsIdInvitations409>, PostV1OrganizationsIdInvitationsMutationRequest>({ method : "POST", url : `/v1/organizations/${id}/invitations`, data : requestData, ... requestConfig })  
   return res.data
 }
 
 /**
- * @description Invite a user to the organization by email. Requires coordinator+ role.
+ * @description Invite a user to the organization by email. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).
  * @summary Create invitation
  * {@link /v1/organizations/:id/invitations}
  */
 export function usePostV1OrganizationsIdInvitations<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations409>, {id: PostV1OrganizationsIdInvitationsPathParams["id"], data: PostV1OrganizationsIdInvitationsMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations404 | PostV1OrganizationsIdInvitations409>, {id: PostV1OrganizationsIdInvitationsPathParams["id"], data: PostV1OrganizationsIdInvitationsMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1OrganizationsIdInvitationsMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1OrganizationsIdInvitations<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1OrganizationsIdInvitationsMutationKey()
 
-  return useMutation<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations409>, {id: PostV1OrganizationsIdInvitationsPathParams["id"], data: PostV1OrganizationsIdInvitationsMutationRequest}, TContext>({
+  return useMutation<PostV1OrganizationsIdInvitationsMutationResponse, ResponseErrorConfig<PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations404 | PostV1OrganizationsIdInvitations409>, {id: PostV1OrganizationsIdInvitationsPathParams["id"], data: PostV1OrganizationsIdInvitationsMutationRequest}, TContext>({
     mutationFn: async({ id, data }) => {
       return postV1OrganizationsIdInvitations(id, data, config)
     },

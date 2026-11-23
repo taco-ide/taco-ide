@@ -135,6 +135,32 @@ export type PostV1OrganizationsIdInvitations403 = {
     };
 };
 
+export const postV1OrganizationsIdInvitations404SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1OrganizationsIdInvitations404SuccessEnum = (typeof postV1OrganizationsIdInvitations404SuccessEnum)[keyof typeof postV1OrganizationsIdInvitations404SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1OrganizationsIdInvitations404 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1OrganizationsIdInvitations404SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+};
+
 export const postV1OrganizationsIdInvitations409SuccessEnum = {
     "false": false
 } as const;
@@ -187,5 +213,5 @@ export type PostV1OrganizationsIdInvitationsMutation = {
     Response: PostV1OrganizationsIdInvitations201;
     Request: PostV1OrganizationsIdInvitationsMutationRequest;
     PathParams: PostV1OrganizationsIdInvitationsPathParams;
-    Errors: PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations409;
+    Errors: PostV1OrganizationsIdInvitations400 | PostV1OrganizationsIdInvitations401 | PostV1OrganizationsIdInvitations403 | PostV1OrganizationsIdInvitations404 | PostV1OrganizationsIdInvitations409;
 };

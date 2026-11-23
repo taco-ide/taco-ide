@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
+import { requirePlatformAdminOrOrgRole } from "../../../../middlewares/authorization";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -8,7 +9,7 @@ import {
   ResponseSchema404,
 } from "../../../_responses/types";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
-import { auth, hasMinimumRole } from "@repo/infra/auth";
+import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { invitation } from "@repo/infra/db/schema";
 
@@ -33,11 +34,12 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
   }>(
     "/invitations/:invitationId",
     {
+      preHandler: requirePlatformAdminOrOrgRole("coordinator"),
       schema: {
         tags: ["organizations"],
         summary: "Cancel invitation",
         description:
-          "Cancel a pending invitation. Requires coordinator+ role.",
+          "Cancel a pending invitation. Requires platform admin or coordinator+ membership in this organization (the active organization is irrelevant).",
         params: OrgInvitationParamsSchema,
         response: {
           200: DeleteInvitationResponseSchema,
@@ -57,22 +59,6 @@ export async function deleteInvitationRoute(app: FastifyTypedInstance) {
       }
 
       const { id: organizationId, invitationId } = request.params;
-
-      // Platform admins bypass the active-organization + role check.
-      if (!usr.isPlatformAdmin) {
-        if (organizationId !== usr.activeOrganizationId) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Organization ID must match your active organization",
-          });
-        }
-        if (!usr.role || !hasMinimumRole(usr.role, "coordinator")) {
-          return reply.status(403).send({
-            success: false as const,
-            message: "Insufficient role permissions",
-          });
-        }
-      }
 
       const inv = await db
         .select({ id: invitation.id })

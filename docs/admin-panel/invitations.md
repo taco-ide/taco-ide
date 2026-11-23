@@ -70,7 +70,7 @@ Estados terminais (`accepted`, `rejected`, `canceled`, `expired`) nao sao reaber
 
 Coordinator+ inclui `coordinator` e `admin` (hierarquia em `packages/infra/src/auth/permissions.ts`: `student=0`, `teacher=1`, `coordinator=2`, `admin=3`).
 
-As rotas `GET` e `POST .../resend` usam o middleware `requirePlatformAdminOrOrgRole("coordinator")` que tambem valida a existencia da organizacao (retorna 404 antes do handler se a org nao existe). As rotas `POST` (criar) e `DELETE` fazem a checagem inline com `hasMinimumRole(usr.role, "coordinator")` e tambem exigem que `organizationId === usr.activeOrganizationId` para nao-platform-admins.
+Todas as rotas de convite (`GET`, `POST`, `DELETE` e `POST .../resend`) usam o middleware `requirePlatformAdminOrOrgRole("coordinator")`, que valida a existencia da organizacao (404 antes do handler) e o papel do caller na organizacao `:id`. A organizacao ativa da sessao nao importa (#118).
 
 ---
 
@@ -158,7 +158,8 @@ Codigo em `apps/api/src/http/routes/v1/organizations/invitations/create.ts:175-1
 | `201`  | Convite criado com sucesso                                                                   |
 | `400`  | Body invalido (Zod), `role` invalido, ou erro generico do Better Auth                        |
 | `401`  | Sem sessao                                                                                   |
-| `403`  | Nao e Platform Admin e nao tem papel >= `coordinator` na org, ou `id` != `activeOrganizationId` |
+| `403`  | Nao e Platform Admin e nao tem papel >= `coordinator` na org `:id`                           |
+| `404`  | Organizacao inexistente                                                                      |
 | `409`  | Convite pendente duplicado, OU usuario ja membro                                              |
 
 ### 4.2 `GET /v1/organizations/:id/invitations` — listar
@@ -295,7 +296,7 @@ Renova o `expires_at` do convite para `NOW() + 7 dias` (`INVITATION_TTL_MS`) e r
 4. `UPDATE invitation SET expires_at = NOW() + 7d WHERE id = ? AND organization_id = ? AND status = 'pending'` — a clausula `status = 'pending'` defende contra TOCTOU (se outro caller transicionou o convite entre o `SELECT` e o `UPDATE`, o `RETURNING` vem vazio e respondemos `409`).
 5. Apos commit, dispara `sendInvitationEmail` fora da transacao (para nao manter lock durante a chamada HTTP ao Resend). Se o envio falhar, o `expires_at` ja foi atualizado e respondemos `500` com mensagem clara — o operador pode reenviar; a UI invalida a lista.
 
-**Helper de autorizacao**: `requirePlatformAdminOrOrgRole("coordinator")` — mesmo padrao da rota `GET`. Diferente das rotas `POST` (criar) e `DELETE`, nao exigimos `organizationId === activeOrganizationId` para nao-platform-admins porque o middleware ja faz a checagem por `membership` no banco (mais robusto contra sessoes desatualizadas).
+**Helper de autorizacao**: `requirePlatformAdminOrOrgRole("coordinator")` — mesmo padrao da rota `GET`. Como nas demais rotas de convite, nao exigimos `organizationId === activeOrganizationId`: o middleware faz a checagem por `membership` no banco (mais robusto contra sessoes desatualizadas).
 
 **Codigos de resposta**
 
@@ -484,15 +485,15 @@ Mensagens estaveis emitidas pelo backend. A UI usa regex tolerantes (com e sem a
 | `POST`   | 400    | `Failed to create invitation`                                                     | Erro generico no caminho Platform Admin (apos retries)      |
 | `POST`   | 400    | `Invalid role`                                                                    | `role` fora do enum                                         |
 | `POST`   | 401    | `Not authenticated`                                                               | Sem sessao                                                  |
-| `POST`   | 403    | `Organization ID must match your active organization`                             | `:id` != `activeOrganizationId` (nao platform admin)        |
-| `POST`   | 403    | `Insufficient role permissions`                                                   | Papel < `coordinator` (nao platform admin)                  |
+| `POST`   | 403    | `Platform admin or coordinator of this organization required`                     | Papel < `coordinator` na org `:id` (nao platform admin)     |
+| `POST`   | 404    | `Organization not found`                                                          | Org inexistente                                             |
 | `POST`   | 409    | `A pending invitation already exists for this email in this organization.`        | Convite pendente duplicado                                  |
 | `POST`   | 409    | `User is already a member of this organization.`                                  | Email ja vinculado a um membro ativo                        |
 | `GET`    | 401    | `Not authenticated`                                                               | —                                                           |
 | `GET`    | 403    | `Platform admin or coordinator of this organization required`                     | Permissao insuficiente                                      |
 | `GET`    | 404    | `Organization not found`                                                          | Org inexistente                                             |
 | `DELETE` | 401    | `Not authenticated`                                                               | —                                                           |
-| `DELETE` | 403    | `Organization ID must match your active organization` / `Insufficient role permissions` | — |
+| `DELETE` | 403    | `Platform admin or coordinator of this organization required`                     | Papel < `coordinator` na org `:id`                          |
 | `DELETE` | 404    | `Invitation not found`                                                            | Convite inexistente ou pertencente a outra org              |
 | `DELETE` | 400    | `Failed to cancel invitation`                                                     | Erro do Better Auth no caminho coordinator+                 |
 | `POST .../resend` | 401 | `Not authenticated`                                                            | —                                                           |
