@@ -12,6 +12,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useApiErrorMessage } from "@/hooks/useApiErrorMessage";
 
 interface ReferenceSolutionsPanelProps {
   challengeId: string;
@@ -23,6 +24,7 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
   const t = useTranslations("challenge");
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const apiErrorMessage = useApiErrorMessage();
   const { mutateAsync, isPending } =
     usePostV1ChallengesChallengeidReferenceSolutionsKindRegenerate();
 
@@ -37,8 +39,8 @@ function EmptyReferenceSolutions({ challengeId }: { challengeId: string }) {
         queryKey:
           getV1ChallengesChallengeidReferenceSolutionsQueryKey(challengeId),
       });
-    } catch (err: any) {
-      setError(err?.message || t("referenceSolutions.panel.generateError"));
+    } catch (err) {
+      setError(apiErrorMessage(err, t("referenceSolutions.panel.generateError")));
     }
   };
 

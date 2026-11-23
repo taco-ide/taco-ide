@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RoleGuard } from "@/components/guards/RoleGuard";
+import { useApiErrorMessage } from "@/hooks/useApiErrorMessage";
 import { ReferenceSolutionsPanel } from "@/components/challenge/_components/ReferenceSolutionsPanel";
 import { AutoReviewStructuredView } from "./_components/AutoReviewStructuredView";
 import {
@@ -54,6 +55,7 @@ function AccessDenied() {
 function SubmissionDetailContent() {
   const t = useTranslations("submissions");
   const c = useTranslations("common");
+  const apiErrorMessage = useApiErrorMessage();
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -121,8 +123,11 @@ function SubmissionDetailContent() {
         const message = (err as { message?: string })?.message;
 
         if (status === 429 && message) {
-          // Already includes "Aguarde Xs antes de tentar novamente"
-          setAutoReviewFeedback({ type: "error", message });
+          // Rate limit: translated text; cooldown: server's "Aguarde Xs…".
+          setAutoReviewFeedback({
+            type: "error",
+            message: apiErrorMessage(err, message),
+          });
         } else if (status === 409) {
           setAutoReviewFeedback({
             type: "error",

@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { useRemarkSync } from "react-remark";
 import { useTranslations } from "next-intl";
 import { useProblem } from "@/contexts/ProblemContext";
+import { useApiErrorMessage } from "@/hooks/useApiErrorMessage";
 import { useCodeEditorStore } from "@/store/useCodeEditorStore";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,7 @@ function ChatPanel() {
   const [input, setInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const apiErrorMessage = useApiErrorMessage();
   const [optimisticUserMessage, setOptimisticUserMessage] = useState<string | null>(null);
 
   const messages = useMemo(() => {
@@ -98,7 +100,7 @@ function ChatPanel() {
         stdout: error || output || undefined,
       });
     } catch (err) {
-      setChatError(err instanceof Error ? err.message : t("errors.sendMessage"));
+      setChatError(apiErrorMessage(err, t("errors.sendMessage")));
     } finally {
       setOptimisticUserMessage(null);
       setIsGenerating(false);
