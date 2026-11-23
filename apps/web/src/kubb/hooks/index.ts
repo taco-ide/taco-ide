@@ -33,6 +33,8 @@ export type { PostV1ClassroomsMutationKey } from "./classroomsHooks/usePostV1Cla
 export type { PostV1ClassroomsIdEnrollMutationKey } from "./classroomsHooks/usePostV1ClassroomsIdEnroll.ts";
 export type { PostV1ClassroomsIdUnenrollMutationKey } from "./classroomsHooks/usePostV1ClassroomsIdUnenroll.ts";
 export type { PutV1ClassroomsIdMutationKey } from "./classroomsHooks/usePutV1ClassroomsId.ts";
+export type { GetV1InvitationsIdQueryKey } from "./invitationsHooks/useGetV1InvitationsId.ts";
+export type { GetV1InvitationsIdSuspenseQueryKey } from "./invitationsHooks/useGetV1InvitationsIdSuspense.ts";
 export type { DeleteV1KnowledgeBasesKbidMutationKey } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbid.ts";
 export type { DeleteV1KnowledgeBasesKbidDocumentsDocidMutationKey } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbidDocumentsDocid.ts";
 export type { DeleteV1KnowledgeBasesKbidEntriesEntryidMutationKey } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbidEntriesEntryid.ts";
@@ -136,6 +138,8 @@ export { postV1ClassroomsMutationKey, postV1Classrooms, usePostV1Classrooms } fr
 export { postV1ClassroomsIdEnrollMutationKey, postV1ClassroomsIdEnroll, usePostV1ClassroomsIdEnroll } from "./classroomsHooks/usePostV1ClassroomsIdEnroll.ts";
 export { postV1ClassroomsIdUnenrollMutationKey, postV1ClassroomsIdUnenroll, usePostV1ClassroomsIdUnenroll } from "./classroomsHooks/usePostV1ClassroomsIdUnenroll.ts";
 export { putV1ClassroomsIdMutationKey, putV1ClassroomsId, usePutV1ClassroomsId } from "./classroomsHooks/usePutV1ClassroomsId.ts";
+export { getV1InvitationsIdQueryKey, getV1InvitationsId, getV1InvitationsIdQueryOptions, useGetV1InvitationsId } from "./invitationsHooks/useGetV1InvitationsId.ts";
+export { getV1InvitationsIdSuspenseQueryKey, getV1InvitationsIdSuspense, getV1InvitationsIdSuspenseQueryOptions, useGetV1InvitationsIdSuspense } from "./invitationsHooks/useGetV1InvitationsIdSuspense.ts";
 export { deleteV1KnowledgeBasesKbidMutationKey, deleteV1KnowledgeBasesKbid, useDeleteV1KnowledgeBasesKbid } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbid.ts";
 export { deleteV1KnowledgeBasesKbidDocumentsDocidMutationKey, deleteV1KnowledgeBasesKbidDocumentsDocid, useDeleteV1KnowledgeBasesKbidDocumentsDocid } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbidDocumentsDocid.ts";
 export { deleteV1KnowledgeBasesKbidEntriesEntryidMutationKey, deleteV1KnowledgeBasesKbidEntriesEntryid, useDeleteV1KnowledgeBasesKbidEntriesEntryid } from "./knowledge-basesHooks/useDeleteV1KnowledgeBasesKbidEntriesEntryid.ts";

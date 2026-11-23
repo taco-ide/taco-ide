@@ -1,6 +1,6 @@
 # Convites — Admin Panel
 
-Documentacao do fluxo de convites de membros de organizacao no painel admin do TACO-IDE. Cobre a aba "Convites" da UI, os tres endpoints REST (criar, listar e cancelar), a tabela `invitation` no banco e o disparo de email de convite.
+Documentacao do fluxo de convites de membros de organizacao no painel admin do TACO-IDE. Cobre a aba "Convites" da UI, os endpoints REST (criar, listar, cancelar, reenviar e a previa publica), a tabela `invitation` no banco, o disparo de email de convite e a pagina de aceite (`/auth/accept-invitation`).
 
 > Escopo: integracao adicionada em `32b61173` (UI + endpoints `GET`/`DELETE`) e fix de idempotencia 409 em `45799967`. As decisoes de papel e dominio que envolvem a aba "Convites" estao em [`organizations.md`](./organizations.md).
 
@@ -43,8 +43,8 @@ Nao existe `UNIQUE` em `(email, organization_id, status)` no schema atual. A uni
 | Status     | Significado                                                              | Origem                              |
 | ---------- | ------------------------------------------------------------------------ | ----------------------------------- |
 | `pending`  | Aguardando aceite. Aparece na listagem default da UI.                    | Default ao inserir                  |
-| `accepted` | Convite aceito pelo destinatario. Linha permanece para auditoria.        | `auth.api.acceptInvitation`         |
-| `rejected` | Convite recusado pelo destinatario.                                      | `auth.api.rejectInvitation`         |
+| `accepted` | Convite aceito pelo destinatario. Linha permanece para auditoria.        | `authClient.organization.acceptInvitation` na pagina de aceite (secao 6.7) |
+| `rejected` | Convite recusado pelo destinatario.                                      | `authClient.organization.rejectInvitation` na pagina de aceite (secao 6.7) |
 | `canceled` | Cancelado por coordinator+/platform admin via `DELETE`, ou cancelamento em massa quando a organizacao e desativada (`PATCH /v1/organizations/:id/active` com `isActive=false`). | `delete.ts` / `setActive.ts` |
 | `expired`  | Passou de `expires_at` sem aceite.                                       | **Lazy expiration**: `GET /v1/organizations/:id/invitations` faz `UPDATE invitation SET status = 'expired' WHERE status = 'pending' AND expires_at < NOW()` antes de cada listagem (race-safe via predicate). Nao ha cron job dedicado. |
 
@@ -330,6 +330,44 @@ HTTP/1.1 409 Conflict
 {"success":false,"message":"Cannot resend invitation in status canceled."}
 ```
 
+### 4.5 `GET /v1/invitations/:id` — previa publica
+
+Rota **publica** (sem sessao) usada pela pagina de aceite para mostrar o convite antes do login. Arquivo: `apps/api/src/http/routes/v1/invitations/getById.ts`.
+
+Por que nao usar `organization.getInvitation` do Better Auth: ele exige sessao, devolve o mesmo erro para convites expirados, cancelados e aceitos, e falha com `INVITER_IS_NO_LONGER_A_MEMBER` quando quem convidou nao e membro da organizacao — o caso normal de convites criados por Platform Admin (secao 4.1).
+
+O `id` do convite e um valor aleatorio entregue por email; a rota so devolve o que o proprio email ja contem, e so enquanto o convite esta `pending`. Aceitar e recusar continuam no Better Auth, que confere o email da sessao.
+
+Somente `GET`/`HEAD` em `/v1/invitations/:id` sao publicos (`isPublicInvitationPreview` em `apps/api/src/http/server.ts`); qualquer outra rota futura sob `/v1/invitations` continua autenticada.
+
+Resposta `200` para convite pendente:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1f6a...",
+    "status": "pending",
+    "organizationName": "Escola Exemplo",
+    "email": "pessoa@exemplo.edu.br",
+    "role": "teacher",
+    "expiresAt": "2026-05-24T18:42:11.000Z",
+    "inviterName": "Coord. Demo"
+  }
+}
+```
+
+Depois que o convite deixa de estar pendente, a resposta traz so `id`, `status` e `organizationName` — um link antigo deixa de expor o email convidado, o papel e quem convidou:
+
+```json
+{
+  "success": true,
+  "data": { "id": "1f6a...", "status": "expired", "organizationName": "Escola Exemplo" }
+}
+```
+
+`status` e calculado na leitura: `pending`, `accepted`, `rejected`, `canceled` ou `expired`. Um convite `pending` com `expires_at` no passado vem como `expired`; um convite `pending` de organizacao desativada vem como `canceled`. Convite inexistente: `404`.
+
 ---
 
 ## 5. UI
@@ -473,6 +511,40 @@ O envio e desacoplado da criacao: falhas no transporte **nao revertem** a criaca
 
 Quando o email original nao chega (caixa de spam, endereco temporariamente fora do ar, etc.), o operador pode usar o endpoint dedicado `POST /v1/organizations/:id/invitations/:invitationId/resend` (secao 4.4) ou o botao "Reenviar" da tabela (secao 5.3). Reenviar **reaproveita o registro existente** — apenas renova `expires_at` e re-dispara o email. Apos um terminal (`accepted` / `rejected` / `canceled` / `expired`), criar um novo convite e o caminho correto.
 
+### 6.7 Pagina de aceite (`/auth/accept-invitation?id=...`)
+
+Destino do botao do email. Arquivos: `apps/web/src/app/auth/accept-invitation/page.tsx` e `apps/web/src/components/accept-invitation.tsx`. Textos em EN e PT-BR no namespace `acceptInvitation`.
+
+Fluxo:
+
+1. A pagina le a previa publica (secao 4.5) e a sessao atual (`useSession`).
+2. **Sem sessao**: mostra organizacao, papel, email convidado, quem convidou e a expiracao, com os botoes "Entrar para aceitar" e "Criar conta". Ambos levam a `/auth/login` ou `/auth/signup` com `?redirect=/auth/accept-invitation?id=...&email=...`; o email vem preenchido.
+3. **Cadastro novo**: se o Better Auth ja abre a sessao no cadastro (sem verificacao de email obrigatoria, ou seja, fora de producao), o formulario volta direto para a pagina de aceite. Em producao (`requireEmailVerification`), a pessoa vai para `/auth/verify`; o link de verificacao usa o mesmo `redirect` como `callbackURL` e, com `autoSignInAfterVerification`, ela volta logada para a pagina de aceite.
+4. **Login**: o formulario volta para o `redirect` apos entrar.
+5. **Logado com o email convidado**: botoes "Aceitar convite" e "Recusar". Aceitar chama `authClient.organization.acceptInvitation` (cria o `member` com o papel do convite e marca o convite `accepted`), depois `organization.setActive` (atualiza o cookie de sessao em cache) e redireciona para `/dashboard`. Recusar chama `rejectInvitation` e a pagina passa a mostrar "Convite recusado".
+6. **Logado com outro email**: estado "Conta diferente", com botao para sair e entrar com o email convidado (volta para a mesma pagina). O Better Auth tambem recusa o aceite com `403` nesse caso.
+7. **Estados terminais**: `expired`, `canceled`, `accepted`, `rejected` e convite inexistente mostram uma mensagem propria, sem botoes de aceite.
+
+Detalhes que fazem o fluxo funcionar ponta a ponta:
+
+- `apps/web/src/middleware.ts` redireciona usuarios logados para fora de `/auth/*`, **exceto** `/auth/accept-invitation`.
+- `redirect` so aceita caminhos do mesmo site (`getSafeRedirect` em `apps/web/src/lib/safe-redirect.ts`): URLs absolutas, `//host`, `/\host` e caracteres de controle sao ignorados e o login cai em `/dashboard`.
+- O hook de auto-vinculo por dominio de email (`applyEmailDomainRule`, chamado em `databaseHooks.user.create.after` em `packages/infra/src/auth/index.ts`) **nao** cria membership quando existe convite `pending` e nao expirado para o mesmo email na mesma organizacao. Sem isso, o cadastro criaria um `member` pelo dominio e o aceite falharia no indice unico `(organization_id, user_id)`. O papel do convite vence mesmo quando e menor que o da regra.
+- Se a pessoa **recusa** o convite, ou tenta aceitar um convite ja **expirado**, a regra de dominio e aplicada nesse momento (desde que ela ainda nao seja membro de nenhuma organizacao). Se o convite expira e ninguem tenta aceitar, nada acontece: um coordenador precisa adiciona-la ou reenviar/criar um convite. Detalhes em [`email-domains.md`](./email-domains.md) secao 6.4.
+- O aceite nao exige email verificado: os ids de convite sao gerados pelo Better Auth (opacos) ou por `randomUUID()` (Platform Admin), e `requireEmailVerificationOnInvitation` nao esta configurado. Em producao o login ja exige email verificado.
+
+Testes:
+
+- API: `apps/api/src/http/routes/v1/invitations/__tests__/accept-invitation.test.ts` (previa publica e seus estados, cadastro + aceite de convite de Platform Admin, login + aceite, email errado, recusa, auto-vinculo por dominio e sua retomada apos recusa ou expiracao).
+- E2E: `e2e/accept-invitation.spec.ts` (convite -> cadastro -> aceite, login -> aceite, conta diferente, expirado/cancelado/inexistente, `redirect` externo ignorado).
+
+Teste manual em dev:
+
+1. Como Platform Admin, crie um convite em `/admin/organizations/[id]/invitations` para um email novo.
+2. Copie o `Accept URL` do log da API (secao 6.5) e abra numa janela anonima.
+3. Clique em "Criar conta", confira o email preenchido, cadastre-se e aceite.
+4. Confira que o dashboard mostra o papel e a organizacao do convite.
+
 ---
 
 ## 7. Codigos de erro (referencia rapida)
@@ -596,9 +668,14 @@ Retorna `200 {"data":{"message":"Invitation cancelled successfully"}}` em sucess
 | `apps/api/src/http/routes/v1/organizations/invitations/delete.ts`                                | `DELETE` — dois branches                  |
 | `apps/api/src/http/routes/v1/organizations/invitations/resend.ts`                                | `POST .../resend` — renova TTL + reenvia email |
 | `apps/api/src/http/routes/v1/organizations/index.ts`                                             | Registro das rotas sob `/:id`             |
+| `apps/api/src/http/routes/v1/invitations/getById.ts`                                             | `GET /v1/invitations/:id` — previa publica |
+| `apps/web/src/app/auth/accept-invitation/page.tsx`                                               | Pagina de aceite                          |
+| `apps/web/src/components/accept-invitation.tsx`                                                  | Estados e acoes da pagina de aceite       |
+| `apps/web/src/lib/safe-redirect.ts`                                                              | `getSafeRedirect` / `authPageHref`        |
 | `apps/api/src/http/middlewares/authorization.ts`                                                 | `requirePlatformAdminOrOrgRole`           |
 | `packages/infra/src/auth/invitation-email.ts`                                                    | `sendInvitationEmail` + `escapeHtml`      |
-| `packages/infra/src/auth/index.ts` (linhas 155-173)                                              | Hook `organization.sendInvitationEmail`   |
+| `packages/infra/src/auth/index.ts`                                                               | Hook `organization.sendInvitationEmail`; auto-vinculo por dominio cede a convite pendente e volta apos recusa/expiracao |
+| `packages/infra/src/auth/email-domain-membership.ts`                                             | `applyEmailDomainRule`                    |
 | `packages/infra/src/auth/permissions.ts`                                                         | `hasMinimumRole`, hierarquia de papeis    |
 | `packages/infra/src/db/schema/auth.ts` (linhas 105-118)                                          | Tabela `invitation`                       |
 | `apps/web/src/app/(inside)/admin/organizations/[id]/invitations/page.tsx`                        | Pagina da aba                             |

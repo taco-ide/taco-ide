@@ -132,13 +132,26 @@ app.register(fastifyMultipart, {
   },
 });
 
+// GET /v1/invitations/:id is the only public route under /v1/invitations:
+// the accept-invitation page reads it before the visitor has an account.
+// Match the exact shape so routes added later under the same prefix stay
+// authenticated by default.
+const PUBLIC_INVITATION_PREVIEW = /^\/v1\/invitations\/[^/?#]+\/?(?:\?.*)?$/;
+
+function isPublicInvitationPreview(method: string, url: string): boolean {
+  return (
+    (method === "GET" || method === "HEAD") &&
+    PUBLIC_INVITATION_PREVIEW.test(url)
+  );
+}
+
 // Global authentication hook
 app.addHook("onRequest", async (request, reply) => {
   const publicRoutes = ["/v1/auth/", "/api/auth/", "/v1/status", "/docs"];
 
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.url.startsWith(route)
-  );
+  const isPublicRoute =
+    publicRoutes.some((route) => request.url.startsWith(route)) ||
+    isPublicInvitationPreview(request.method, request.url);
 
   if (!isPublicRoute) {
     await authMiddleware(request, reply);
@@ -175,6 +188,10 @@ app.register(fastifySwagger, {
         description: "Organization members and invitations",
       },
       { name: "chat", description: "Chat agent endpoints" },
+      {
+        name: "invitations",
+        description: "Public invitation preview for the accept page",
+      },
     ],
   },
   transform: jsonSchemaTransform,

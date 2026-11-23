@@ -24,8 +24,12 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Login function using Better Auth
-  const login = async (data: LoginFormData): Promise<boolean> => {
+  // Login function using Better Auth. `redirectTo` must already be a safe
+  // same-origin path (see getSafeRedirect).
+  const login = async (
+    data: LoginFormData,
+    redirectTo?: string | null
+  ): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
@@ -41,7 +45,7 @@ export const useAuth = () => {
       }
 
       // Redirect after successful login
-      router.push("/dashboard");
+      router.push(redirectTo ?? "/dashboard");
       router.refresh();
       return true;
     } catch (err) {
@@ -53,8 +57,12 @@ export const useAuth = () => {
     }
   };
 
-  // Signup function using Better Auth
-  const signup = async (data: SignupFormData): Promise<boolean> => {
+  // Signup function using Better Auth. `redirectTo` must already be a safe
+  // same-origin path (see getSafeRedirect).
+  const signup = async (
+    data: SignupFormData,
+    redirectTo?: string | null
+  ): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
 
@@ -63,12 +71,21 @@ export const useAuth = () => {
         email: data.email,
         password: data.password,
         name: data.name,
-        callbackURL: `${window.location.origin}/dashboard`,
+        // Where the email-verification link lands after verifying.
+        callbackURL: `${window.location.origin}${redirectTo ?? "/dashboard"}`,
       });
 
       if (result.error) {
         setError(result.error.message || t("errors.registration"));
         return false;
+      }
+
+      // Signed in right away (email verification not required): continue
+      // where the person was going, e.g. back to an invitation.
+      if (redirectTo && result.data?.token) {
+        router.push(redirectTo);
+        router.refresh();
+        return true;
       }
 
       // Redirect to email verification page

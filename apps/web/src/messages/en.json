@@ -1,4 +1,72 @@
 {
+  "acceptInvitation": {
+    "accept": "Accept invitation",
+    "accepting": "Joining...",
+    "decline": "Decline",
+    "declining": "Declining...",
+    "details": {
+      "email": "Invited email",
+      "expires": "Expires",
+      "invitedBy": "Invited by",
+      "organization": "Organization",
+      "role": "Role"
+    },
+    "errors": {
+      "action": "We couldn't complete this action. Please try again.",
+      "load": "We couldn't load this invitation. Check your connection and try again."
+    },
+    "goToDashboard": "Go to dashboard",
+    "loading": "Loading invitation...",
+    "pending": {
+      "signedInAs": "Signed in as <strong>{email}</strong>.",
+      "subtitle": "You've been invited to join <strong>{organization}</strong> on TACO as {role}.",
+      "title": "You're invited"
+    },
+    "retry": "Try again",
+    "roles": {
+      "admin": "Administrator",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "signedOut": {
+      "createAccount": "Create an account",
+      "hint": "Sign in or create an account with <strong>{email}</strong> to accept.",
+      "signIn": "Sign in to accept"
+    },
+    "states": {
+      "accepted": {
+        "description": "This invitation to {organization} has already been accepted.",
+        "title": "Invitation already accepted"
+      },
+      "canceled": {
+        "description": "This invitation to {organization} was canceled. Ask the person who invited you to send a new one.",
+        "title": "Invitation canceled"
+      },
+      "expired": {
+        "description": "This invitation to {organization} has expired. Ask the person who invited you to send a new one.",
+        "title": "Invitation expired"
+      },
+      "invalidLink": {
+        "description": "This link is missing the invitation code. Open the link from your invitation email again.",
+        "title": "Invalid invitation link"
+      },
+      "notFound": {
+        "description": "We couldn't find this invitation. It may have been removed. Ask the person who invited you to send a new one.",
+        "title": "Invitation not found"
+      },
+      "rejected": {
+        "description": "You declined the invitation to {organization}. If this was a mistake, ask for a new invitation.",
+        "title": "Invitation declined"
+      },
+      "wrongAccount": {
+        "description": "This invitation was sent to <strong>{invited}</strong>, but you're signed in as <strong>{current}</strong>. Sign out and continue with the invited email.",
+        "switchAccount": "Sign out and switch account",
+        "switching": "Signing out...",
+        "title": "Wrong account"
+      }
+    }
+  },
   "admin": {
     "accessDenied": {
       "backToApp": "Back to the app",

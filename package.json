@@ -9,7 +9,7 @@
     "check-types": "turbo run typecheck && npm run typecheck:e2e",
     "db:reset": "npm run db:reset -w @repo/infra",
     "db:reset:push": "npm run db:reset:push -w @repo/infra",
-    "test": "npm test -w @repo/api",
+    "test": "npm test -w @repo/api && npm test -w portal-taco",
     "test:e2e": "dotenv -e .env -- playwright test",
     "test:e2e:ui": "dotenv -e .env -- playwright test --ui",
     "typecheck:e2e": "tsc --project e2e/tsconfig.json --noEmit",

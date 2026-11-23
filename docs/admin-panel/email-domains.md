@@ -14,7 +14,7 @@ Casos de uso típicos:
 - Onboarding de equipe pedagógica (`@professor.escola.edu.br` → `teacher`).
 - Coordenação acadêmica de um curso (`@coordenacao.escola.edu.br` → `coordinator`).
 
-A regra atua **apenas no signup** (criação do usuário). Usuários já existentes não são reprocessados retroativamente; remover uma regra também **não desvincula** membros já adicionados.
+A regra atua **no signup** (criação do usuário) e, quando um convite pendente a segurou nesse momento, de novo quando esse convite é recusado ou encontrado expirado (Seção 6.4). Usuários já existentes não são reprocessados retroativamente; remover uma regra também **não desvincula** membros já adicionados.
 
 Por motivo de segurança, o papel `admin` **nunca** pode ser concedido via auto-link — qualquer pessoa que controle uma caixa postal naquele domínio se tornaria administradora da organização. Promoções a `admin` continuam sendo feitas manualmente.
 
@@ -176,7 +176,7 @@ O Zod schema é `.strict()`: qualquer campo extra no body causa `400`.
 
 ## 6. Lógica de auto-link no signup
 
-Implementada como `databaseHooks.user.create.after` em `packages/infra/src/auth/index.ts`. Executa **após** o Better Auth gravar o registro do usuário com sucesso.
+Implementada em `applyEmailDomainRule` (`packages/infra/src/auth/email-domain-membership.ts`), chamada por `databaseHooks.user.create.after` em `packages/infra/src/auth/index.ts`. Executa **após** o Better Auth gravar o registro do usuário com sucesso. A mesma função roda nos dois pontos de retomada da Seção 6.4.
 
 ### 6.1 Pseudo-código resumido
 
@@ -203,6 +203,12 @@ after(createdUser) {
 
     if (!rule) return;
 
+    // Convite pendente e não expirado para a mesma org: o convite vence
+    if (await temConvitePendente(rule.organizationId, email)) return;
+
+    // Já é membro de alguma organização: a regra é só um padrão de cadastro
+    if (await temMembership(createdUser.id)) return;
+
     // Defense-in-depth: legacy admin -> teacher
     const effectiveRole = rule.role === "admin" ? "teacher" : rule.role;
 
@@ -212,7 +218,7 @@ after(createdUser) {
       organizationId: rule.organizationId,
       role: effectiveRole,
       createdAt: new Date(),
-    });
+    }).onConflictDoNothing();
   } catch (err) {
     console.error("[user.create.after] domain auto-assign failed:", err);
     // NUNCA propaga: signup tem prioridade sobre o auto-link
@@ -228,7 +234,9 @@ after(createdUser) {
 - **Organização inativa:** se `organization.isActive = false`, a regra é ignorada e o usuário **não** é auto-vinculado. O signup ainda completa normalmente.
 - **Múltiplas regras:** quando o mesmo domínio aparece em mais de uma regra (possível porque o UNIQUE é em `(domain, role)`, não apenas `domain`), vence a de menor `createdAt`. Apenas uma regra é aplicada por signup.
 - **Bypass do `membershipLimit`:** a inserção em `member` é direta via Drizzle, **não** via `auth.api.addMember`. Isso evita o limite padrão de 100 membros do plugin de organização do Better Auth.
-- **Falha silenciosa:** se a inserção do `member` falhar (ex.: usuário já é membro), o erro é logado e o signup é considerado bem-sucedido. Não há retry automático.
+- **Falha silenciosa:** se a inserção do `member` falhar, o erro é logado e o signup é considerado bem-sucedido. Não há retry automático. Conflito no índice único `(organization_id, user_id)` é ignorado (`onConflictDoNothing`).
+- **Convite pendente vence:** se existe convite `pending` e não expirado para o mesmo email na organização da regra, nada é criado no signup — a pessoa vai aceitar o convite com o papel escolhido por quem convidou, mesmo que seja **menor** que o papel da regra (ex.: convite `student` com regra `teacher`). O convite é uma escolha explícita e prevalece; para dar o papel da regra, cancele o convite antes do cadastro ou ajuste o papel depois em "Membros".
+- **Só quem não tem membership:** a regra não adiciona organizações a quem já é membro de alguma.
 
 ### 6.3 Cap defensivo `admin → teacher`
 
@@ -237,6 +245,17 @@ O hook **rebaixa** `role === "admin"` para `"teacher"` em tempo de execução, m
 1. **API** (`create.ts`) — Zod bloqueia novos `admin` com `400`.
 2. **Dados** (`0005_cap_email_domain_admin_role.sql`) — `UPDATE` rebaixa registros existentes.
 3. **Runtime** (`auth/index.ts`) — cap derradeiro no momento do signup.
+
+### 6.4 Retomada quando o convite não é aceito
+
+Como o convite pendente segura a regra no signup, a regra é reaplicada (mesma função, mesmas condições) quando:
+
+- **O convite é recusado:** `organizationHooks.afterRejectInvitation` do plugin de organização, após `POST /api/auth/organization/reject-invitation`.
+- **O convite expirou e a pessoa tenta aceitar:** o Better Auth recusa o aceite com `400 INVITATION_NOT_FOUND` antes de qualquer hook de organização, então o `hooks.before` de `/organization/accept-invitation` confere se o convite está `pending`, vencido e endereçado ao email da sessão, e aplica a regra antes do aceite falhar.
+
+Limitação: se o convite expira e a pessoa nunca mais tenta aceitá-lo, nada dispara a regra; ela fica sem organização até um coordenador adicioná-la em "Membros" ou enviar um novo convite. A página de aceite mostra "Convite expirado" e orienta a pedir um novo convite.
+
+Testes: `apps/api/src/http/routes/v1/invitations/__tests__/accept-invitation.test.ts`.
 
 ## 7. Migration `0005_cap_email_domain_admin_role.sql`
 
@@ -394,7 +413,8 @@ Para detalhes dos templates e configuração do Resend, consultar `emails.md`. <
 
 - Schema: `packages/infra/src/db/schema/email-domains.ts`.
 - Rotas: `apps/api/src/http/routes/v1/organizations/email-domains/{create,list,delete,index}.ts`.
-- Hook de signup: `packages/infra/src/auth/index.ts` (`databaseHooks.user.create.after`).
+- Regra: `packages/infra/src/auth/email-domain-membership.ts` (`applyEmailDomainRule`).
+- Hooks: `packages/infra/src/auth/index.ts` (`databaseHooks.user.create.after`, `organizationHooks.afterRejectInvitation`, `hooks.before` de `/organization/accept-invitation`).
 - Migration de data fix: `packages/infra/drizzle/0005_cap_email_domain_admin_role.sql`.
 - UI: `apps/web/src/app/(inside)/admin/organizations/[id]/domains/`.
 - Commit do fix F10: `00b4a428`.

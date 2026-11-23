@@ -9,8 +9,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SignupFormData, signupSchema } from "@/lib/schemas";
 import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
+import { authPageHref, getSafeRedirect } from "@/lib/safe-redirect";
 
 export function SignupForm({
   className,
@@ -19,6 +21,9 @@ export function SignupForm({
   const t = useTranslations("auth");
   const c = useTranslations("common");
   const { signup, error, isLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTo = getSafeRedirect(searchParams.get("redirect"));
+  const prefilledEmail = searchParams.get("email") ?? "";
 
   const {
     register,
@@ -26,10 +31,11 @@ export function SignupForm({
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: { email: prefilledEmail },
   });
 
   const onSubmit = async (data: SignupFormData) => {
-    await signup(data);
+    await signup(data, redirectTo);
   };
 
   return (
@@ -107,7 +113,13 @@ export function SignupForm({
           </Button>
           <div className="text-center text-sm">
             {t("signup.haveAccount")}{" "}
-            <Link href="/auth/login" className="underline underline-offset-4">
+            <Link
+              href={authPageHref("login", {
+                redirect: redirectTo,
+                email: prefilledEmail,
+              })}
+              className="underline underline-offset-4"
+            >
               {t("signup.signInLink")}
             </Link>
           </div>
