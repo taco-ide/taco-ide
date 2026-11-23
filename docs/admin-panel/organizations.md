@@ -384,7 +384,7 @@ Ao **desativar** (`isActive=false`):
 
 - Org **não é apagada**. `member`, `classroom`, `invitation`, `organizationEmailDomain`, `challenge`, `knowledgeBase` permanecem intactos.
 - Para cada `session` cujo `activeOrganizationId` aponta para esta org, a coluna é setada para `NULL` em um único `UPDATE` na mesma transação. `clearedSessions` é o rowCount.
-- **Sem revogação de sessão**: usuário continua logado, mas perde o contexto de "org ativa" e precisa re-selecionar na próxima navegação. <!-- TODO: confirmar UX do seletor de org quando activeOrganizationId é NULL. -->
+- **Sem revogação de sessão**: usuário continua logado, mas perde o contexto de "org ativa". Na próxima requisição o middleware de auth usa a membership mais antiga em outra org ativa, se houver; caso contrário o app mostra a tela de primeiro acesso, que informa que a organização está desativada.
 - A org some do filtro `Ativas`; continua visível em `Todas` e `Inativas`.
 - Membros e papéis permanecem; ao reativar, voltam a operar normalmente.
 - Convites pendentes **são cancelados** (`status = 'canceled'`) na mesma transação. `canceledInvitations` no response retorna a quantidade afetada. Convites já `accepted`/`rejected`/`expired` não são tocados.

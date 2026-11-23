@@ -990,6 +990,49 @@
       "title": "Title"
     }
   },
+  "firstAccess": {
+    "checkAgain": "Check my access again",
+    "checkFailed": "We couldn't check your access right now. Please try again in a moment.",
+    "checking": "Checking...",
+    "error": {
+      "description": "Something went wrong while loading your access status. Try again in a moment; if the problem persists, contact your coordinator or institution administrator.",
+      "title": "We couldn't check your access"
+    },
+    "inactive": {
+      "description": "You belong to an organization that is currently deactivated, so its classrooms and exercises are unavailable. Your account and work are kept.",
+      "title": "Your organization is inactive"
+    },
+    "invitations": {
+      "expires": "Expires on {date}",
+      "invitedBy": "invited by {name}",
+      "review": "Review invitation",
+      "role": "Role: {role}",
+      "title": "{count, plural, one {You have a pending invitation} other {You have # pending invitations}}"
+    },
+    "loading": "Checking your access...",
+    "loggedInAs": "Logged in as <strong>{email}</strong>",
+    "newUser": {
+      "description": "Your account is ready, but it is not linked to an organization yet. Access to classrooms and exercises is granted by your institution: once a coordinator or institution administrator adds you, everything shows up here.",
+      "title": "Welcome! You are not in an organization yet"
+    },
+    "nextSteps": {
+      "askForInvite": "Ask your coordinator or institution administrator to invite this email address. Invitations are tied to the exact address you signed up with.",
+      "checkEmail": "Look for an invitation email from TACO in your inbox (and spam folder) and open its link.",
+      "contactCoordinatorInactive": "Contact your coordinator or the TACO platform team to have the organization reactivated, or ask to be invited to another organization.",
+      "institutionalEmail": "If your institution links accounts automatically by email domain, sign up with your institutional email address instead of a personal one.",
+      "title": "What to do next"
+    },
+    "noSelfServiceHint": "Organizations are set up by the TACO platform team, so you cannot create one from here. If you had access before, you may have been removed from your organization: ask your coordinator to add you again.",
+    "removedHint": "Organizations are managed by the TACO platform team. Your coordinator can tell you whether the deactivation is temporary.",
+    "roles": {
+      "admin": "Administrator",
+      "coordinator": "Coordinator",
+      "student": "Student",
+      "teacher": "Teacher"
+    },
+    "stillPending": "Your account is still not linked to an organization. Once you have been added, try again.",
+    "verifyEmailHint": "Confirm your email address (check for the verification email) to see invitations sent to it here."
+  },
   "guards": {},
   "home": {
     "ai": {
@@ -1258,11 +1301,6 @@
     "login": "Sign in",
     "logoAlt": "TACO-IDE logo",
     "miniLogoAlt": "TACO logo",
-    "noOrg": {
-      "description": "You are not part of any active organization right now. This may have happened because your organization was deactivated or because you were removed. Please contact a platform administrator to restore your access.",
-      "loggedInAs": "Logged in as <strong>{email}</strong>",
-      "title": "No active organization"
-    },
     "profile": "Profile",
     "resources": "Resources",
     "signOut": "Sign out",

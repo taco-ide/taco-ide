@@ -383,8 +383,8 @@ a senha plaintext aparece **uma única vez** no relatório
 para que o administrador a compartilhe **out-of-band** (mensagem direta,
 sistema institucional, e-mail manual etc.).
 
-<!-- TODO: vincular a `docs/admin-panel/emails.md` quando o documento
-de e-mails do painel administrativo for criado. -->
+A importação não dispara e-mails; veja [`emails.md`](./emails.md) para o
+catálogo de e-mails do painel administrativo.
 
 ---
 

@@ -990,6 +990,49 @@
       "title": "Título"
     }
   },
+  "firstAccess": {
+    "checkAgain": "Verificar meu acesso",
+    "checkFailed": "Não foi possível verificar seu acesso agora. Tente de novo em instantes.",
+    "checking": "Verificando...",
+    "error": {
+      "description": "Algo deu errado ao carregar a situação do seu acesso. Tente de novo em instantes; se o problema continuar, fale com seu coordenador ou com o administrador da instituição.",
+      "title": "Não foi possível verificar seu acesso"
+    },
+    "inactive": {
+      "description": "Você pertence a uma organização que está desativada no momento, por isso as turmas e os exercícios dela estão indisponíveis. Sua conta e seus trabalhos continuam guardados.",
+      "title": "Sua organização está inativa"
+    },
+    "invitations": {
+      "expires": "Expira em {date}",
+      "invitedBy": "convidado por {name}",
+      "review": "Ver convite",
+      "role": "Papel: {role}",
+      "title": "{count, plural, one {Você tem um convite pendente} other {Você tem # convites pendentes}}"
+    },
+    "loading": "Verificando seu acesso...",
+    "loggedInAs": "Conectado como <strong>{email}</strong>",
+    "newUser": {
+      "description": "Sua conta está pronta, mas ainda não está vinculada a uma organização. O acesso a turmas e exercícios é liberado pela sua instituição: assim que um coordenador ou administrador da instituição adicionar você, tudo aparece aqui.",
+      "title": "Boas-vindas! Você ainda não está em uma organização"
+    },
+    "nextSteps": {
+      "askForInvite": "Peça ao seu coordenador ou ao administrador da instituição um convite para este endereço de email. O convite fica vinculado exatamente ao email usado no cadastro.",
+      "checkEmail": "Procure um email de convite do TACO na sua caixa de entrada (e no spam) e abra o link dele.",
+      "contactCoordinatorInactive": "Fale com seu coordenador ou com a equipe da plataforma TACO para reativar a organização, ou peça um convite para outra organização.",
+      "institutionalEmail": "Se a sua instituição vincula contas automaticamente pelo domínio do email, cadastre-se com o seu email institucional em vez de um pessoal.",
+      "title": "Próximos passos"
+    },
+    "noSelfServiceHint": "As organizações são criadas pela equipe da plataforma TACO, então não é possível criar uma por aqui. Se você já tinha acesso, talvez tenha sido removido da sua organização: peça ao seu coordenador para adicionar você de novo.",
+    "removedHint": "As organizações são gerenciadas pela equipe da plataforma TACO. Seu coordenador pode dizer se a desativação é temporária.",
+    "roles": {
+      "admin": "Administrador",
+      "coordinator": "Coordenador",
+      "student": "Aluno",
+      "teacher": "Professor"
+    },
+    "stillPending": "Sua conta ainda não está vinculada a uma organização. Depois de ser adicionado, tente de novo.",
+    "verifyEmailHint": "Confirme seu endereço de email (procure o email de verificação) para ver aqui os convites enviados a ele."
+  },
   "guards": {},
   "home": {
     "ai": {
@@ -1258,11 +1301,6 @@
     "login": "Entrar",
     "logoAlt": "Logo do TACO-IDE",
     "miniLogoAlt": "Logo do TACO",
-    "noOrg": {
-      "description": "Você não está em nenhuma organização ativa no momento. Isso pode ter acontecido porque sua organização foi desativada ou porque você foi removido. Procure um administrador da plataforma para regularizar seu acesso.",
-      "loggedInAs": "Conectado como <strong>{email}</strong>",
-      "title": "Nenhuma organização ativa"
-    },
     "profile": "Perfil",
     "resources": "Recursos",
     "signOut": "Sair",

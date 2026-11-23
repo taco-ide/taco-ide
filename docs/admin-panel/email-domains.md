@@ -388,7 +388,7 @@ O que pode ocorrer é o fluxo normal do Better Auth no signup:
 - **Email de reset de senha**: não relacionado ao auto-link.
 - **Email de convite (`sendInvitationEmail`)**: usado pelo plugin de organização do Better Auth em **convites manuais**. Auto-link **não** passa por `auth.api.addMember`, então não dispara esse email.
 
-Para detalhes dos templates e configuração do Resend, consultar `emails.md`. <!-- TODO: confirmar caminho exato do arquivo emails.md no diretório docs/admin-panel/ -->
+Para detalhes dos templates e configuração do Resend, consultar [`emails.md`](./emails.md).
 
 ## Referências de código
 
