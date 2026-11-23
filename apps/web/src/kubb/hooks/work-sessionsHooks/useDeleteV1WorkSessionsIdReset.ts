@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { DeleteV1WorkSessionsIdResetMutationResponse, DeleteV1WorkSessionsIdResetPathParams, DeleteV1WorkSessionsIdReset400, DeleteV1WorkSessionsIdReset401, DeleteV1WorkSessionsIdReset403, DeleteV1WorkSessionsIdReset404 } from "../../../../../../packages/types/kubb/DeleteV1WorkSessionsIdReset.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { DeleteV1WorkSessionsIdResetMutationResponse, DeleteV1WorkSessionsIdResetPathParams, DeleteV1WorkSessionsIdReset401, DeleteV1WorkSessionsIdReset403, DeleteV1WorkSessionsIdReset404 } from "../../../../../../packages/types/kubb/DeleteV1WorkSessionsIdReset.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const deleteV1WorkSessionsIdResetMutationKey = () => [{ url: '/v1/work-sessions/:id/reset' }] as const
@@ -14,25 +14,25 @@ export const deleteV1WorkSessionsIdResetMutationKey = () => [{ url: '/v1/work-se
 export type DeleteV1WorkSessionsIdResetMutationKey = ReturnType<typeof deleteV1WorkSessionsIdResetMutationKey>
 
 /**
- * @description Deletes the work session (and interactions) and clears the student's solution for this challenge. Teacher, coordinator, or admin only.
+ * @description Archives the work session (its interactions are kept for research data) and clears the student's solution for this challenge; the student's next action starts a new session. Teacher, coordinator, or admin only.
  * @summary Reset work session and solution
  * {@link /v1/work-sessions/:id/reset}
  */
 export async function deleteV1WorkSessionsIdReset(id: DeleteV1WorkSessionsIdResetPathParams["id"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, unknown>({ method : "DELETE", url : `/v1/work-sessions/${id}/reset`, ... requestConfig })  
+  const res = await request<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset400 | DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, unknown>({ method : "DELETE", url : `/v1/work-sessions/${id}/reset`, ... requestConfig })  
   return res.data
 }
 
 /**
- * @description Deletes the work session (and interactions) and clears the student's solution for this challenge. Teacher, coordinator, or admin only.
+ * @description Archives the work session (its interactions are kept for research data) and clears the student's solution for this challenge; the student's next action starts a new session. Teacher, coordinator, or admin only.
  * @summary Reset work session and solution
  * {@link /v1/work-sessions/:id/reset}
  */
 export function useDeleteV1WorkSessionsIdReset<TContext>(options: 
 {
-  mutation?: UseMutationOptions<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, {id: DeleteV1WorkSessionsIdResetPathParams["id"]}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset400 | DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, {id: DeleteV1WorkSessionsIdResetPathParams["id"]}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch },
 }
  = {}) {
@@ -40,7 +40,7 @@ export function useDeleteV1WorkSessionsIdReset<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? deleteV1WorkSessionsIdResetMutationKey()
 
-  return useMutation<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, {id: DeleteV1WorkSessionsIdResetPathParams["id"]}, TContext>({
+  return useMutation<DeleteV1WorkSessionsIdResetMutationResponse, ResponseErrorConfig<DeleteV1WorkSessionsIdReset400 | DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404>, {id: DeleteV1WorkSessionsIdResetPathParams["id"]}, TContext>({
     mutationFn: async({ id }) => {
       return deleteV1WorkSessionsIdReset(id, config)
     },

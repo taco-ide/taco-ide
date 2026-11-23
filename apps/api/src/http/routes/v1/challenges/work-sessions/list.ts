@@ -3,6 +3,7 @@ import {
   eq,
   and,
   isNotNull,
+  isNull,
   desc,
   sql,
   ilike,
@@ -43,6 +44,8 @@ const WorkSessionRowSchema = z.object({
   createdAt: z.string(),
   lastMessageAt: z.string().nullable(),
   endedAt: z.string().nullable(),
+  /** Set when a reset archived the session; it is kept for the record. */
+  archivedAt: z.string().nullable(),
 });
 
 const ListWorkSessionsResponseSchema = ResponseSchema200.extend({
@@ -117,7 +120,11 @@ export async function listChallengeWorkSessionsRoute(
       const sessionFilters = [eq(workSession.challengeId, challengeId)];
 
       if (submittedOnly) {
-        sessionFilters.push(isNotNull(workSession.endedAt));
+        // A reset session's submission is no longer the student's current one.
+        sessionFilters.push(
+          isNotNull(workSession.endedAt),
+          isNull(workSession.archivedAt)
+        );
       }
 
       const nameSearch = search ? sanitizeNameSearch(search) : "";
@@ -144,6 +151,7 @@ export async function listChallengeWorkSessionsRoute(
           createdAt: workSession.createdAt,
           lastMessageAt: workSession.lastMessageAt,
           endedAt: workSession.endedAt,
+          archivedAt: workSession.archivedAt,
         })
         .from(workSession)
         .innerJoin(user, eq(workSession.userId, user.id))
@@ -161,6 +169,7 @@ export async function listChallengeWorkSessionsRoute(
           createdAt: r.createdAt.toISOString(),
           lastMessageAt: r.lastMessageAt?.toISOString() ?? null,
           endedAt: r.endedAt?.toISOString() ?? null,
+          archivedAt: r.archivedAt?.toISOString() ?? null,
         })),
         pagination: { total, page, perPage, totalPages },
       });

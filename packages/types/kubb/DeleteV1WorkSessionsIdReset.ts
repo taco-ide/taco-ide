@@ -17,11 +17,11 @@ export const deleteV1WorkSessionsIdReset200SuccessEnum = {
 
 export type DeleteV1WorkSessionsIdReset200SuccessEnum = (typeof deleteV1WorkSessionsIdReset200SuccessEnum)[keyof typeof deleteV1WorkSessionsIdReset200SuccessEnum];
 
-export const dataDeletedEnum = {
+export const dataArchivedEnum = {
     "true": true
 } as const;
 
-export type DataDeletedEnum = (typeof dataDeletedEnum)[keyof typeof dataDeletedEnum];
+export type DataArchivedEnum = (typeof dataArchivedEnum)[keyof typeof dataArchivedEnum];
 
 /**
  * @description Default Response
@@ -42,7 +42,7 @@ export type DeleteV1WorkSessionsIdReset200 = {
         /**
          * @type boolean
         */
-        deleted: DataDeletedEnum;
+        archived: DataArchivedEnum;
     };
     /**
      * @type object | undefined
@@ -64,6 +64,32 @@ export type DeleteV1WorkSessionsIdReset200 = {
          * @type number
         */
         totalPages: number;
+    };
+};
+
+export const deleteV1WorkSessionsIdReset400SuccessEnum = {
+    "false": false
+} as const;
+
+export type DeleteV1WorkSessionsIdReset400SuccessEnum = (typeof deleteV1WorkSessionsIdReset400SuccessEnum)[keyof typeof deleteV1WorkSessionsIdReset400SuccessEnum];
+
+/**
+ * @description Default Response
+*/
+export type DeleteV1WorkSessionsIdReset400 = {
+    /**
+     * @type boolean
+    */
+    success: DeleteV1WorkSessionsIdReset400SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
     };
 };
 
@@ -150,5 +176,5 @@ export type DeleteV1WorkSessionsIdResetMutationResponse = DeleteV1WorkSessionsId
 export type DeleteV1WorkSessionsIdResetMutation = {
     Response: DeleteV1WorkSessionsIdReset200;
     PathParams: DeleteV1WorkSessionsIdResetPathParams;
-    Errors: DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404;
+    Errors: DeleteV1WorkSessionsIdReset400 | DeleteV1WorkSessionsIdReset401 | DeleteV1WorkSessionsIdReset403 | DeleteV1WorkSessionsIdReset404;
 };

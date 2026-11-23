@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -13,28 +13,23 @@ import {
   ResponseSchema503,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
+import { env } from "@repo/infra/env";
+import { workSession, teachingAssistant, challenge } from "@repo/infra/db/schema";
+import type { BaseMessage } from "@langchain/core/messages";
+import { prepareTeachingAssistantTurn } from "../../../../agents/teaching-assistant/prepare-turn";
 import {
-  workSession,
-  teachingAssistant,
-  challenge,
-  userInteractionOnChallenge,
-  challengeSolution,
-  model,
-} from "@repo/infra/db/schema";
-import { AIMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assistant/agent";
-import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
-import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
+  buildTurnContext,
+  finalAnswerText,
+  persistTurn,
+} from "../../../../agents/teaching-assistant/turn-context";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
 import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
 import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
-import { createLlm, AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
-import { AGENT_FALLBACK_RESPONSE, TA_HISTORY_TURN_CAP } from "../../../../agents/constants";
-import { formatSupportMaterials } from "../../../../agents/support-materials";
-import { detectLanguageHint } from "../../../../agents/language-detect";
+import { AGENT_TIMEOUT_MS, AgentTimeoutError } from "../../../../agents/llm-factory";
+import { AGENT_FALLBACK_RESPONSE } from "../../../../agents/constants";
 
 // ==================== SCHEMAS ====================
 
@@ -97,7 +92,12 @@ export async function chatRoute(app: FastifyTypedInstance) {
       }
 
       const { id: workSessionId } = request.params;
-      const { message, code: bodyCode, stdout: bodyStdout } = request.body;
+      const {
+        message,
+        code: bodyCode,
+        stdin: bodyStdin,
+        stdout: bodyStdout,
+      } = request.body;
 
       const [session] = await db
         .select({
@@ -106,6 +106,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
           challengeId: workSession.challengeId,
           teachingAssistantId: workSession.teachingAssistantId,
           endedAt: workSession.endedAt,
+          archivedAt: workSession.archivedAt,
         })
         .from(workSession)
         .where(eq(workSession.id, workSessionId))
@@ -122,6 +123,13 @@ export async function chatRoute(app: FastifyTypedInstance) {
         return reply.status(403).send({
           success: false as const,
           message: "Not authorized to use this work session",
+        });
+      }
+
+      if (session.archivedAt) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was reset",
         });
       }
 
@@ -169,18 +177,6 @@ export async function chatRoute(app: FastifyTypedInstance) {
         });
       }
 
-      let modelParams: Record<string, unknown> = {};
-      if (ta.modelId) {
-        const [m] = await db
-          .select()
-          .from(model)
-          .where(eq(model.id, ta.modelId))
-          .limit(1);
-        if (m) {
-          modelParams = (m.modelParameters as Record<string, unknown>) ?? {};
-        }
-      }
-
       const [ch] = await db
         .select({
           title: challenge.title,
@@ -191,73 +187,20 @@ export async function chatRoute(app: FastifyTypedInstance) {
         .where(and(eq(challenge.id, session.challengeId), isNull(challenge.deletedAt)))
         .limit(1);
 
-      const [solution] = await db
-        .select({
-          code: challengeSolution.code,
-          stdin: challengeSolution.stdin,
-          stdout: challengeSolution.stdout,
-        })
-        .from(challengeSolution)
-        .where(
-          and(
-            eq(challengeSolution.userId, usr.id),
-            eq(challengeSolution.challengeId, session.challengeId)
-          )
-        )
-        .limit(1);
-
-      const code = bodyCode ?? solution?.code ?? null;
-      const stdout = bodyStdout ?? solution?.stdout ?? null;
-
-      // RAG: Search challenge knowledge bases for relevant context
-      let kbContext = "";
-      try {
-        const kbResults = await searchChallengeKnowledgeBases({
-          challengeId: session.challengeId,
-          query: message,
-          limit: 5,
-        });
-
-        if (kbResults.length > 0) {
-          const formattedChunks = kbResults.map((result) => {
-            const hierarchy = result.metadata?.titleHierarchy ?? [];
-            const source = result.metadata?.documentFilename ?? "manual entry";
-            const header =
-              hierarchy.length > 0
-                ? `[${hierarchy.join(" > ")}] (fonte: ${source})`
-                : `(fonte: ${source})`;
-            return `${header}\n${result.content}`;
-          });
-          kbContext = formattedChunks.join("\n\n---\n\n");
-        }
-      } catch (err) {
-        request.server.log.warn(
-          { err },
-          "KB search failed during chat, proceeding without RAG"
-        );
-      }
-
-      const formattedSupportMaterials = formatSupportMaterials(
-        ch?.supportMaterials
-      );
-
-      const systemPrompt = buildTeachingAssistantPrompt({
-        systemPrompt: ta.systemPrompt,
-        targetAudience: ta.targetAudience ?? "",
-        challengeTitle: ch?.title ?? "",
-        challengeDescription: ch?.description ?? "",
-        supportMaterials: formattedSupportMaterials,
-        kbContext: kbContext || undefined,
-        currentCode: code ?? "",
-        stdout: stdout ?? "",
-        detectedLanguage: detectLanguageHint(message),
+      const turn = await prepareTeachingAssistantTurn({
+        workSessionId,
+        userId: usr.id,
+        challengeId: session.challengeId,
+        ta,
+        challenge: ch,
+        message,
+        body: { code: bodyCode, stdin: bodyStdin, stdout: bodyStdout },
+        onPrefetchError: (err) =>
+          request.server.log.warn(
+            { err },
+            "KB search failed during chat, proceeding without RAG"
+          ),
       });
-
-      const challengeContext = {
-        title: ch?.title ?? "",
-        description: ch?.description ?? "",
-        supportMaterials: formattedSupportMaterials,
-      };
 
       const langfuseCallback = getLangfuseCallback({
         userId: usr.id,
@@ -268,41 +211,12 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
       let modelResponse: string;
       let wasFallback = false;
+      let producedMessages: BaseMessage[] = [];
       try {
-        // Load recent conversation history for context memory
-        const historyRows = await db
-          .select()
-          .from(userInteractionOnChallenge)
-          .where(
-            and(
-              eq(userInteractionOnChallenge.workSessionId, workSessionId),
-              eq(userInteractionOnChallenge.interactionType, "chat"),
-            ),
-          )
-          .orderBy(desc(userInteractionOnChallenge.createdAt), desc(userInteractionOnChallenge.id))
-          .limit(TA_HISTORY_TURN_CAP);
-
-        // Reverse to chronological order and build message pairs
-        const historyMessages = historyRows
-          .reverse()
-          .flatMap((row) => {
-            const msgs: (HumanMessage | AIMessage)[] = [];
-            // Only include pairs where modelResponse is non-empty (defensive)
-            if (row.userPrompt) {
-              msgs.push(new HumanMessage(row.userPrompt));
-            }
-            if (row.modelResponse?.trim()) {
-              msgs.push(new AIMessage(row.modelResponse));
-            }
-            return msgs;
-          });
-
-        // Create LLM instance with model parameters applied
-        const llmInstance = createLlm(modelParams);
-        const agent = buildTeachingAssistantAgent(llmInstance);
-
-
-        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+        const callbacks = [
+          ...turn.callbacks,
+          ...(langfuseCallback ? [langfuseCallback] : []),
+        ];
 
         // Use AbortController to enforce timeout
         const controller = new AbortController();
@@ -312,20 +226,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
         let result;
         try {
-          result = await agent.invoke(
+          result = await turn.agent.invoke(
+            { messages: turn.inputMessages },
             {
-              messages: [
-                new SystemMessage(systemPrompt),
-                ...historyMessages,
-                new HumanMessage(message),
-              ],
-            },
-            {
-              configurable: {
-                thread_id: workSessionId,
-                challengeId: session.challengeId,
-                challengeContext,
-              },
+              configurable: turn.configurable,
               recursionLimit: 25,
               signal: controller.signal,
               callbacks,
@@ -335,15 +239,13 @@ export async function chatRoute(app: FastifyTypedInstance) {
           clearTimeout(timeout);
         }
 
-        // The agent returns a messages array; the last message is the AI reply.
-        const lastMsg = result.messages[result.messages.length - 1];
-        const rawResponse =
-          typeof lastMsg?.content === "string"
-            ? lastMsg.content
-            : JSON.stringify(lastMsg?.content ?? "");
+        // The agent state starts with the input messages; the rest is this turn.
+        producedMessages = result.messages.slice(turn.inputMessages.length);
+
         // If the agent returned nothing (e.g. guardrail triggered), use a fallback
-        wasFallback = !rawResponse.trim();
-        modelResponse = rawResponse.trim() || AGENT_FALLBACK_RESPONSE;
+        const answer = finalAnswerText(producedMessages);
+        wasFallback = !answer;
+        modelResponse = answer || AGENT_FALLBACK_RESPONSE;
       } catch (err) {
         if (
           err instanceof AgentTimeoutError ||
@@ -372,14 +274,31 @@ export async function chatRoute(app: FastifyTypedInstance) {
 
       // Only persist the interaction if the model output was not a fallback response
       if (!wasFallback) {
-        await db.insert(userInteractionOnChallenge).values({
-          id: interactionId,
-          workSessionId,
-          challengeId: session.challengeId,
-          interactionType: "chat",
-          userPrompt: message,
-          modelResponse,
-        });
+        await persistTurn(
+          {
+            id: interactionId,
+            workSessionId,
+            challengeId: session.challengeId,
+            interactionType: "chat",
+            userPrompt: message,
+            modelResponse,
+            ...turn.workspace,
+          },
+          buildTurnContext({
+            interactionId,
+            appVersion: env.APP_VERSION ?? null,
+            teachingAssistantId: ta.id,
+            challengeId: session.challengeId,
+            systemPrompt: turn.systemPrompt,
+            promptContext: turn.promptContext,
+            historyInteractionIds: turn.historyInteractionIds,
+            prefetch: turn.prefetch,
+            collector: turn.collector,
+            llm: turn.llm,
+            producedMessages,
+            langfuseTraceId: langfuseCallback?.getTraceId?.() ?? null,
+          })
+        );
 
         await db
           .update(workSession)

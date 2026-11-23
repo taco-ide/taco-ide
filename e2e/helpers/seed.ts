@@ -57,10 +57,11 @@ export async function seedSubmissionForGrading(): Promise<SeedSubmissionResult> 
       );
     }
 
-    // Get or create a work session for (student, challenge).
+    // Get or create the active (not reset) work session for (student, challenge).
     let [session] = await sql<{ id: string; ended_at: Date | null }[]>`
       SELECT id, ended_at FROM work_session
       WHERE user_id = ${STUDENT.id} AND challenge_id = ${SEED_CHALLENGE_ID}
+        AND archived_at IS NULL
       LIMIT 1
     `;
     if (!session) {

@@ -110,11 +110,18 @@ function ReplayContent() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t("replay.backToList")}
           </Button>
-          {data?.data?.id ? (
-            <p className="text-xs text-slate-500 font-mono truncate max-w-[min(100%,280px)]">
-              {t("replay.sessionLabel", { id: data.data.id })}
-            </p>
-          ) : null}
+          <div className="flex items-center gap-3 min-w-0">
+            {data?.data?.archivedAt ? (
+              <span className="shrink-0 text-xs font-medium text-rose-400/90">
+                {t("state.reset")}
+              </span>
+            ) : null}
+            {data?.data?.id ? (
+              <p className="text-xs text-slate-500 font-mono truncate max-w-[min(100%,280px)]">
+                {t("replay.sessionLabel", { id: data.data.id })}
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <div className="shrink-0">

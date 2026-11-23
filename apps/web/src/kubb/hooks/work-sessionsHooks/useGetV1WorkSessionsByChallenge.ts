@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge403, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { QueryKey, QueryClient, QueryObserverOptions, UseQueryResult } from "@tanstack/react-query";
-import type { GetV1WorkSessionsByChallengeQueryResponse, GetV1WorkSessionsByChallengeQueryParams, GetV1WorkSessionsByChallenge401, GetV1WorkSessionsByChallenge403, GetV1WorkSessionsByChallenge404 } from "../../../../../../packages/types/kubb/GetV1WorkSessionsByChallenge.ts";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 export const getV1WorkSessionsByChallengeQueryKey = (params: GetV1WorkSessionsByChallengeQueryParams) => [{ url: '/v1/work-sessions/by-challenge' }, ...(params ? [params] : [])] as const
@@ -14,7 +14,7 @@ export const getV1WorkSessionsByChallengeQueryKey = (params: GetV1WorkSessionsBy
 export type GetV1WorkSessionsByChallengeQueryKey = ReturnType<typeof getV1WorkSessionsByChallengeQueryKey>
 
 /**
- * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @description Returns the user's active work session on a challenge (including a submitted one; sessions archived by a reset are skipped). Returns 200 with data null if there is no session yet.
  * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */
@@ -38,7 +38,7 @@ export function getV1WorkSessionsByChallengeQueryOptions(params: GetV1WorkSessio
 }
 
 /**
- * @description Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.
+ * @description Returns the user's active work session on a challenge (including a submitted one; sessions archived by a reset are skipped). Returns 200 with data null if there is no session yet.
  * @summary Get work session for challenge
  * {@link /v1/work-sessions/by-challenge}
  */

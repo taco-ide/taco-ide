@@ -1,4 +1,6 @@
-interface TeachingAssistantPromptContext {
+// A type alias (not an interface) so it is assignable to the stored
+// ta_turn_context.prompt_context shape, which allows extra keys.
+export type TeachingAssistantPromptContext = {
   systemPrompt: string;
   targetAudience: string;
   challengeTitle: string;
@@ -9,7 +11,7 @@ interface TeachingAssistantPromptContext {
   currentCode: string;
   stdout: string;
   detectedLanguage?: string;
-}
+};
 
 export function buildTeachingAssistantPrompt(context: TeachingAssistantPromptContext): string {
   return `\

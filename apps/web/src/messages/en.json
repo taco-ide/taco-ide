@@ -1322,7 +1322,7 @@
     "reset": {
       "action": "Reset",
       "confirm": "Confirm reset",
-      "dialogDescription": "This action deletes the work session, the chat history, and the saved code for this challenge. It cannot be undone.",
+      "dialogDescription": "This action closes the work session and clears the saved code for this challenge; the next attempt starts a new session. The old session and its chat history stay in the teacher's session list, marked as reset. It cannot be undone.",
       "dialogTitle": "Reset problem?",
       "loading": "Resetting…"
     },
@@ -1542,6 +1542,7 @@
     },
     "state": {
       "inProgress": "In progress",
+      "reset": "Reset",
       "submitted": "Submitted"
     },
     "table": {

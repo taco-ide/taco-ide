@@ -28,7 +28,8 @@ export const getV1ChallengesChallengeidWorkSessions200Schema = z.object({
 "studentName": z.string(),
 "createdAt": z.string(),
 "lastMessageAt": z.string().nullable(),
-"endedAt": z.string().nullable()
+"endedAt": z.string().nullable(),
+"archivedAt": z.string().nullable()
     })),
 "pagination": z.object({
     "total": z.number(),

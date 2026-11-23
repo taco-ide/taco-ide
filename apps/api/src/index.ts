@@ -4,6 +4,14 @@ import { recoverStaleRunningJobs } from "./http/services/job-recovery";
 
 const port = env.PORT;
 
+// Every teaching-assistant turn stores APP_VERSION (ta_turn_context) to tie it
+// to the prompt template and tools that produced it.
+if (env.NODE_ENV === "production" && !env.APP_VERSION) {
+  console.warn(
+    "⚠️  APP_VERSION is not set: teaching-assistant turns will be stored without the deployed version"
+  );
+}
+
 const startServer = async () => {
   try {
     // Reset jobs left in `running` by a previous process before serving (#95).

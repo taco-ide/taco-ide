@@ -44,6 +44,8 @@ const GetWorkSessionResponseSchema = ResponseSchema200.extend({
     createdAt: z.string(),
     lastMessageAt: z.string().nullable(),
     endedAt: z.string().nullable(),
+    /** Set when a reset archived the session. */
+    archivedAt: z.string().nullable(),
     interactions: z.array(InteractionSchema),
   }),
 });
@@ -141,6 +143,7 @@ export async function getWorkSessionByIdRoute(app: FastifyTypedInstance) {
           createdAt: session.createdAt.toISOString(),
           lastMessageAt: session.lastMessageAt?.toISOString() ?? null,
           endedAt: session.endedAt?.toISOString() ?? null,
+          archivedAt: session.archivedAt?.toISOString() ?? null,
           interactions: interactions.map((i) => ({
             id: i.id,
             interactionType: i.interactionType,

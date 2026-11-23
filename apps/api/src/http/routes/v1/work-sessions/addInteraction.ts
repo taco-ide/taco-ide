@@ -115,6 +115,13 @@ export async function addInteractionRoute(app: FastifyTypedInstance) {
         });
       }
 
+      if (session.archivedAt) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was reset",
+        });
+      }
+
       if (session.endedAt) {
         return reply.status(400).send({
           success: false as const,

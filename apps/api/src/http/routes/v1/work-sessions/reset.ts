@@ -1,8 +1,9 @@
 import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
+  ResponseSchema400,
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
@@ -20,7 +21,7 @@ const WorkSessionParamsSchema = z.object({
 
 const ResetWorkSessionResponseSchema = ResponseSchema200.extend({
   data: z.object({
-    deleted: z.literal(true),
+    archived: z.literal(true),
   }),
 });
 
@@ -34,10 +35,11 @@ export async function resetWorkSessionRoute(app: FastifyTypedInstance) {
         tags: ["work-sessions"],
         summary: "Reset work session and solution",
         description:
-          "Deletes the work session (and interactions) and clears the student's solution for this challenge. Teacher, coordinator, or admin only.",
+          "Archives the work session (its interactions are kept for research data) and clears the student's solution for this challenge; the student's next action starts a new session. Teacher, coordinator, or admin only.",
         params: WorkSessionParamsSchema,
         response: {
           200: ResetWorkSessionResponseSchema,
+          400: ResponseSchema400,
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
@@ -88,11 +90,26 @@ export async function resetWorkSessionRoute(app: FastifyTypedInstance) {
         });
       }
 
+      if (session.archivedAt) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was already reset",
+        });
+      }
+
       const ownerUserId = session.userId;
       const challengeId = session.challengeId;
 
-      await db.transaction(async (tx) => {
-        await tx.delete(workSession).where(eq(workSession.id, id));
+      const archived = await db.transaction(async (tx) => {
+        const now = new Date();
+        const rows = await tx
+          .update(workSession)
+          .set({ archivedAt: now, updatedAt: now })
+          .where(and(eq(workSession.id, id), isNull(workSession.archivedAt)))
+          .returning({ id: workSession.id });
+        // A concurrent reset archived it first; the solution may already
+        // belong to the student's new attempt, so leave it alone.
+        if (rows.length === 0) return false;
 
         await tx
           .update(challengeSolution)
@@ -109,11 +126,19 @@ export async function resetWorkSessionRoute(app: FastifyTypedInstance) {
               eq(challengeSolution.challengeId, challengeId)
             )
           );
+        return true;
       });
+
+      if (!archived) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was already reset",
+        });
+      }
 
       return reply.status(200).send({
         success: true as const,
-        data: { deleted: true as const },
+        data: { archived: true as const },
       });
     }
   );

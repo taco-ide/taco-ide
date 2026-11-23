@@ -1322,7 +1322,7 @@
     "reset": {
       "action": "Reiniciar",
       "confirm": "Confirmar reinício",
-      "dialogDescription": "Esta ação apaga a sessão de trabalho, o histórico de chat e o código guardado para este desafio. Não pode ser desfeita.",
+      "dialogDescription": "Esta ação encerra a sessão de trabalho e limpa o código guardado para este desafio; a próxima tentativa começa uma sessão nova. A sessão antiga e o histórico de chat continuam na lista de sessões do professor, marcados como resetados. Não pode ser desfeita.",
       "dialogTitle": "Reiniciar problema?",
       "loading": "A reiniciar…"
     },
@@ -1542,6 +1542,7 @@
     },
     "state": {
       "inProgress": "Em andamento",
+      "reset": "Resetada",
       "submitted": "Submetida"
     },
     "table": {

@@ -16,6 +16,7 @@ const TRUNCATE_TABLES = [
   "teaching_assistant_evaluation",
   "replay_interaction",
   "conversation_replay",
+  "ta_turn_context",
   "user_interaction_on_challenge",
   "work_session",
   "challenge_knowledge_base",

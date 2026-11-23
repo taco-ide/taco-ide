@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../types";
 import {
   ResponseSchema200,
@@ -49,7 +49,7 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         tags: ["work-sessions"],
         summary: "Get work session for challenge",
         description:
-          "Returns the most recent work session for the user on a challenge (including submitted sessions). Returns 200 with data null if there is no session yet.",
+          "Returns the user's active work session on a challenge (including a submitted one; sessions archived by a reset are skipped). Returns 200 with data null if there is no session yet.",
         querystring: GetByChallengeQuerySchema,
         response: {
           200: GetWorkSessionResponseSchema,
@@ -92,7 +92,8 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         .where(
           and(
             eq(workSession.userId, usr.id),
-            eq(workSession.challengeId, challengeId)
+            eq(workSession.challengeId, challengeId),
+            isNull(workSession.archivedAt)
           )
         )
         .orderBy(desc(workSession.createdAt))

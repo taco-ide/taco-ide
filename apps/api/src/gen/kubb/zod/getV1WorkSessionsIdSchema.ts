@@ -23,6 +23,7 @@ export const getV1WorkSessionsId200Schema = z.object({
 "createdAt": z.string(),
 "lastMessageAt": z.string().nullable(),
 "endedAt": z.string().nullable(),
+"archivedAt": z.string().nullable(),
 "interactions": z.array(z.object({
     "id": z.string(),
 "interactionType": z.string(),

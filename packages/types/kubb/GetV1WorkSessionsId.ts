@@ -63,6 +63,10 @@ export type GetV1WorkSessionsId200 = {
         */
         endedAt: string | null;
         /**
+         * @type string
+        */
+        archivedAt: string | null;
+        /**
          * @type array
         */
         interactions: {

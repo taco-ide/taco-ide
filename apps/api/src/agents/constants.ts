@@ -7,3 +7,7 @@ export const AGENT_FALLBACK_RESPONSE =
  * sufficient context for progressive hints (Socratic method).
  */
 export const TA_HISTORY_TURN_CAP = 20;
+
+/** Knowledge-base search settings for the TA (prefetch and the tool). */
+export const TA_KB_SEARCH_LIMIT = 5;
+export const TA_KB_SIMILARITY_THRESHOLD = 0.3;
