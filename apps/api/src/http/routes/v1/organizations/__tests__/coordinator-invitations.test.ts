@@ -4,8 +4,8 @@
  * The web app exposes an org-scoped "Team" screen to coordinators+ that
  * reuses the existing invitation endpoints. These tests pin the contract that
  * screen relies on: coordinators of the active organization can create, list,
- * resend and cancel invitations, while teachers and coordinators of other
- * organizations cannot.
+ * resend and cancel invitations (but not invite admins), while teachers and
+ * coordinators of other organizations cannot.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { and, eq } from "drizzle-orm";
@@ -145,6 +145,25 @@ describe("coordinator invitation management", () => {
     expect(row?.status).toBe("canceled");
   });
 
+  it("rejects a coordinator inviting an admin", async () => {
+    // The UI caps the role picker, but the API must refuse too: Better Auth
+    // only lets members holding the creator role (`admin`) invite admins.
+    const res = await invite(coordinatorCookie, "boss@school.test", "admin");
+    expect(res.statusCode).toBe(403);
+    expect(mocks.sendInvitationEmail).not.toHaveBeenCalled();
+
+    const rows = await db
+      .select({ id: invitation.id })
+      .from(invitation)
+      .where(
+        and(
+          eq(invitation.organizationId, orgId),
+          eq(invitation.email, "boss@school.test")
+        )
+      );
+    expect(rows).toHaveLength(0);
+  });
+
   it("rejects teachers on every invitation endpoint", async () => {
     const created = await invite(teacherCookie, "x@school.test", "student");
     expect(created.statusCode).toBe(403);
@@ -155,6 +174,37 @@ describe("coordinator invitation management", () => {
       headers: { cookie: teacherCookie },
     });
     expect(list.statusCode).toBe(403);
+
+    // Resend and cancel need a real invitation to target.
+    const existing = await invite(
+      coordinatorCookie,
+      "pending@school.test",
+      "student"
+    );
+    expect(existing.statusCode).toBe(201);
+    const invitationId = (existing.json() as { data: { id: string } }).data.id;
+    mocks.sendInvitationEmail.mockClear();
+
+    const resend = await app.inject({
+      method: "POST",
+      url: `/v1/organizations/${orgId}/invitations/${invitationId}/resend`,
+      headers: { cookie: teacherCookie },
+    });
+    expect(resend.statusCode).toBe(403);
+    expect(mocks.sendInvitationEmail).not.toHaveBeenCalled();
+
+    const cancel = await app.inject({
+      method: "DELETE",
+      url: `/v1/organizations/${orgId}/invitations/${invitationId}`,
+      headers: { cookie: teacherCookie },
+    });
+    expect(cancel.statusCode).toBe(403);
+
+    const [row] = await db
+      .select({ status: invitation.status })
+      .from(invitation)
+      .where(eq(invitation.id, invitationId));
+    expect(row?.status).toBe("pending");
   });
 
   it("rejects coordinators of another organization", async () => {
