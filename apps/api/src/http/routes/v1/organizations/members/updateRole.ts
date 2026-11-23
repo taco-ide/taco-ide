@@ -10,6 +10,10 @@ import {
   ResponseSchema409,
 } from "../../../_responses/types";
 import { getRequestHeaders } from "../../../../lib/requestHeaders";
+import {
+  ADMIN_ROLE_FORBIDDEN_MESSAGE,
+  canManageOrgAdminRole,
+} from "../../../../lib/orgAdminRole";
 import { auth } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import { member } from "@repo/infra/db/schema";
@@ -47,7 +51,7 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
         tags: ["organizations"],
         summary: "Update member role",
         description:
-          "Update a member's role in the organization. Requires coordinator+ role.",
+          "Update a member's role in the organization. Requires coordinator+ role. Granting or removing the admin role requires a platform admin or an admin of this organization.",
         params: OrgMembersParamsSchema,
         body: UpdateRoleBodySchema,
         response: {
@@ -95,6 +99,11 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
         });
       }
 
+      // Granting or removing `admin` is reserved to platform admins and org
+      // admins. Demotions below are written directly (not through Better
+      // Auth's creator-role guard), so the check must happen here.
+      const mayManageAdmin = await canManageOrgAdminRole(usr, organizationId);
+
       // Resolve the target member and, when demoting an admin, run the
       // last-admin guard inside a transaction. Locking the admin rows with
       // FOR UPDATE serializes against concurrent demotions/removals so the
@@ -116,6 +125,10 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
 
         if (!target[0]) {
           return { kind: "not_found" as const };
+        }
+
+        if ((target[0].role === "admin" || role === "admin") && !mayManageAdmin) {
+          return { kind: "admin_forbidden" as const };
         }
 
         const isDemotingAdmin = target[0].role === "admin" && role !== "admin";
@@ -156,6 +169,13 @@ export async function updateMemberRoleRoute(app: FastifyTypedInstance) {
         return reply.status(404).send({
           success: false as const,
           message: "Member not found",
+        });
+      }
+
+      if (guardResult.kind === "admin_forbidden") {
+        return reply.status(403).send({
+          success: false as const,
+          message: ADMIN_ROLE_FORBIDDEN_MESSAGE,
         });
       }
 

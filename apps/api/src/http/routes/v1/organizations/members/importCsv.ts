@@ -5,6 +5,10 @@ import { parse as parseCsv } from "csv-parse/sync";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { FastifyTypedInstance } from "../../../../types";
 import {
+  ADMIN_ROLE_FORBIDDEN_MESSAGE,
+  canManageOrgAdminRole,
+} from "../../../../lib/orgAdminRole";
+import {
   ResponseSchema200,
   ResponseSchema400,
   ResponseSchema401,
@@ -221,7 +225,7 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
         tags: ["organizations"],
         summary: "Bulk import members from a CSV file",
         description:
-          "Upload a CSV with columns name,email,role (and optional password) to bulk-create or link members in the organization. Headers are matched case-insensitively and accept pt-BR aliases (Nome, E-mail, Senha, Função/Papel). When a password is omitted the API auto-generates a random one and returns it via `generatedPassword` per row — share it with the user out-of-band. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting.",
+          "Upload a CSV with columns name,email,role (and optional password) to bulk-create or link members in the organization. Headers are matched case-insensitively and accept pt-BR aliases (Nome, E-mail, Senha, Função/Papel). When a password is omitted the API auto-generates a random one and returns it via `generatedPassword` per row — share it with the user out-of-band. Best-effort processing: invalid rows are reported but do not block valid ones. Use ?dryRun=true to validate without persisting. Rows with role admin require a platform admin or an admin of this organization; otherwise the whole import is rejected with 403.",
         consumes: ["multipart/form-data"],
         params: ImportCsvParamsSchema,
         querystring: ImportCsvQuerySchema,
@@ -365,6 +369,20 @@ export async function importCsvMembersRoute(app: FastifyTypedInstance) {
         }
         seenEmails.set(row.data.email, row.line);
         dedupedRows.push(row);
+      }
+
+      // ---- 5b. Admin role grants ----------------------------------------
+      // Rows are inserted directly, bypassing Better Auth's creator-role
+      // guard, so only platform admins and org admins may import `admin`
+      // rows. Reject the whole import (dry run included) before any write.
+      if (
+        dedupedRows.some((row) => row.data.role === "admin") &&
+        !(await canManageOrgAdminRole(request.user!, organizationId))
+      ) {
+        return reply.status(403).send({
+          success: false as const,
+          message: ADMIN_ROLE_FORBIDDEN_MESSAGE,
+        });
       }
 
       // ---- 6. Bulk lookup of existing users + memberships ---------------
