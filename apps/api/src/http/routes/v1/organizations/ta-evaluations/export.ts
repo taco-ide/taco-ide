@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { and, eq } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema400,
@@ -7,19 +6,15 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { db } from "@repo/infra/db";
-import {
-  teachingAssistant,
-  teachingAssistantEvaluation,
-} from "@repo/infra/db/schema";
 import {
   assertCanReadOrgEvaluations,
   EvaluationParamsSchema,
   EvaluationQuerySchema,
+  GRADES,
   listOrgTeachingAssistants,
-  orgScopeCondition,
-  weekLabel,
-  weekRangeConditions,
+  loadRatingGroups,
+  minGroupSize,
+  summarizeGroups,
 } from "./shared";
 
 const CSV_HEADER = [
@@ -27,10 +22,16 @@ const CSV_HEADER = [
   "teaching_assistant_id",
   "teaching_assistant_alias",
   "teaching_assistant_version",
-  "grade",
+  "count",
+  "mean",
+  ...GRADES.map((g) => `grade_${g}`),
+  "suppressed",
 ];
 
-function csvCell(value: string | number): string {
+/** Lets Excel detect UTF-8 (PT-BR accents in aliases). */
+const UTF8_BOM = "\uFEFF";
+
+function csvCell(value: string | number | boolean): string {
   let str = String(value);
   // Neutralise spreadsheet formula injection (aliases are user-provided).
   if (/^[=+\-@\t\r]/.test(str)) str = `'${str}`;
@@ -47,7 +48,7 @@ export async function teachingAssistantEvaluationExportRoute(
         tags: ["organizations"],
         summary: "Export anonymous teaching assistant ratings as CSV",
         description:
-          "CSV (text/csv) of the organization's anonymous TA ratings for research use: one row per rating with week, TA id/alias/version and grade, sorted by week, TA and grade (no rating id, student, session or classroom). Same filters and authorization as the stats endpoint.",
+          "CSV (text/csv) of the organization's anonymous TA ratings for research use: one aggregated row per week × TA with the rating count, mean and count per grade (1–5), sorted by week and TA. Rows of groups with fewer than TA_RATING_MIN_GROUP_SIZE ratings are suppressed (empty figures, `suppressed=true`). Never one row per rating; no student, session or classroom. UTF-8 with BOM. Same filters and authorization as the stats endpoint.",
         params: EvaluationParamsSchema,
         querystring: EvaluationQuerySchema,
         response: {
@@ -79,55 +80,45 @@ export async function teachingAssistantEvaluationExportRoute(
         });
       }
 
-      if (query.teachingAssistantId) {
-        const tas = await listOrgTeachingAssistants(organizationId);
-        if (!tas.some((t) => t.id === query.teachingAssistantId)) {
-          return reply.status(404).send({
-            success: false as const,
-            message: "Teaching assistant not found",
-          });
-        }
+      const tas = await listOrgTeachingAssistants(organizationId);
+      if (
+        query.teachingAssistantId &&
+        !tas.some((t) => t.id === query.teachingAssistantId)
+      ) {
+        return reply.status(404).send({
+          success: false as const,
+          message: "Teaching assistant not found",
+        });
       }
 
-      const conditions = [
-        orgScopeCondition(organizationId),
-        ...weekRangeConditions(query),
-      ];
-      if (query.teachingAssistantId) {
-        conditions.push(
-          eq(teachingAssistantEvaluation.teachingAssistantId, query.teachingAssistantId)
-        );
-      }
-
-      const rows = await db
-        .select({
-          week: weekLabel,
-          teachingAssistantId: teachingAssistant.id,
-          alias: teachingAssistant.alias,
-          version: teachingAssistant.version,
-          grade: teachingAssistantEvaluation.grade,
-        })
-        .from(teachingAssistantEvaluation)
-        .innerJoin(
-          teachingAssistant,
-          eq(teachingAssistant.id, teachingAssistantEvaluation.teachingAssistantId)
+      const k = minGroupSize();
+      // listOrgTeachingAssistants is ordered by alias, version.
+      const taOrder = new Map(tas.map((t, i) => [t.id, i]));
+      const taById = new Map(tas.map((t) => [t.id, t]));
+      const groups = (await loadRatingGroups(organizationId, query))
+        .filter(
+          (g) =>
+            !query.teachingAssistantId ||
+            g.teachingAssistantId === query.teachingAssistantId
         )
-        .where(and(...conditions))
-        .orderBy(
-          weekLabel,
-          teachingAssistant.alias,
-          teachingAssistant.version,
-          teachingAssistant.id,
-          teachingAssistantEvaluation.grade
+        .sort(
+          (a, b) =>
+            a.week.localeCompare(b.week) ||
+            taOrder.get(a.teachingAssistantId)! - taOrder.get(b.teachingAssistantId)!
         );
 
       const lines = [
         CSV_HEADER.join(","),
-        ...rows.map((r) =>
-          [r.week, r.teachingAssistantId, r.alias, r.version, r.grade]
+        ...groups.map((g) => {
+          const ta = taById.get(g.teachingAssistantId)!;
+          const s = summarizeGroups([g], k);
+          const figures = s.distribution
+            ? [s.count!, s.mean!, ...s.distribution]
+            : ["", "", ...GRADES.map(() => "")];
+          return [g.week, ta.id, ta.alias, ta.version, ...figures, s.suppressed]
             .map(csvCell)
-            .join(",")
-        ),
+            .join(",");
+        }),
       ];
 
       const filename = `ta-ratings-${organizationId}-${new Date()
@@ -138,7 +129,7 @@ export async function teachingAssistantEvaluationExportRoute(
         .status(200)
         .header("content-disposition", `attachment; filename="${filename}"`)
         .type("text/csv; charset=utf-8")
-        .send(`${lines.join("\n")}\n`);
+        .send(`${UTF8_BOM}${lines.join("\n")}\n`);
     }
   );
 }

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { and, eq, sql } from "drizzle-orm";
 import { FastifyTypedInstance } from "../../../../types";
 import {
   ResponseSchema200,
@@ -8,45 +7,48 @@ import {
   ResponseSchema403,
   ResponseSchema404,
 } from "../../../_responses/types";
-import { db } from "@repo/infra/db";
-import {
-  teachingAssistant,
-  teachingAssistantEvaluation,
-} from "@repo/infra/db/schema";
 import {
   assertCanReadOrgEvaluations,
   EvaluationParamsSchema,
   EvaluationQuerySchema,
+  GRADES,
   listOrgTeachingAssistants,
-  orgScopeCondition,
-  round2,
-  weekLabel,
-  weekRangeConditions,
+  loadRatingGroups,
+  minGroupSize,
+  summarizeGroups,
+  weeksInRange,
 } from "./shared";
 
 // ==================== SCHEMAS ====================
 
-const EvaluationStatsSchema = z.object({
-  total: z.number().int(),
+const GroupFields = {
+  count: z
+    .number()
+    .int()
+    .nullable()
+    .describe("Ratings in visible groups; null when all were withheld"),
   mean: z.number().nullable(),
-  distribution: z.array(
-    z.object({ grade: z.number().int(), count: z.number().int() })
-  ),
-  weekly: z.array(
-    z.object({
-      week: z.string(),
-      count: z.number().int(),
-      mean: z.number(),
-    })
-  ),
+  suppressed: z
+    .boolean()
+    .describe("Some ratings were withheld (week × TA groups smaller than minGroupSize)"),
+};
+
+const EvaluationStatsSchema = z.object({
+  minGroupSize: z.number().int(),
+  total: GroupFields.count,
+  mean: GroupFields.mean,
+  suppressed: GroupFields.suppressed,
+  distribution: z
+    .array(z.object({ grade: z.number().int(), count: z.number().int() }))
+    .nullable(),
+  weekly: z.array(z.object({ week: z.string(), ...GroupFields })),
   teachingAssistants: z.array(
     z.object({
       id: z.string(),
       alias: z.string(),
       version: z.number().int(),
       isActive: z.boolean(),
-      count: z.number().int(),
-      mean: z.number().nullable(),
+      ...GroupFields,
     })
   ),
 });
@@ -54,8 +56,6 @@ const EvaluationStatsSchema = z.object({
 const EvaluationStatsResponseSchema = ResponseSchema200.extend({
   data: EvaluationStatsSchema,
 });
-
-const GRADES = [1, 2, 3, 4, 5] as const;
 
 // ==================== ROUTE ====================
 
@@ -69,7 +69,7 @@ export async function teachingAssistantEvaluationStatsRoute(
         tags: ["organizations"],
         summary: "Anonymous teaching assistant rating statistics",
         description:
-          "Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).",
+          "Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Small-cell suppression: week × TA groups with fewer than `minGroupSize` ratings (env TA_RATING_MIN_GROUP_SIZE) are withheld from every figure; `suppressed` flags where that happened and `count`/`mean` are null when nothing is left. The weekly series is zero-filled over the requested range (up to the current week). Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).",
         params: EvaluationParamsSchema,
         querystring: EvaluationQuerySchema,
         response: {
@@ -112,84 +112,48 @@ export async function teachingAssistantEvaluationStatsRoute(
         });
       }
 
-      const scoped = [orgScopeCondition(organizationId), ...weekRangeConditions(query)];
+      const k = minGroupSize();
+      const groups = await loadRatingGroups(organizationId, query);
       const filtered = query.teachingAssistantId
-        ? [
-            ...scoped,
-            eq(
-              teachingAssistantEvaluation.teachingAssistantId,
-              query.teachingAssistantId
-            ),
-          ]
-        : scoped;
+        ? groups.filter((g) => g.teachingAssistantId === query.teachingAssistantId)
+        : groups;
 
-      const count = sql<number>`count(*)::int`;
-      const mean = sql<number>`avg(${teachingAssistantEvaluation.grade})::float8`;
-
-      const [byGrade, byWeek, byTa] = await Promise.all([
-        db
-          .select({ grade: teachingAssistantEvaluation.grade, count })
-          .from(teachingAssistantEvaluation)
-          .innerJoin(
-            teachingAssistant,
-            eq(teachingAssistant.id, teachingAssistantEvaluation.teachingAssistantId)
-          )
-          .where(and(...filtered))
-          .groupBy(teachingAssistantEvaluation.grade),
-        db
-          .select({ week: weekLabel, count, mean })
-          .from(teachingAssistantEvaluation)
-          .innerJoin(
-            teachingAssistant,
-            eq(teachingAssistant.id, teachingAssistantEvaluation.teachingAssistantId)
-          )
-          .where(and(...filtered))
-          .groupBy(weekLabel)
-          .orderBy(weekLabel),
-        db
-          .select({
-            teachingAssistantId: teachingAssistantEvaluation.teachingAssistantId,
-            count,
-            mean,
-          })
-          .from(teachingAssistantEvaluation)
-          .innerJoin(
-            teachingAssistant,
-            eq(teachingAssistant.id, teachingAssistantEvaluation.teachingAssistantId)
-          )
-          .where(and(...scoped))
-          .groupBy(teachingAssistantEvaluation.teachingAssistantId),
-      ]);
-
-      const gradeCounts = new Map(byGrade.map((r) => [r.grade, r.count]));
-      const distribution = GRADES.map((grade) => ({
-        grade,
-        count: gradeCounts.get(grade) ?? 0,
-      }));
-      const total = byGrade.reduce((acc, r) => acc + r.count, 0);
-      const sum = byGrade.reduce((acc, r) => acc + r.grade * r.count, 0);
-
-      const taStats = new Map(byTa.map((r) => [r.teachingAssistantId, r]));
+      const overall = summarizeGroups(filtered, k);
+      const pick = ({ count, mean, suppressed }: typeof overall) => ({
+        count,
+        mean,
+        suppressed,
+      });
 
       return reply.status(200).send({
         success: true as const,
         data: {
-          total,
-          mean: total > 0 ? round2(sum / total) : null,
-          distribution,
-          weekly: byWeek.map((w) => ({
-            week: w.week,
-            count: w.count,
-            mean: round2(w.mean),
+          minGroupSize: k,
+          total: overall.count,
+          mean: overall.mean,
+          suppressed: overall.suppressed,
+          distribution: overall.distribution
+            ? GRADES.map((grade, i) => ({
+                grade,
+                count: overall.distribution![i]!,
+              }))
+            : null,
+          weekly: weeksInRange(
+            query,
+            filtered.map((g) => g.week)
+          ).map((week) => ({
+            week,
+            ...pick(summarizeGroups(filtered.filter((g) => g.week === week), k)),
           })),
-          teachingAssistants: tas.map((t) => {
-            const s = taStats.get(t.id);
-            return {
-              ...t,
-              count: s?.count ?? 0,
-              mean: s ? round2(s.mean) : null,
-            };
-          }),
+          teachingAssistants: tas.map((t) => ({
+            ...t,
+            ...pick(
+              summarizeGroups(
+                groups.filter((g) => g.teachingAssistantId === t.id),
+                k
+              )
+            ),
+          })),
         },
       });
     }

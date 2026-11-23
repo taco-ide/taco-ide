@@ -14,7 +14,7 @@ export const getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryK
 export type GetV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryKey = ReturnType<typeof getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQueryKey>
 
 /**
- * @description Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).
+ * @description Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Small-cell suppression: week × TA groups with fewer than `minGroupSize` ratings (env TA_RATING_MIN_GROUP_SIZE) are withheld from every figure; `suppressed` flags where that happened and `count`/`mean` are null when nothing is left. The weekly series is zero-filled over the requested range (up to the current week). Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).
  * @summary Anonymous teaching assistant rating statistics
  * {@link /v1/organizations/:id/teaching-assistant-evaluations/stats}
  */
@@ -38,7 +38,7 @@ export function getV1OrganizationsIdTeachingAssistantEvaluationsStatsSuspenseQue
 }
 
 /**
- * @description Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).
+ * @description Aggregated anonymous student ratings (1–5) of the organization's teaching assistants: total, mean, distribution per grade, weekly series and per-TA summary. Ratings carry no student, session or classroom link. Small-cell suppression: week × TA groups with fewer than `minGroupSize` ratings (env TA_RATING_MIN_GROUP_SIZE) are withheld from every figure; `suppressed` flags where that happened and `count`/`mean` are null when nothing is left. The weekly series is zero-filled over the requested range (up to the current week). Filter by `teachingAssistantId` and by week range (`from`/`to`, YYYY-MM-DD; a rating counts when its week starts between the start of the week containing `from` and `to`). The per-TA summary honours the date range but not the TA filter. Staff only (teacher, coordinator, admin of the organization, or platform admin).
  * @summary Anonymous teaching assistant rating statistics
  * {@link /v1/organizations/:id/teaching-assistant-evaluations/stats}
  */

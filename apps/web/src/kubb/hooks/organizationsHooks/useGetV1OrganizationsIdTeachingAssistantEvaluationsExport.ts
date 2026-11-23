@@ -14,7 +14,7 @@ export const getV1OrganizationsIdTeachingAssistantEvaluationsExportQueryKey = (i
 export type GetV1OrganizationsIdTeachingAssistantEvaluationsExportQueryKey = ReturnType<typeof getV1OrganizationsIdTeachingAssistantEvaluationsExportQueryKey>
 
 /**
- * @description CSV (text/csv) of the organization's anonymous TA ratings for research use: one row per rating with week, TA id/alias/version and grade, sorted by week, TA and grade (no rating id, student, session or classroom). Same filters and authorization as the stats endpoint.
+ * @description CSV (text/csv) of the organization's anonymous TA ratings for research use: one aggregated row per week × TA with the rating count, mean and count per grade (1–5), sorted by week and TA. Rows of groups with fewer than TA_RATING_MIN_GROUP_SIZE ratings are suppressed (empty figures, `suppressed=true`). Never one row per rating; no student, session or classroom. UTF-8 with BOM. Same filters and authorization as the stats endpoint.
  * @summary Export anonymous teaching assistant ratings as CSV
  * {@link /v1/organizations/:id/teaching-assistant-evaluations/export}
  */
@@ -38,7 +38,7 @@ export function getV1OrganizationsIdTeachingAssistantEvaluationsExportQueryOptio
 }
 
 /**
- * @description CSV (text/csv) of the organization's anonymous TA ratings for research use: one row per rating with week, TA id/alias/version and grade, sorted by week, TA and grade (no rating id, student, session or classroom). Same filters and authorization as the stats endpoint.
+ * @description CSV (text/csv) of the organization's anonymous TA ratings for research use: one aggregated row per week × TA with the rating count, mean and count per grade (1–5), sorted by week and TA. Rows of groups with fewer than TA_RATING_MIN_GROUP_SIZE ratings are suppressed (empty figures, `suppressed=true`). Never one row per rating; no student, session or classroom. UTF-8 with BOM. Same filters and authorization as the stats endpoint.
  * @summary Export anonymous teaching assistant ratings as CSV
  * {@link /v1/organizations/:id/teaching-assistant-evaluations/export}
  */

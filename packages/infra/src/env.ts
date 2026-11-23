@@ -72,6 +72,11 @@ const envSchema = z.object({
     .optional()
     .transform((v) => v || undefined),
 
+  // Anonymous TA rating stats (#99): week × TA groups with fewer ratings
+  // than this are withheld from stats and the CSV export (small-cell
+  // suppression). 1 disables suppression.
+  TA_RATING_MIN_GROUP_SIZE: z.coerce.number().int().min(1).default(5),
+
   // Server
   PORT: z.coerce.number().default(4000),
 

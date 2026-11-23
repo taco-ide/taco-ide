@@ -22,24 +22,28 @@ export const getV1OrganizationsIdTeachingAssistantEvaluationsStats200Schema = z.
     "success": z.literal(true),
 "message": z.string().optional(),
 "data": z.object({
-    "total": z.number().int(),
+    "minGroupSize": z.number().int(),
+"total": z.number().int().describe("Ratings in visible groups; null when all were withheld").nullable(),
 "mean": z.number().nullable(),
+"suppressed": z.boolean().describe("Some ratings were withheld (week × TA groups smaller than minGroupSize)"),
 "distribution": z.array(z.object({
     "grade": z.number().int(),
 "count": z.number().int()
-    })),
+    })).nullable(),
 "weekly": z.array(z.object({
     "week": z.string(),
-"count": z.number().int(),
-"mean": z.number()
+"count": z.number().int().describe("Ratings in visible groups; null when all were withheld").nullable(),
+"mean": z.number().nullable(),
+"suppressed": z.boolean().describe("Some ratings were withheld (week × TA groups smaller than minGroupSize)")
     })),
 "teachingAssistants": z.array(z.object({
     "id": z.string(),
 "alias": z.string(),
 "version": z.number().int(),
 "isActive": z.boolean(),
-"count": z.number().int(),
-"mean": z.number().nullable()
+"count": z.number().int().describe("Ratings in visible groups; null when all were withheld").nullable(),
+"mean": z.number().nullable(),
+"suppressed": z.boolean().describe("Some ratings were withheld (week × TA groups smaller than minGroupSize)")
     }))
     }),
 "pagination": z.object({

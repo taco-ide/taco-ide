@@ -55,11 +55,21 @@ export type GetV1OrganizationsIdTeachingAssistantEvaluationsStats200 = {
         /**
          * @type integer
         */
-        total: number;
+        minGroupSize: number;
+        /**
+         * @description Ratings in visible groups; null when all were withheld
+         * @type integer
+        */
+        total: number | null;
         /**
          * @type number
         */
         mean: number | null;
+        /**
+         * @description Some ratings were withheld (week × TA groups smaller than minGroupSize)
+         * @type boolean
+        */
+        suppressed: boolean;
         /**
          * @type array
         */
@@ -72,7 +82,7 @@ export type GetV1OrganizationsIdTeachingAssistantEvaluationsStats200 = {
              * @type integer
             */
             count: number;
-        }[];
+        }[] | null;
         /**
          * @type array
         */
@@ -82,13 +92,19 @@ export type GetV1OrganizationsIdTeachingAssistantEvaluationsStats200 = {
             */
             week: string;
             /**
+             * @description Ratings in visible groups; null when all were withheld
              * @type integer
             */
-            count: number;
+            count: number | null;
             /**
              * @type number
             */
-            mean: number;
+            mean: number | null;
+            /**
+             * @description Some ratings were withheld (week × TA groups smaller than minGroupSize)
+             * @type boolean
+            */
+            suppressed: boolean;
         }[];
         /**
          * @type array
@@ -111,13 +127,19 @@ export type GetV1OrganizationsIdTeachingAssistantEvaluationsStats200 = {
             */
             isActive: boolean;
             /**
+             * @description Ratings in visible groups; null when all were withheld
              * @type integer
             */
-            count: number;
+            count: number | null;
             /**
              * @type number
             */
             mean: number | null;
+            /**
+             * @description Some ratings were withheld (week × TA groups smaller than minGroupSize)
+             * @type boolean
+            */
+            suppressed: boolean;
         }[];
     };
     /**
