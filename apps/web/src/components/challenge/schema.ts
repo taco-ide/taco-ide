@@ -9,6 +9,8 @@ export const challengeFormSchema = z.object({
     classroomId: z.string().min(1, "Selecione uma turma"),
     tags: z.array(z.string()).optional(),
     generateReferenceSolutions: z.boolean().optional(),
+    /** "" = organization default assistant. */
+    teachingAssistantId: z.string().optional(),
 });
 
 export type ChallengeFormData = z.infer<typeof challengeFormSchema>;

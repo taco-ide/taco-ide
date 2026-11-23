@@ -48,7 +48,7 @@ test.describe("Challenge wizard — two-phase Next on step 2", () => {
     await page.getByRole("option").first().click();
 
     // Select an existing classroom using the second combobox.
-    const classroomCombo = page.getByRole("combobox").last();
+    const classroomCombo = page.getByRole("combobox").nth(1);
     await classroomCombo.click();
     await page.getByRole("option").first().click();
 

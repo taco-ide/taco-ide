@@ -76,6 +76,14 @@ const Navbar = () => {
                 {t("create")}
               </Link>
             </PermissionGuard>
+            <PermissionGuard resource="teachingAssistant" action="update">
+              <Link
+                href="/teaching-assistants"
+                className="px-3 py-1.5 text-sm text-gray-300 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+              >
+                {t("teachingAssistants")}
+              </Link>
+            </PermissionGuard>
             <PlatformAdminGuard>
               <Link
                 href="/admin"

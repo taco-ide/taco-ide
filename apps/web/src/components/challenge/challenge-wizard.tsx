@@ -197,6 +197,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 classroomId: formData.classroomId,
                 tags: tags.length > 0 ? tags : undefined,
                 generateReferenceSolutions: formData.generateReferenceSolutions !== false ? true : undefined,
+                teachingAssistantId: formData.teachingAssistantId || undefined,
             };
 
             if (mode === "create") {
@@ -210,6 +211,10 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 };
                 if (formData.generateReferenceSolutions === true) {
                     patchData.generateReferenceSolutions = true;
+                }
+                const selectedTa = formData.teachingAssistantId ?? "";
+                if (selectedTa !== (initialData?.teachingAssistantId ?? "")) {
+                    patchData.teachingAssistantId = selectedTa || null;
                 }
                 updateMutation.mutate({
                     id: challengeId,

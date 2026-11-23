@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -10,11 +10,8 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import {
-  workSession,
-  challengeTeachingAssistant,
-  teachingAssistant,
-} from "@repo/infra/db/schema";
+import { workSession, challengeTeachingAssistant } from "@repo/infra/db/schema";
+import { findDefaultTeachingAssistant } from "../../../services/teaching-assistant-access";
 import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
@@ -132,16 +129,8 @@ export async function createWorkSessionRoute(app: FastifyTypedInstance) {
               message: "Challenge has no teaching assistant configured",
             });
           }
-          const [orgTa] = await db
-            .select({ id: teachingAssistant.id })
-            .from(teachingAssistant)
-            .where(
-              and(
-                eq(teachingAssistant.createdByOrganizationId, organizationId),
-                eq(teachingAssistant.isActive, true)
-              )
-            )
-            .limit(1);
+          // Same "organization default" as challenge creation.
+          const orgTa = await findDefaultTeachingAssistant(organizationId);
           if (!orgTa) {
             return reply.status(400).send({
               success: false as const,

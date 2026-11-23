@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { z } from "zod";
 import { env } from "@repo/infra/env";
+import { LLMOverridesSchema } from "./llm-overrides";
 
 export const AGENT_TIMEOUT_MS = 60_000;
 
@@ -12,19 +12,6 @@ export class AgentTimeoutError extends Error {
     this.name = "AgentTimeoutError";
   }
 }
-
-/**
- * Zod schema for validating LLM parameter overrides.
- * Only these keys are accepted to prevent arbitrary configuration of the LLM.
- */
-const LLMOverridesSchema = z.object({
-  model: z.string().min(1).optional(),
-  temperature: z.number().min(0).max(2).optional(),
-  max_tokens: z.number().int().min(1).optional(),
-  top_p: z.number().min(0).max(1).optional(),
-  frequency_penalty: z.number().min(-2).max(2).optional(),
-  presence_penalty: z.number().min(-2).max(2).optional(),
-});
 
 function buildChatOpenAI(
   defaultModel: string,

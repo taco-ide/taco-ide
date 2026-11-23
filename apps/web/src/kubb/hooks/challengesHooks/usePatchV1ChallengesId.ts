@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PatchV1ChallengesIdMutationRequest, PatchV1ChallengesIdMutationResponse, PatchV1ChallengesIdPathParams, PatchV1ChallengesId400, PatchV1ChallengesId401, PatchV1ChallengesId403, PatchV1ChallengesId404 } from "../../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PatchV1ChallengesIdMutationRequest, PatchV1ChallengesIdMutationResponse, PatchV1ChallengesIdPathParams, PatchV1ChallengesId400, PatchV1ChallengesId401, PatchV1ChallengesId403, PatchV1ChallengesId404 } from "../../../../../../packages/types/kubb/PatchV1ChallengesId.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const patchV1ChallengesIdMutationKey = () => [{ url: '/v1/challenges/:id' }] as const
@@ -14,7 +14,7 @@ export const patchV1ChallengesIdMutationKey = () => [{ url: '/v1/challenges/:id'
 export type PatchV1ChallengesIdMutationKey = ReturnType<typeof patchV1ChallengesIdMutationKey>
 
 /**
- * @description Update challenge content or classroom assignment. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.
+ * @description Update challenge content, teaching assistant or classroom assignment. The teaching assistant must be active and belong to the challenge's organization. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.
  * @summary Update challenge
  * {@link /v1/challenges/:id}
  */
@@ -28,7 +28,7 @@ export async function patchV1ChallengesId(id: PatchV1ChallengesIdPathParams["id"
 }
 
 /**
- * @description Update challenge content or classroom assignment. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.
+ * @description Update challenge content, teaching assistant or classroom assignment. The teaching assistant must be active and belong to the challenge's organization. Teachers can manage challenges they created or whose classroom they lead. Coordinators/admins can manage challenges in the target organization; platform admins can manage globally. All changes require source management access. Assignment also requires destination classroom management access and removal of an existing assignment first.
  * @summary Update challenge
  * {@link /v1/challenges/:id}
  */

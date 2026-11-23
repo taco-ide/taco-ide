@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useFormContext, Controller } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useFormContext, useWatch, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
@@ -22,12 +22,16 @@ import { difficultyLevels } from "@/components/challenge/constants";
 import type { ChallengeFormData } from "@/components/challenge/schema";
 import {
     useGetV1Classrooms,
+    useGetV1ClassroomsId,
     usePostV1Classrooms,
     getV1ClassroomsQueryKey,
+    useGetV1TeachingAssistants,
 } from "@/kubb/hooks";
 import { useUser } from "@/contexts/UserContext";
 
 const CREATE_NEW_VALUE = "__create_new__";
+// Radix Select cannot use "" as an item value; the form stores "" for default.
+const DEFAULT_TA_VALUE = "__default__";
 
 interface StepBasicInfoProps {
     tags: string[];
@@ -56,6 +60,36 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
     );
 
     const classrooms = classroomsData?.data ?? [];
+
+    // Assistants must belong to the challenge's organization, i.e. the
+    // selected classroom's (not necessarily the active organization).
+    const selectedClassroomId = useWatch({ control, name: "classroomId" });
+    const listedClassroom = classrooms.find((cl) => cl.id === selectedClassroomId);
+    const { data: classroomDetail } = useGetV1ClassroomsId(selectedClassroomId ?? "", {
+        query: {
+            enabled: !!selectedClassroomId && !isLoadingClassrooms && !listedClassroom,
+        },
+    });
+    const classroomOrganizationId =
+        listedClassroom?.organizationId ?? classroomDetail?.data?.organizationId;
+
+    const { data: assistantsData, isLoading: isLoadingAssistants } =
+        useGetV1TeachingAssistants(
+            { organizationId: classroomOrganizationId },
+            { query: { enabled: !!classroomOrganizationId } },
+        );
+    const assistants = assistantsData?.data ?? [];
+
+    // Drop a choice that does not exist in the newly selected organization.
+    const selectedTeachingAssistantId = useWatch({ control, name: "teachingAssistantId" });
+    useEffect(() => {
+        if (
+            assistantsData &&
+            selectedTeachingAssistantId &&
+            !assistantsData.data.some((ta) => ta.id === selectedTeachingAssistantId)
+        )
+            setValue("teachingAssistantId", "");
+    }, [assistantsData, selectedTeachingAssistantId, setValue]);
 
     const createClassroomMutation = usePostV1Classrooms({
         mutation: {
@@ -283,6 +317,55 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
                             {t("basicInfo.classroom.createError")}
                         </p>
                     )}
+                </div>
+
+                <div>
+                    <Label htmlFor="challenge-teaching-assistant" className="text-slate-200">
+                        {t("basicInfo.teachingAssistant.label")}
+                    </Label>
+                    <Controller
+                        control={control}
+                        name="teachingAssistantId"
+                        render={({ field }) => (
+                            <Select
+                                onValueChange={(value: string) =>
+                                    field.onChange(value === DEFAULT_TA_VALUE ? "" : value)
+                                }
+                                value={field.value ? field.value : DEFAULT_TA_VALUE}
+                                disabled={!classroomOrganizationId || isLoadingAssistants}
+                            >
+                                <SelectTrigger
+                                    id="challenge-teaching-assistant"
+                                    className="bg-slate-900 border-slate-700 text-slate-200"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-700">
+                                    <SelectItem
+                                        value={DEFAULT_TA_VALUE}
+                                        className="text-slate-200 focus:bg-slate-700"
+                                    >
+                                        {t("basicInfo.teachingAssistant.default")}
+                                    </SelectItem>
+                                    {assistants.map((ta) => (
+                                        <SelectItem
+                                            key={ta.id}
+                                            value={ta.id}
+                                            disabled={!ta.isActive}
+                                            className="text-slate-200 focus:bg-slate-700"
+                                        >
+                                            {ta.isActive
+                                                ? ta.alias
+                                                : t("basicInfo.teachingAssistant.inactive", { name: ta.alias })}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                        {t("basicInfo.teachingAssistant.help")}
+                    </p>
                 </div>
 
                 <div>
