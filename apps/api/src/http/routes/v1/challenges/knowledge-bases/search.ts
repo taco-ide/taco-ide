@@ -17,7 +17,7 @@ import { knowledgeBase } from "@repo/infra/db/schema";
 import { searchChallengeKnowledgeBases } from "../../../../../services/knowledge-base-search";
 import {
   EmbeddingUnavailableError,
-  EMBEDDING_UNAVAILABLE_MESSAGE,
+  embeddingUnavailableMessage,
 } from "../../../../../services/embedding-errors";
 
 // ==================== SCHEMAS ====================
@@ -122,7 +122,7 @@ export async function searchChallengeKnowledgeBasesRoute(
         );
         return reply.status(503).send({
           success: false as const,
-          message: EMBEDDING_UNAVAILABLE_MESSAGE,
+          message: embeddingUnavailableMessage(err),
         });
       }
 

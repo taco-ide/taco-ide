@@ -35,6 +35,26 @@ describe("searchKnowledgeBase tool", () => {
     expect(out.error).toMatch(/temporarily unavailable/i);
   });
 
+  it("says the materials search is not available in this deployment when embeddings are not configured", async () => {
+    mocks.search.mockRejectedValueOnce(
+      new EmbeddingUnavailableError("not_configured", "not configured")
+    );
+    const out = await runTool();
+    expect(out.unavailable).toBe(true);
+    expect(out.results).toEqual([]);
+    expect(out.error).toMatch(/not available in this deployment/i);
+    expect(out.error).not.toMatch(/temporarily/i);
+  });
+
+  it("reports a generic search failure for non-embedding errors", async () => {
+    mocks.search.mockRejectedValueOnce(new Error("connection terminated"));
+    const out = await runTool();
+    expect(out.unavailable).toBe(true);
+    expect(out.results).toEqual([]);
+    expect(out.error).toMatch(/search failed/i);
+    expect(out.error).not.toMatch(/could not be reached/i);
+  });
+
   it("reports no matches without the unavailable flag", async () => {
     mocks.search.mockResolvedValueOnce([]);
     const out = await runTool();

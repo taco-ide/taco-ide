@@ -63,6 +63,13 @@ function embeddingOk(vector: number[]) {
 const UNAVAILABLE_CASES = [
   ["HTTP 503", () => Promise.resolve(new Response("down", { status: 503 }))],
   ["network error", () => Promise.reject(new TypeError("fetch failed"))],
+  [
+    "HTTP 200 without a data array",
+    () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ object: "list" }), { status: 200 })
+      ),
+  ],
 ] as const;
 
 describe("knowledge-base retrieval when the embedding service fails", () => {
@@ -193,6 +200,48 @@ describe("knowledge-base retrieval when the embedding service fails", () => {
             kbRetrieval: expect.objectContaining({
               status: "unavailable",
               failureReason: expect.stringMatching(/^embedding_/),
+            }),
+          }),
+        })
+      );
+    });
+  });
+
+  describe("embedding service not configured", () => {
+    beforeEach(() => {
+      env.EMBEDDING_API_URL = undefined;
+    });
+
+    it("search endpoints return 503 saying search is not available in this deployment", async () => {
+      for (const url of searchUrls()) {
+        const res = await app.inject({
+          url,
+          headers: { cookie: teacherCookie },
+        });
+        expect(res.statusCode, url).toBe(503);
+        const body = res.json<{ success: boolean; message: string }>();
+        expect(body.success).toBe(false);
+        expect(body.message).toMatch(/not available in this deployment/i);
+        expect(body.message).not.toMatch(/temporarily/i);
+      }
+      expect(mocks.embeddingFetch).not.toHaveBeenCalled();
+    });
+
+    it("chat tags the turn rag:not_configured instead of rag:unavailable", async () => {
+      const res = await app.inject({
+        method: "POST",
+        url: `/v1/work-sessions/${workSessionId}/chat`,
+        headers: { cookie: learnerCookie },
+        payload: { message: "How do loops work?" },
+      });
+      expect(res.statusCode).toBe(200);
+      expect(mocks.langfuse).toHaveBeenCalledWith(
+        expect.objectContaining({
+          tags: ["agent:ta", "rag:not_configured"],
+          metadata: expect.objectContaining({
+            kbRetrieval: expect.objectContaining({
+              status: "unavailable",
+              failureReason: "embedding_not_configured",
             }),
           }),
         })

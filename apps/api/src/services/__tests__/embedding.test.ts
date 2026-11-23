@@ -72,6 +72,17 @@ describe("embedding service", () => {
       });
     });
 
+    it("throws invalid_response when an HTTP 200 payload has no data array", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ object: "list" }), { status: 200 })
+      );
+      await expect(generateQueryEmbedding("loops")).rejects.toMatchObject({
+        name: "EmbeddingUnavailableError",
+        reason: "invalid_response",
+        message: expect.stringMatching(/data array/i),
+      });
+    });
+
     it("throws EmbeddingUnavailableError when the service is not configured", async () => {
       mocks.env.EMBEDDING_API_URL = undefined;
       await expect(generateQueryEmbedding("loops")).rejects.toMatchObject({
@@ -94,6 +105,44 @@ describe("embedding service", () => {
     it("keeps returning nulls on network errors", async () => {
       fetchMock.mockRejectedValueOnce(new TypeError("fetch failed"));
       await expect(generateEmbeddings(["a"])).resolves.toEqual([null]);
+    });
+
+    it("logs a warning and returns nulls when an HTTP 200 payload has no data array", async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ object: "list" }), { status: 200 })
+      );
+      await expect(generateEmbeddings(["a", "b"])).resolves.toEqual([
+        null,
+        null,
+      ]);
+      expect(console.warn).toHaveBeenCalledWith(
+        "[Embedding] Batch 0 failed:",
+        expect.stringMatching(/data array/i)
+      );
+    });
+
+    it("nulls only the chunks of the batch that failed", async () => {
+      // 150 texts → two batches of 100 and 50; the first batch fails.
+      const texts = Array.from({ length: 150 }, (_, i) => `chunk ${i}`);
+      fetchMock
+        .mockResolvedValueOnce(new Response("boom", { status: 500 }))
+        .mockResolvedValueOnce(
+          embeddingResponse(texts.slice(100).map((_, i) => [i, 0, 0]))
+        );
+
+      const results = await generateEmbeddings(texts);
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(results).toHaveLength(150);
+      expect(results.slice(0, 100).every((r) => r === null)).toBe(true);
+      expect(results.slice(100)).toEqual(
+        texts.slice(100).map((_, i) => [i, 0, 0])
+      );
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.warn).toHaveBeenCalledWith(
+        "[Embedding] Batch 0 failed:",
+        expect.stringMatching(/status 500/)
+      );
     });
 
     it("returns embeddings in input order on success", async () => {

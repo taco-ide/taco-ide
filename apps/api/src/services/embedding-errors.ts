@@ -28,3 +28,16 @@ export class EmbeddingUnavailableError extends Error {
 /** User-facing message for search endpoints when embeddings are unavailable. */
 export const EMBEDDING_UNAVAILABLE_MESSAGE =
   "Knowledge base search is temporarily unavailable because the embedding service could not be reached. Please try again later.";
+
+/** User-facing message when this deployment has no embedding service configured. */
+export const EMBEDDING_NOT_CONFIGURED_MESSAGE =
+  "Knowledge base search is not available in this deployment because no embedding service is configured.";
+
+/** Picks the user-facing search message for an embedding failure. */
+export function embeddingUnavailableMessage(
+  err: EmbeddingUnavailableError
+): string {
+  return err.reason === "not_configured"
+    ? EMBEDDING_NOT_CONFIGURED_MESSAGE
+    : EMBEDDING_UNAVAILABLE_MESSAGE;
+}

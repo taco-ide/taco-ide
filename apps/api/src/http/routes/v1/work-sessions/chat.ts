@@ -282,9 +282,11 @@ export async function chatRoute(app: FastifyTypedInstance) {
         userId: usr.id,
         sessionId: workSessionId,
         tags:
-          kbRetrieval.status === "unavailable"
-            ? ["agent:ta", "rag:unavailable"]
-            : ["agent:ta"],
+          kbRetrieval.status === "ok"
+            ? ["agent:ta"]
+            : kbRetrieval.failureReason === "embedding_not_configured"
+              ? ["agent:ta", "rag:not_configured"]
+              : ["agent:ta", "rag:unavailable"],
         metadata: {
           challengeId: session.challengeId,
           workSessionId,

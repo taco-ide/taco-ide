@@ -124,13 +124,29 @@ export const getChallengeInfo = tool(
 export const KB_UNAVAILABLE_TOOL_MESSAGE =
   "Course materials are temporarily unavailable (the knowledge base search service could not be reached). Tell the student the materials cannot be consulted right now, and continue helping without them.";
 
+export const KB_NOT_CONFIGURED_TOOL_MESSAGE =
+  "Course materials search is not available in this deployment (no embedding service is configured). Do not say it is temporary; if the student asks about course materials, tell them they cannot be searched here, and continue helping without them.";
+
+export const KB_SEARCH_FAILED_TOOL_MESSAGE =
+  "The course materials search failed. Tell the student the materials cannot be consulted right now, and continue helping without them.";
+
+function kbFailureToolMessage(err: unknown): string {
+  if (!(err instanceof EmbeddingUnavailableError)) {
+    return KB_SEARCH_FAILED_TOOL_MESSAGE;
+  }
+  return err.reason === "not_configured"
+    ? KB_NOT_CONFIGURED_TOOL_MESSAGE
+    : KB_UNAVAILABLE_TOOL_MESSAGE;
+}
+
 /**
  * Tool output contract:
  * - `unavailable: false` — search ran; `results` may be empty (no relevant
  *   material found).
- * - `unavailable: true` — search could not run (e.g. embedding service down);
- *   `results` is empty and `error` tells the agent to say the materials are
- *   temporarily unavailable rather than implying none exist.
+ * - `unavailable: true` — search could not run; `results` is empty and
+ *   `error` tells the agent what to say instead of implying none exist:
+ *   temporarily unavailable (embedding service down), not available in this
+ *   deployment (embeddings not configured), or a generic search failure.
  */
 export const searchKnowledgeBase = tool(
   async ({ query }, config) => {
@@ -167,7 +183,7 @@ export const searchKnowledgeBase = tool(
       return JSON.stringify({
         unavailable: true,
         results: [],
-        error: KB_UNAVAILABLE_TOOL_MESSAGE,
+        error: kbFailureToolMessage(err),
       });
     }
   },

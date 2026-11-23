@@ -65,7 +65,7 @@ async function requestEmbeddingBatch(
     );
   }
 
-  let json: { data?: Array<{ index: number; embedding: number[] }> };
+  let json: { data?: Array<{ index: number; embedding: number[] }> } | null;
   try {
     json = (await response.json()) as typeof json;
   } catch (err) {
@@ -76,8 +76,15 @@ async function requestEmbeddingBatch(
     );
   }
 
+  if (!Array.isArray(json?.data)) {
+    throw new EmbeddingUnavailableError(
+      "invalid_response",
+      "Embedding service response has no data array"
+    );
+  }
+
   const embeddings: (number[] | undefined)[] = new Array(batch.length);
-  for (const item of json.data ?? []) {
+  for (const item of json.data) {
     if (Array.isArray(item.embedding)) embeddings[item.index] = item.embedding;
   }
   return embeddings;
