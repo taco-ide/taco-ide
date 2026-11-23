@@ -37,6 +37,8 @@ export default async function setup() {
   const { url: testUrl, dbName } = deriveTestDbUrl(baseUrl);
   process.env.DATABASE_URL = testUrl;
   process.env.NODE_ENV = "test";
+  // Deterministic small-cell suppression threshold for the TA rating stats tests.
+  process.env.TA_RATING_MIN_GROUP_SIZE = "5";
 
   // Connect to the default `postgres` admin DB to create the test DB.
   const adminUrl = new URL(baseUrl);

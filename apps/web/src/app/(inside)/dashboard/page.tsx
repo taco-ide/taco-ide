@@ -11,6 +11,7 @@ import {
   Plus,
   ShieldCheck,
   Sparkles,
+  Star,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
   useGetV1Challenges,
   useGetV1OrganizationsIdMembers,
 } from "@/kubb/hooks";
+import { useHasMinimumRole } from "@/hooks/usePermission";
 import { useTutorial } from "@/hooks/useTutorial";
 
 type RoleKey = "student" | "teacher" | "coordinator" | "admin";
@@ -291,7 +293,9 @@ function TeacherChallenges() {
 function DashboardContent() {
   const t = useTranslations("dashboard");
   const tour = useTranslations("dashboard.tour");
+  const tRatings = useTranslations("taRatings");
   const { user, isLoading, getFirstName } = useUser();
+  const isStaff = useHasMinimumRole("teacher");
 
   const roleKey = user
     ? resolveRole(user.role, user.isPlatformAdmin)
@@ -445,6 +449,16 @@ function DashboardContent() {
                 accent="sky"
               />
             </>
+          )}
+          {/* Issue #99: anonymous TA rating stats, staff of the active org. */}
+          {user.activeOrganizationId && (isStaff || user.isPlatformAdmin) && (
+            <QuickAction
+              href="/dashboard/ta-ratings"
+              icon={Star}
+              title={tRatings("quickAction.title")}
+              description={tRatings("quickAction.description")}
+              accent="violet"
+            />
           )}
         </div>
       </section>

@@ -16,6 +16,7 @@ import { deleteInvitationRoute } from "./invitations/delete";
 import { listInvitationsRoute } from "./invitations/list";
 import { resendInvitationRoute } from "./invitations/resend";
 import { emailDomainsRoutes } from "./email-domains";
+import { teachingAssistantEvaluationRoutes } from "./ta-evaluations";
 
 export async function organizationsRoutes(app: FastifyTypedInstance) {
   await app.register(
@@ -49,6 +50,8 @@ export async function organizationsRoutes(app: FastifyTypedInstance) {
           await listInvitationsRoute(sf);
           await resendInvitationRoute(sf);
           await emailDomainsRoutes(sf);
+          // Issue #99: anonymous TA rating stats + CSV export.
+          await teachingAssistantEvaluationRoutes(sf);
         },
         { prefix: "/:id" }
       );
