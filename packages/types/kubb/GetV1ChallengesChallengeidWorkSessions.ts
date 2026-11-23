@@ -140,6 +140,10 @@ export type GetV1ChallengesChallengeidWorkSessions200 = {
         */
         totalPages: number;
     };
+    /**
+     * @type number
+    */
+    inactivityThresholdHours: number;
 };
 
 export const getV1ChallengesChallengeidWorkSessions401SuccessEnum = {

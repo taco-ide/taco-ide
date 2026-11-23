@@ -51,7 +51,7 @@ const GetWorkSessionResponseSchema = ResponseSchema200.extend({
     createdAt: z.string(),
     lastMessageAt: z.string().nullable(),
     endedAt: z.string().nullable(),
-    /** Latest student activity (session start, chat, code run or solution save). */
+    /** Latest activity: session start, chat, code run, solution save or staff reopen. */
     lastActivityAt: z.string(),
     activityStatus: z.enum(workSessionActivityStatuses),
     interactions: z.array(InteractionSchema),

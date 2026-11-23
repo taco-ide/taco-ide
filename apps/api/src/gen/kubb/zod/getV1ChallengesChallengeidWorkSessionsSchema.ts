@@ -38,7 +38,8 @@ export const getV1ChallengesChallengeidWorkSessions200Schema = z.object({
 "page": z.number(),
 "perPage": z.number(),
 "totalPages": z.number()
-    })
+    }),
+"inactivityThresholdHours": z.number()
     })
 
 /**

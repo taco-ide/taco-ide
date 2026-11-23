@@ -157,6 +157,35 @@ describe("work-session activity status", () => {
     expect(body.data.every((r) => r.activityStatus === status)).toBe(true);
   });
 
+  it("exposes the inactivity threshold so the UI can explain it", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: `/v1/challenges/${challengeId}/work-sessions`,
+      headers: { cookie: teacherCookie },
+    });
+    expect(res.statusCode).toBe(200);
+    expect((res.json() as { inactivityThresholdHours: number }).inactivityThresholdHours).toBe(
+      24
+    );
+  });
+
+  it("counts a staff reopen as a fresh start for the inactivity clock", async () => {
+    const reopen = await app.inject({
+      method: "POST",
+      url: `/v1/work-sessions/${sessions.submitted}/reopen`,
+      headers: { cookie: teacherCookie },
+    });
+    expect(reopen.statusCode).toBe(200);
+
+    const body = await list();
+    const row = body.data.find((r) => r.workSessionId === sessions.submitted)!;
+    expect(row.endedAt).toBeNull();
+    expect(row.activityStatus).toBe("active");
+
+    const active = await list("&activityStatus=active");
+    expect(active.data.map((r) => r.workSessionId)).toContain(sessions.submitted);
+  });
+
   it("rejects an unknown status filter", async () => {
     const res = await app.inject({
       method: "GET",

@@ -10,9 +10,15 @@
  * - `inactive`:  open, no student activity for the threshold or longer
  *
  * Last activity is the latest of: session creation, `lastMessageAt` (bumped by
- * chat messages and code runs) and the student's saved solution for the
- * challenge (`challengeSolution.updatedAt`, saved on runs and chats). Staff
- * actions such as reopen are deliberately not counted.
+ * chat messages and code runs), `workSession.updatedAt` and the student's
+ * saved solution for the challenge (`challengeSolution.updatedAt`, saved on
+ * runs and chats).
+ *
+ * `workSession.updatedAt` is written only on create, on interactions (same
+ * instant as `lastMessageAt`), on submit and on staff reopen. Submit doesn't
+ * matter (the session is then `submitted`), so in practice it adds exactly
+ * one signal: a reopen restarts the inactivity clock, instead of a session
+ * reopened days later showing "inactive" straight away.
  */
 import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm";
 import { env } from "@repo/infra/env";
@@ -27,8 +33,12 @@ export const workSessionActivityStatuses = [
 export type WorkSessionActivityStatus =
   (typeof workSessionActivityStatuses)[number];
 
+export function inactivityThresholdHours(): number {
+  return env.WORK_SESSION_INACTIVITY_HOURS;
+}
+
 export function inactivityThresholdMs(): number {
-  return env.WORK_SESSION_INACTIVITY_HOURS * 60 * 60 * 1000;
+  return inactivityThresholdHours() * 60 * 60 * 1000;
 }
 
 /** Sessions whose last activity is at or before this instant are inactive. */
@@ -62,7 +72,7 @@ export const workSessionSolutionJoin = and(
 );
 
 /** GREATEST ignores NULLs, so the result is never older than `createdAt`. */
-export const lastActivityAtSql = sql<Date>`GREATEST(${workSession.createdAt}, ${workSession.lastMessageAt}, ${challengeSolution.updatedAt})`.mapWith(
+export const lastActivityAtSql = sql<Date>`GREATEST(${workSession.createdAt}, ${workSession.updatedAt}, ${workSession.lastMessageAt}, ${challengeSolution.updatedAt})`.mapWith(
   workSession.createdAt
 );
 
