@@ -168,16 +168,20 @@ Quem pode chamar:
 
 - Platform Admin: update direto em `member` via Drizzle.
 - Coordenador/admin da própria org: delega a `auth.api.updateMemberRole`
-  do Better Auth, que aplica as regras internas de RBAC.
+  do Better Auth, que aplica as regras internas de RBAC (só um `admin`
+  pode atribuir o papel `admin`).
+- Rebaixar um `admin` (qualquer caller): a rota trava as linhas de `admin`
+  da org (`FOR UPDATE`) e grava a mudança direto em `member`, na mesma
+  transação do guard abaixo. Esse caminho não passa pelo Better Auth; veja
+  [#140](https://github.com/taco-ide/taco-ide/issues/140).
 
-Guard de último admin: <!-- TODO: `updateMemberRole` não tem guard
-explícito contra rebaixar o último admin. Confirmar se o Better Auth
-bloqueia internamente; caso contrário, documentar como gap conhecido. -->
+Guard de último admin: rebaixar o único `admin` da org retorna
+`409 "Cannot demote the last admin of the organization. Promote another member first."`.
 
-Efeito em sessões: a rota **não** revoga sessões. O `member.role` é
-cacheado no cookie do Better Auth por até 5 minutos, então mudanças
-podem demorar para refletir em permissões avaliadas a partir do cookie.
-Para aplicação imediata, o alvo deve sair e entrar novamente.
+Efeito em sessões: a rota **não** revoga sessões, e não é preciso. O
+`authMiddleware` lê o `member.role` do banco a cada requisição (o cache de
+cookie do Better Auth guarda só a sessão e o usuário), então o novo papel
+vale a partir da próxima requisição do alvo.
 
 ---
 

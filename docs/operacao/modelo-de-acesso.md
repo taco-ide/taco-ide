@@ -15,8 +15,9 @@ Há dois eixos independentes:
   outros Platform Admins. Acessa o painel `/admin`.
 - **Papel na organização** (`member.role`), com hierarquia
   `student < teacher < coordinator < admin`. Um usuário pode ter papéis
-  diferentes em organizações diferentes. `admin` e `coordinator` gerenciam a
-  própria organização; só o `admin` pode apagá-la.
+  diferentes em organizações diferentes. `admin` e `coordinator` gerenciam
+  as pessoas da própria organização; o ciclo de vida da organização (criar,
+  editar, desativar) é do Platform Admin.
 
 Ser `admin` de uma organização **não** dá poderes de Platform Admin.
 
@@ -57,20 +58,26 @@ Observações operacionais:
 
 ## 4. O que exige ação administrativa
 
+Regras de produto pretendidas. As rotas do produto (`/v1/organizations/...`)
+já as aplicam; veja a lacuna conhecida no fim da seção 5.
+
 | Ação | Quem pode |
 | --- | --- |
 | Criar, editar, desativar ou reativar organização | Platform Admin |
+| Excluir organização | Ninguém pelo app (não há exclusão; desative) |
 | Vincular conta existente sem convite, remover membro | Platform Admin |
 | Mover usuário entre organizações | Platform Admin |
 | Promover ou despromover Platform Admin | Platform Admin (não pode despromover o último nem a si mesmo) |
 | Alterar papel de um membro | Coordenador+ da própria org ou Platform Admin |
 | Convidar, importar CSV, configurar domínios | Coordenador+ da própria org ou Platform Admin |
 
-Mudanças de papel não derrubam a sessão; o novo papel pode levar até
-5 minutos para valer (cache do cookie de sessão), ou vale imediatamente após
-sair e entrar de novo.
+Mudanças de papel não derrubam a sessão e valem a partir da próxima
+requisição: a API lê o `member.role` do banco a cada chamada, sem cache.
 
 ## 5. Decisões de segurança
+
+Como na seção 4, os itens abaixo descrevem as regras pretendidas; os desvios
+atuais estão listados em "Lacuna conhecida".
 
 - **O cadastro não escolhe papel.** O formulário público cria só a conta. O
   papel vem sempre de um convite, de uma regra de domínio, do CSV ou de uma
@@ -86,10 +93,32 @@ sair e entrar de novo.
   Platform Admin; a API também impede remover o último `admin` de uma org.
 - **Coordenadores agem só na organização ativa** da própria sessão; não
   enxergam nem alteram outras organizações.
+- **Só quem já é `admin` concede `admin`.** Convites e mudanças de papel
+  feitos por coordenadores passam pelo Better Auth, que recusa atribuir o
+  papel `admin` a quem não o tem.
 
-<!-- TODO(produto): hoje um coordenador pode convidar ou promover alguém a
-`admin` da própria organização (convites e importação CSV aceitam `admin`).
-Confirmar se isso é desejado ou se `admin` deve ficar restrito ao Platform
+> **Lacuna conhecida ([#140](https://github.com/taco-ide/taco-ide/issues/140)).**
+> Os endpoints de organização do Better Auth continuam acessíveis
+> diretamente em `/v1/auth/organization/*` e aplicam só as permissões de
+> `packages/infra/src/auth/permissions.ts`, não as regras acima. Até a
+> correção do #140:
+>
+> - **Professores** conseguem convidar pessoas (inclusive como
+>   `coordinator`) por `/v1/auth/organization/invite-member`.
+> - **Coordenadores** conseguem remover membros
+>   (`/v1/auth/organization/remove-member`) e editar a organização
+>   (`/v1/auth/organization/update`).
+> - **`admin` da organização** consegue excluí-la
+>   (`/v1/auth/organization/delete`).
+> - **Importação CSV** grava o papel direto no banco, sem a trava do Better
+>   Auth: um coordenador consegue criar ou vincular contas como `admin`.
+> - **Rebaixar um `admin`** pela rota de papel grava direto no banco: um
+>   coordenador consegue rebaixar um `admin` quando a org tem mais de um.
+>
+> Quando o #140 for integrado, remova esta nota.
+
+<!-- TODO(produto, #140): confirmar se o `admin` da organização deve poder
+conceder `admin` pela importação CSV ou se isso fica restrito ao Platform
 Admin. -->
 
 ## 6. Usuário sem organização
@@ -98,14 +127,17 @@ Quem entra sem convite, sem domínio mapeado ou depois de ser removido não
 fica solto em `/explore`: o app mostra a tela de primeiro acesso, que
 
 - explica que o acesso é liberado pela instituição e sugere os próximos
-  passos (procurar o email de convite, pedir um convite ao coordenador ou
-  professor, cadastrar-se com o email institucional se houver domínio
-  mapeado);
+  passos (procurar o email de convite, pedir um convite ao coordenador ou ao
+  administrador da instituição, cadastrar-se com o email institucional se
+  houver domínio mapeado);
 - lista os convites pendentes para o email da pessoa (só depois de o email ser
   verificado), com link para aceitá-los;
-- diferencia o caso de organização desativada;
+- diferencia o caso de organização desativada (enquanto a situação carrega,
+  mostra só um aviso neutro de "verificando", e um erro se a consulta
+  falhar);
 - tem o botão **Verificar meu acesso**, que recarrega a sessão assim que a
-  pessoa for adicionada, e o botão de sair.
+  pessoa for adicionada (ou avisa se a verificação falhar), e o botão de
+  sair.
 
 Não há como criar uma organização a partir dessa tela. Platform Admins não
 veem essa tela, porque o acesso deles é global.
