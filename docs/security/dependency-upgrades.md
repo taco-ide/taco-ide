@@ -1,6 +1,6 @@
 # Runtime dependency security updates
 
-This update follows issue #114 and upgrades the runtime packages that had fixes available without a framework migration. Use Node.js 22.12 or newer and npm 11.3.0; the root engine now matches the complete runtime and development toolchain.
+This update follows issue #114 and upgrades the runtime packages that had fixes available without a framework migration. Use Node.js 22.12 or newer and the npm version pinned in `packageManager` (11.21.3); the root engine now matches the complete runtime and development toolchain.
 
 ## Package changes
 
@@ -51,12 +51,12 @@ Remaining advisories, recorded explicitly:
 
 | Package | Severity | Path | Usage | Why not fixed here |
 | --- | --- | --- | --- | --- |
-| `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5) and `fastify-type-provider-zod` <= 4.0.2 | high | API, web, infra, Kubb UI | Deployed runtime (request validation) | No patched 3.x release. Requires the Zod 4 migration together with `fastify-type-provider-zod` 6 or 7 (both require `zod` >= 4.1.5), Kubb-generated Zod schemas and web form schemas. Plan as its own change. |
+| `zod` < 4.6.6 (GHSA-mrhx-c7xc-m3w5) and `fastify-type-provider-zod` <= 4.0.2 | high | API, web, infra | Deployed runtime (request validation) | No patched 3.x release. Requires the Zod 4 migration together with `fastify-type-provider-zod` 6 or 7 (both require `zod` >= 4.1.5), Kubb-generated Zod schemas and web form schemas. Plan as its own change. The Zod migration alone does not clear the Kubb chain below, which keeps its own Zod 3 copy. |
 | `postcss-selector-parser` <= 6.1.4 via `tailwindcss` 3 and `@tailwindcss/typography` | moderate | web | Build only (CSS compilation of trusted sources) | The fix requires the Tailwind 4 plugin chain; plan that migration separately with browser regression coverage. |
 | `esbuild` <= 0.24.2 via `@esbuild-kit/*` in `drizzle-kit` 0.31.x | moderate | infra | Migration/development CLI | The advisory concerns esbuild's development server, which drizzle-kit does not start. Every 0.31.x release, including the latest 0.31.11, still depends on `@esbuild-kit`; only the 1.0 release candidates drop it. Re-evaluate when drizzle-kit 1.0 is stable and verify `db:generate`, `db:migrate` and `db:push` before adopting it. |
-| `@hono/node-server` <= 2.1.2 via `@kubb/ui` 3.18.3 | moderate | API devDependency | Code generation only | Kubb 3.18.3 is the newest 3.x release; the fix needs Kubb 4. |
+| Kubb chain: `@kubb/cli` and `@kubb/ui` 3.18.3, `@hono/zod-openapi` 0.19.2, `@hono/zod-validator` 0.4.3, `@asteasolutions/zod-to-openapi` 7.3.4 (all via `zod` 3.25.76, GHSA-mrhx-c7xc-m3w5), and `@hono/node-server` 1.19.19 (GHSA-rmxm-3fg6-px4f) | 5 high, 1 moderate | API devDependency | Code generation only (`npm run kubb`) | `@kubb/ui` 3.18.3 pins `@hono/zod-openapi` 0.19.2 exactly and `zod` ^3.25.76, so the application's Zod migration cannot remove these paths. Kubb 3.18.3 is the newest 3.x release; `@kubb/cli` 4.0.2 and later no longer depend on `@kubb/ui`. Needs the Kubb 4 (>= 4.0.2) upgrade of the CLI and all `@kubb/plugin-*` packages, with the generated types, hooks and Zod schemas re-verified. |
 
-The lockfile was regenerated with npm 11 (the `edgesOut` arborist error in npm 11.3.0 blocks updating the Vitest peer set) and installs cleanly with `npm ci` on npm 11.3.0. Platform-specific optional entries (Next SWC, esbuild, Rolldown, LightningCSS, sharp, Parcel watcher, turbo) are retained for macOS, Linux and Windows.
+The lockfile was regenerated with npm 11.21.3 (the `edgesOut` arborist error in npm 11.3.0 blocks updating the Vitest peer set). The root `packageManager` field and the CI workflow now pin npm 11.21.3, the version that wrote the lockfile: with 11.3.0, `npm install` rewrites about a hundred `dev`/`peer` flags, while 11.21.3 leaves the lockfile unchanged. Platform-specific optional entries (Next SWC, esbuild, Rolldown, LightningCSS, sharp, Parcel watcher, turbo) are retained for macOS, Linux and Windows.
 
 The API image footprint work described above (separating generation, test, build and migration-only dependencies from the runner image) is not part of this change and remains open under #119.
 

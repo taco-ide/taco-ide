@@ -1,7 +1,7 @@
 # Quality checks
 
 The `Quality checks` GitHub Actions workflow runs on every pull request and every
-push to `main`. It installs the lockfile with Node.js 22 and npm 11.3.0, then runs:
+push to `main`. It installs the lockfile with Node.js 22 and npm 11.21.3, then runs:
 
 1. `npm run check-types`: the API, web and infrastructure `typecheck` tasks, plus
    the Playwright configuration, specs and helpers under strict TypeScript.
