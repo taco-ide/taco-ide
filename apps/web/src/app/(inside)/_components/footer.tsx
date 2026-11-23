@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 const Footer = () => {
   const t = useTranslations("nav");
+  const tLegal = useTranslations("legal.nav");
   return (
     <footer className="shrink-0 bg-gradient-to-t from-[#151822] to-[#1a1f2e] py-4">
       <div className="container mx-auto px-4">
@@ -23,9 +24,12 @@ const Footer = () => {
             <span className="text-lg font-bold text-[#FFB800]">TACO</span>
           </Link>
           <div className="flex gap-6 text-sm text-gray-400 sm:justify-self-center">
-            <a href="#recursos" className="hover:text-white transition-colors">
-              {t("resources")}
-            </a>
+            <Link href="/terms" className="hover:text-white transition-colors">
+              {tLegal("terms")}
+            </Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">
+              {tLegal("privacy")}
+            </Link>
             <a
               href="https://github.com/taco-ide"
               target="_blank"

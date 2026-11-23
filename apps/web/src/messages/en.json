@@ -581,7 +581,7 @@
       "newPassword": "New Password",
       "password": "Password"
     },
-    "legal": "By using our services, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "legal": "By using our services, you agree to our <terms>Terms of Use</terms> and confirm you have read our <privacy>Privacy Notice</privacy>.",
     "login": {
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
@@ -1246,6 +1246,193 @@
       "uploading": "Uploading file..."
     }
   },
+  "legal": {
+    "nav": {
+      "backHome": "Back to home",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    },
+    "draft": {
+      "title": "Draft — pending legal and ethics review",
+      "body": "This text is a working draft. It has not yet been approved by the institution responsible for the research and may change. Items in [BRACKETS] are still to be filled in."
+    },
+    "version": "Draft version: {date}",
+    "otherDoc": {
+      "privacy": "See also the <link>Terms of Use</link>.",
+      "terms": "See also the <link>Privacy Notice</link>."
+    },
+    "privacy": {
+      "metaTitle": "Privacy Notice — TACO-IDE",
+      "title": "Privacy Notice",
+      "intro": "TACO-IDE is a research prototype of an AI-assisted Python programming environment, developed in a master's research project and used by teachers and students. This notice explains which personal data the platform processes, why, and how you can exercise your rights under Brazil's General Data Protection Law (LGPD, Law No. 13,709/2018).",
+      "sections": [
+        {
+          "title": "1. Who is responsible",
+          "body": [
+            "Controller: [CONTROLLER NAME — institution responsible for the research].",
+            "Data protection contact (encarregado): [CONTACT EMAIL]."
+          ]
+        },
+        {
+          "title": "2. Data we collect",
+          "items": [
+            "Account data: name, email address, password (stored only as a hash), email verification status, and your roles in organizations and classrooms (for example teacher or student).",
+            "Session and usage data: a session cookie and a short-lived cookie that caches your session, the IP address and browser user agent recorded with each sign-in session, and the time you were last active in each organization.",
+            "Learning activity: the code you write and save, program input and output, submissions and their timestamps, grades and comments from teachers, and automated reviews of submissions generated for teachers.",
+            "Conversations with the AI teaching assistant: the messages you send, the assistant's replies and the code included as context.",
+            "Teaching materials: exercises, reference solutions and documents uploaded by teachers to knowledge bases. Please do not include personal data in these materials.",
+            "Anonymous assistant ratings: when submitting an exercise, students may rate the AI assistant. Only the rating, the assistant and the week are stored, not who gave the rating.",
+            "Preferences kept in your browser: editor theme and font size, which tutorials and tips you have already seen, and the tab you last opened in an exercise. They are stored in your browser's local storage and are not sent to our servers.",
+            "Technical logs: server request and error logs used to operate and secure the service."
+          ]
+        },
+        {
+          "title": "3. Why we use it",
+          "items": [
+            "To provide the platform: accounts, classrooms, exercises, AI feedback and grading.",
+            "To keep the service secure, prevent abuse and fix problems.",
+            "For research on AI-assisted programming education. Research results are published [ONLY IN AGGREGATED OR DE-IDENTIFIED FORM — to be confirmed by the controller]. Ethics committee approval: [ETHICS APPROVAL NUMBER]."
+          ],
+          "body": [
+            "We do not sell personal data and do not use it for advertising. The legal basis for each purpose (LGPD arts. 7 and 11) is [LEGAL BASES — to be confirmed by the controller]."
+          ]
+        },
+        {
+          "title": "4. Who we share it with",
+          "body": [
+            "Teachers, coordinators and administrators of your organization can see your activity on the exercises they manage, including code, submissions and conversations with the assistant. Platform administrators, who operate TACO-IDE, can access the data of all organizations. We also rely on the following service providers, which process data on our behalf:"
+          ],
+          "items": [
+            "AI model providers: your messages, code, program input and output and the exercise context are sent to the configured language model API (an OpenAI-compatible service, such as Azure OpenAI) to generate the assistant's replies.",
+            "AI tools for teachers: when a teacher uses the AI teacher companion, students' names, submitted code, program output and full conversations with the assistant may be sent to the language model API so it can analyze them, and are recorded by Langfuse when it is enabled (see below).",
+            "Automated reviews and reference solutions: when a student submits an exercise, the exercise statement, the submitted code, its input and output, and the student's conversation with the assistant are sent to OpenRouter, which routes requests to third-party model providers, to generate a review for the teacher. When the partner research API (PDC) is enabled, it receives only the exercise statement and the submitted code, and its review is then adapted through OpenRouter together with the context above. Exercise data is also sent to PDC and/or OpenRouter to generate reference solutions.",
+            "Code execution: Python code you run in the editor executes in your own browser. The Python runtime (Pyodide) and the code editor are downloaded from the jsDelivr CDN (cdn.jsdelivr.net), which receives your IP address and browser information. Code in other languages is sent with its input from your browser to the public Piston code execution service (emkc.org). Code the assistant runs to check an answer is sent with its input from our servers to a code execution service (by default, the same Piston service at emkc.org).",
+            "Embeddings: the text of knowledge base documents and entries, and search queries, are sent to an embeddings API (such as Azure OpenAI) to enable search. This includes the messages students send to the assistant on exercises linked to a knowledge base.",
+            "Langfuse (AI monitoring), when enabled: conversations with the AI assistants — messages, replies, code context and the results of tools the assistant uses — are recorded together with the internal user ID and session ID of the person chatting, to monitor and improve answer quality. Students' own conversations are recorded without their name or email, but conversations of teachers with the AI teacher companion may include students' names, code, program output and conversations with the assistant.",
+            "Email (Resend): your email address and message content, to send verification, password reset and invitation emails.",
+            "Hosting: [HOSTING PROVIDER]."
+          ]
+        },
+        {
+          "title": "5. International transfers",
+          "body": [
+            "Some of these providers may process data outside Brazil. Such transfers follow LGPD art. 33. [TRANSFER SAFEGUARDS — to be confirmed by the controller]."
+          ]
+        },
+        {
+          "title": "6. How long we keep it",
+          "body": [
+            "We keep personal data while your account is active and for as long as needed for the purposes above, including the research period: [RETENTION PERIOD]. After that, [DELETION OR ANONYMIZATION PROCEDURE — to be confirmed by the controller; today the platform hides most deleted records instead of erasing them]. Anonymous ratings and de-identified research data may be kept. Service providers keep data according to their own terms."
+          ]
+        },
+        {
+          "title": "7. Your rights",
+          "body": [
+            "Under LGPD art. 18 you may request: confirmation that we process your data; access to it; correction; anonymization, blocking or deletion of unnecessary or excessive data; portability; deletion of data processed with your consent; information about who we share it with; and withdrawal of consent. Write to [CONTACT EMAIL]. You may also complain to the national data protection authority (ANPD)."
+          ]
+        },
+        {
+          "title": "8. Cookies",
+          "body": [
+            "We only use essential cookies: a session cookie keeps you signed in, a short-lived cookie caches your session so pages load faster, and one remembers your language. Your editor and tutorial preferences are kept in your browser's local storage (see section 2). We do not use advertising or analytics cookies."
+          ]
+        },
+        {
+          "title": "9. Security",
+          "body": [
+            "We use technical and organizational measures such as password hashing and role-based access control. No system is completely secure; if an incident may cause relevant risk to you, we will notify you and the ANPD as required by law."
+          ]
+        },
+        {
+          "title": "10. Children and adolescents",
+          "body": [
+            "If the platform is used by students under 18, their data is processed in their best interest and, where required, with the consent of a parent or guardian (LGPD art. 14). [PROCEDURE FOR MINORS — to be confirmed by the controller]."
+          ]
+        },
+        {
+          "title": "11. Changes",
+          "body": [
+            "We may update this notice. Significant changes will be announced on the platform."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "metaTitle": "Terms of Use — TACO-IDE",
+      "title": "Terms of Use",
+      "intro": "These terms govern the use of TACO-IDE, a research prototype of an AI-assisted Python programming environment developed in a master's research project. By creating an account or using the platform you agree to them.",
+      "sections": [
+        {
+          "title": "1. The service",
+          "body": [
+            "TACO-IDE is offered [FREE OF CHARGE — to be confirmed by the controller] for teaching and research. Because it is a prototype, features may change, be interrupted or be removed at any time."
+          ]
+        },
+        {
+          "title": "2. Your account",
+          "items": [
+            "Provide accurate information and keep your password confidential.",
+            "You are responsible for activity on your account. Tell us at [CONTACT EMAIL] if you suspect unauthorized use.",
+            "Access to organizations and classrooms is managed by their teachers and administrators, who may remove or deactivate accounts."
+          ]
+        },
+        {
+          "title": "3. Acceptable use",
+          "body": [
+            "You agree not to:"
+          ],
+          "items": [
+            "attack, overload or try to bypass the security or usage limits of the platform, including the code execution environment;",
+            "access data or accounts that do not belong to you;",
+            "upload content that is illegal, offensive, or that you do not have the right to share;",
+            "enter sensitive personal data (such as health data or identity document numbers) in code, chat messages or uploaded documents."
+          ]
+        },
+        {
+          "title": "4. The AI assistant",
+          "body": [
+            "Answers generated by AI may be incomplete or wrong and do not replace your teacher. Follow your institution's academic integrity rules when using the assistant."
+          ]
+        },
+        {
+          "title": "5. Content and intellectual property",
+          "body": [
+            "You keep the rights to the code and content you create. You allow us to store and process it to operate the platform and, as described in the Privacy Notice, for research. Teachers are responsible for having the rights to the materials they upload. The TACO-IDE source code is publicly available under [LICENSE]."
+          ]
+        },
+        {
+          "title": "6. Research",
+          "body": [
+            "The platform is used in academic research. How your data is used for research is described in the Privacy Notice. Ethics committee approval: [ETHICS APPROVAL NUMBER]."
+          ]
+        },
+        {
+          "title": "7. Availability and liability",
+          "body": [
+            "The platform is provided \"as is\", without guarantees of availability or fitness for a particular purpose. Keep your own copies of important work. To the extent permitted by law, the project team is not liable for data loss or damage arising from the use of the platform."
+          ]
+        },
+        {
+          "title": "8. Suspension",
+          "body": [
+            "We may suspend or close accounts that break these terms or put the platform or other users at risk."
+          ]
+        },
+        {
+          "title": "9. Changes and applicable law",
+          "body": [
+            "We may update these terms; significant changes will be announced on the platform. These terms are governed by Brazilian law. Venue: [JURISDICTION]."
+          ]
+        },
+        {
+          "title": "10. Contact",
+          "body": [
+            "[CONTROLLER NAME] — [CONTACT EMAIL]."
+          ]
+        }
+      ]
+    }
+  },
   "nav": {
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>All rights reserved.",
@@ -1264,7 +1451,6 @@
       "title": "No active organization"
     },
     "profile": "Profile",
-    "resources": "Resources",
     "signOut": "Sign out",
     "userMenu": "User menu"
   },

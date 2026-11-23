@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
 
@@ -30,8 +31,8 @@ export default function AuthLayout({
         </Card>
         <div className="mt-6 text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
           {t.rich("legal", {
-            terms: (chunks) => <a href="#">{chunks}</a>,
-            privacy: (chunks) => <a href="#">{chunks}</a>,
+            terms: (chunks) => <Link href="/terms">{chunks}</Link>,
+            privacy: (chunks) => <Link href="/privacy">{chunks}</Link>,
           })}
         </div>
       </div>

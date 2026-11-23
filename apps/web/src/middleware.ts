@@ -6,6 +6,8 @@ const authPaths = ["/auth"];
 // Public paths that don't require authentication
 const publicPaths = [
   "/", // Only the exact home page
+  "/terms",
+  "/privacy",
 ];
 
 // This function is executed for all requests
@@ -20,11 +22,11 @@ export async function middleware(request: NextRequest) {
   const isAuthPath = authPaths.some((path) => pathname.startsWith(path));
 
   // Check if the current path is public (accessible by anyone)
+  // Match whole segments only, so "/termsX" or "/privacy-foo" stay protected.
   const isPublicPath =
     publicPaths.some(
       (path) =>
-        (path !== "/" && pathname.startsWith(path)) ||
-        (path === "/" && pathname === "/")
+        pathname === path || (path !== "/" && pathname.startsWith(`${path}/`))
     ) || isAuthPath;
 
   // If user is logged in and trying to access auth routes, redirect to dashboard

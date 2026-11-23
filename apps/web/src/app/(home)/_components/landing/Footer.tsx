@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { GitBranch } from "lucide-react";
 
@@ -12,6 +13,7 @@ type FooterColumn = { title: string; links: FooterLink[] };
 
 export function Footer() {
   const t = useTranslations("home.footer");
+  const tLegal = useTranslations("legal.nav");
 
   const columns: FooterColumn[] = [
     {
@@ -76,8 +78,14 @@ export function Footer() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3.5 pt-6">
-          <div className="text-xs text-gray-500">
-            {t("copyright", { year: YEAR })}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-500">
+            <span>{t("copyright", { year: YEAR })}</span>
+            <Link href="/terms" className="transition-colors hover:text-white">
+              {tLegal("terms")}
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              {tLegal("privacy")}
+            </Link>
           </div>
           <a
             href={REPO}

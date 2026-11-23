@@ -581,7 +581,7 @@
       "newPassword": "Nova Senha",
       "password": "Senha"
     },
-    "legal": "Ao usar nossos serviços, você concorda com nossos <terms>Termos de Serviço</terms> e <privacy>Política de Privacidade</privacy>.",
+    "legal": "Ao usar nossos serviços, você concorda com nossos <terms>Termos de Uso</terms> e declara ter lido nosso <privacy>Aviso de Privacidade</privacy>.",
     "login": {
       "forgotPassword": "Esqueceu a senha?",
       "noAccount": "Não tem uma conta?",
@@ -1246,6 +1246,193 @@
       "uploading": "Enviando arquivo..."
     }
   },
+  "legal": {
+    "nav": {
+      "backHome": "Voltar ao início",
+      "privacy": "Privacidade",
+      "terms": "Termos"
+    },
+    "draft": {
+      "title": "Rascunho — pendente de revisão jurídica e ética",
+      "body": "Este texto é um rascunho de trabalho. Ainda não foi aprovado pela instituição responsável pela pesquisa e pode mudar. Itens entre [COLCHETES] ainda serão preenchidos."
+    },
+    "version": "Versão de rascunho: {date}",
+    "otherDoc": {
+      "privacy": "Veja também os <link>Termos de Uso</link>.",
+      "terms": "Veja também o <link>Aviso de Privacidade</link>."
+    },
+    "privacy": {
+      "metaTitle": "Aviso de Privacidade — TACO-IDE",
+      "title": "Aviso de Privacidade",
+      "intro": "O TACO-IDE é um protótipo de pesquisa de um ambiente de programação em Python com apoio de IA, desenvolvido em um projeto de pesquisa de mestrado e usado por professores e estudantes. Este aviso explica quais dados pessoais a plataforma trata, para quê, e como você pode exercer seus direitos previstos na Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).",
+      "sections": [
+        {
+          "title": "1. Quem é o responsável",
+          "body": [
+            "Controlador: [NOME DO CONTROLADOR — instituição responsável pela pesquisa].",
+            "Encarregado pelo tratamento de dados: [E-MAIL DE CONTATO]."
+          ]
+        },
+        {
+          "title": "2. Dados que coletamos",
+          "items": [
+            "Dados de conta: nome, e-mail, senha (armazenada apenas como hash), status de verificação do e-mail e seus papéis em organizações e turmas (por exemplo, professor ou estudante).",
+            "Dados de sessão e de uso: um cookie de sessão e um cookie de curta duração que guarda sua sessão em cache, o endereço IP e o navegador (user agent) registrados em cada sessão de login, e o horário da sua última atividade em cada organização.",
+            "Atividade de aprendizagem: o código que você escreve e salva, entradas e saídas dos programas, submissões e seus horários, notas e comentários dos professores, e revisões automáticas das submissões geradas para os professores.",
+            "Conversas com o assistente de IA: as mensagens que você envia, as respostas do assistente e o código incluído como contexto.",
+            "Materiais didáticos: exercícios, soluções de referência e documentos enviados por professores às bases de conhecimento. Não inclua dados pessoais nesses materiais.",
+            "Avaliações anônimas do assistente: ao submeter um exercício, estudantes podem avaliar o assistente de IA. Guardamos apenas a nota, o assistente e a semana, não quem avaliou.",
+            "Preferências guardadas no seu navegador: tema e tamanho da fonte do editor, quais tutoriais e dicas você já viu e a última aba aberta em um exercício. Elas ficam no armazenamento local do seu navegador e não são enviadas aos nossos servidores.",
+            "Registros técnicos: logs de requisições e erros do servidor, usados para operar e proteger o serviço."
+          ]
+        },
+        {
+          "title": "3. Para que usamos",
+          "items": [
+            "Para oferecer a plataforma: contas, turmas, exercícios, feedback de IA e correção.",
+            "Para manter o serviço seguro, evitar abusos e corrigir problemas.",
+            "Para pesquisa sobre ensino de programação com apoio de IA. Os resultados são publicados [APENAS DE FORMA AGREGADA OU DESIDENTIFICADA — a confirmar pelo controlador]. Aprovação do comitê de ética: [NÚMERO DE APROVAÇÃO DO CEP/CAAE]."
+          ],
+          "body": [
+            "Não vendemos dados pessoais nem os usamos para publicidade. A base legal de cada finalidade (arts. 7º e 11 da LGPD) é [BASES LEGAIS — a confirmar pelo controlador]."
+          ]
+        },
+        {
+          "title": "4. Com quem compartilhamos",
+          "body": [
+            "Professores, coordenadores e administradores da sua organização podem ver sua atividade nos exercícios que gerenciam, incluindo código, submissões e conversas com o assistente. Administradores da plataforma, que operam o TACO-IDE, podem acessar os dados de todas as organizações. Também contamos com os seguintes prestadores de serviço, que tratam dados em nosso nome:"
+          ],
+          "items": [
+            "Provedores de modelos de IA: suas mensagens, seu código, as entradas e saídas dos programas e o contexto do exercício são enviados à API de modelo de linguagem configurada (um serviço compatível com OpenAI, como o Azure OpenAI) para gerar as respostas do assistente.",
+            "Ferramentas de IA para professores: quando um professor usa o assistente de IA do professor, nomes de estudantes, código submetido, saídas dos programas e conversas completas com o assistente podem ser enviados à API de modelo de linguagem para análise, e são registrados pelo Langfuse quando ele está ativado (veja abaixo).",
+            "Revisões automáticas e soluções de referência: quando um estudante submete um exercício, o enunciado, o código submetido, suas entradas e saídas e a conversa do estudante com o assistente são enviados ao OpenRouter, que encaminha as requisições a provedores de modelos terceiros, para gerar uma revisão para o professor. Quando a API de pesquisa parceira (PDC) está ativada, ela recebe apenas o enunciado e o código submetido, e sua revisão é depois adaptada pelo OpenRouter junto com o contexto acima. Dados dos exercícios também são enviados ao PDC e/ou ao OpenRouter para gerar soluções de referência.",
+            "Execução de código: o código Python que você executa no editor roda no seu próprio navegador. O ambiente Python (Pyodide) e o editor de código são baixados da CDN jsDelivr (cdn.jsdelivr.net), que recebe seu endereço IP e dados do navegador. Código em outras linguagens é enviado com sua entrada, a partir do seu navegador, ao serviço público de execução de código Piston (emkc.org). O código que o assistente executa para verificar uma resposta é enviado com sua entrada, a partir dos nossos servidores, a um serviço de execução de código (por padrão, o mesmo serviço Piston em emkc.org).",
+            "Embeddings: o texto dos documentos e entradas das bases de conhecimento, e as consultas de busca, são enviados a uma API de embeddings (como o Azure OpenAI) para permitir a busca. Isso inclui as mensagens que estudantes enviam ao assistente em exercícios vinculados a uma base de conhecimento.",
+            "Langfuse (monitoramento de IA), quando ativado: as conversas com os assistentes de IA — mensagens, respostas, contexto de código e os resultados das ferramentas usadas pelo assistente — são registradas junto com o ID interno de usuário e de sessão de quem conversa, para monitorar e melhorar a qualidade das respostas. As conversas dos próprios estudantes são registradas sem seu nome ou e-mail, mas as conversas de professores com o assistente de IA do professor podem incluir nomes de estudantes, código, saídas dos programas e conversas com o assistente.",
+            "E-mail (Resend): seu endereço de e-mail e o conteúdo da mensagem, para enviar e-mails de verificação, redefinição de senha e convites.",
+            "Hospedagem: [PROVEDOR DE HOSPEDAGEM]."
+          ]
+        },
+        {
+          "title": "5. Transferências internacionais",
+          "body": [
+            "Alguns desses prestadores podem tratar dados fora do Brasil. Essas transferências seguem o art. 33 da LGPD. [SALVAGUARDAS DE TRANSFERÊNCIA — a confirmar pelo controlador]."
+          ]
+        },
+        {
+          "title": "6. Por quanto tempo guardamos",
+          "body": [
+            "Guardamos os dados pessoais enquanto sua conta estiver ativa e pelo tempo necessário às finalidades acima, incluindo o período da pesquisa: [PRAZO DE RETENÇÃO]. Depois disso, [PROCEDIMENTO DE EXCLUSÃO OU ANONIMIZAÇÃO — a confirmar pelo controlador; hoje a plataforma oculta a maioria dos registros excluídos em vez de apagá-los]. Avaliações anônimas e dados de pesquisa desidentificados podem ser mantidos. Os prestadores de serviço guardam dados conforme seus próprios termos."
+          ]
+        },
+        {
+          "title": "7. Seus direitos",
+          "body": [
+            "Pelo art. 18 da LGPD, você pode solicitar: confirmação de que tratamos seus dados; acesso a eles; correção; anonimização, bloqueio ou eliminação de dados desnecessários ou excessivos; portabilidade; eliminação dos dados tratados com seu consentimento; informação sobre com quem os compartilhamos; e revogação do consentimento. Escreva para [E-MAIL DE CONTATO]. Você também pode apresentar reclamação à Autoridade Nacional de Proteção de Dados (ANPD)."
+          ]
+        },
+        {
+          "title": "8. Cookies",
+          "body": [
+            "Usamos apenas cookies essenciais: um cookie de sessão mantém você conectado, um cookie de curta duração guarda sua sessão em cache para as páginas carregarem mais rápido, e outro guarda seu idioma. Suas preferências de editor e de tutoriais ficam no armazenamento local do navegador (veja a seção 2). Não usamos cookies de publicidade ou de análise."
+          ]
+        },
+        {
+          "title": "9. Segurança",
+          "body": [
+            "Adotamos medidas técnicas e organizacionais, como hash de senhas e controle de acesso por papel. Nenhum sistema é totalmente seguro; se um incidente puder gerar risco relevante a você, comunicaremos você e a ANPD conforme a lei."
+          ]
+        },
+        {
+          "title": "10. Crianças e adolescentes",
+          "body": [
+            "Se a plataforma for usada por estudantes menores de 18 anos, seus dados serão tratados em seu melhor interesse e, quando exigido, com o consentimento de um dos pais ou responsável (art. 14 da LGPD). [PROCEDIMENTO PARA MENORES — a confirmar pelo controlador]."
+          ]
+        },
+        {
+          "title": "11. Alterações",
+          "body": [
+            "Podemos atualizar este aviso. Mudanças relevantes serão comunicadas na plataforma."
+          ]
+        }
+      ]
+    },
+    "terms": {
+      "metaTitle": "Termos de Uso — TACO-IDE",
+      "title": "Termos de Uso",
+      "intro": "Estes termos regem o uso do TACO-IDE, um protótipo de pesquisa de um ambiente de programação em Python com apoio de IA, desenvolvido em um projeto de pesquisa de mestrado. Ao criar uma conta ou usar a plataforma, você concorda com eles.",
+      "sections": [
+        {
+          "title": "1. O serviço",
+          "body": [
+            "O TACO-IDE é oferecido [GRATUITAMENTE — a confirmar pelo controlador] para ensino e pesquisa. Por ser um protótipo, funcionalidades podem mudar, ser interrompidas ou removidas a qualquer momento."
+          ]
+        },
+        {
+          "title": "2. Sua conta",
+          "items": [
+            "Informe dados corretos e mantenha sua senha em sigilo.",
+            "Você é responsável pela atividade na sua conta. Avise-nos em [E-MAIL DE CONTATO] se suspeitar de uso não autorizado.",
+            "O acesso a organizações e turmas é gerenciado pelos professores e administradores, que podem remover ou desativar contas."
+          ]
+        },
+        {
+          "title": "3. Uso aceitável",
+          "body": [
+            "Você concorda em não:"
+          ],
+          "items": [
+            "atacar, sobrecarregar ou tentar contornar a segurança ou os limites de uso da plataforma, incluindo o ambiente de execução de código;",
+            "acessar dados ou contas que não sejam seus;",
+            "enviar conteúdo ilegal, ofensivo ou que você não tenha direito de compartilhar;",
+            "inserir dados pessoais sensíveis (como dados de saúde ou números de documentos) em códigos, mensagens ou documentos enviados."
+          ]
+        },
+        {
+          "title": "4. O assistente de IA",
+          "body": [
+            "Respostas geradas por IA podem estar incompletas ou erradas e não substituem seu professor. Siga as regras de integridade acadêmica da sua instituição ao usar o assistente."
+          ]
+        },
+        {
+          "title": "5. Conteúdo e propriedade intelectual",
+          "body": [
+            "Você mantém os direitos sobre o código e o conteúdo que cria. Você nos autoriza a armazená-los e tratá-los para operar a plataforma e, conforme descrito no Aviso de Privacidade, para pesquisa. Professores são responsáveis por ter os direitos sobre os materiais que enviam. O código-fonte do TACO-IDE é público, sob [LICENÇA]."
+          ]
+        },
+        {
+          "title": "6. Pesquisa",
+          "body": [
+            "A plataforma é usada em pesquisa acadêmica. O uso dos seus dados na pesquisa está descrito no Aviso de Privacidade. Aprovação do comitê de ética: [NÚMERO DE APROVAÇÃO DO CEP/CAAE]."
+          ]
+        },
+        {
+          "title": "7. Disponibilidade e responsabilidade",
+          "body": [
+            "A plataforma é oferecida \"no estado em que se encontra\", sem garantia de disponibilidade ou de adequação a uma finalidade específica. Guarde suas próprias cópias de trabalhos importantes. Na medida permitida pela lei, a equipe do projeto não se responsabiliza por perda de dados ou danos decorrentes do uso da plataforma."
+          ]
+        },
+        {
+          "title": "8. Suspensão",
+          "body": [
+            "Podemos suspender ou encerrar contas que violem estes termos ou coloquem em risco a plataforma ou outros usuários."
+          ]
+        },
+        {
+          "title": "9. Alterações e lei aplicável",
+          "body": [
+            "Podemos atualizar estes termos; mudanças relevantes serão comunicadas na plataforma. Estes termos são regidos pela lei brasileira. Foro: [FORO]."
+          ]
+        },
+        {
+          "title": "10. Contato",
+          "body": [
+            "[NOME DO CONTROLADOR] — [E-MAIL DE CONTATO]."
+          ]
+        }
+      ]
+    }
+  },
   "nav": {
     "admin": "Admin",
     "copyright": "© {year} TACO.<br></br>Todos os direitos reservados.",
@@ -1264,7 +1451,6 @@
       "title": "Nenhuma organização ativa"
     },
     "profile": "Perfil",
-    "resources": "Recursos",
     "signOut": "Sair",
     "userMenu": "Menu do usuário"
   },
