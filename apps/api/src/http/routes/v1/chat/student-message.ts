@@ -22,6 +22,7 @@ import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import { prepareTeachingAssistantTurn } from "../../../../agents/teaching-assistant/prepare-turn";
 import {
   buildTurnContext,
+  finalAnswerText,
   persistTurn,
 } from "../../../../agents/teaching-assistant/turn-context";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
@@ -187,7 +188,10 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       let finalMessages: BaseMessage[] | undefined;
 
       try {
-        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+        const callbacks = [
+          ...turn.callbacks,
+          ...(langfuseCallback ? [langfuseCallback] : []),
+        ];
 
         // Use AbortController to enforce timeout
         const controller = new AbortController();
@@ -269,12 +273,26 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
       }
 
       try {
+        const producedMessages = finalMessages?.slice(
+          turn.inputMessages.length
+        );
+        // Store the final answer, like the JSON route: text streamed before a
+        // tool call stays in the trajectory but is not replayed as history.
+        const answer = producedMessages
+          ? finalAnswerText(producedMessages)
+          : fullResponse.trim();
         // Persist interaction to DB (skip if fallback response or stream errored mid-flight)
         if (
-          fullResponse &&
+          answer &&
           fullResponse !== AGENT_FALLBACK_RESPONSE &&
           !streamErrored
         ) {
+          if (!producedMessages) {
+            request.log.warn(
+              { workSessionId },
+              "No final agent state in the SSE stream; storing the streamed text as the trajectory"
+            );
+          }
           const interactionId = randomUUID();
           await persistTurn(
             {
@@ -283,7 +301,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
               challengeId: ws[0].challengeId,
               interactionType: "chat",
               userPrompt: message,
-              modelResponse: fullResponse,
+              modelResponse: answer,
               ...turn.workspace,
             },
             buildTurnContext({
@@ -298,9 +316,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
               collector: turn.collector,
               llm: turn.llm,
               // Without the final state, keep at least the streamed answer.
-              producedMessages: finalMessages
-                ? finalMessages.slice(turn.inputMessages.length)
-                : [new AIMessage(fullResponse)],
+              producedMessages: producedMessages ?? [new AIMessage(answer)],
               langfuseTraceId: langfuseCallback?.getTraceId?.() ?? null,
             })
           );

@@ -100,12 +100,16 @@ export async function resetWorkSessionRoute(app: FastifyTypedInstance) {
       const ownerUserId = session.userId;
       const challengeId = session.challengeId;
 
-      await db.transaction(async (tx) => {
+      const archived = await db.transaction(async (tx) => {
         const now = new Date();
-        await tx
+        const rows = await tx
           .update(workSession)
           .set({ archivedAt: now, updatedAt: now })
-          .where(and(eq(workSession.id, id), isNull(workSession.archivedAt)));
+          .where(and(eq(workSession.id, id), isNull(workSession.archivedAt)))
+          .returning({ id: workSession.id });
+        // A concurrent reset archived it first; the solution may already
+        // belong to the student's new attempt, so leave it alone.
+        if (rows.length === 0) return false;
 
         await tx
           .update(challengeSolution)
@@ -122,7 +126,15 @@ export async function resetWorkSessionRoute(app: FastifyTypedInstance) {
               eq(challengeSolution.challengeId, challengeId)
             )
           );
+        return true;
       });
+
+      if (!archived) {
+        return reply.status(400).send({
+          success: false as const,
+          message: "Work session was already reset",
+        });
+      }
 
       return reply.status(200).send({
         success: true as const,

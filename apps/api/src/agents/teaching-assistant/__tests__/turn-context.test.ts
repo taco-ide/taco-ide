@@ -13,8 +13,11 @@ import {
   challengeContentHash,
   createTurnCollector,
   describeRequestedLlm,
+  finalAnswerText,
   persistTurn,
   toRetrieval,
+  TurnCaptureHandler,
+  withoutNul,
   type TurnContextInput,
 } from "../turn-context";
 import type { TeachingAssistantPromptContext } from "../prompt";
@@ -160,11 +163,67 @@ describe("buildTurnContext", () => {
     expect(trajectory[2]?.data).toMatchObject({ content: "What would a loop need?" });
   });
 
+  it("takes the resolved model from the generation info when streaming left response_metadata empty", () => {
+    const collector = createTurnCollector();
+    new TurnCaptureHandler(collector).handleLLMEnd({
+      generations: [[{ text: "", generationInfo: { finish_reason: "tool_calls" } }]],
+    });
+    new TurnCaptureHandler(collector).handleLLMEnd({
+      generations: [
+        [
+          {
+            text: "Hi",
+            generationInfo: {
+              model_name: "gpt-x-stream",
+              system_fingerprint: "fp_s",
+              finish_reason: "stop",
+            },
+          },
+        ],
+      ],
+    });
+
+    const { llm } = buildTurnContext(
+      input({
+        collector,
+        producedMessages: [
+          new AIMessage({ content: "Hi", response_metadata: { model_provider: "openai" } }),
+        ],
+      })
+    );
+
+    expect(collector.generationInfos).toHaveLength(2);
+    expect(llm.resolved).toEqual({
+      modelName: "gpt-x-stream",
+      systemFingerprint: "fp_s",
+      finishReason: "stop",
+    });
+  });
+
   it("has no usage and null resolution when the turn produced no AI message", () => {
     const { llm } = buildTurnContext(input({ producedMessages: [] }));
 
     expect(llm.usage).toBeNull();
     expect(llm.resolved).toEqual({ modelName: null, systemFingerprint: null, finishReason: null });
+  });
+});
+
+describe("finalAnswerText", () => {
+  it("returns the trimmed text of the last produced message", () => {
+    expect(
+      finalAnswerText([new AIMessage("Let me look. "), new AIMessage("  Try range(n).\n")])
+    ).toBe("Try range(n).");
+    expect(finalAnswerText([])).toBe("");
+    expect(finalAnswerText([new AIMessage("   ")])).toBe("");
+  });
+});
+
+describe("withoutNul", () => {
+  it("replaces NUL in every string, including object keys, and keeps dates", () => {
+    const at = new Date();
+    expect(
+      withoutNul({ a: "x\u0000y", list: ["\u0000", 1, null], ["k\u0000"]: { at } })
+    ).toEqual({ a: "x�y", list: ["�", 1, null], ["k�"]: { at } });
   });
 });
 

@@ -71,10 +71,11 @@ export class ScriptedChatModel extends BaseChatModel {
           index,
           type: "tool_call_chunk" as const,
         })),
-        response_metadata: turn.responseMetadata ?? {},
         usage_metadata: turn.usage,
       }),
       text: turn.content,
+      // Like ChatOpenAI when streaming: model name, fingerprint and finish
+      // reason arrive only in the generation info, not in response_metadata.
       generationInfo: turn.responseMetadata,
     });
     yield chunk;

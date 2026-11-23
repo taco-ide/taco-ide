@@ -176,7 +176,10 @@ describe("work session reset", () => {
       headers: { cookie: cookies.teacher },
     });
     expect(reopen.statusCode).toBe(400);
-    expect((await reset()).statusCode).toBe(400);
+    expect(reopen.json().message).toBe("Work session was reset");
+    const again = await reset();
+    expect(again.statusCode).toBe(400);
+    expect(again.json().message).toBe("Work session was already reset");
   });
 
   it("shows the archived session to the teacher but hides its submission", async () => {
@@ -208,5 +211,7 @@ describe("work session reset", () => {
 
     const replay = await app.inject({ url: `/v1/work-sessions/${ws.id}`, headers });
     expect(replay.statusCode).toBe(200);
+    expect(replay.json().data.archivedAt).toEqual(expect.any(String));
+    expect(replay.json().data.interactions).toHaveLength(1);
   });
 });

@@ -1,9 +1,11 @@
 import { createHash } from "node:crypto";
+import { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import {
   mapChatMessagesToStoredMessages,
   type AIMessage,
   type BaseMessage,
 } from "@langchain/core/messages";
+import type { LLMResult } from "@langchain/core/outputs";
 import { db } from "@repo/infra/db";
 import {
   taTurnContext,
@@ -19,15 +21,37 @@ import {
 import type { KBSearchResult } from "../../services/knowledge-base-search";
 
 /**
- * Per-turn sink that tools write to through `configurable.turnCapture`, for
- * data the model-visible tool output does not carry (e.g. chunk ids).
+ * Per-turn sink for data the stored messages do not carry. Tools write to it
+ * through `configurable.turnCapture` (e.g. chunk ids); `TurnCaptureHandler`
+ * writes each model call's generation info.
  */
 export interface TurnCollector {
   toolRetrievals: TaRetrieval[];
+  /** `generationInfo` of each model call, in order. */
+  generationInfos: Record<string, unknown>[];
 }
 
 export function createTurnCollector(): TurnCollector {
-  return { toolRetrievals: [] };
+  return { toolRetrievals: [], generationInfos: [] };
+}
+
+/**
+ * When ChatOpenAI streams (the SSE route), it reports the model name, system
+ * fingerprint and finish reason only in the generation info, not in the
+ * message's response_metadata. This handler keeps that info for the turn.
+ */
+export class TurnCaptureHandler extends BaseCallbackHandler {
+  name = "ta-turn-capture";
+
+  constructor(private readonly collector: TurnCollector) {
+    super();
+  }
+
+  handleLLMEnd(output: LLMResult) {
+    this.collector.generationInfos.push(
+      output.generations[0]?.[0]?.generationInfo ?? {}
+    );
+  }
 }
 
 export function getTurnCollector(
@@ -103,7 +127,8 @@ export function describeRequestedLlm(llm: unknown): TaTurnLlm["requested"] {
 }
 
 function describeResolvedLlm(
-  produced: BaseMessage[]
+  produced: BaseMessage[],
+  collector: TurnCollector
 ): Pick<TaTurnLlm, "resolved" | "usage"> {
   const aiMessages = produced.filter(
     (m) => m.getType() === "ai"
@@ -112,6 +137,13 @@ function describeResolvedLlm(
     string,
     unknown
   >;
+  // invoke puts these in response_metadata; streaming only in generationInfo.
+  const info = collector.generationInfos.at(-1) ?? {};
+  const pick = (...keys: string[]) =>
+    keys
+      .flatMap((key) => [meta[key], info[key]])
+      .map(stringOrNull)
+      .find((v) => v !== null) ?? null;
 
   let usage: TaTurnLlm["usage"] = null;
   for (const m of aiMessages) {
@@ -124,9 +156,9 @@ function describeResolvedLlm(
 
   return {
     resolved: {
-      modelName: stringOrNull(meta.model_name) ?? stringOrNull(meta.model),
-      systemFingerprint: stringOrNull(meta.system_fingerprint),
-      finishReason: stringOrNull(meta.finish_reason),
+      modelName: pick("model_name", "model"),
+      systemFingerprint: pick("system_fingerprint"),
+      finishReason: pick("finish_reason"),
     },
     usage,
   };
@@ -168,13 +200,38 @@ export function buildTurnContext(input: TurnContextInput): TaTurnContextValues {
     },
     llm: {
       requested: describeRequestedLlm(input.llm),
-      ...describeResolvedLlm(input.producedMessages),
+      ...describeResolvedLlm(input.producedMessages, input.collector),
     },
     trajectory: mapChatMessagesToStoredMessages(input.producedMessages).map(
       (m) => ({ type: m.type, data: { ...m.data } })
     ),
     langfuseTraceId: input.langfuseTraceId,
   };
+}
+
+/** The AE's answer: the trimmed text of the last message the turn produced. */
+export function finalAnswerText(produced: BaseMessage[]): string {
+  const content = produced.at(-1)?.content;
+  if (content === undefined || content === null) return "";
+  const text = typeof content === "string" ? content : JSON.stringify(content);
+  return text.trim();
+}
+
+/**
+ * Postgres text and jsonb cannot hold U+0000 (e.g. a program that prints
+ * chr(0)). Replace it with U+FFFD so the turn is still stored, visibly marked.
+ */
+export function withoutNul<T>(value: T): T {
+  if (typeof value === "string") {
+    return value.split("\u0000").join("�") as T;
+  }
+  if (Array.isArray(value)) return value.map(withoutNul) as T;
+  if (value && typeof value === "object" && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [withoutNul(k), withoutNul(v)])
+    ) as T;
+  }
+  return value;
 }
 
 /**
@@ -185,12 +242,12 @@ export async function persistTurn(
   interaction: NewUserInteractionOnChallenge,
   context: TaTurnContextValues
 ): Promise<void> {
-  const values = taTurnContextValuesSchema.parse(context);
+  const values = withoutNul(taTurnContextValuesSchema.parse(context));
   if (values.interactionId !== interaction.id) {
     throw new Error("Turn context does not belong to this interaction");
   }
   await db.transaction(async (tx) => {
-    await tx.insert(userInteractionOnChallenge).values(interaction);
+    await tx.insert(userInteractionOnChallenge).values(withoutNul(interaction));
     await tx.insert(taTurnContext).values(values);
   });
 }

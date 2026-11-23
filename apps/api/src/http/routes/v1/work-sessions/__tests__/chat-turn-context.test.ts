@@ -73,7 +73,8 @@ const ANSWER = "What does range(3) produce?";
 
 const searchThenAnswer: ScriptedTurn[] = [
   {
-    content: "",
+    // Text before a tool call is streamed but is not the AE's answer.
+    content: "Let me look that up. ",
     toolCalls: [{ id: "call_1", name: "searchKnowledgeBase", args: { query: "range function" } }],
     usage: { input_tokens: 100, output_tokens: 10, total_tokens: 110 },
   },
@@ -283,6 +284,7 @@ describe("teaching assistant turn capture", () => {
       });
 
       expect(context!.trajectory.map((m) => m.type)).toEqual(["ai", "tool", "ai"]);
+      expect(context!.trajectory[0]?.data).toMatchObject({ content: "Let me look that up. " });
       expect(JSON.stringify(context!.trajectory[1])).toContain("range(n) yields 0 to n-1.");
     }
   );
@@ -306,6 +308,24 @@ describe("teaching assistant turn capture", () => {
       await latestTurn(ws.id);
     expect(row).toMatchObject({ code: "print('saved')", stdin: "7", stdout: "saved" });
     expect(context!.promptContext).toMatchObject({ currentCode: "print('saved')", stdout: "saved" });
+  });
+
+  it("stores a turn whose output contains a NUL character", async () => {
+    const ws = await startSession();
+    mocks.createLlm.mockImplementation(() => new ScriptedChatModel([{ content: ANSWER }]));
+
+    const response = await sendTurn("json", ws.id, {
+      message: "How do I loop n times?",
+      code: "print(chr(0))",
+      stdout: "a\u0000b",
+    });
+
+    expect(response.statusCode).toBe(200);
+    const { user_interaction_on_challenge: row, ta_turn_context: context } =
+      await latestTurn(ws.id);
+    expect(row.stdout).toBe("a�b");
+    expect(context!.promptContext.stdout).toBe("a�b");
+    expect(context!.systemPrompt).toContain("a�b");
   });
 
   it.each<Route>(["json", "sse"])("writes nothing on a %s fallback turn", async (route) => {

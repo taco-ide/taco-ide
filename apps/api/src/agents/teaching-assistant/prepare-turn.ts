@@ -17,7 +17,12 @@ import {
   buildTeachingAssistantPrompt,
   type TeachingAssistantPromptContext,
 } from "./prompt";
-import { createTurnCollector, toRetrieval, type TurnCollector } from "./turn-context";
+import {
+  createTurnCollector,
+  toRetrieval,
+  TurnCaptureHandler,
+  type TurnCollector,
+} from "./turn-context";
 import { createLlm } from "../llm-factory";
 import {
   TA_HISTORY_TURN_CAP,
@@ -64,6 +69,8 @@ export interface PreparedTurn {
   llm: ReturnType<typeof createLlm>;
   agent: ReturnType<typeof buildTeachingAssistantAgent>;
   configurable: Record<string, unknown>;
+  /** Pass to the agent run, next to any observability callbacks. */
+  callbacks: TurnCaptureHandler[];
   /** The code, stdin and stdout this turn ran with, for the interaction row. */
   workspace: { code: string | null; stdin: string | null; stdout: string | null };
 }
@@ -215,6 +222,7 @@ export async function prepareTeachingAssistantTurn(
       },
       turnCapture: collector,
     },
+    callbacks: [new TurnCaptureHandler(collector)],
     workspace,
   };
 }

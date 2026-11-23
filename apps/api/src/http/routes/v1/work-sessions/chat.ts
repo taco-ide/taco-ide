@@ -19,6 +19,7 @@ import type { BaseMessage } from "@langchain/core/messages";
 import { prepareTeachingAssistantTurn } from "../../../../agents/teaching-assistant/prepare-turn";
 import {
   buildTurnContext,
+  finalAnswerText,
   persistTurn,
 } from "../../../../agents/teaching-assistant/turn-context";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
@@ -212,7 +213,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
       let wasFallback = false;
       let producedMessages: BaseMessage[] = [];
       try {
-        const callbacks = langfuseCallback ? [langfuseCallback] : [];
+        const callbacks = [
+          ...turn.callbacks,
+          ...(langfuseCallback ? [langfuseCallback] : []),
+        ];
 
         // Use AbortController to enforce timeout
         const controller = new AbortController();
@@ -238,15 +242,10 @@ export async function chatRoute(app: FastifyTypedInstance) {
         // The agent state starts with the input messages; the rest is this turn.
         producedMessages = result.messages.slice(turn.inputMessages.length);
 
-        // The last message is the AI reply.
-        const lastMsg = result.messages[result.messages.length - 1];
-        const rawResponse =
-          typeof lastMsg?.content === "string"
-            ? lastMsg.content
-            : JSON.stringify(lastMsg?.content ?? "");
         // If the agent returned nothing (e.g. guardrail triggered), use a fallback
-        wasFallback = !rawResponse.trim();
-        modelResponse = rawResponse.trim() || AGENT_FALLBACK_RESPONSE;
+        const answer = finalAnswerText(producedMessages);
+        wasFallback = !answer;
+        modelResponse = answer || AGENT_FALLBACK_RESPONSE;
       } catch (err) {
         if (
           err instanceof AgentTimeoutError ||
