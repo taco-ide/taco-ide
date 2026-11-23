@@ -14,7 +14,7 @@ export const deleteV1TeachingAssistantsIdMutationKey = () => [{ url: '/v1/teachi
 export type DeleteV1TeachingAssistantsIdMutationKey = ReturnType<typeof deleteV1TeachingAssistantsIdMutationKey>
 
 /**
- * @description Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while the assistant is linked to non-deleted challenges; `errors.challenges` lists their titles.
+ * @description Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while a non-deleted challenge is linked to the assistant or has work sessions running on it; `errors.challenges` lists their titles.
  * @summary Delete teaching assistant
  * {@link /v1/teaching-assistants/:id}
  */
@@ -26,7 +26,7 @@ export async function deleteV1TeachingAssistantsId(id: DeleteV1TeachingAssistant
 }
 
 /**
- * @description Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while the assistant is linked to non-deleted challenges; `errors.challenges` lists their titles.
+ * @description Soft delete (and deactivate) a teaching assistant. Requires the teachingAssistant:delete permission in the assistant's organization, or platform admin. Returns 409 while a non-deleted challenge is linked to the assistant or has work sessions running on it; `errors.challenges` lists their titles.
  * @summary Delete teaching assistant
  * {@link /v1/teaching-assistants/:id}
  */

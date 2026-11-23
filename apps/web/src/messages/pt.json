@@ -1603,6 +1603,8 @@
     "new": "Novo assistente",
     "status": {
       "active": "Ativo",
+      "default": "Padrão da organização",
+      "defaultHint": "Somente coordenadores e administradores podem alterar o padrão da organização.",
       "inactive": "Inativo"
     },
     "subtitle": "Configure os tutores de IA que orientam os alunos nos desafios da sua organização.",

@@ -14,7 +14,7 @@ export const patchV1TeachingAssistantsIdMutationKey = () => [{ url: '/v1/teachin
 export type PatchV1TeachingAssistantsIdMutationKey = ReturnType<typeof patchV1TeachingAssistantsIdMutationKey>
 
 /**
- * @description Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Deactivated assistants stop answering students in challenges that use them.
+ * @description Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Teachers can only change assistants that are not the organization default and that serve no challenge they do not manage; coordinators and admins can change any. Omitting modelParameters keeps the current model; null restores the shared model. Deactivated assistants stop answering students in challenges that use them.
  * @summary Update teaching assistant
  * {@link /v1/teaching-assistants/:id}
  */
@@ -28,7 +28,7 @@ export async function patchV1TeachingAssistantsId(id: PatchV1TeachingAssistantsI
 }
 
 /**
- * @description Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Deactivated assistants stop answering students in challenges that use them.
+ * @description Update a teaching assistant's name, description, instructions, audience, model parameters or active flag. Requires the teachingAssistant:update permission in the assistant's organization, or platform admin. Teachers can only change assistants that are not the organization default and that serve no challenge they do not manage; coordinators and admins can change any. Omitting modelParameters keeps the current model; null restores the shared model. Deactivated assistants stop answering students in challenges that use them.
  * @summary Update teaching assistant
  * {@link /v1/teaching-assistants/:id}
  */

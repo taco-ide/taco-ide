@@ -157,6 +157,14 @@ function TeachingAssistantsManager() {
                       >
                         {ta.isActive ? t("status.active") : t("status.inactive")}
                       </Badge>
+                      {ta.isDefault && (
+                        <Badge
+                          title={t("status.defaultHint")}
+                          className="bg-amber-500/15 text-amber-300 border-amber-500/30"
+                        >
+                          {t("status.default")}
+                        </Badge>
+                      )}
                       {ta.targetAudience && (
                         <Badge className="bg-slate-700 text-slate-200">
                           {ta.targetAudience}

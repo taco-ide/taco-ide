@@ -96,6 +96,14 @@ function toModelParameters(values: FormValues) {
   return Object.keys(out).length > 0 ? out : null;
 }
 
+/** Same parameters, regardless of key order or absent vs. empty. */
+function sameModelParameters(
+  a: Partial<Record<ParamKey, number>> | null,
+  b: Partial<Record<ParamKey, number>> | null
+) {
+  return PARAMS.every(({ key }) => a?.[key] === b?.[key]);
+}
+
 interface TeachingAssistantFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -157,16 +165,28 @@ export function TeachingAssistantFormDialog({
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   const onSubmit = (values: FormValues) => {
+    const modelParameters = toModelParameters(values);
     const data = {
       alias: values.alias.trim(),
       description: values.description.trim() || null,
       systemPrompt: values.systemPrompt.trim(),
       targetAudience: values.targetAudience.trim() || null,
       isActive: values.isActive,
-      modelParameters: toModelParameters(values),
     };
-    if (assistant) updateMutation.mutate({ id: assistant.id, data });
-    else createMutation.mutate({ data });
+    if (assistant) {
+      // Omitted parameters keep the current model link (e.g. the shared seed
+      // model); only send them when the user actually changed them.
+      const changed = !sameModelParameters(
+        modelParameters,
+        (assistant.modelParameters ?? null) as Partial<
+          Record<ParamKey, number>
+        > | null
+      );
+      updateMutation.mutate({
+        id: assistant.id,
+        data: changed ? { ...data, modelParameters } : data,
+      });
+    } else createMutation.mutate({ data: { ...data, modelParameters } });
   };
 
   const fieldClass = "bg-slate-950 border-slate-700 text-slate-100";

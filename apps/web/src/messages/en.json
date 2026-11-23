@@ -1603,6 +1603,8 @@
     "new": "New assistant",
     "status": {
       "active": "Active",
+      "default": "Organization default",
+      "defaultHint": "Only coordinators and admins can change the organization default.",
       "inactive": "Inactive"
     },
     "subtitle": "Configure the AI tutors that guide students in your organization's challenges.",
