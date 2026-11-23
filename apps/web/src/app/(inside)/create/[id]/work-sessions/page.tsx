@@ -97,6 +97,8 @@ function WorkSessionsListContent() {
   );
 
   const rows = data?.data ?? [];
+  // Only read by row hints, and rows exist only once `data` has loaded.
+  const inactivityHours = data?.inactivityThresholdHours ?? 0;
   const pagination = data?.pagination ?? {
     total: 0,
     page: 1,
@@ -193,7 +195,9 @@ function WorkSessionsListContent() {
                         <Badge
                           variant="outline"
                           className={ACTIVITY_BADGE_CLASS[row.activityStatus]}
-                          title={tActivity(`hint.${row.activityStatus}`)}
+                          title={tActivity(`hint.${row.activityStatus}`, {
+                            hours: inactivityHours,
+                          })}
                         >
                           {tActivity(`status.${row.activityStatus}`)}
                         </Badge>

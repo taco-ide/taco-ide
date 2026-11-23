@@ -14,7 +14,7 @@ export const getV1ChallengesChallengeidWorkSessionsQueryKey = (challengeId: GetV
 export type GetV1ChallengesChallengeidWorkSessionsQueryKey = ReturnType<typeof getV1ChallengesChallengeidWorkSessionsQueryKey>
 
 /**
- * @description Paginated list of student work sessions for a challenge, each with a derived activity status (active, inactive after WORK_SESSION_INACTIVITY_HOURS without student activity, or submitted). Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
+ * @description Paginated list of student work sessions for a challenge, each with a derived activity status (active, inactive after inactivityThresholdHours (WORK_SESSION_INACTIVITY_HOURS) without student activity or a staff reopen, or submitted). Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
  * @summary List work sessions for challenge (staff)
  * {@link /v1/challenges/:challengeId/work-sessions/}
  */
@@ -38,7 +38,7 @@ export function getV1ChallengesChallengeidWorkSessionsQueryOptions(challengeId: 
 }
 
 /**
- * @description Paginated list of student work sessions for a challenge, each with a derived activity status (active, inactive after WORK_SESSION_INACTIVITY_HOURS without student activity, or submitted). Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
+ * @description Paginated list of student work sessions for a challenge, each with a derived activity status (active, inactive after inactivityThresholdHours (WORK_SESSION_INACTIVITY_HOURS) without student activity or a staff reopen, or submitted). Scoped to the challenge's organization: teachers see only their own challenges; coordinators and admins see sessions in their org.
  * @summary List work sessions for challenge (staff)
  * {@link /v1/challenges/:challengeId/work-sessions/}
  */

@@ -1487,8 +1487,7 @@
     "exploreProblems": "Explorar problemas",
     "filters": {
       "searchLabel": "Buscar por nome do aluno",
-      "searchPlaceholder": "Nome...",
-      "submittedOnly": "Apenas submetidas"
+      "searchPlaceholder": "Nome..."
     },
     "pagination": {
       "summary": "{count, plural, =0 {nenhuma sessão} one {# sessão} other {# sessões}} · Página {page} de {totalPages}"
@@ -1540,14 +1539,9 @@
         "stepPrev": "Passo anterior"
       }
     },
-    "state": {
-      "inProgress": "Em andamento",
-      "submitted": "Submetida"
-    },
     "table": {
       "actions": "Ações",
       "createdAt": "Criada em",
-      "lastMessage": "Última mensagem",
       "state": "Estado",
       "student": "Aluno"
     },
@@ -1563,8 +1557,8 @@
       "submitted": "Submetida"
     },
     "hint": {
-      "active": "O aluno trabalhou nesta sessão recentemente.",
-      "inactive": "Sem atividade do aluno há algum tempo (24 h por padrão). A sessão continua aberta e o aluno pode retomá-la.",
+      "active": "O aluno teve atividade nas últimas {hours} h.",
+      "inactive": "Sem atividade do aluno há {hours} h ou mais (reabrir a sessão também reinicia essa contagem). A sessão continua aberta e o aluno pode retomá-la.",
       "submitted": "O aluno submeteu esta sessão."
     }
   }
