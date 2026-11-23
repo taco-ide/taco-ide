@@ -75,6 +75,15 @@ const envSchema = z.object({
   // Server
   PORT: z.coerce.number().default(4000),
 
+  // Work sessions: hours without student activity after which an open
+  // (not submitted) session is reported as "inactive". Derived on read only;
+  // nothing is closed or written when the threshold passes. An empty value
+  // (`WORK_SESSION_INACTIVITY_HOURS=`) counts as unset, like LANGFUSE_BASEURL.
+  WORK_SESSION_INACTIVITY_HOURS: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.coerce.number().positive().default(24)
+  ),
+
   // Platform admin seed (all optional; seed skips with a warning if any is missing)
   PLATFORM_ADMIN_EMAIL: z.string().email().optional(),
   PLATFORM_ADMIN_PASSWORD: z.string().min(12).optional(),

@@ -330,15 +330,27 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
           !streamErrored
         ) {
           const interactionId = randomUUID();
-          await db.insert(userInteractionOnChallenge).values({
-            id: interactionId,
-            workSessionId,
-            challengeId: ws[0].challengeId,
-            interactionType: "chat",
-            userPrompt: message,
-            modelResponse: fullResponse,
-            code: currentCode ?? null,
-            stdout: stdout ?? null,
+          const challengeId = ws[0].challengeId;
+          const now = new Date();
+          // Save the interaction and bump lastMessageAt together (as the
+          // other interaction routes do); the derived active/inactive status
+          // reads lastMessageAt.
+          await db.transaction(async (tx) => {
+            await tx.insert(userInteractionOnChallenge).values({
+              id: interactionId,
+              workSessionId,
+              challengeId,
+              interactionType: "chat",
+              userPrompt: message,
+              modelResponse: fullResponse,
+              code: currentCode ?? null,
+              stdout: stdout ?? null,
+            });
+
+            await tx
+              .update(workSession)
+              .set({ updatedAt: now, lastMessageAt: now })
+              .where(eq(workSession.id, workSessionId));
           });
         }
       } catch (err) {

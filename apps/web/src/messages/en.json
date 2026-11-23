@@ -1487,8 +1487,7 @@
     "exploreProblems": "Explore problems",
     "filters": {
       "searchLabel": "Search by student name",
-      "searchPlaceholder": "Name...",
-      "submittedOnly": "Submitted only"
+      "searchPlaceholder": "Name..."
     },
     "pagination": {
       "summary": "{count, plural, =0 {no sessions} one {# session} other {# sessions}} · Page {page} of {totalPages}"
@@ -1540,17 +1539,27 @@
         "stepPrev": "Previous step"
       }
     },
-    "state": {
-      "inProgress": "In progress",
-      "submitted": "Submitted"
-    },
     "table": {
       "actions": "Actions",
       "createdAt": "Created at",
-      "lastMessage": "Last message",
       "state": "State",
       "student": "Student"
     },
     "title": "Student sessions"
+  },
+  "workSessionActivity": {
+    "filterLabel": "Activity",
+    "all": "All sessions",
+    "lastActivity": "Last activity",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "submitted": "Submitted"
+    },
+    "hint": {
+      "active": "The student was active in the last {hours} h.",
+      "inactive": "No student activity for {hours} h or more (reopening the session also restarts this count). The session is still open and the student can resume it.",
+      "submitted": "The student submitted this session."
+    }
   }
 }

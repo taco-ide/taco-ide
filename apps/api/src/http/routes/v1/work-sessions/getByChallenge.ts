@@ -8,11 +8,17 @@ import {
   ResponseSchema404,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
-import { workSession } from "@repo/infra/db/schema";
+import { workSession, challengeSolution } from "@repo/infra/db/schema";
 import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
+import {
+  deriveWorkSessionStatus,
+  lastActivityAtSql,
+  workSessionActivityStatuses,
+  workSessionSolutionJoin,
+} from "../../../services/work-session-activity";
 
 // ==================== SCHEMAS ====================
 
@@ -30,6 +36,9 @@ const WorkSessionSchema = z.object({
   createdAt: z.string(),
   lastMessageAt: z.string().nullable(),
   endedAt: z.string().nullable(),
+  /** Latest activity: session start, chat, code run, solution save or staff reopen. */
+  lastActivityAt: z.string(),
+  activityStatus: z.enum(workSessionActivityStatuses),
 });
 
 const GetWorkSessionResponseSchema = ResponseSchema200.extend({
@@ -86,9 +95,10 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         });
       }
 
-      const [session] = await db
-        .select()
+      const [row] = await db
+        .select({ session: workSession, lastActivityAt: lastActivityAtSql })
         .from(workSession)
+        .leftJoin(challengeSolution, workSessionSolutionJoin)
         .where(
           and(
             eq(workSession.userId, usr.id),
@@ -98,13 +108,14 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
         .orderBy(desc(workSession.createdAt))
         .limit(1);
 
-      if (!session) {
+      if (!row) {
         return reply.status(200).send({
           success: true as const,
           data: null,
         });
       }
 
+      const { session, lastActivityAt } = row;
       return reply.status(200).send({
         success: true as const,
         data: {
@@ -115,6 +126,11 @@ export async function getWorkSessionByChallengeRoute(app: FastifyTypedInstance) 
           createdAt: session.createdAt.toISOString(),
           lastMessageAt: session.lastMessageAt?.toISOString() ?? null,
           endedAt: session.endedAt?.toISOString() ?? null,
+          lastActivityAt: lastActivityAt.toISOString(),
+          activityStatus: deriveWorkSessionStatus({
+            endedAt: session.endedAt,
+            lastActivityAt,
+          }),
         },
       });
     }

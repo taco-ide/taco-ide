@@ -23,6 +23,14 @@ export const getV1ChallengesChallengeidWorkSessionsQueryParamsSubmittedOnlyEnum2
 
 export type GetV1ChallengesChallengeidWorkSessionsQueryParamsSubmittedOnlyEnum2 = (typeof getV1ChallengesChallengeidWorkSessionsQueryParamsSubmittedOnlyEnum2)[keyof typeof getV1ChallengesChallengeidWorkSessionsQueryParamsSubmittedOnlyEnum2];
 
+export const getV1ChallengesChallengeidWorkSessionsQueryParamsActivityStatusEnum = {
+    "active": "active",
+    "inactive": "inactive",
+    "submitted": "submitted"
+} as const;
+
+export type GetV1ChallengesChallengeidWorkSessionsQueryParamsActivityStatusEnum = (typeof getV1ChallengesChallengeidWorkSessionsQueryParamsActivityStatusEnum)[keyof typeof getV1ChallengesChallengeidWorkSessionsQueryParamsActivityStatusEnum];
+
 export type GetV1ChallengesChallengeidWorkSessionsQueryParams = {
     /**
      * @minLength 1
@@ -41,6 +49,10 @@ export type GetV1ChallengesChallengeidWorkSessionsQueryParams = {
     /**
      * @type string | undefined
     */
+    activityStatus?: GetV1ChallengesChallengeidWorkSessionsQueryParamsActivityStatusEnum;
+    /**
+     * @type string | undefined
+    */
     search?: string;
 };
 
@@ -49,6 +61,14 @@ export const getV1ChallengesChallengeidWorkSessions200SuccessEnum = {
 } as const;
 
 export type GetV1ChallengesChallengeidWorkSessions200SuccessEnum = (typeof getV1ChallengesChallengeidWorkSessions200SuccessEnum)[keyof typeof getV1ChallengesChallengeidWorkSessions200SuccessEnum];
+
+export const dataActivityStatusEnum = {
+    "active": "active",
+    "inactive": "inactive",
+    "submitted": "submitted"
+} as const;
+
+export type DataActivityStatusEnum = (typeof dataActivityStatusEnum)[keyof typeof dataActivityStatusEnum];
 
 /**
  * @description Default Response
@@ -90,6 +110,14 @@ export type GetV1ChallengesChallengeidWorkSessions200 = {
          * @type string
         */
         endedAt: string | null;
+        /**
+         * @type string
+        */
+        lastActivityAt: string;
+        /**
+         * @type string
+        */
+        activityStatus: DataActivityStatusEnum;
     }[];
     /**
      * @type object
@@ -112,6 +140,10 @@ export type GetV1ChallengesChallengeidWorkSessions200 = {
         */
         totalPages: number;
     };
+    /**
+     * @type number
+    */
+    inactivityThresholdHours: number;
 };
 
 export const getV1ChallengesChallengeidWorkSessions401SuccessEnum = {

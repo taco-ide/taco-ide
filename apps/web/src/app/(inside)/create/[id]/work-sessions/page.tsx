@@ -5,9 +5,17 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Loader2, Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -18,10 +26,20 @@ import {
 } from "@/components/ui/table";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { useGetV1ChallengesChallengeidWorkSessions } from "@/kubb/hooks";
+import type { DataActivityStatusEnum } from "@repo/types";
 import { ChallengeManageHeader } from "../_components/ChallengeManageHeader";
 
 const PER_PAGE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+const ACTIVITY_FILTER_ALL = "all";
+const ACTIVITY_STATUSES = ["active", "inactive", "submitted"] as const satisfies readonly DataActivityStatusEnum[];
+type ActivityFilter = DataActivityStatusEnum | typeof ACTIVITY_FILTER_ALL;
+
+const ACTIVITY_BADGE_CLASS: Record<DataActivityStatusEnum, string> = {
+  active: "border-amber-500/40 bg-amber-500/10 text-amber-300",
+  inactive: "border-slate-500/40 bg-slate-500/10 text-slate-400",
+  submitted: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
+};
 
 function formatDt(iso: string | null) {
   if (!iso) return "—";
@@ -43,12 +61,14 @@ function AccessDenied() {
 
 function WorkSessionsListContent() {
   const t = useTranslations("workSessions");
+  const tActivity = useTranslations("workSessionActivity");
   const params = useParams();
   const router = useRouter();
   const challengeId = params.id as string;
 
   const [page, setPage] = useState(1);
-  const [submittedOnly, setSubmittedOnly] = useState(false);
+  const [activityFilter, setActivityFilter] =
+    useState<ActivityFilter>(ACTIVITY_FILTER_ALL);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -61,20 +81,24 @@ function WorkSessionsListContent() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, submittedOnly]);
+  }, [debouncedSearch, activityFilter]);
 
   const { data, isLoading, error } = useGetV1ChallengesChallengeidWorkSessions(
     challengeId,
     {
       page,
       perPage: PER_PAGE,
-      ...(submittedOnly ? { submittedOnly: "true" } : {}),
+      ...(activityFilter !== ACTIVITY_FILTER_ALL
+        ? { activityStatus: activityFilter }
+        : {}),
       ...(debouncedSearch ? { search: debouncedSearch } : {}),
     },
     { query: { enabled: !!challengeId } }
   );
 
   const rows = data?.data ?? [];
+  // Only read by row hints, and rows exist only once `data` has loaded.
+  const inactivityHours = data?.inactivityThresholdHours ?? 0;
   const pagination = data?.pagination ?? {
     total: 0,
     page: 1,
@@ -88,17 +112,38 @@ function WorkSessionsListContent() {
       <ChallengeManageHeader challengeId={challengeId} />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between rounded-lg border border-slate-700 bg-slate-800/50 p-4">
-          <div className="flex items-center gap-2">
-            <input
-              id="submitted-only"
-              type="checkbox"
-              checked={submittedOnly}
-              onChange={(e) => setSubmittedOnly(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-amber-500 focus:ring-amber-500"
-            />
-            <Label htmlFor="submitted-only" className="text-slate-200 cursor-pointer">
-              {t("filters.submittedOnly")}
+          <div className="w-full sm:max-w-xs">
+            <Label htmlFor="activity-filter" className="text-slate-400 text-xs mb-1 block">
+              {tActivity("filterLabel")}
             </Label>
+            <Select
+              value={activityFilter}
+              onValueChange={(v) => setActivityFilter(v as ActivityFilter)}
+            >
+              <SelectTrigger
+                id="activity-filter"
+                className="bg-slate-900 border-slate-600 text-slate-100"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectItem
+                  value={ACTIVITY_FILTER_ALL}
+                  className="text-slate-200 focus:bg-slate-700"
+                >
+                  {tActivity("all")}
+                </SelectItem>
+                {ACTIVITY_STATUSES.map((status) => (
+                  <SelectItem
+                    key={status}
+                    value={status}
+                    className="text-slate-200 focus:bg-slate-700"
+                  >
+                    {tActivity(`status.${status}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="w-full sm:max-w-xs">
             <Label htmlFor="search-name" className="text-slate-400 text-xs mb-1 block">
@@ -133,7 +178,7 @@ function WorkSessionsListContent() {
                     <TableHead className="text-slate-200">{t("table.student")}</TableHead>
                     <TableHead className="text-slate-200">{t("table.state")}</TableHead>
                     <TableHead className="text-slate-200">{t("table.createdAt")}</TableHead>
-                    <TableHead className="text-slate-200">{t("table.lastMessage")}</TableHead>
+                    <TableHead className="text-slate-200">{tActivity("lastActivity")}</TableHead>
                     <TableHead className="text-slate-200 text-right w-32">{t("table.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -147,17 +192,21 @@ function WorkSessionsListContent() {
                         {row.studentName}
                       </TableCell>
                       <TableCell className="text-slate-300">
-                        {row.endedAt ? (
-                          <span className="text-emerald-400/90">{t("state.submitted")}</span>
-                        ) : (
-                          <span className="text-amber-400/90">{t("state.inProgress")}</span>
-                        )}
+                        <Badge
+                          variant="outline"
+                          className={ACTIVITY_BADGE_CLASS[row.activityStatus]}
+                          title={tActivity(`hint.${row.activityStatus}`, {
+                            hours: inactivityHours,
+                          })}
+                        >
+                          {tActivity(`status.${row.activityStatus}`)}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
                         {formatDt(row.createdAt)}
                       </TableCell>
                       <TableCell className="text-slate-400 text-sm">
-                        {formatDt(row.lastMessageAt)}
+                        {formatDt(row.lastActivityAt)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button

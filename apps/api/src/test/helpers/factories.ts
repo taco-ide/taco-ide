@@ -173,9 +173,14 @@ export async function createWorkSession(overrides: {
   classroomId?: string | null;
   teachingAssistantId: string;
   endedAt?: Date | null;
+  createdAt?: Date;
+  lastMessageAt?: Date | null;
+  /** Defaults to `createdAt` (as on a fresh insert) when that is given. */
+  updatedAt?: Date;
   id?: string;
 }) {
   const id = overrides.id ?? randomUUID();
+  const updatedAt = overrides.updatedAt ?? overrides.createdAt;
   const [row] = await db
     .insert(workSession)
     .values({
@@ -185,6 +190,9 @@ export async function createWorkSession(overrides: {
       classroomId: overrides.classroomId ?? null,
       teachingAssistantId: overrides.teachingAssistantId,
       endedAt: overrides.endedAt ?? null,
+      lastMessageAt: overrides.lastMessageAt ?? null,
+      ...(overrides.createdAt ? { createdAt: overrides.createdAt } : {}),
+      ...(updatedAt ? { updatedAt } : {}),
     })
     .returning();
   return row!;
