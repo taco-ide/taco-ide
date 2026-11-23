@@ -183,6 +183,11 @@ export const auth = betterAuth({
         return true;
       },
       creatorRole: "admin",
+      // Match the 7-day window used by the platform-admin invitation path
+      // and the resend route (apps/api/.../organizations/invitations/*).
+      // Without this, invitations created by coordinators expire after the
+      // plugin's 48h default while the UI promises 7 days.
+      invitationExpiresIn: 60 * 60 * 24 * 7,
       sendInvitationEmail: async (data) => {
         try {
           await sendInvitationEmail({

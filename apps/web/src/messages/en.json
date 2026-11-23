@@ -783,6 +783,81 @@
     },
     "tabsLabel": "Challenge management sections"
   },
+  "classroomOnboarding": {
+    "create": {
+      "intro": {
+        "body": "A classroom groups students and the challenges they will solve under one lead teacher. Coordinators can see and manage every classroom in the organization; the lead teacher manages their own.",
+        "title": "What is a classroom?"
+      },
+      "inviteTeacher": {
+        "link": "Invite them",
+        "prompt": "Teacher not listed yet?"
+      },
+      "teacherEffect": "The lead teacher can edit the classroom, enroll students and assign challenges. You can change it later."
+    },
+    "dashboard": {
+      "emptyAction": "Create a classroom",
+      "emptyHint": "Create your first classroom, pick its lead teacher, then enroll students and assign challenges.",
+      "emptyHintTeacher": "Create your first classroom, then enroll students and assign challenges.",
+      "newClassroom": {
+        "description": "Create a classroom and choose the teacher responsible for it.",
+        "title": "New classroom"
+      }
+    },
+    "detail": {
+      "problems": {
+        "create": "Create a challenge",
+        "orAssign": "…or assign one of the existing challenges listed below."
+      },
+      "students": {
+        "askCoordinator": "Only organization members can be enrolled. Ask a coordinator to invite the students you need.",
+        "invite": "Invite students",
+        "noneAvailable": "Everyone in your organization is already here, or nobody else has joined yet.",
+        "pickAbove": "Pick an organization member in the selector above to enroll them."
+      },
+      "whoManages": "Coordinators and the lead teacher can manage this classroom. Students only see the challenges assigned here."
+    },
+    "showTutorial": "Show tutorial",
+    "tour": {
+      "buttons": {
+        "back": "Back",
+        "done": "Got it",
+        "next": "Next"
+      },
+      "create": {
+        "intro": {
+          "description": "A classroom connects a lead teacher, their students and the challenges they will work on. Let's create one.",
+          "title": "Create a classroom"
+        },
+        "submit": {
+          "description": "After creating it you land on the classroom page, where you enroll students and assign challenges.",
+          "title": "Create and continue"
+        },
+        "teacher": {
+          "description": "Pick who leads this classroom. That teacher will be able to enroll students, assign challenges and review submissions. Leave it empty to manage it yourself for now.",
+          "title": "Choose the lead teacher"
+        },
+        "title": {
+          "description": "Use a name everyone recognizes, like the course and term (e.g. \"Programming I — 2026\").",
+          "title": "Name the classroom"
+        }
+      },
+      "detail": {
+        "problems": {
+          "description": "Assign challenges so students see them in this classroom. Create a new one or pick an existing challenge.",
+          "title": "Assign challenges"
+        },
+        "students": {
+          "description": "Enroll organization members here. People who are not in the organization yet must be invited first — coordinators do that from the Team page.",
+          "title": "Enroll students"
+        },
+        "teacher": {
+          "description": "You can change the lead teacher at any time. The new teacher immediately gets access to manage this classroom.",
+          "title": "Lead teacher"
+        }
+      }
+    }
+  },
   "classrooms": {
     "backToExplore": "Back to Explore",
     "create": {
@@ -1465,6 +1540,98 @@
     "view": "View",
     "viewReplay": "View history (replay)",
     "viewStudentSessions": "View student sessions"
+  },
+  "teamInvitations": {
+    "dashboard": {
+      "description": "Invite teachers and students by email and track pending invitations.",
+      "title": "Invite people"
+    },
+    "empty": {
+      "action": "Send the first invitation",
+      "body": "Invite a teacher to lead a classroom, or students who are not in your organization yet.",
+      "title": "No pending invitations"
+    },
+    "fallbackOrgName": "Your organization",
+    "loadError": "Could not load the invitations.",
+    "methods": {
+      "adminOnly": "Platform admin",
+      "availableHere": "Available here",
+      "csv": {
+        "body": "Creates accounts for a whole group at once from a spreadsheet. Imports are run by a platform administrator — ask them when you need to onboard a full class.",
+        "title": "Bulk CSV import"
+      },
+      "domain": {
+        "body": "Anyone who signs up with an address from a mapped domain (e.g. @yourschool.edu) joins automatically with the role set for that domain (student, teacher or coordinator). Domains are configured by a platform administrator.",
+        "title": "Automatic email domain"
+      },
+      "invite": {
+        "body": "Send a personal invitation with a chosen role. The person gets an email with a link, valid for 7 days, to accept it and join with that role.",
+        "title": "Email invitation"
+      },
+      "selfSignup": "Anyone can create an account, but without an invitation or a mapped email domain they will not join your organization.",
+      "title": "How people join your organization"
+    },
+    "navLabel": "Team",
+    "newInvitation": "Invite someone",
+    "notAllowed": {
+      "adminConsole": "Open the admin console",
+      "description": "Only coordinators and administrators of the active organization can invite people. Ask a coordinator if someone needs access.",
+      "title": "Invitations are managed by coordinators"
+    },
+    "onboardingStep": {
+      "description": "Bring teachers and students into your organization by email. The Team page also explains when to use email domains or a CSV import.",
+      "title": "Invite your team"
+    },
+    "pending": {
+      "description": "{count, plural, =0 {No invitations waiting for an answer.} one {# invitation waiting for an answer.} other {# invitations waiting for an answer.}} Resend one if the email got lost, or cancel it to invalidate the link.",
+      "title": "Pending invitations"
+    },
+    "roles": {
+      "admin": "Everything a coordinator can do, plus organization settings. Reserved for the people responsible for the school.",
+      "coordinator": "Creates classrooms, assigns lead teachers and invites people. Sees every classroom in the organization.",
+      "notOfferedToYou": "Only an administrator can invite someone as {role}.",
+      "student": "Joins classrooms, solves challenges and talks to the AI teaching assistant. Cannot create content.",
+      "teacher": "Creates challenges and leads the classrooms assigned to them: enrolls students and reviews submissions.",
+      "title": "What each role can do"
+    },
+    "showTutorial": "Show tutorial",
+    "subtitle": "Invite teachers and students, and see who has not accepted yet.",
+    "title": "Team and invitations",
+    "tour": {
+      "buttons": {
+        "back": "Back",
+        "done": "Got it",
+        "next": "Next"
+      },
+      "csv": {
+        "description": "For a whole class at once, a platform administrator can import a CSV with names, emails and roles. It is not available on this page.",
+        "title": "Bulk import (admin only)"
+      },
+      "domain": {
+        "description": "If your school has its own email domain, a platform administrator can map it so new sign-ups join automatically as students or teachers — no invitation needed.",
+        "title": "Email domain (admin only)"
+      },
+      "invite": {
+        "description": "The way you invite people from here: one email, one role. Use it for teachers, coordinators or a handful of students.",
+        "title": "Email invitation"
+      },
+      "newInvitation": {
+        "description": "Click here, type the email and choose the role. They receive a link that is valid for 7 days.",
+        "title": "Send an invitation"
+      },
+      "pending": {
+        "description": "Invitations that have not been accepted yet show up here. Resend one if it expired or got lost, or cancel it to invalidate the link.",
+        "title": "Track pending invitations"
+      },
+      "roles": {
+        "description": "The role decides what the person can do once they join. Teachers lead classrooms; students only solve challenges.",
+        "title": "Pick the right role"
+      },
+      "welcome": {
+        "description": "There are three ways for teachers and students to join your organization. Let's see when to use each one.",
+        "title": "Bringing people in"
+      }
+    }
   },
   "ui": {
     "carousel": {

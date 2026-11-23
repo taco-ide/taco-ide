@@ -9,8 +9,8 @@ import { Pager } from "@/components/admin/pager";
 import { useGetV1OrganizationsIdInvitations } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsIdInvitations";
 import { useGetV1OrganizationsId } from "@/kubb/hooks/organizationsHooks/useGetV1OrganizationsId";
 import { EmptyState } from "@/components/admin/empty-state";
-import { CreateInvitationDialog } from "./_components/create-invitation-dialog";
-import { InvitationsTable, type InvitationRow } from "./_components/invitations-table";
+import { CreateInvitationDialog } from "@/components/admin/create-invitation-dialog";
+import { InvitationsTable, type InvitationRow } from "@/components/admin/invitations-table";
 
 const PER_PAGE = 20;
 

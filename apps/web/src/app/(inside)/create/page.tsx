@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ShieldAlert } from "lucide-react";
 import { RoleGuard } from "@/components/guards/RoleGuard";
@@ -20,10 +22,19 @@ function AccessDenied() {
 
 const CLASSROOM_NONE_VALUE = "__none__";
 
+function CreateWizard() {
+    // `/create?classroomId=…` (e.g. from a classroom's empty state) preselects
+    // that classroom; the wizard ignores ids the user cannot pick.
+    const classroomId = useSearchParams().get("classroomId") ?? undefined;
+    return <ChallengeWizard mode="create" preselectedClassroomId={classroomId} />;
+}
+
 export default function CreatePage() {
     return (
         <RoleGuard minimumRole="teacher" fallback={<AccessDenied />}>
-            <ChallengeWizard mode="create" />
+            <Suspense>
+                <CreateWizard />
+            </Suspense>
         </RoleGuard>
     );
 }

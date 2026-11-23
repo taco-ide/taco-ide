@@ -9,8 +9,10 @@ import {
   Compass,
   Loader2,
   Plus,
+  School,
   ShieldCheck,
   Sparkles,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ import {
   useGetV1OrganizationsIdMembers,
 } from "@/kubb/hooks";
 import { useTutorial } from "@/hooks/useTutorial";
+import { useHasMinimumRole } from "@/hooks/usePermission";
 
 type RoleKey = "student" | "teacher" | "coordinator" | "admin";
 
@@ -114,8 +117,17 @@ function QuickAction({
   );
 }
 
-function ClassroomGrid({ scope }: { scope: "mine" | "org" }) {
+function ClassroomGrid({
+  scope,
+  canCreate,
+  canPickTeacher,
+}: {
+  scope: "mine" | "org";
+  canCreate: boolean;
+  canPickTeacher: boolean;
+}) {
   const t = useTranslations("dashboard");
+  const tOnboarding = useTranslations("classroomOnboarding.dashboard");
   const { data, isLoading } = useGetV1Classrooms({ scope });
   const rows = data?.data ?? [];
 
@@ -130,7 +142,24 @@ function ClassroomGrid({ scope }: { scope: "mine" | "org" }) {
   if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-700 bg-slate-800/30 p-6 text-center text-sm text-slate-400">
-        {t("classrooms.empty")}
+        <p>{t("classrooms.empty")}</p>
+        {canCreate ? (
+          <>
+            <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">
+              {tOnboarding(canPickTeacher ? "emptyHint" : "emptyHintTeacher")}
+            </p>
+            <Button
+              asChild
+              size="sm"
+              className="mt-3 bg-amber-500 text-slate-900 hover:bg-amber-400"
+            >
+              <Link href="/classrooms/create">
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                {tOnboarding("emptyAction")}
+              </Link>
+            </Button>
+          </>
+        ) : null}
       </div>
     );
   }
@@ -291,7 +320,13 @@ function TeacherChallenges() {
 function DashboardContent() {
   const t = useTranslations("dashboard");
   const tour = useTranslations("dashboard.tour");
+  const tTeam = useTranslations("teamInvitations");
+  const tClassroom = useTranslations("classroomOnboarding.dashboard");
   const { user, isLoading, getFirstName } = useUser();
+  // Same gates as /classrooms/create: teacher+ may create, coordinator+ also
+  // picks the lead teacher.
+  const canCreateClassroom = useHasMinimumRole("teacher");
+  const canPickTeacher = useHasMinimumRole("coordinator");
 
   const roleKey = user
     ? resolveRole(user.role, user.isPlatformAdmin)
@@ -312,6 +347,13 @@ function DashboardContent() {
         popover: {
           title: tour("coordinator.quickActions.title"),
           description: tour("coordinator.quickActions.description"),
+        },
+      },
+      {
+        element: '[data-tour="invite-people"]',
+        popover: {
+          title: tTeam("onboardingStep.title"),
+          description: tTeam("onboardingStep.description"),
         },
       },
       {
@@ -405,6 +447,22 @@ function DashboardContent() {
           )}
           {roleKey === "coordinator" && (
             <>
+              <div data-tour="invite-people">
+                <QuickAction
+                  href="/team"
+                  icon={UserPlus}
+                  title={tTeam("dashboard.title")}
+                  description={tTeam("dashboard.description")}
+                  accent="violet"
+                />
+              </div>
+              <QuickAction
+                href="/classrooms/create"
+                icon={School}
+                title={tClassroom("newClassroom.title")}
+                description={tClassroom("newClassroom.description")}
+                accent="emerald"
+              />
               <QuickAction
                 href="/classrooms"
                 icon={BookOpen}
@@ -493,7 +551,11 @@ function DashboardContent() {
             <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
-        <ClassroomGrid scope={roleKey === "coordinator" ? "org" : "mine"} />
+        <ClassroomGrid
+          scope={roleKey === "coordinator" ? "org" : "mine"}
+          canCreate={canCreateClassroom}
+          canPickTeacher={canPickTeacher}
+        />
       </section>
 
       {roleKey === "student" && (

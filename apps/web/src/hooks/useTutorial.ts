@@ -11,6 +11,7 @@ import "driver.js/dist/driver.css";
 export type TutorialId =
   | "coordinator-onboarding"
   | "classroom-teacher-add"
+  | "classroom-next-steps"
   | "invite-flow";
 
 const STORAGE_KEY = (id: TutorialId) => `taco-tutorial:${id}`;

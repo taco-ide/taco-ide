@@ -9,7 +9,7 @@
 import { randomUUID } from "node:crypto";
 import postgres from "postgres";
 
-const DEV_DATABASE_URL =
+export const DEV_DATABASE_URL =
   process.env.DATABASE_URL ??
   "postgresql://dbuser:dbpass@localhost:5490/taco_dev";
 

@@ -783,6 +783,81 @@
     },
     "tabsLabel": "Seções de gestão do desafio"
   },
+  "classroomOnboarding": {
+    "create": {
+      "intro": {
+        "body": "Uma turma reúne alunos e os desafios que eles vão resolver, sob um professor responsável. Coordenadores veem e gerenciam todas as turmas da organização; o professor responsável gerencia as suas.",
+        "title": "O que é uma turma?"
+      },
+      "inviteTeacher": {
+        "link": "Convide-o",
+        "prompt": "O professor ainda não aparece na lista?"
+      },
+      "teacherEffect": "O professor responsável pode editar a turma, matricular alunos e atribuir desafios. Você pode trocá-lo depois."
+    },
+    "dashboard": {
+      "emptyAction": "Criar uma turma",
+      "emptyHint": "Crie sua primeira turma, escolha o professor responsável e depois matricule alunos e atribua desafios.",
+      "emptyHintTeacher": "Crie sua primeira turma e depois matricule alunos e atribua desafios.",
+      "newClassroom": {
+        "description": "Crie uma turma e escolha o professor responsável por ela.",
+        "title": "Nova turma"
+      }
+    },
+    "detail": {
+      "problems": {
+        "create": "Criar um desafio",
+        "orAssign": "…ou atribua um dos desafios existentes listados abaixo."
+      },
+      "students": {
+        "askCoordinator": "Só membros da organização podem ser matriculados. Peça a um coordenador para convidar os alunos de que você precisa.",
+        "invite": "Convidar alunos",
+        "noneAvailable": "Todos da sua organização já estão aqui, ou ninguém mais entrou ainda.",
+        "pickAbove": "Escolha um membro da organização no seletor acima para matriculá-lo."
+      },
+      "whoManages": "Coordenadores e o professor responsável podem gerenciar esta turma. Alunos veem apenas os desafios atribuídos aqui."
+    },
+    "showTutorial": "Ver tutorial",
+    "tour": {
+      "buttons": {
+        "back": "Voltar",
+        "done": "Entendi",
+        "next": "Próximo"
+      },
+      "create": {
+        "intro": {
+          "description": "Uma turma liga um professor responsável, seus alunos e os desafios em que vão trabalhar. Vamos criar uma.",
+          "title": "Criar uma turma"
+        },
+        "submit": {
+          "description": "Depois de criar, você vai para a página da turma, onde matricula alunos e atribui desafios.",
+          "title": "Criar e continuar"
+        },
+        "teacher": {
+          "description": "Escolha quem conduz esta turma. Esse professor poderá matricular alunos, atribuir desafios e avaliar submissões. Deixe vazio para gerenciá-la você mesmo por enquanto.",
+          "title": "Escolha o professor responsável"
+        },
+        "title": {
+          "description": "Use um nome que todos reconheçam, como a disciplina e o período (ex.: \"Programação I — 2026\").",
+          "title": "Dê um nome à turma"
+        }
+      },
+      "detail": {
+        "problems": {
+          "description": "Atribua desafios para que os alunos os vejam nesta turma. Crie um novo ou escolha um desafio existente.",
+          "title": "Atribua desafios"
+        },
+        "students": {
+          "description": "Matricule aqui membros da organização. Quem ainda não está na organização precisa ser convidado antes — coordenadores fazem isso pela página Equipe.",
+          "title": "Matricule alunos"
+        },
+        "teacher": {
+          "description": "Você pode trocar o professor responsável a qualquer momento. O novo professor passa a gerenciar a turma imediatamente.",
+          "title": "Professor responsável"
+        }
+      }
+    }
+  },
   "classrooms": {
     "backToExplore": "Voltar ao Explorar",
     "create": {
@@ -1465,6 +1540,98 @@
     "view": "Ver",
     "viewReplay": "Ver histórico (replay)",
     "viewStudentSessions": "Ver sessões dos alunos"
+  },
+  "teamInvitations": {
+    "dashboard": {
+      "description": "Convide professores e alunos por email e acompanhe os convites pendentes.",
+      "title": "Convidar pessoas"
+    },
+    "empty": {
+      "action": "Enviar o primeiro convite",
+      "body": "Convide um professor para conduzir uma turma, ou alunos que ainda não fazem parte da sua organização.",
+      "title": "Nenhum convite pendente"
+    },
+    "fallbackOrgName": "Sua organização",
+    "loadError": "Não foi possível carregar os convites.",
+    "methods": {
+      "adminOnly": "Admin da plataforma",
+      "availableHere": "Disponível aqui",
+      "csv": {
+        "body": "Cria contas para um grupo inteiro de uma vez a partir de uma planilha. A importação é feita por um administrador da plataforma — peça a ele quando precisar cadastrar uma turma completa.",
+        "title": "Importação em lote (CSV)"
+      },
+      "domain": {
+        "body": "Quem se cadastrar com um email de um domínio mapeado (ex.: @suaescola.edu.br) entra automaticamente com o papel definido para esse domínio (aluno, professor ou coordenador). Os domínios são configurados por um administrador da plataforma.",
+        "title": "Domínio de email automático"
+      },
+      "invite": {
+        "body": "Envie um convite individual com o papel escolhido. A pessoa recebe um email com um link, válido por 7 dias, para aceitar e entrar com esse papel.",
+        "title": "Convite por email"
+      },
+      "selfSignup": "Qualquer pessoa pode criar uma conta, mas sem convite ou domínio de email mapeado ela não entra na sua organização.",
+      "title": "Como as pessoas entram na sua organização"
+    },
+    "navLabel": "Equipe",
+    "newInvitation": "Convidar alguém",
+    "notAllowed": {
+      "adminConsole": "Abrir o console de administração",
+      "description": "Somente coordenadores e administradores da organização ativa podem convidar pessoas. Fale com um coordenador se alguém precisar de acesso.",
+      "title": "Convites são gerenciados por coordenadores"
+    },
+    "onboardingStep": {
+      "description": "Traga professores e alunos para a sua organização por email. A página Equipe também explica quando usar domínios de email ou importação CSV.",
+      "title": "Convide sua equipe"
+    },
+    "pending": {
+      "description": "{count, plural, =0 {Nenhum convite aguardando resposta.} one {# convite aguardando resposta.} other {# convites aguardando resposta.}} Reenvie se o email se perdeu, ou cancele para invalidar o link.",
+      "title": "Convites pendentes"
+    },
+    "roles": {
+      "admin": "Tudo o que o coordenador faz, mais as configurações da organização. Reservado aos responsáveis pela escola.",
+      "coordinator": "Cria turmas, define o professor responsável e convida pessoas. Vê todas as turmas da organização.",
+      "notOfferedToYou": "Somente um administrador pode convidar alguém como {role}.",
+      "student": "Participa de turmas, resolve desafios e conversa com o assistente de ensino de IA. Não cria conteúdo.",
+      "teacher": "Cria desafios e conduz as turmas atribuídas a ele: matricula alunos e avalia submissões.",
+      "title": "O que cada papel pode fazer"
+    },
+    "showTutorial": "Ver tutorial",
+    "subtitle": "Convide professores e alunos e veja quem ainda não aceitou.",
+    "title": "Equipe e convites",
+    "tour": {
+      "buttons": {
+        "back": "Voltar",
+        "done": "Entendi",
+        "next": "Próximo"
+      },
+      "csv": {
+        "description": "Para uma turma inteira de uma vez, um administrador da plataforma pode importar um CSV com nomes, emails e papéis. Isso não está disponível nesta página.",
+        "title": "Importação em lote (só admin)"
+      },
+      "domain": {
+        "description": "Se a escola tem domínio de email próprio, um administrador da plataforma pode mapeá-lo para que novos cadastros entrem automaticamente como alunos ou professores — sem convite.",
+        "title": "Domínio de email (só admin)"
+      },
+      "invite": {
+        "description": "É assim que você convida pessoas por aqui: um email, um papel. Use para professores, coordenadores ou poucos alunos.",
+        "title": "Convite por email"
+      },
+      "newInvitation": {
+        "description": "Clique aqui, digite o email e escolha o papel. A pessoa recebe um link válido por 7 dias.",
+        "title": "Enviar um convite"
+      },
+      "pending": {
+        "description": "Convites ainda não aceitos aparecem aqui. Reenvie se expirou ou se perdeu, ou cancele para invalidar o link.",
+        "title": "Acompanhe os convites pendentes"
+      },
+      "roles": {
+        "description": "O papel define o que a pessoa pode fazer ao entrar. Professores conduzem turmas; alunos apenas resolvem desafios.",
+        "title": "Escolha o papel certo"
+      },
+      "welcome": {
+        "description": "Professores e alunos podem entrar na sua organização de três formas. Vamos ver quando usar cada uma.",
+        "title": "Trazendo pessoas"
+      }
+    }
   },
   "ui": {
     "carousel": {
