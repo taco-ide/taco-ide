@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  AlertTriangle,
   Building2,
   Inbox,
+  Loader2,
   LogOut,
   Mail,
   RefreshCw,
@@ -48,26 +50,47 @@ export function NoActiveOrganization() {
   const queryClient = useQueryClient();
   const { user, logout, fetchUser } = useUser();
   const [checking, setChecking] = useState(false);
-  const [stillPending, setStillPending] = useState(false);
+  const [checkResult, setCheckResult] = useState<
+    "stillPending" | "failed" | null
+  >(null);
 
-  const { data, refetch } = useGetV1UsersMeAccessStatus();
+  // One retry keeps "check again" responsive when the API is down instead
+  // of spinning through the default exponential backoff.
+  const { data, isError, refetch } = useGetV1UsersMeAccessStatus({
+    query: { retry: 1 },
+  });
   const status = data?.data;
   const invitations = status?.pendingInvitations ?? [];
-  const orgInactive = status?.hasInactiveOrganizationMembership ?? false;
+  // Until the status arrives we can't tell a new user from one whose
+  // organization was deactivated, so neither variant is shown.
+  const variant: "loading" | "error" | "inactive" | "newUser" = !status
+    ? isError
+      ? "error"
+      : "loading"
+    : status.hasInactiveOrganizationMembership
+      ? "inactive"
+      : "newUser";
+  const orgInactive = variant === "inactive";
 
   const checkAgain = async () => {
     setChecking(true);
-    setStillPending(false);
+    setCheckResult(null);
     try {
       const [, statusResult] = await Promise.all([fetchUser(), refetch()]);
-      // When the user now has an active membership, the refreshed /me
-      // resolves it as the active organization and the layout swaps this
-      // screen for the app. Drop anything cached while access was missing.
-      if (statusResult.data?.data.hasActiveMembership) {
+      // A failed refetch keeps the previous data around; report the failure
+      // instead of presenting that stale data as "still pending".
+      if (statusResult.isError) {
+        setCheckResult("failed");
+      } else if (statusResult.data?.data.hasActiveMembership) {
+        // The refreshed /me resolves the new membership as the active
+        // organization and the layout swaps this screen for the app. Drop
+        // anything cached while access was missing.
         await queryClient.invalidateQueries();
       } else {
-        setStillPending(true);
+        setCheckResult("stillPending");
       }
+    } catch {
+      setCheckResult("failed");
     } finally {
       setChecking(false);
     }
@@ -89,20 +112,27 @@ export function NoActiveOrganization() {
       <div className="relative w-full max-w-lg rounded-2xl border border-slate-700/60 bg-slate-900/80 p-6 backdrop-blur sm:p-8">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-400">
-            {orgInactive ? (
-              <ShieldAlert className="h-6 w-6" />
-            ) : (
-              <Building2 className="h-6 w-6" />
+            {variant === "loading" && (
+              <Loader2 className="h-6 w-6 animate-spin" />
             )}
+            {variant === "error" && <AlertTriangle className="h-6 w-6" />}
+            {variant === "inactive" && <ShieldAlert className="h-6 w-6" />}
+            {variant === "newUser" && <Building2 className="h-6 w-6" />}
           </div>
-          <h1 className="text-xl font-semibold text-white">
-            {orgInactive ? t("inactive.title") : t("newUser.title")}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
-            {orgInactive
-              ? t("inactive.description")
-              : t("newUser.description")}
-          </p>
+          {variant === "loading" ? (
+            <p role="status" className="text-sm text-slate-400">
+              {t("loading")}
+            </p>
+          ) : (
+            <>
+              <h1 className="text-xl font-semibold text-white">
+                {t(`${variant}.title`)}
+              </h1>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">
+                {t(`${variant}.description`)}
+              </p>
+            </>
+          )}
           {user?.email && (
             <div className="mt-5 rounded-md border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-xs text-slate-400">
               {t.rich("loggedInAs", {
@@ -162,52 +192,62 @@ export function NoActiveOrganization() {
           </section>
         )}
 
-        <section className="mt-6" aria-labelledby="first-access-next-steps">
-          <h2
-            id="first-access-next-steps"
-            className="mb-3 text-sm font-semibold text-white"
-          >
-            {t("nextSteps.title")}
-          </h2>
-          <ul className="space-y-3 text-sm text-slate-400">
-            {orgInactive ? (
-              <li className="flex gap-3">
-                <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                <span>{t("nextSteps.contactCoordinatorInactive")}</span>
-              </li>
-            ) : (
-              <>
-                <li className="flex gap-3">
-                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <span>{t("nextSteps.checkEmail")}</span>
-                </li>
+        {(variant === "inactive" || variant === "newUser") && (
+          <section className="mt-6" aria-labelledby="first-access-next-steps">
+            <h2
+              id="first-access-next-steps"
+              className="mb-3 text-sm font-semibold text-white"
+            >
+              {t("nextSteps.title")}
+            </h2>
+            <ul className="space-y-3 text-sm text-slate-400">
+              {orgInactive ? (
                 <li className="flex gap-3">
                   <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <span>{t("nextSteps.askForInvite")}</span>
+                  <span>{t("nextSteps.contactCoordinatorInactive")}</span>
                 </li>
-                <li className="flex gap-3">
-                  <AtSign className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <span>{t("nextSteps.institutionalEmail")}</span>
-                </li>
-              </>
+              ) : (
+                <>
+                  <li className="flex gap-3">
+                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span>{t("nextSteps.checkEmail")}</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span>{t("nextSteps.askForInvite")}</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <AtSign className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span>{t("nextSteps.institutionalEmail")}</span>
+                  </li>
+                </>
+              )}
+            </ul>
+            {user && !user.emailVerified && (
+              <p className="mt-4 rounded-md border border-sky-500/30 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">
+                {t("verifyEmailHint")}
+              </p>
             )}
-          </ul>
-          {user && !user.emailVerified && (
-            <p className="mt-4 rounded-md border border-sky-500/30 bg-sky-500/5 px-3 py-2 text-xs text-sky-200">
-              {t("verifyEmailHint")}
+            <p className="mt-4 text-xs text-slate-500">
+              {orgInactive ? t("removedHint") : t("noSelfServiceHint")}
             </p>
-          )}
-          <p className="mt-4 text-xs text-slate-500">
-            {orgInactive ? t("removedHint") : t("noSelfServiceHint")}
-          </p>
-        </section>
+          </section>
+        )}
 
-        {stillPending && (
+        {checkResult === "stillPending" && (
           <p
             role="status"
             className="mt-6 rounded-md border border-slate-700/60 bg-slate-800/60 px-3 py-2 text-center text-xs text-slate-300"
           >
             {t("stillPending")}
+          </p>
+        )}
+        {checkResult === "failed" && (
+          <p
+            role="alert"
+            className="mt-6 rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-center text-xs text-red-200"
+          >
+            {t("checkFailed")}
           </p>
         )}
 
