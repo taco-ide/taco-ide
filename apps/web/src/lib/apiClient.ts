@@ -42,16 +42,22 @@ export type ResponseErrorConfig<TError = unknown> = TError;
 export class ApiError extends Error {
   status: number;
   errors?: Record<string, string | string[]>;
+  /** Machine-readable error code, e.g. "RATE_LIMITED". */
+  code?: string;
+  retryAfterSeconds?: number;
 
   constructor(
     message: string,
     status: number,
-    errors?: Record<string, string | string[]>
+    errors?: Record<string, string | string[]>,
+    details: { code?: string; retryAfterSeconds?: number } = {}
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.errors = errors;
+    this.code = details.code;
+    this.retryAfterSeconds = details.retryAfterSeconds;
   }
 }
 
@@ -133,7 +139,14 @@ async function apiClient<TData = unknown, TError = unknown, TRequest = unknown>(
     const errors = responseData.errors as
       | Record<string, string | string[]>
       | undefined;
-    throw new ApiError(message, response.status, errors);
+    throw new ApiError(message, response.status, errors, {
+      code:
+        typeof responseData.code === "string" ? responseData.code : undefined,
+      retryAfterSeconds:
+        typeof responseData.retryAfterSeconds === "number"
+          ? responseData.retryAfterSeconds
+          : undefined,
+    });
   }
 
   // Kubb generated hooks use res.data - our API returns { success, data?, pagination? }

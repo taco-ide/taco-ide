@@ -56,8 +56,10 @@ export const postV1ChatStudentMessage429Schema = z.object({
     "success": z.literal(false),
 "message": z.string(),
 "errors": z.object({
-
-    }).catchall(z.union([z.array(z.string()), z.string()])).optional()
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
     })
 
 /**

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useWatch, useFormContext } from "react-hook-form";
 import { useTranslations, useFormatter } from "next-intl";
+import { useApiErrorMessage } from "@/hooks/useApiErrorMessage";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -93,6 +94,7 @@ function ReferenceKindCard({
   const c = useTranslations("common");
   const format = useFormatter();
   const queryClient = useQueryClient();
+  const apiErrorMessage = useApiErrorMessage();
   const [editingCode, setEditingCode] = useState(false);
   const [editCode, setEditCode] = useState(data?.code ?? "");
   const [feedback, setFeedback] = useState<{
@@ -134,7 +136,10 @@ function ReferenceKindCard({
           } else if (status === 429) {
             setFeedback({
               type: "error",
-              message: message || t("referenceSolutions.card.feedback.rateLimited"),
+              message: apiErrorMessage(
+                err,
+                t("referenceSolutions.card.feedback.rateLimited")
+              ),
             });
           } else {
             setFeedback({

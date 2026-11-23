@@ -17,6 +17,7 @@ import {
     getV1ChallengesChallengeidReferenceSolutionsQueryOptions,
 } from "@/kubb/hooks";
 import { challengeFormSchema, type ChallengeFormData } from "@/components/challenge/schema";
+import { useApiErrorMessage, useRateLimitMessage } from "@/hooks/useApiErrorMessage";
 import { WizardStepper } from "@/components/challenge/wizard-stepper";
 import { StepBasicInfo } from "@/components/challenge/steps/step-basic-info";
 import { StepDescription } from "@/components/challenge/steps/step-description";
@@ -47,9 +48,11 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
     const [resolvedChallengeId, setResolvedChallengeId] = useState<string | null>(challengeId ?? null);
     const [hasSavedRefStep, setHasSavedRefStep] = useState(false);
     const [feedback, setFeedback] = useState<{
-        type: "success" | "error";
+        type: "success" | "error" | "warning";
         message: string;
     } | null>(null);
+    const apiErrorMessage = useApiErrorMessage();
+    const rateLimitMessage = useRateLimitMessage();
 
     const methods = useForm<ChallengeFormData>({
         resolver: zodResolver(challengeFormSchema),
@@ -75,15 +78,25 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 setHasSavedRefStep(true);
                 // Clear isDirty so a second "Próximo" click just advances.
                 methods.reset(methods.getValues());
-                setFeedback({
-                    type: "success",
-                    message: t("feedback.createdGenerating"),
-                });
+                const skipped = res.data.referenceSolutionsSkipped;
+                setFeedback(
+                    skipped
+                        ? {
+                              type: "warning",
+                              message: t("feedback.createdRateLimited", {
+                                  wait: rateLimitMessage(skipped.retryAfterSeconds),
+                              }),
+                          }
+                        : {
+                              type: "success",
+                              message: t("feedback.createdGenerating"),
+                          }
+                );
             },
             onError: (err) => {
                 setFeedback({
                     type: "error",
-                    message: err.message ?? t("feedback.createError"),
+                    message: apiErrorMessage(err, t("feedback.createError")),
                 });
             },
         },
@@ -91,7 +104,7 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
 
     const updateMutation = usePatchV1ChallengesId({
         mutation: {
-            onSuccess: () => {
+            onSuccess: (res) => {
                 if (challengeId) {
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getV1ChallengesIdQueryKey(challengeId) });
@@ -100,17 +113,27 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 const willGenerate =
                     methods.getValues("generateReferenceSolutions") === true;
                 methods.reset(methods.getValues());
-                setFeedback({
-                    type: "success",
-                    message: willGenerate
-                        ? t("feedback.updatedGenerating")
-                        : t("feedback.updatedNoGenerate"),
-                });
+                const skipped = res.data.referenceSolutionsSkipped;
+                setFeedback(
+                    skipped
+                        ? {
+                              type: "warning",
+                              message: t("feedback.updatedRateLimited", {
+                                  wait: rateLimitMessage(skipped.retryAfterSeconds),
+                              }),
+                          }
+                        : {
+                              type: "success",
+                              message: willGenerate
+                                  ? t("feedback.updatedGenerating")
+                                  : t("feedback.updatedNoGenerate"),
+                          }
+                );
             },
             onError: (err) => {
                 setFeedback({
                     type: "error",
-                    message: err.message ?? t("feedback.updateError"),
+                    message: apiErrorMessage(err, t("feedback.updateError")),
                 });
             },
         },
@@ -296,7 +319,9 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                         className={`mt-6 ${
                             feedback.type === "success"
                                 ? "border-green-500/30 bg-green-500/10 text-green-400"
-                                : "border-red-500/30 bg-red-500/10 text-red-400"
+                                : feedback.type === "warning"
+                                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                                  : "border-red-500/30 bg-red-500/10 text-red-400"
                         }`}
                     >
                         <AlertDescription>{feedback.message}</AlertDescription>

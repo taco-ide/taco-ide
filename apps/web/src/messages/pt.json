@@ -684,7 +684,9 @@
       "createdGenerating": "Desafio salvo. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa.",
       "updateError": "Erro ao atualizar problema",
       "updatedGenerating": "Alterações salvas. Soluções de referência sendo geradas em segundo plano — acompanhe abaixo ou avance para a próxima etapa.",
-      "updatedNoGenerate": "Alterações salvas. Você pode avançar para a próxima etapa."
+      "updatedNoGenerate": "Alterações salvas. Você pode avançar para a próxima etapa.",
+      "createdRateLimited": "Desafio salvo, mas as soluções de referência não foram geradas porque o limite de geração por IA foi atingido. Gere-as mais tarde nesta etapa. {wait}",
+      "updatedRateLimited": "Alterações salvas, mas as soluções de referência não foram geradas porque o limite de geração por IA foi atingido. Gere-as mais tarde nesta etapa. {wait}"
     },
     "header": {
       "createSubtitle": "Crie seu desafio de programação com instruções e recursos detalhados",
@@ -871,7 +873,12 @@
     "signIn": "Entrar",
     "signOut": "Sair",
     "success": "Sucesso",
-    "yes": "Sim"
+    "yes": "Sim",
+    "rateLimited": {
+      "seconds": "Muitas solicitações. Tente novamente em {count, plural, one {# segundo} other {# segundos}}.",
+      "minutes": "Muitas solicitações. Tente novamente em {count, plural, one {# minuto} other {# minutos}}.",
+      "hours": "Muitas solicitações. Tente novamente em {count, plural, one {# hora} other {# horas}}."
+    }
   },
   "create": {
     "accessDenied": {

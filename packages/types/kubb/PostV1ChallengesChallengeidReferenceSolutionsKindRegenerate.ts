@@ -234,6 +234,12 @@ export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429Succe
 
 export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429SuccessEnum = (typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429SuccessEnum)[keyof typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429SuccessEnum];
 
+export const postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429CodeEnum = (typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429CodeEnum)[keyof typeof postV1ChallengesChallengeidReferenceSolutionsKindRegenerate429CodeEnum];
+
 /**
  * @description Default Response
 */
@@ -252,6 +258,15 @@ export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429 = {
     errors?: {
         [key: string]: (string[] | string);
     };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
 };
 
 export type PostV1ChallengesChallengeidReferenceSolutionsKindRegenerateMutationResponse = PostV1ChallengesChallengeidReferenceSolutionsKindRegenerate202;

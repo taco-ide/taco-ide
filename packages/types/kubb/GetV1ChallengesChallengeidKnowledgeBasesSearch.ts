@@ -15,6 +15,7 @@ export type GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams = {
 export type GetV1ChallengesChallengeidKnowledgeBasesSearchQueryParams = {
     /**
      * @minLength 1
+     * @maxLength 1000
      * @type string
     */
     q: string;
@@ -192,6 +193,47 @@ export type GetV1ChallengesChallengeidKnowledgeBasesSearch404 = {
     };
 };
 
+export const getV1ChallengesChallengeidKnowledgeBasesSearch429SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1ChallengesChallengeidKnowledgeBasesSearch429SuccessEnum = (typeof getV1ChallengesChallengeidKnowledgeBasesSearch429SuccessEnum)[keyof typeof getV1ChallengesChallengeidKnowledgeBasesSearch429SuccessEnum];
+
+export const getV1ChallengesChallengeidKnowledgeBasesSearch429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type GetV1ChallengesChallengeidKnowledgeBasesSearch429CodeEnum = (typeof getV1ChallengesChallengeidKnowledgeBasesSearch429CodeEnum)[keyof typeof getV1ChallengesChallengeidKnowledgeBasesSearch429CodeEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1ChallengesChallengeidKnowledgeBasesSearch429 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1ChallengesChallengeidKnowledgeBasesSearch429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+    /**
+     * @type string | undefined
+    */
+    code?: GetV1ChallengesChallengeidKnowledgeBasesSearch429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
+};
+
 export const getV1ChallengesChallengeidKnowledgeBasesSearch503SuccessEnum = {
     "false": false
 } as const;
@@ -224,5 +266,5 @@ export type GetV1ChallengesChallengeidKnowledgeBasesSearchQuery = {
     Response: GetV1ChallengesChallengeidKnowledgeBasesSearch200;
     PathParams: GetV1ChallengesChallengeidKnowledgeBasesSearchPathParams;
     QueryParams: GetV1ChallengesChallengeidKnowledgeBasesSearchQueryParams;
-    Errors: GetV1ChallengesChallengeidKnowledgeBasesSearch401 | GetV1ChallengesChallengeidKnowledgeBasesSearch403 | GetV1ChallengesChallengeidKnowledgeBasesSearch404 | GetV1ChallengesChallengeidKnowledgeBasesSearch503;
+    Errors: GetV1ChallengesChallengeidKnowledgeBasesSearch401 | GetV1ChallengesChallengeidKnowledgeBasesSearch403 | GetV1ChallengesChallengeidKnowledgeBasesSearch404 | GetV1ChallengesChallengeidKnowledgeBasesSearch429 | GetV1ChallengesChallengeidKnowledgeBasesSearch503;
 };

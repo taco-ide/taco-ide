@@ -10,6 +10,12 @@ export const postV1Challenges201SuccessEnum = {
 
 export type PostV1Challenges201SuccessEnum = (typeof postV1Challenges201SuccessEnum)[keyof typeof postV1Challenges201SuccessEnum];
 
+export const referenceSolutionsSkippedCodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type ReferenceSolutionsSkippedCodeEnum = (typeof referenceSolutionsSkippedCodeEnum)[keyof typeof referenceSolutionsSkippedCodeEnum];
+
 /**
  * @description Default Response
 */
@@ -54,6 +60,24 @@ export type PostV1Challenges201 = {
          * @type string
         */
         createdAt: string;
+        /**
+         * @type object | undefined
+        */
+        referenceSolutionsSkipped?: {
+            /**
+             * @type string
+            */
+            code: ReferenceSolutionsSkippedCodeEnum;
+            /**
+             * @type string
+            */
+            message: string;
+            /**
+             * @minLength 0
+             * @type integer
+            */
+            retryAfterSeconds: number;
+        };
     };
 };
 

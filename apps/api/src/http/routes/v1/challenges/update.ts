@@ -7,6 +7,7 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  RateLimitedSkipSchema,
 } from "../../_responses/types";
 import { db } from "@repo/infra/db";
 import { challenge } from "@repo/infra/db/schema";
@@ -17,6 +18,10 @@ import {
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
 import { generateReferenceSolutions } from "../../../../agents/teachers-companion/reference-solution";
+import {
+  consumeRateLimit,
+  rateLimitedSkip,
+} from "../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -44,6 +49,8 @@ const UpdateChallengeResponseSchema = ResponseSchema200.extend({
     difficulty: z.string().nullable(),
     tags: z.array(z.string()).nullable(),
     message: z.string(),
+    // Present when generation was requested but skipped (AI budget exhausted).
+    referenceSolutionsSkipped: RateLimitedSkipSchema.optional(),
   }),
 });
 
@@ -169,9 +176,13 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
         });
       }
 
-      // Fire and forget reference solution generation if explicitly requested
+      // Fire and forget reference solution generation if explicitly
+      // requested. An exhausted AI budget skips it; the save stands.
+      let referenceSolutionsSkipped;
       if (body.generateReferenceSolutions === true) {
-        void generateReferenceSolutions(challengeId);
+        const rateLimited = await consumeRateLimit(request, "aiGeneration");
+        if (rateLimited) referenceSolutionsSkipped = rateLimitedSkip(rateLimited);
+        else void generateReferenceSolutions(challengeId);
       }
 
       return reply.status(200).send({
@@ -188,6 +199,7 @@ export async function updateChallengeRoute(app: FastifyTypedInstance) {
               ? "Challenge assigned to classroom"
               : "Challenge unassigned from classroom"
             : "Challenge updated",
+          referenceSolutionsSkipped,
         },
       });
     }

@@ -55,6 +55,19 @@ export const postV1KnowledgeBasesKbidEntries404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const postV1KnowledgeBasesKbidEntries429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
+    })
+
 export const postV1KnowledgeBasesKbidEntriesMutationRequestSchema = z.object({
     "content": z.string().min(1)
     })

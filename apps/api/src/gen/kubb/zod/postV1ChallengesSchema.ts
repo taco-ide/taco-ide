@@ -18,7 +18,12 @@ export const postV1Challenges201Schema = z.object({
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
 "classroomId": z.string().nullable(),
-"createdAt": z.string()
+"createdAt": z.string(),
+"referenceSolutionsSkipped": z.object({
+    "code": z.enum(["RATE_LIMITED"]),
+"message": z.string(),
+"retryAfterSeconds": z.number().int().min(0)
+    }).optional()
     })
     })
 

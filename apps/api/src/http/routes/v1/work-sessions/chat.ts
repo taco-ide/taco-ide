@@ -26,7 +26,7 @@ import { buildTeachingAssistantAgent } from "../../../../agents/teaching-assista
 import { buildTeachingAssistantPrompt } from "../../../../agents/teaching-assistant/prompt";
 import { searchChallengeKnowledgeBases } from "../../../../services/knowledge-base-search";
 import { getLangfuseCallback } from "../../../../agents/langfuse";
-import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 import {
   assertCanParticipateInChallengeWorkSession,
   loadChallengeWorkAccessContext,
@@ -67,7 +67,7 @@ export async function chatRoute(app: FastifyTypedInstance) {
   }>(
     "/:id/chat",
     {
-      preHandler: [workSessionChatRateLimitPreHandler],
+      preHandler: [rateLimitPolicy("aiChat")],
       schema: {
         tags: ["work-sessions"],
         summary: "Send chat message and get TA response",

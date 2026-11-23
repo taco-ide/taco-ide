@@ -88,6 +88,12 @@ export const postV1ChatTeacherMessage429SuccessEnum = {
 
 export type PostV1ChatTeacherMessage429SuccessEnum = (typeof postV1ChatTeacherMessage429SuccessEnum)[keyof typeof postV1ChatTeacherMessage429SuccessEnum];
 
+export const postV1ChatTeacherMessage429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1ChatTeacherMessage429CodeEnum = (typeof postV1ChatTeacherMessage429CodeEnum)[keyof typeof postV1ChatTeacherMessage429CodeEnum];
+
 /**
  * @description Default Response
 */
@@ -106,6 +112,15 @@ export type PostV1ChatTeacherMessage429 = {
     errors?: {
         [key: string]: (string[] | string);
     };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1ChatTeacherMessage429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
 };
 
 export const postV1ChatTeacherMessage500SuccessEnum = {

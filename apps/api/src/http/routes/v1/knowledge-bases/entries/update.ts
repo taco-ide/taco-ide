@@ -7,11 +7,13 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
 } from "../../../_responses/types";
 import { requirePermission } from "../../../../middlewares/authorization";
 import { db } from "@repo/infra/db";
 import { knowledgeBaseChunk } from "@repo/infra/db/schema";
 import { generateEmbedding } from "../../../../../services/embedding";
+import { rateLimitPolicy } from "../../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -45,7 +47,10 @@ export async function updateEntryRoute(app: FastifyTypedInstance) {
   }>(
     "/:entryId",
     {
-      preHandler: [requirePermission("knowledgeBase", "update")],
+      preHandler: [
+        requirePermission("knowledgeBase", "update"),
+        rateLimitPolicy("embedding"),
+      ],
       schema: {
         tags: ["knowledge-bases"],
         summary: "Update manual knowledge base entry",
@@ -57,6 +62,7 @@ export async function updateEntryRoute(app: FastifyTypedInstance) {
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
         },
       },
     },

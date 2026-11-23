@@ -2,7 +2,7 @@ import {
   loadClassroomAccessContext,
   assertCanAccessClassroom,
 } from "../../../services/work-session-access";
-import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 import { z } from "zod";
 import { FastifyTypedInstance } from "../../../types";
 import {
@@ -42,7 +42,7 @@ export async function teacherMessageRoute(app: FastifyTypedInstance) {
   app.post(
     "/teacher/message",
     {
-      preHandler: [workSessionChatRateLimitPreHandler],
+      preHandler: [rateLimitPolicy("aiChat")],
       schema: {
         tags: ["chat"],
         summary: "Send a message to the teacher's companion agent (SSE)",

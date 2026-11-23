@@ -10,11 +10,13 @@ import {
   ResponseSchema401,
   ResponseSchema403,
   ResponseSchema404,
+  ResponseSchema429,
   ResponseSchema503,
 } from "../../../_responses/types";
 import { db } from "@repo/infra/db";
 import { knowledgeBase } from "@repo/infra/db/schema";
 import { searchChallengeKnowledgeBases } from "../../../../../services/knowledge-base-search";
+import { rateLimitPolicy } from "../../../../middlewares/rate-limit";
 
 // ==================== SCHEMAS ====================
 
@@ -24,7 +26,8 @@ const SearchChallengeKBParamsSchema = z.object({
 
 const SearchChallengeKBQuerySchema = z
   .object({
-    q: z.string().min(1),
+    // Bounded: the query is embedded on every request.
+    q: z.string().trim().min(1).max(1000),
     limit: z.coerce.number().min(1).max(50).default(10),
   })
   .strict();
@@ -60,6 +63,7 @@ export async function searchChallengeKnowledgeBasesRoute(
   }>(
     "/search",
     {
+      preHandler: [rateLimitPolicy("embedding")],
       schema: {
         tags: ["challenge-knowledge-bases"],
         summary: "Semantic search across challenge knowledge bases",
@@ -72,6 +76,7 @@ export async function searchChallengeKnowledgeBasesRoute(
           401: ResponseSchema401,
           403: ResponseSchema403,
           404: ResponseSchema404,
+          429: ResponseSchema429,
           503: ResponseSchema503,
         },
       },

@@ -195,10 +195,51 @@ export type PostV1KnowledgeBasesKbidDocuments413 = {
     };
 };
 
+export const postV1KnowledgeBasesKbidDocuments429SuccessEnum = {
+    "false": false
+} as const;
+
+export type PostV1KnowledgeBasesKbidDocuments429SuccessEnum = (typeof postV1KnowledgeBasesKbidDocuments429SuccessEnum)[keyof typeof postV1KnowledgeBasesKbidDocuments429SuccessEnum];
+
+export const postV1KnowledgeBasesKbidDocuments429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1KnowledgeBasesKbidDocuments429CodeEnum = (typeof postV1KnowledgeBasesKbidDocuments429CodeEnum)[keyof typeof postV1KnowledgeBasesKbidDocuments429CodeEnum];
+
+/**
+ * @description Default Response
+*/
+export type PostV1KnowledgeBasesKbidDocuments429 = {
+    /**
+     * @type boolean
+    */
+    success: PostV1KnowledgeBasesKbidDocuments429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1KnowledgeBasesKbidDocuments429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
+};
+
 export type PostV1KnowledgeBasesKbidDocumentsMutationResponse = PostV1KnowledgeBasesKbidDocuments202;
 
 export type PostV1KnowledgeBasesKbidDocumentsMutation = {
     Response: PostV1KnowledgeBasesKbidDocuments202;
     PathParams: PostV1KnowledgeBasesKbidDocumentsPathParams;
-    Errors: PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413;
+    Errors: PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413 | PostV1KnowledgeBasesKbidDocuments429;
 };

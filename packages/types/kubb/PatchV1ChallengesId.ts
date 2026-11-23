@@ -18,6 +18,12 @@ export const patchV1ChallengesId200SuccessEnum = {
 
 export type PatchV1ChallengesId200SuccessEnum = (typeof patchV1ChallengesId200SuccessEnum)[keyof typeof patchV1ChallengesId200SuccessEnum];
 
+export const referenceSolutionsSkippedCodeEnum2 = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type ReferenceSolutionsSkippedCodeEnum2 = (typeof referenceSolutionsSkippedCodeEnum2)[keyof typeof referenceSolutionsSkippedCodeEnum2];
+
 /**
  * @description Default Response
 */
@@ -62,6 +68,24 @@ export type PatchV1ChallengesId200 = {
          * @type string
         */
         message: string;
+        /**
+         * @type object | undefined
+        */
+        referenceSolutionsSkipped?: {
+            /**
+             * @type string
+            */
+            code: ReferenceSolutionsSkippedCodeEnum2;
+            /**
+             * @type string
+            */
+            message: string;
+            /**
+             * @minLength 0
+             * @type integer
+            */
+            retryAfterSeconds: number;
+        };
     };
     /**
      * @type object | undefined

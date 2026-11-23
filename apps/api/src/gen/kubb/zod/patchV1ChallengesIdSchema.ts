@@ -22,7 +22,12 @@ export const patchV1ChallengesId200Schema = z.object({
 "description": z.string().nullable(),
 "difficulty": z.string().nullable(),
 "tags": z.array(z.string()).nullable(),
-"message": z.string()
+"message": z.string(),
+"referenceSolutionsSkipped": z.object({
+    "code": z.enum(["RATE_LIMITED"]),
+"message": z.string(),
+"retryAfterSeconds": z.number().int().min(0)
+    }).optional()
     }),
 "pagination": z.object({
     "total": z.number(),

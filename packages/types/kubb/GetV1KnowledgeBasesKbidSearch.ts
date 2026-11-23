@@ -15,6 +15,7 @@ export type GetV1KnowledgeBasesKbidSearchPathParams = {
 export type GetV1KnowledgeBasesKbidSearchQueryParams = {
     /**
      * @minLength 1
+     * @maxLength 1000
      * @type string
     */
     q: string;
@@ -188,6 +189,47 @@ export type GetV1KnowledgeBasesKbidSearch404 = {
     };
 };
 
+export const getV1KnowledgeBasesKbidSearch429SuccessEnum = {
+    "false": false
+} as const;
+
+export type GetV1KnowledgeBasesKbidSearch429SuccessEnum = (typeof getV1KnowledgeBasesKbidSearch429SuccessEnum)[keyof typeof getV1KnowledgeBasesKbidSearch429SuccessEnum];
+
+export const getV1KnowledgeBasesKbidSearch429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type GetV1KnowledgeBasesKbidSearch429CodeEnum = (typeof getV1KnowledgeBasesKbidSearch429CodeEnum)[keyof typeof getV1KnowledgeBasesKbidSearch429CodeEnum];
+
+/**
+ * @description Default Response
+*/
+export type GetV1KnowledgeBasesKbidSearch429 = {
+    /**
+     * @type boolean
+    */
+    success: GetV1KnowledgeBasesKbidSearch429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+    /**
+     * @type string | undefined
+    */
+    code?: GetV1KnowledgeBasesKbidSearch429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
+};
+
 export const getV1KnowledgeBasesKbidSearch503SuccessEnum = {
     "false": false
 } as const;
@@ -220,5 +262,5 @@ export type GetV1KnowledgeBasesKbidSearchQuery = {
     Response: GetV1KnowledgeBasesKbidSearch200;
     PathParams: GetV1KnowledgeBasesKbidSearchPathParams;
     QueryParams: GetV1KnowledgeBasesKbidSearchQueryParams;
-    Errors: GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch503;
+    Errors: GetV1KnowledgeBasesKbidSearch401 | GetV1KnowledgeBasesKbidSearch403 | GetV1KnowledgeBasesKbidSearch404 | GetV1KnowledgeBasesKbidSearch429 | GetV1KnowledgeBasesKbidSearch503;
 };

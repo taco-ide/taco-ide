@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1KnowledgeBasesKbidDocumentsMutationResponse, PostV1KnowledgeBasesKbidDocumentsPathParams, PostV1KnowledgeBasesKbidDocuments400, PostV1KnowledgeBasesKbidDocuments401, PostV1KnowledgeBasesKbidDocuments403, PostV1KnowledgeBasesKbidDocuments404, PostV1KnowledgeBasesKbidDocuments413, PostV1KnowledgeBasesKbidDocuments429 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidDocuments.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1KnowledgeBasesKbidDocumentsMutationResponse, PostV1KnowledgeBasesKbidDocumentsPathParams, PostV1KnowledgeBasesKbidDocuments400, PostV1KnowledgeBasesKbidDocuments401, PostV1KnowledgeBasesKbidDocuments403, PostV1KnowledgeBasesKbidDocuments404, PostV1KnowledgeBasesKbidDocuments413 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidDocuments.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1KnowledgeBasesKbidDocumentsMutationKey = () => [{ url: '/v1/knowledge-bases/:kbId/documents/' }] as const
@@ -21,7 +21,7 @@ export type PostV1KnowledgeBasesKbidDocumentsMutationKey = ReturnType<typeof pos
 export async function postV1KnowledgeBasesKbidDocuments(kbId: PostV1KnowledgeBasesKbidDocumentsPathParams["kbId"], config: Partial<RequestConfig> & { client?: typeof fetch } = {}) {
   const { client: request = fetch, ...requestConfig } = config  
   
-  const res = await request<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413>, unknown>({ method : "POST", url : `/v1/knowledge-bases/${kbId}/documents/`, ... requestConfig })  
+  const res = await request<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413 | PostV1KnowledgeBasesKbidDocuments429>, unknown>({ method : "POST", url : `/v1/knowledge-bases/${kbId}/documents/`, ... requestConfig })  
   return res.data
 }
 
@@ -32,7 +32,7 @@ export async function postV1KnowledgeBasesKbidDocuments(kbId: PostV1KnowledgeBas
  */
 export function usePostV1KnowledgeBasesKbidDocuments<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413>, {kbId: PostV1KnowledgeBasesKbidDocumentsPathParams["kbId"]}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413 | PostV1KnowledgeBasesKbidDocuments429>, {kbId: PostV1KnowledgeBasesKbidDocumentsPathParams["kbId"]}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig> & { client?: typeof fetch },
 }
  = {}) {
@@ -40,7 +40,7 @@ export function usePostV1KnowledgeBasesKbidDocuments<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1KnowledgeBasesKbidDocumentsMutationKey()
 
-  return useMutation<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413>, {kbId: PostV1KnowledgeBasesKbidDocumentsPathParams["kbId"]}, TContext>({
+  return useMutation<PostV1KnowledgeBasesKbidDocumentsMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidDocuments400 | PostV1KnowledgeBasesKbidDocuments401 | PostV1KnowledgeBasesKbidDocuments403 | PostV1KnowledgeBasesKbidDocuments404 | PostV1KnowledgeBasesKbidDocuments413 | PostV1KnowledgeBasesKbidDocuments429>, {kbId: PostV1KnowledgeBasesKbidDocumentsPathParams["kbId"]}, TContext>({
     mutationFn: async({ kbId }) => {
       return postV1KnowledgeBasesKbidDocuments(kbId, config)
     },

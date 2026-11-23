@@ -684,7 +684,9 @@
       "createdGenerating": "Challenge saved. Reference solutions are being generated in the background — follow along below or move on to the next step.",
       "updateError": "Error updating problem",
       "updatedGenerating": "Changes saved. Reference solutions are being generated in the background — follow along below or move on to the next step.",
-      "updatedNoGenerate": "Changes saved. You can move on to the next step."
+      "updatedNoGenerate": "Changes saved. You can move on to the next step.",
+      "createdRateLimited": "Challenge saved, but reference solutions were not generated because the AI generation limit was reached. Generate them later on this step. {wait}",
+      "updatedRateLimited": "Changes saved, but reference solutions were not generated because the AI generation limit was reached. Generate them later on this step. {wait}"
     },
     "header": {
       "createSubtitle": "Design your programming challenge with detailed instructions and resources",
@@ -871,7 +873,12 @@
     "signIn": "Sign in",
     "signOut": "Sign out",
     "success": "Success",
-    "yes": "Yes"
+    "yes": "Yes",
+    "rateLimited": {
+      "seconds": "Too many requests. Try again in {count, plural, one {# second} other {# seconds}}.",
+      "minutes": "Too many requests. Try again in {count, plural, one {# minute} other {# minutes}}.",
+      "hours": "Too many requests. Try again in {count, plural, one {# hour} other {# hours}}."
+    }
   },
   "create": {
     "accessDenied": {

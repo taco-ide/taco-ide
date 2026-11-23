@@ -201,6 +201,12 @@ export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429Succ
 
 export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429SuccessEnum = (typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429SuccessEnum)[keyof typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429SuccessEnum];
 
+export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429CodeEnum = (typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429CodeEnum)[keyof typeof postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429CodeEnum];
+
 /**
  * @description Default Response
 */
@@ -219,6 +225,15 @@ export type PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429 = {
     errors?: {
         [key: string]: (string[] | string);
     };
+    /**
+     * @type string | undefined
+    */
+    code?: PostV1ChallengesChallengeidSubmissionsSubmissionidAutoReview429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
 };
 
 export const postV1ChallengesChallengeidSubmissionsSubmissionidAutoReview500SuccessEnum = {

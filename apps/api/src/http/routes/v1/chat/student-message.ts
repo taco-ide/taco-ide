@@ -2,7 +2,7 @@ import {
   loadChallengeWorkAccessContext,
   assertCanParticipateInChallengeWorkSession,
 } from "../../../services/work-session-access";
-import { workSessionChatRateLimitPreHandler } from "../../../middlewares/work-session-chat-rate-limit";
+import { rateLimitPolicy } from "../../../middlewares/rate-limit";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { FastifyTypedInstance } from "../../../types";
@@ -59,7 +59,7 @@ export async function studentMessageRoute(app: FastifyTypedInstance) {
   app.post(
     "/student/message",
     {
-      preHandler: [workSessionChatRateLimitPreHandler],
+      preHandler: [rateLimitPolicy("aiChat")],
       schema: {
         tags: ["chat"],
         summary: "Send a message to the teaching assistant agent (SSE)",

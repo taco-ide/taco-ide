@@ -153,6 +153,47 @@ export type PutV1KnowledgeBasesKbidEntriesEntryid404 = {
     };
 };
 
+export const putV1KnowledgeBasesKbidEntriesEntryid429SuccessEnum = {
+    "false": false
+} as const;
+
+export type PutV1KnowledgeBasesKbidEntriesEntryid429SuccessEnum = (typeof putV1KnowledgeBasesKbidEntriesEntryid429SuccessEnum)[keyof typeof putV1KnowledgeBasesKbidEntriesEntryid429SuccessEnum];
+
+export const putV1KnowledgeBasesKbidEntriesEntryid429CodeEnum = {
+    "RATE_LIMITED": "RATE_LIMITED"
+} as const;
+
+export type PutV1KnowledgeBasesKbidEntriesEntryid429CodeEnum = (typeof putV1KnowledgeBasesKbidEntriesEntryid429CodeEnum)[keyof typeof putV1KnowledgeBasesKbidEntriesEntryid429CodeEnum];
+
+/**
+ * @description Default Response
+*/
+export type PutV1KnowledgeBasesKbidEntriesEntryid429 = {
+    /**
+     * @type boolean
+    */
+    success: PutV1KnowledgeBasesKbidEntriesEntryid429SuccessEnum;
+    /**
+     * @type string
+    */
+    message: string;
+    /**
+     * @type object | undefined
+    */
+    errors?: {
+        [key: string]: (string[] | string);
+    };
+    /**
+     * @type string | undefined
+    */
+    code?: PutV1KnowledgeBasesKbidEntriesEntryid429CodeEnum;
+    /**
+     * @minLength 0
+     * @type integer | undefined
+    */
+    retryAfterSeconds?: number;
+};
+
 export type PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest = {
     /**
      * @minLength 1
@@ -167,5 +208,5 @@ export type PutV1KnowledgeBasesKbidEntriesEntryidMutation = {
     Response: PutV1KnowledgeBasesKbidEntriesEntryid200;
     Request: PutV1KnowledgeBasesKbidEntriesEntryidMutationRequest;
     PathParams: PutV1KnowledgeBasesKbidEntriesEntryidPathParams;
-    Errors: PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404;
+    Errors: PutV1KnowledgeBasesKbidEntriesEntryid401 | PutV1KnowledgeBasesKbidEntriesEntryid403 | PutV1KnowledgeBasesKbidEntriesEntryid404 | PutV1KnowledgeBasesKbidEntriesEntryid429;
 };

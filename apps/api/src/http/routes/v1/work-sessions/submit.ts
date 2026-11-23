@@ -20,6 +20,7 @@ import {
   loadChallengeWorkAccessContext,
 } from "../../../services/work-session-access";
 import { runAutoReview } from "../../../../agents/teachers-companion/auto-review";
+import { consumeRateLimit } from "../../../middlewares/rate-limit";
 
 const WorkSessionParamsSchema = z.object({
   id: z.string().uuid(),
@@ -190,7 +191,24 @@ export async function submitWorkSessionRoute(app: FastifyTypedInstance) {
         );
       }
 
-      if (submissionId) {
+      // The auto-review spends the student's AI generation budget. When it
+      // is exhausted the submission still stands; the review is marked
+      // failed so staff can re-run it from the submission page.
+      const rateLimited = submissionId
+        ? await consumeRateLimit(request, "aiGeneration")
+        : null;
+      if (submissionId && rateLimited) {
+        await db
+          .update(submission)
+          .set({
+            autoReviewStatus: "failed",
+            autoReviewError: `Auto-review skipped: ${rateLimited.message}`,
+          })
+          .where(eq(submission.id, submissionId))
+          .catch((err) => {
+            request.log.error({ err, submissionId }, "Failed to mark skipped auto review");
+          });
+      } else if (submissionId) {
         // Fire-and-forget: do not await. Auto-review runs in the
         // background; failures are logged but do not affect the
         // student's submit response.

@@ -4,9 +4,9 @@
 */
 
 import fetch from "@/lib/apiClient";
+import type { PostV1KnowledgeBasesKbidEntriesMutationRequest, PostV1KnowledgeBasesKbidEntriesMutationResponse, PostV1KnowledgeBasesKbidEntriesPathParams, PostV1KnowledgeBasesKbidEntries401, PostV1KnowledgeBasesKbidEntries403, PostV1KnowledgeBasesKbidEntries404, PostV1KnowledgeBasesKbidEntries429 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidEntries.ts";
 import type { RequestConfig, ResponseErrorConfig } from "@/lib/apiClient";
 import type { UseMutationOptions, QueryClient } from "@tanstack/react-query";
-import type { PostV1KnowledgeBasesKbidEntriesMutationRequest, PostV1KnowledgeBasesKbidEntriesMutationResponse, PostV1KnowledgeBasesKbidEntriesPathParams, PostV1KnowledgeBasesKbidEntries401, PostV1KnowledgeBasesKbidEntries403, PostV1KnowledgeBasesKbidEntries404 } from "../../../../../../packages/types/kubb/PostV1KnowledgeBasesKbidEntries.ts";
 import { useMutation } from "@tanstack/react-query";
 
 export const postV1KnowledgeBasesKbidEntriesMutationKey = () => [{ url: '/v1/knowledge-bases/:kbId/entries/' }] as const
@@ -23,7 +23,7 @@ export async function postV1KnowledgeBasesKbidEntries(kbId: PostV1KnowledgeBases
   
   const requestData = data  
   
-  const res = await request<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404>, PostV1KnowledgeBasesKbidEntriesMutationRequest>({ method : "POST", url : `/v1/knowledge-bases/${kbId}/entries/`, data : requestData, ... requestConfig })  
+  const res = await request<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404 | PostV1KnowledgeBasesKbidEntries429>, PostV1KnowledgeBasesKbidEntriesMutationRequest>({ method : "POST", url : `/v1/knowledge-bases/${kbId}/entries/`, data : requestData, ... requestConfig })  
   return res.data
 }
 
@@ -34,7 +34,7 @@ export async function postV1KnowledgeBasesKbidEntries(kbId: PostV1KnowledgeBases
  */
 export function usePostV1KnowledgeBasesKbidEntries<TContext>(options: 
 {
-  mutation?: UseMutationOptions<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404>, {kbId: PostV1KnowledgeBasesKbidEntriesPathParams["kbId"], data: PostV1KnowledgeBasesKbidEntriesMutationRequest}, TContext> & { client?: QueryClient },
+  mutation?: UseMutationOptions<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404 | PostV1KnowledgeBasesKbidEntries429>, {kbId: PostV1KnowledgeBasesKbidEntriesPathParams["kbId"], data: PostV1KnowledgeBasesKbidEntriesMutationRequest}, TContext> & { client?: QueryClient },
   client?: Partial<RequestConfig<PostV1KnowledgeBasesKbidEntriesMutationRequest>> & { client?: typeof fetch },
 }
  = {}) {
@@ -42,7 +42,7 @@ export function usePostV1KnowledgeBasesKbidEntries<TContext>(options:
   const { client: queryClient, ...mutationOptions } = mutation;
   const mutationKey = mutationOptions.mutationKey ?? postV1KnowledgeBasesKbidEntriesMutationKey()
 
-  return useMutation<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404>, {kbId: PostV1KnowledgeBasesKbidEntriesPathParams["kbId"], data: PostV1KnowledgeBasesKbidEntriesMutationRequest}, TContext>({
+  return useMutation<PostV1KnowledgeBasesKbidEntriesMutationResponse, ResponseErrorConfig<PostV1KnowledgeBasesKbidEntries401 | PostV1KnowledgeBasesKbidEntries403 | PostV1KnowledgeBasesKbidEntries404 | PostV1KnowledgeBasesKbidEntries429>, {kbId: PostV1KnowledgeBasesKbidEntriesPathParams["kbId"], data: PostV1KnowledgeBasesKbidEntriesMutationRequest}, TContext>({
     mutationFn: async({ kbId, data }) => {
       return postV1KnowledgeBasesKbidEntries(kbId, data, config)
     },

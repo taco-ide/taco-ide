@@ -81,4 +81,17 @@ export const postV1KnowledgeBasesKbidDocuments413Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const postV1KnowledgeBasesKbidDocuments429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
+    })
+
 export const postV1KnowledgeBasesKbidDocumentsMutationResponseSchema = z.lazy(() => postV1KnowledgeBasesKbidDocuments202Schema)

@@ -62,6 +62,19 @@ export const putV1KnowledgeBasesKbidEntriesEntryid404Schema = z.object({
     }).catchall(z.union([z.array(z.string()), z.string()])).optional()
     })
 
+/**
+ * @description Default Response
+ */
+export const putV1KnowledgeBasesKbidEntriesEntryid429Schema = z.object({
+    "success": z.literal(false),
+"message": z.string(),
+"errors": z.object({
+    
+    }).catchall(z.union([z.array(z.string()), z.string()])).optional(),
+"code": z.enum(["RATE_LIMITED"]).optional(),
+"retryAfterSeconds": z.number().int().min(0).optional()
+    })
+
 export const putV1KnowledgeBasesKbidEntriesEntryidMutationRequestSchema = z.object({
     "content": z.string().min(1)
     })

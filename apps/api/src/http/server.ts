@@ -10,6 +10,7 @@ import {
 } from "fastify-type-provider-zod";
 import fastifyCookie from "@fastify/cookie";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyRateLimit from "@fastify/rate-limit";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import { jsonSchemaTransform } from "fastify-type-provider-zod";
@@ -22,12 +23,24 @@ import { fileURLToPath } from "url";
 import { env } from "@repo/infra/env";
 import { registerRoutes } from "./routes/v1/index";
 import { authMiddleware } from "./middlewares/auth";
+import {
+  globalRateLimitOptions,
+  rateLimitBody,
+  RateLimitExceededError,
+} from "./middlewares/rate-limit";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create Fastify instance with Zod Type Provider
-const app = fastify({ trustProxy: true }).withTypeProvider<ZodTypeProvider>();
+// Create Fastify instance with Zod Type Provider. TRUST_PROXY decides which
+// X-Forwarded-For entries request.ip may come from; the default (no proxy)
+// ignores the header, since its leftmost entries are chosen by the client.
+const app = fastify({ trustProxy: env.TRUST_PROXY }).withTypeProvider<ZodTypeProvider>();
+if (env.NODE_ENV === "production" && env.TRUST_PROXY === false) {
+  console.warn(
+    "TRUST_PROXY is not set: behind a reverse proxy every client shares the proxy's IP for rate limits. Set TRUST_PROXY to the proxy's address (e.g. 127.0.0.1 or uniquelocal)."
+  );
+}
 const theme = new SwaggerTheme();
 const darkCss = theme.getBuffer(SwaggerThemeNameEnum.DARK);
 
@@ -52,6 +65,14 @@ app.setErrorHandler((error, request, reply) => {
       message: "Validation failed",
       errors,
     });
+  }
+
+  // Thrown by the global limiter; Retry-After and x-ratelimit-* headers are
+  // already set on the reply.
+  if (error instanceof RateLimitExceededError) {
+    return reply
+      .status(429)
+      .send(rateLimitBody(error.message, error.retryAfterSeconds));
   }
 
   if (isResponseSerializationError(error)) {
@@ -131,6 +152,13 @@ app.register(fastifyMultipart, {
     files: 1,
   },
 });
+
+// Rate limiting: a per-user (or per-IP) default on every route plus the
+// LLM/embedding cost policies in middlewares/rate-limit.ts. Must be
+// registered before the routes.
+if (env.RATE_LIMIT_ENABLED) {
+  app.register(fastifyRateLimit, globalRateLimitOptions);
+}
 
 // Global authentication hook
 app.addHook("onRequest", async (request, reply) => {
