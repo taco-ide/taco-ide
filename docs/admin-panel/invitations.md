@@ -336,24 +336,33 @@ Rota **publica** (sem sessao) usada pela pagina de aceite para mostrar o convite
 
 Por que nao usar `organization.getInvitation` do Better Auth: ele exige sessao, devolve o mesmo erro para convites expirados, cancelados e aceitos, e falha com `INVITER_IS_NO_LONGER_A_MEMBER` quando quem convidou nao e membro da organizacao — o caso normal de convites criados por Platform Admin (secao 4.1).
 
-O `id` do convite e um valor aleatorio entregue por email; a rota so devolve o que o proprio email ja contem. Aceitar e recusar continuam no Better Auth, que confere o email da sessao.
+O `id` do convite e um valor aleatorio entregue por email; a rota so devolve o que o proprio email ja contem, e so enquanto o convite esta `pending`. Aceitar e recusar continuam no Better Auth, que confere o email da sessao.
 
 Somente `GET`/`HEAD` em `/v1/invitations/:id` sao publicos (`isPublicInvitationPreview` em `apps/api/src/http/server.ts`); qualquer outra rota futura sob `/v1/invitations` continua autenticada.
 
-Resposta `200`:
+Resposta `200` para convite pendente:
 
 ```json
 {
   "success": true,
   "data": {
     "id": "1f6a...",
+    "status": "pending",
+    "organizationName": "Escola Exemplo",
     "email": "pessoa@exemplo.edu.br",
     "role": "teacher",
-    "status": "pending",
     "expiresAt": "2026-05-24T18:42:11.000Z",
-    "organizationName": "Escola Exemplo",
     "inviterName": "Coord. Demo"
   }
+}
+```
+
+Depois que o convite deixa de estar pendente, a resposta traz so `id`, `status` e `organizationName` — um link antigo deixa de expor o email convidado, o papel e quem convidou:
+
+```json
+{
+  "success": true,
+  "data": { "id": "1f6a...", "status": "expired", "organizationName": "Escola Exemplo" }
 }
 ```
 

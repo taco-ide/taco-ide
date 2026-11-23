@@ -44,7 +44,7 @@
         "title": "Invitation canceled"
       },
       "expired": {
-        "description": "This invitation to {organization} expired on {date}. Ask the person who invited you to send a new one.",
+        "description": "This invitation to {organization} has expired. Ask the person who invited you to send a new one.",
         "title": "Invitation expired"
       },
       "invalidLink": {

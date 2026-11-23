@@ -14,7 +14,7 @@ export const getV1InvitationsIdQueryKey = (id: GetV1InvitationsIdPathParams["id"
 export type GetV1InvitationsIdQueryKey = ReturnType<typeof getV1InvitationsIdQueryKey>
 
 /**
- * @description Public. Returns the organization, role, invited email, expiry and current status of an invitation so the accept page can render it before sign-in.
+ * @description Public. For a pending invitation, returns the organization, role, invited email, inviter and expiry so the accept page can render it before sign-in. Once the invitation is no longer pending, returns only its status and organization name.
  * @summary Get invitation preview
  * {@link /v1/invitations/:id}
  */
@@ -38,7 +38,7 @@ export function getV1InvitationsIdQueryOptions(id: GetV1InvitationsIdPathParams[
 }
 
 /**
- * @description Public. Returns the organization, role, invited email, expiry and current status of an invitation so the accept page can render it before sign-in.
+ * @description Public. For a pending invitation, returns the organization, role, invited email, inviter and expiry so the accept page can render it before sign-in. Once the invitation is no longer pending, returns only its status and organization name.
  * @summary Get invitation preview
  * {@link /v1/invitations/:id}
  */

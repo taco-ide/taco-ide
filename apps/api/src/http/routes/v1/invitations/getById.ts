@@ -19,15 +19,29 @@ export const INVITATION_PREVIEW_STATUSES = [
   "expired",
 ] as const;
 
-const InvitationPreviewSchema = z.object({
+// A pending invitation carries what the accept page needs before sign-in.
+// Once it is no longer pending, only the status and organization remain, so
+// an old link stops exposing the invited email and the inviter.
+const PendingInvitationPreviewSchema = z.object({
   id: z.string(),
+  status: z.literal("pending"),
+  organizationName: z.string(),
   email: z.string(),
   role: z.string(),
-  status: z.enum(INVITATION_PREVIEW_STATUSES),
   expiresAt: z.string().datetime(),
-  organizationName: z.string(),
   inviterName: z.string().nullable(),
 });
+
+const ClosedInvitationPreviewSchema = z.object({
+  id: z.string(),
+  status: z.enum(["accepted", "rejected", "canceled", "expired"]),
+  organizationName: z.string(),
+});
+
+const InvitationPreviewSchema = z.discriminatedUnion("status", [
+  PendingInvitationPreviewSchema,
+  ClosedInvitationPreviewSchema,
+]);
 
 const InvitationPreviewResponseSchema = ResponseSchema200.extend({
   data: InvitationPreviewSchema,
@@ -62,7 +76,8 @@ function resolveStatus(row: {
  * account, so it reads this endpoint instead.
  *
  * The invitation id is an unguessable bearer value delivered by email; this
- * route only exposes what the email itself already contains. Accepting and
+ * route only exposes what the email itself already contains, and only while
+ * the invitation is pending. Accepting and
  * declining still go through Better Auth, which checks the session email.
  */
 export async function getInvitationPreviewRoute(app: FastifyTypedInstance) {
@@ -73,7 +88,7 @@ export async function getInvitationPreviewRoute(app: FastifyTypedInstance) {
         tags: ["invitations"],
         summary: "Get invitation preview",
         description:
-          "Public. Returns the organization, role, invited email, expiry and current status of an invitation so the accept page can render it before sign-in.",
+          "Public. For a pending invitation, returns the organization, role, invited email, inviter and expiry so the accept page can render it before sign-in. Once the invitation is no longer pending, returns only its status and organization name.",
         params: InvitationParamsSchema,
         response: {
           200: InvitationPreviewResponseSchema,
@@ -106,15 +121,23 @@ export async function getInvitationPreviewRoute(app: FastifyTypedInstance) {
         });
       }
 
+      const status = resolveStatus(row);
+      if (status !== "pending") {
+        return reply.status(200).send({
+          success: true as const,
+          data: { id: row.id, status, organizationName: row.organizationName },
+        });
+      }
+
       return reply.status(200).send({
         success: true as const,
         data: {
           id: row.id,
+          status,
+          organizationName: row.organizationName,
           email: row.email,
           role: row.role,
-          status: resolveStatus(row),
           expiresAt: row.expiresAt.toISOString(),
-          organizationName: row.organizationName,
           inviterName: row.inviterName ?? null,
         },
       });

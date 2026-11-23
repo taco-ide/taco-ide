@@ -20,14 +20,19 @@ export const getV1InvitationsId200SuccessEnum = {
 export type GetV1InvitationsId200SuccessEnum = (typeof getV1InvitationsId200SuccessEnum)[keyof typeof getV1InvitationsId200SuccessEnum];
 
 export const dataStatusEnum4 = {
-    "pending": "pending",
+    "pending": "pending"
+} as const;
+
+export type DataStatusEnum4 = (typeof dataStatusEnum4)[keyof typeof dataStatusEnum4];
+
+export const dataStatusEnum5 = {
     "accepted": "accepted",
     "rejected": "rejected",
     "canceled": "canceled",
     "expired": "expired"
 } as const;
 
-export type DataStatusEnum4 = (typeof dataStatusEnum4)[keyof typeof dataStatusEnum4];
+export type DataStatusEnum5 = (typeof dataStatusEnum5)[keyof typeof dataStatusEnum5];
 
 /**
  * @description Default Response
@@ -41,14 +46,19 @@ export type GetV1InvitationsId200 = {
      * @type string | undefined
     */
     message?: string;
-    /**
-     * @type object
-    */
-    data: {
+    data: ({
         /**
          * @type string
         */
         id: string;
+        /**
+         * @type string
+        */
+        status: DataStatusEnum4;
+        /**
+         * @type string
+        */
+        organizationName: string;
         /**
          * @type string
         */
@@ -58,22 +68,27 @@ export type GetV1InvitationsId200 = {
         */
         role: string;
         /**
-         * @type string
-        */
-        status: DataStatusEnum4;
-        /**
          * @type string, date-time
         */
         expiresAt: string;
         /**
          * @type string
         */
-        organizationName: string;
+        inviterName: string | null;
+    } | {
         /**
          * @type string
         */
-        inviterName: string | null;
-    };
+        id: string;
+        /**
+         * @type string
+        */
+        status: DataStatusEnum5;
+        /**
+         * @type string
+        */
+        organizationName: string;
+    });
     /**
      * @type object | undefined
     */

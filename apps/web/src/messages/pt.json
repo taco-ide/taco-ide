@@ -44,7 +44,7 @@
         "title": "Convite cancelado"
       },
       "expired": {
-        "description": "Este convite para {organization} expirou em {date}. Peça a quem convidou você para enviar um novo.",
+        "description": "Este convite para {organization} expirou. Peça a quem convidou você para enviar um novo.",
         "title": "Convite expirado"
       },
       "invalidLink": {

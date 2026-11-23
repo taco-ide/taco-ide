@@ -15,15 +15,19 @@ export const getV1InvitationsIdPathParamsSchema = z.object({
 export const getV1InvitationsId200Schema = z.object({
     "success": z.literal(true),
 "message": z.string().optional(),
-"data": z.object({
+"data": z.union([z.object({
     "id": z.string(),
+"status": z.enum(["pending"]),
+"organizationName": z.string(),
 "email": z.string(),
 "role": z.string(),
-"status": z.enum(["pending", "accepted", "rejected", "canceled", "expired"]),
 "expiresAt": z.string().datetime(),
-"organizationName": z.string(),
 "inviterName": z.string().nullable()
-    }),
+    }), z.object({
+    "id": z.string(),
+"status": z.enum(["accepted", "rejected", "canceled", "expired"]),
+"organizationName": z.string()
+    })]),
 "pagination": z.object({
     "total": z.number(),
 "page": z.number(),

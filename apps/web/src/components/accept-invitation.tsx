@@ -97,10 +97,6 @@ export function AcceptInvitation() {
   const invitation = invitationQuery.data.data;
   const currentUser = session.data?.user ?? null;
   const organization = invitation.organizationName;
-  const roleLabel = isKnownRole(invitation.role)
-    ? t(`roles.${invitation.role}`)
-    : invitation.role;
-  const expiresAt = new Date(invitation.expiresAt);
   const selfHref = `/auth/accept-invitation?id=${encodeURIComponent(invitation.id)}`;
   const dashboardButton = currentUser ? (
     <Button asChild className="w-full">
@@ -145,15 +141,21 @@ export function AcceptInvitation() {
     return (
       <StateMessage
         title={t("states.expired.title")}
-        description={t("states.expired.description", {
-          organization,
-          date: format.dateTime(expiresAt, { dateStyle: "long" }),
-        })}
+        description={t("states.expired.description", { organization })}
       >
         {dashboardButton}
       </StateMessage>
     );
   }
+
+  // Every closed status returned above; only a pending invitation carries
+  // the email, role and expiry.
+  if (invitation.status !== "pending") return null;
+
+  const roleLabel = isKnownRole(invitation.role)
+    ? t(`roles.${invitation.role}`)
+    : invitation.role;
+  const expiresAt = new Date(invitation.expiresAt);
 
   const isWrongAccount =
     !!currentUser &&

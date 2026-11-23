@@ -107,21 +107,28 @@ describe("GET /v1/invitations/:id (public preview)", () => {
     { stored: "accepted", expected: "accepted" },
     { stored: "rejected", expected: "rejected" },
     { stored: "canceled", expected: "canceled" },
-  ])("reports a $stored invitation as $expected", async ({ stored, expected }) => {
-    const org = await createOrg();
-    const inviter = await createUser();
-    const inv = await insertInvitation({
-      organizationId: org.id,
-      inviterId: inviter.id,
-      email: `${stored}@test.local`,
-      status: stored,
-    });
+  ])(
+    "reports a $stored invitation as $expected without the invitation details",
+    async ({ stored, expected }) => {
+      const org = await createOrg({ name: "Escola Terminal" });
+      const inviter = await createUser();
+      const inv = await insertInvitation({
+        organizationId: org.id,
+        inviterId: inviter.id,
+        email: `${stored}@test.local`,
+        status: stored,
+      });
 
-    const response = await app.inject({ method: "GET", url: `/v1/invitations/${inv.id}` });
+      const response = await app.inject({ method: "GET", url: `/v1/invitations/${inv.id}` });
 
-    expect(response.statusCode).toBe(200);
-    expect(response.json().data.status).toBe(expected);
-  });
+      expect(response.statusCode).toBe(200);
+      expect(response.json().data).toEqual({
+        id: inv.id,
+        status: expected,
+        organizationName: "Escola Terminal",
+      });
+    }
+  );
 
   it("reports a pending invitation past its expiry as expired", async () => {
     const org = await createOrg();
@@ -135,7 +142,11 @@ describe("GET /v1/invitations/:id (public preview)", () => {
 
     const response = await app.inject({ method: "GET", url: `/v1/invitations/${inv.id}` });
 
-    expect(response.json().data.status).toBe("expired");
+    expect(response.json().data).toEqual({
+      id: inv.id,
+      status: "expired",
+      organizationName: org.name,
+    });
   });
 
   it("reports a pending invitation of a deactivated organization as canceled", async () => {
@@ -149,7 +160,11 @@ describe("GET /v1/invitations/:id (public preview)", () => {
 
     const response = await app.inject({ method: "GET", url: `/v1/invitations/${inv.id}` });
 
-    expect(response.json().data.status).toBe("canceled");
+    expect(response.json().data).toEqual({
+      id: inv.id,
+      status: "canceled",
+      organizationName: org.name,
+    });
   });
 
   it("keeps other /v1/invitations paths and methods authenticated", async () => {
