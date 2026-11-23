@@ -173,12 +173,23 @@ test.describe("Accept invitation", () => {
     await expect(page.getByRole("heading", { name: "Invitation not found" })).toBeVisible();
   });
 
-  test("login ignores redirects to other sites", async ({ page }) => {
-    await page.goto("/auth/login?redirect=//example.com/phish");
-    await login(page, STUDENT.email, STUDENT.password);
-    await page.waitForURL((url) => !url.pathname.startsWith("/auth/login"), {
-      timeout: 30_000,
+  // Each payload must leave the person on this site after signing in. The dot
+  // segment ones only become `//example.com` once the URL is normalised.
+  for (const redirect of [
+    "//example.com/phish",
+    "/.//example.com/phish",
+    "/..//example.com/phish",
+    "/a/../..//example.com/phish",
+  ]) {
+    test(`login ignores the off-site redirect ${redirect}`, async ({ page }) => {
+      await page.goto(`/auth/login?redirect=${encodeURIComponent(redirect)}`);
+      await login(page, STUDENT.email, STUDENT.password);
+      await page.waitForURL((url) => !url.pathname.startsWith("/auth/login"), {
+        timeout: 30_000,
+      });
+      expect(new URL(page.url()).host).toBe(
+        new URL(test.info().project.use.baseURL!).host
+      );
     });
-    expect(new URL(page.url()).host).toBe(new URL(test.info().project.use.baseURL!).host);
-  });
+  }
 });

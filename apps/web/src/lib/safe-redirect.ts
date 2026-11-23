@@ -7,6 +7,10 @@ const SAME_ORIGIN_BASE = "http://same-origin.invalid";
  * Rejects absolute URLs, protocol-relative URLs (`//evil.com`), backslash
  * tricks (`/\evil.com`) and control characters so a crafted
  * `?redirect=` link can't send people to another site.
+ *
+ * The check runs again on the normalised result: resolving dot segments turns
+ * `/.//evil.com` or `/a/../..//evil.com` into `//evil.com`, which the router
+ * would treat as another host.
  */
 export function getSafeRedirect(raw: string | null | undefined): string | null {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
@@ -15,7 +19,10 @@ export function getSafeRedirect(raw: string | null | undefined): string | null {
   try {
     const url = new URL(raw, SAME_ORIGIN_BASE);
     if (url.origin !== SAME_ORIGIN_BASE) return null;
-    return `${url.pathname}${url.search}${url.hash}`;
+    const path = `${url.pathname}${url.search}${url.hash}`;
+    if (path.startsWith("//") || path.startsWith("/\\")) return null;
+    if (new URL(path, SAME_ORIGIN_BASE).origin !== SAME_ORIGIN_BASE) return null;
+    return path;
   } catch {
     return null;
   }

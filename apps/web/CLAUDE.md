@@ -103,6 +103,7 @@ apps/web/
 | `npm run build`     | Build for production     |
 | `npm run lint`      | Run ESLint               |
 | `npm run typecheck` | Run TypeScript check     |
+| `npm test`          | Run Vitest unit tests    |
 
 ## Authentication Flow
 
