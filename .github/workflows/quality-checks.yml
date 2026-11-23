@@ -54,7 +54,7 @@ jobs:
           node-version: "22"
           cache: npm
       - name: Use the repository npm version
-        run: npm install --global npm@11.3.0
+        run: npm install --global npm@11.21.3
       - name: Install dependencies
         run: npm ci
       - name: Check types
