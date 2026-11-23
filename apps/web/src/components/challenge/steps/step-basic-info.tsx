@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -32,9 +32,10 @@ const CREATE_NEW_VALUE = "__create_new__";
 interface StepBasicInfoProps {
     tags: string[];
     setTags: (tags: string[]) => void;
+    preselectedClassroomId?: string;
 }
 
-export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
+export function StepBasicInfo({ tags, setTags, preselectedClassroomId }: StepBasicInfoProps) {
     const t = useTranslations("challenge");
     const c = useTranslations("common");
     const [currentTag, setCurrentTag] = useState("");
@@ -48,6 +49,7 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
         register,
         control,
         setValue,
+        getValues,
         formState: { errors },
     } = useFormContext<ChallengeFormData>();
 
@@ -56,6 +58,15 @@ export function StepBasicInfo({ tags, setTags }: StepBasicInfoProps) {
     );
 
     const classrooms = classroomsData?.data ?? [];
+
+    // Prefill the classroom passed in the URL, but only when it is one of the
+    // classrooms this user can pick and nothing has been chosen yet.
+    useEffect(() => {
+        if (!preselectedClassroomId || getValues("classroomId")) return;
+        if (classroomsData?.data?.some((c) => c.id === preselectedClassroomId)) {
+            setValue("classroomId", preselectedClassroomId);
+        }
+    }, [preselectedClassroomId, classroomsData, getValues, setValue]);
 
     const createClassroomMutation = usePostV1Classrooms({
         mutation: {

@@ -23,6 +23,7 @@ import {
   useGetV1OrganizationsIdMembers,
 } from "@/kubb/hooks";
 import { useTutorial } from "@/hooks/useTutorial";
+import { useHasMinimumRole } from "@/hooks/usePermission";
 
 type RoleKey = "student" | "teacher" | "coordinator" | "admin";
 
@@ -119,9 +120,11 @@ function QuickAction({
 function ClassroomGrid({
   scope,
   canCreate,
+  canPickTeacher,
 }: {
   scope: "mine" | "org";
   canCreate: boolean;
+  canPickTeacher: boolean;
 }) {
   const t = useTranslations("dashboard");
   const tOnboarding = useTranslations("classroomOnboarding.dashboard");
@@ -143,7 +146,7 @@ function ClassroomGrid({
         {canCreate ? (
           <>
             <p className="mx-auto mt-1 max-w-md text-xs text-slate-500">
-              {tOnboarding("emptyHint")}
+              {tOnboarding(canPickTeacher ? "emptyHint" : "emptyHintTeacher")}
             </p>
             <Button
               asChild
@@ -320,6 +323,10 @@ function DashboardContent() {
   const tTeam = useTranslations("teamInvitations");
   const tClassroom = useTranslations("classroomOnboarding.dashboard");
   const { user, isLoading, getFirstName } = useUser();
+  // Same gates as /classrooms/create: teacher+ may create, coordinator+ also
+  // picks the lead teacher.
+  const canCreateClassroom = useHasMinimumRole("teacher");
+  const canPickTeacher = useHasMinimumRole("coordinator");
 
   const roleKey = user
     ? resolveRole(user.role, user.isPlatformAdmin)
@@ -546,7 +553,8 @@ function DashboardContent() {
         </div>
         <ClassroomGrid
           scope={roleKey === "coordinator" ? "org" : "mine"}
-          canCreate={roleKey === "coordinator"}
+          canCreate={canCreateClassroom}
+          canPickTeacher={canPickTeacher}
         />
       </section>
 

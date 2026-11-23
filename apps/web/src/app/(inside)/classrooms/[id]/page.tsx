@@ -658,7 +658,9 @@ export default function ClassroomPage() {
                           size="sm"
                           className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-slate-900 font-medium"
                         >
-                          <Link href="/create">
+                          <Link
+                            href={`/create?classroomId=${encodeURIComponent(id)}`}
+                          >
                             <Plus className="mr-1.5 h-4 w-4" />
                             {tOnboarding("detail.problems.create")}
                           </Link>

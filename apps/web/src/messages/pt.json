@@ -798,6 +798,7 @@
     "dashboard": {
       "emptyAction": "Criar uma turma",
       "emptyHint": "Crie sua primeira turma, escolha o professor responsável e depois matricule alunos e atribua desafios.",
+      "emptyHintTeacher": "Crie sua primeira turma e depois matricule alunos e atribua desafios.",
       "newClassroom": {
         "description": "Crie uma turma e escolha o professor responsável por ela.",
         "title": "Nova turma"
@@ -1560,7 +1561,7 @@
         "title": "Importação em lote (CSV)"
       },
       "domain": {
-        "body": "Quem se cadastrar com um email de um domínio mapeado (ex.: @suaescola.edu.br) entra automaticamente como aluno ou professor. Os domínios são configurados por um administrador da plataforma.",
+        "body": "Quem se cadastrar com um email de um domínio mapeado (ex.: @suaescola.edu.br) entra automaticamente com o papel definido para esse domínio (aluno, professor ou coordenador). Os domínios são configurados por um administrador da plataforma.",
         "title": "Domínio de email automático"
       },
       "invite": {

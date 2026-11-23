@@ -28,9 +28,11 @@ interface ChallengeWizardProps {
     challengeId?: string;
     initialData?: ChallengeFormData;
     initialTags?: string[];
+    /** Classroom to preselect in create mode (e.g. from `/create?classroomId=`). */
+    preselectedClassroomId?: string;
 }
 
-export function ChallengeWizard({ mode, challengeId, initialData, initialTags }: ChallengeWizardProps) {
+export function ChallengeWizard({ mode, challengeId, initialData, initialTags, preselectedClassroomId }: ChallengeWizardProps) {
     const t = useTranslations("challenge");
     const c = useTranslations("common");
     const router = useRouter();
@@ -274,7 +276,11 @@ export function ChallengeWizard({ mode, challengeId, initialData, initialTags }:
                 <FormProvider {...methods}>
                     <div className="space-y-6">
                         {currentStep === 0 && (
-                            <StepBasicInfo tags={tags} setTags={setTags} />
+                            <StepBasicInfo
+                                tags={tags}
+                                setTags={setTags}
+                                preselectedClassroomId={mode === "create" ? preselectedClassroomId : undefined}
+                            />
                         )}
                         {currentStep === 1 && <StepDescription />}
                         {currentStep === 2 && (

@@ -798,6 +798,7 @@
     "dashboard": {
       "emptyAction": "Create a classroom",
       "emptyHint": "Create your first classroom, pick its lead teacher, then enroll students and assign challenges.",
+      "emptyHintTeacher": "Create your first classroom, then enroll students and assign challenges.",
       "newClassroom": {
         "description": "Create a classroom and choose the teacher responsible for it.",
         "title": "New classroom"
@@ -1560,7 +1561,7 @@
         "title": "Bulk CSV import"
       },
       "domain": {
-        "body": "Anyone who signs up with an address from a mapped domain (e.g. @yourschool.edu) joins automatically as a student or teacher. Domains are configured by a platform administrator.",
+        "body": "Anyone who signs up with an address from a mapped domain (e.g. @yourschool.edu) joins automatically with the role set for that domain (student, teacher or coordinator). Domains are configured by a platform administrator.",
         "title": "Automatic email domain"
       },
       "invite": {
