@@ -581,7 +581,7 @@
       "newPassword": "Nova Senha",
       "password": "Senha"
     },
-    "legal": "Ao usar nossos serviços, você concorda com nossos <terms>Termos de Serviço</terms> e <privacy>Política de Privacidade</privacy>.",
+    "legal": "Ao usar nossos serviços, você concorda com nossos <terms>Termos de Uso</terms> e declara ter lido nosso <privacy>Aviso de Privacidade</privacy>.",
     "login": {
       "forgotPassword": "Esqueceu a senha?",
       "noAccount": "Não tem uma conta?",
@@ -1277,11 +1277,12 @@
           "title": "2. Dados que coletamos",
           "items": [
             "Dados de conta: nome, e-mail, senha (armazenada apenas como hash), status de verificação do e-mail e seus papéis em organizações e turmas (por exemplo, professor ou estudante).",
-            "Dados de sessão: um cookie de sessão, além do endereço IP e do navegador (user agent) registrados em cada sessão de login.",
+            "Dados de sessão e de uso: um cookie de sessão e um cookie de curta duração que guarda sua sessão em cache, o endereço IP e o navegador (user agent) registrados em cada sessão de login, e o horário da sua última atividade em cada organização.",
             "Atividade de aprendizagem: o código que você escreve e salva, entradas e saídas dos programas, submissões e seus horários, notas e comentários dos professores, e revisões automáticas das submissões geradas para os professores.",
             "Conversas com o assistente de IA: as mensagens que você envia, as respostas do assistente e o código incluído como contexto.",
             "Materiais didáticos: exercícios, soluções de referência e documentos enviados por professores às bases de conhecimento. Não inclua dados pessoais nesses materiais.",
             "Avaliações anônimas do assistente: ao submeter um exercício, estudantes podem avaliar o assistente de IA. Guardamos apenas a nota, o assistente e a semana, não quem avaliou.",
+            "Preferências guardadas no seu navegador: tema e tamanho da fonte do editor, quais tutoriais e dicas você já viu e a última aba aberta em um exercício. Elas ficam no armazenamento local do seu navegador e não são enviadas aos nossos servidores.",
             "Registros técnicos: logs de requisições e erros do servidor, usados para operar e proteger o serviço."
           ]
         },
@@ -1290,7 +1291,7 @@
           "items": [
             "Para oferecer a plataforma: contas, turmas, exercícios, feedback de IA e correção.",
             "Para manter o serviço seguro, evitar abusos e corrigir problemas.",
-            "Para pesquisa sobre ensino de programação com apoio de IA. Os resultados são publicados apenas de forma agregada ou desidentificada. Aprovação do comitê de ética: [NÚMERO DE APROVAÇÃO DO CEP/CAAE]."
+            "Para pesquisa sobre ensino de programação com apoio de IA. Os resultados são publicados [APENAS DE FORMA AGREGADA OU DESIDENTIFICADA — a confirmar pelo controlador]. Aprovação do comitê de ética: [NÚMERO DE APROVAÇÃO DO CEP/CAAE]."
           ],
           "body": [
             "Não vendemos dados pessoais nem os usamos para publicidade. A base legal de cada finalidade (arts. 7º e 11 da LGPD) é [BASES LEGAIS — a confirmar pelo controlador]."
@@ -1299,13 +1300,15 @@
         {
           "title": "4. Com quem compartilhamos",
           "body": [
-            "Professores e administradores da sua organização podem ver sua atividade nos exercícios deles, incluindo código, submissões e conversas com o assistente. Também contamos com os seguintes prestadores de serviço, que tratam dados em nosso nome:"
+            "Professores, coordenadores e administradores da sua organização podem ver sua atividade nos exercícios que gerenciam, incluindo código, submissões e conversas com o assistente. Administradores da plataforma, que operam o TACO-IDE, podem acessar os dados de todas as organizações. Também contamos com os seguintes prestadores de serviço, que tratam dados em nosso nome:"
           ],
           "items": [
-            "Provedores de modelos de IA: suas mensagens, seu código e o contexto do exercício são enviados à API de modelo de linguagem configurada (um serviço compatível com OpenAI, como o Azure OpenAI) para gerar as respostas do assistente. Dados dos exercícios e o código submetido são enviados a uma API de pesquisa parceira (PDC) e/ou ao OpenRouter, que encaminha as requisições a provedores de modelos terceiros, para gerar soluções de referência e revisões automáticas.",
-            "Execução de código: o código Python que você executa no editor roda no seu próprio navegador. Código em outras linguagens, e o código que o assistente executa para verificar uma resposta, é enviado com sua entrada a um serviço de execução de código (Piston).",
-            "Embeddings: o texto dos documentos das bases de conhecimento é enviado a uma API de embeddings para permitir a busca.",
-            "Langfuse (monitoramento de IA), quando ativado: as conversas com o assistente — mensagens, respostas e contexto de código — são registradas junto com seu ID interno de usuário e de sessão (não seu nome ou e-mail) para monitorar e melhorar a qualidade das respostas.",
+            "Provedores de modelos de IA: suas mensagens, seu código, as entradas e saídas dos programas e o contexto do exercício são enviados à API de modelo de linguagem configurada (um serviço compatível com OpenAI, como o Azure OpenAI) para gerar as respostas do assistente.",
+            "Ferramentas de IA para professores: quando um professor usa o assistente de IA do professor, nomes de estudantes, código submetido, saídas dos programas e conversas completas com o assistente podem ser enviados à API de modelo de linguagem para análise, e são registrados pelo Langfuse quando ele está ativado (veja abaixo).",
+            "Revisões automáticas e soluções de referência: quando um estudante submete um exercício, o enunciado, o código submetido, suas entradas e saídas e a conversa do estudante com o assistente são enviados ao OpenRouter, que encaminha as requisições a provedores de modelos terceiros, para gerar uma revisão para o professor. Quando a API de pesquisa parceira (PDC) está ativada, ela recebe apenas o enunciado e o código submetido, e sua revisão é depois adaptada pelo OpenRouter junto com o contexto acima. Dados dos exercícios também são enviados ao PDC e/ou ao OpenRouter para gerar soluções de referência.",
+            "Execução de código: o código Python que você executa no editor roda no seu próprio navegador. O ambiente Python (Pyodide) e o editor de código são baixados da CDN jsDelivr (cdn.jsdelivr.net), que recebe seu endereço IP e dados do navegador. Código em outras linguagens é enviado com sua entrada, a partir do seu navegador, ao serviço público de execução de código Piston (emkc.org). O código que o assistente executa para verificar uma resposta é enviado com sua entrada, a partir dos nossos servidores, a um serviço de execução de código (por padrão, o mesmo serviço Piston em emkc.org).",
+            "Embeddings: o texto dos documentos e entradas das bases de conhecimento, e as consultas de busca, são enviados a uma API de embeddings (como o Azure OpenAI) para permitir a busca. Isso inclui as mensagens que estudantes enviam ao assistente em exercícios vinculados a uma base de conhecimento.",
+            "Langfuse (monitoramento de IA), quando ativado: as conversas com os assistentes de IA — mensagens, respostas, contexto de código e os resultados das ferramentas usadas pelo assistente — são registradas junto com o ID interno de usuário e de sessão de quem conversa, para monitorar e melhorar a qualidade das respostas. As conversas dos próprios estudantes são registradas sem seu nome ou e-mail, mas as conversas de professores com o assistente de IA do professor podem incluir nomes de estudantes, código, saídas dos programas e conversas com o assistente.",
             "E-mail (Resend): seu endereço de e-mail e o conteúdo da mensagem, para enviar e-mails de verificação, redefinição de senha e convites.",
             "Hospedagem: [PROVEDOR DE HOSPEDAGEM]."
           ]
@@ -1319,7 +1322,7 @@
         {
           "title": "6. Por quanto tempo guardamos",
           "body": [
-            "Guardamos os dados pessoais enquanto sua conta estiver ativa e pelo tempo necessário às finalidades acima, incluindo o período da pesquisa: [PRAZO DE RETENÇÃO]. Depois disso, eles são excluídos ou anonimizados. Avaliações anônimas e dados de pesquisa desidentificados podem ser mantidos. Os prestadores de serviço guardam dados conforme seus próprios termos."
+            "Guardamos os dados pessoais enquanto sua conta estiver ativa e pelo tempo necessário às finalidades acima, incluindo o período da pesquisa: [PRAZO DE RETENÇÃO]. Depois disso, [PROCEDIMENTO DE EXCLUSÃO OU ANONIMIZAÇÃO — a confirmar pelo controlador; hoje a plataforma oculta a maioria dos registros excluídos em vez de apagá-los]. Avaliações anônimas e dados de pesquisa desidentificados podem ser mantidos. Os prestadores de serviço guardam dados conforme seus próprios termos."
           ]
         },
         {
@@ -1331,7 +1334,7 @@
         {
           "title": "8. Cookies",
           "body": [
-            "Usamos apenas cookies essenciais: um mantém você conectado e outro guarda seu idioma. Não usamos cookies de publicidade ou de análise."
+            "Usamos apenas cookies essenciais: um cookie de sessão mantém você conectado, um cookie de curta duração guarda sua sessão em cache para as páginas carregarem mais rápido, e outro guarda seu idioma. Suas preferências de editor e de tutoriais ficam no armazenamento local do navegador (veja a seção 2). Não usamos cookies de publicidade ou de análise."
           ]
         },
         {
@@ -1362,7 +1365,7 @@
         {
           "title": "1. O serviço",
           "body": [
-            "O TACO-IDE é oferecido gratuitamente para ensino e pesquisa. Por ser um protótipo, funcionalidades podem mudar, ser interrompidas ou removidas a qualquer momento."
+            "O TACO-IDE é oferecido [GRATUITAMENTE — a confirmar pelo controlador] para ensino e pesquisa. Por ser um protótipo, funcionalidades podem mudar, ser interrompidas ou removidas a qualquer momento."
           ]
         },
         {

@@ -8,6 +8,8 @@
  *   3. Both pages are translated (PT-BR via the locale cookie).
  *   4. The in-app footer no longer points to the missing "#recursos" anchor
  *      and links to both legal pages.
+ *   5. Only /terms and /privacy themselves are public: look-alike paths such
+ *      as /privacy-foo still require a login.
  */
 import { test, expect } from "@playwright/test";
 import { LOCALE_COOKIE } from "../apps/web/src/i18n/config";
@@ -21,7 +23,7 @@ test.describe("Legal pages", () => {
     const shot = makeShooter(page, testInfo);
 
     await page.goto("/auth/login");
-    await page.getByRole("link", { name: "Terms of Service" }).click();
+    await page.getByRole("link", { name: "Terms of Use" }).click();
     await expect(page).toHaveURL(/\/terms$/);
     await expect(
       page.getByRole("heading", { level: 1, name: "Terms of Use" }),
@@ -30,13 +32,20 @@ test.describe("Legal pages", () => {
     await shot("terms-en");
 
     await page.goto("/auth/login");
-    await page.getByRole("link", { name: "Privacy Policy" }).click();
+    await page.getByRole("link", { name: "Privacy Notice" }).click();
     await expect(page).toHaveURL(/\/privacy$/);
     await expect(
       page.getByRole("heading", { level: 1, name: "Privacy Notice" }),
     ).toBeVisible();
     await expect(page.getByText(/LGPD/).first()).toBeVisible();
     await shot("privacy-en");
+  });
+
+  test("only the exact legal paths are public", async ({ page }) => {
+    for (const path of ["/privacy-foo", "/termsX"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/auth\/login\?redirect=/);
+    }
   });
 
   test("legal pages are translated to Portuguese", async ({

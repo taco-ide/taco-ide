@@ -581,7 +581,7 @@
       "newPassword": "New Password",
       "password": "Password"
     },
-    "legal": "By using our services, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>.",
+    "legal": "By using our services, you agree to our <terms>Terms of Use</terms> and confirm you have read our <privacy>Privacy Notice</privacy>.",
     "login": {
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
@@ -1277,11 +1277,12 @@
           "title": "2. Data we collect",
           "items": [
             "Account data: name, email address, password (stored only as a hash), email verification status, and your roles in organizations and classrooms (for example teacher or student).",
-            "Session data: a session cookie, plus the IP address and browser user agent recorded with each sign-in session.",
+            "Session and usage data: a session cookie and a short-lived cookie that caches your session, the IP address and browser user agent recorded with each sign-in session, and the time you were last active in each organization.",
             "Learning activity: the code you write and save, program input and output, submissions and their timestamps, grades and comments from teachers, and automated reviews of submissions generated for teachers.",
             "Conversations with the AI teaching assistant: the messages you send, the assistant's replies and the code included as context.",
             "Teaching materials: exercises, reference solutions and documents uploaded by teachers to knowledge bases. Please do not include personal data in these materials.",
             "Anonymous assistant ratings: when submitting an exercise, students may rate the AI assistant. Only the rating, the assistant and the week are stored, not who gave the rating.",
+            "Preferences kept in your browser: editor theme and font size, which tutorials and tips you have already seen, and the tab you last opened in an exercise. They are stored in your browser's local storage and are not sent to our servers.",
             "Technical logs: server request and error logs used to operate and secure the service."
           ]
         },
@@ -1290,7 +1291,7 @@
           "items": [
             "To provide the platform: accounts, classrooms, exercises, AI feedback and grading.",
             "To keep the service secure, prevent abuse and fix problems.",
-            "For research on AI-assisted programming education. Research results are published only in aggregated or de-identified form. Ethics committee approval: [ETHICS APPROVAL NUMBER]."
+            "For research on AI-assisted programming education. Research results are published [ONLY IN AGGREGATED OR DE-IDENTIFIED FORM — to be confirmed by the controller]. Ethics committee approval: [ETHICS APPROVAL NUMBER]."
           ],
           "body": [
             "We do not sell personal data and do not use it for advertising. The legal basis for each purpose (LGPD arts. 7 and 11) is [LEGAL BASES — to be confirmed by the controller]."
@@ -1299,13 +1300,15 @@
         {
           "title": "4. Who we share it with",
           "body": [
-            "Teachers and administrators of your organization can see your activity on their exercises, including code, submissions and conversations with the assistant. We also rely on the following service providers, which process data on our behalf:"
+            "Teachers, coordinators and administrators of your organization can see your activity on the exercises they manage, including code, submissions and conversations with the assistant. Platform administrators, who operate TACO-IDE, can access the data of all organizations. We also rely on the following service providers, which process data on our behalf:"
           ],
           "items": [
-            "AI model providers: your messages, code and exercise context are sent to the configured language model API (an OpenAI-compatible service, such as Azure OpenAI) to generate the assistant's replies. Exercise data and submitted code are sent to a partner research API (PDC) and/or OpenRouter, which routes requests to third-party model providers, to generate reference solutions and automated reviews.",
-            "Code execution: Python code you run in the editor executes in your own browser. Code in other languages, and code the assistant runs to check an answer, is sent with its input to a code execution service (Piston).",
-            "Embeddings: the text of knowledge base documents is sent to an embeddings API to enable search.",
-            "Langfuse (AI monitoring), when enabled: assistant conversations — messages, replies and code context — are recorded together with your internal user ID and session ID (not your name or email) to monitor and improve answer quality.",
+            "AI model providers: your messages, code, program input and output and the exercise context are sent to the configured language model API (an OpenAI-compatible service, such as Azure OpenAI) to generate the assistant's replies.",
+            "AI tools for teachers: when a teacher uses the AI teacher companion, students' names, submitted code, program output and full conversations with the assistant may be sent to the language model API so it can analyze them, and are recorded by Langfuse when it is enabled (see below).",
+            "Automated reviews and reference solutions: when a student submits an exercise, the exercise statement, the submitted code, its input and output, and the student's conversation with the assistant are sent to OpenRouter, which routes requests to third-party model providers, to generate a review for the teacher. When the partner research API (PDC) is enabled, it receives only the exercise statement and the submitted code, and its review is then adapted through OpenRouter together with the context above. Exercise data is also sent to PDC and/or OpenRouter to generate reference solutions.",
+            "Code execution: Python code you run in the editor executes in your own browser. The Python runtime (Pyodide) and the code editor are downloaded from the jsDelivr CDN (cdn.jsdelivr.net), which receives your IP address and browser information. Code in other languages is sent with its input from your browser to the public Piston code execution service (emkc.org). Code the assistant runs to check an answer is sent with its input from our servers to a code execution service (by default, the same Piston service at emkc.org).",
+            "Embeddings: the text of knowledge base documents and entries, and search queries, are sent to an embeddings API (such as Azure OpenAI) to enable search. This includes the messages students send to the assistant on exercises linked to a knowledge base.",
+            "Langfuse (AI monitoring), when enabled: conversations with the AI assistants — messages, replies, code context and the results of tools the assistant uses — are recorded together with the internal user ID and session ID of the person chatting, to monitor and improve answer quality. Students' own conversations are recorded without their name or email, but conversations of teachers with the AI teacher companion may include students' names, code, program output and conversations with the assistant.",
             "Email (Resend): your email address and message content, to send verification, password reset and invitation emails.",
             "Hosting: [HOSTING PROVIDER]."
           ]
@@ -1319,7 +1322,7 @@
         {
           "title": "6. How long we keep it",
           "body": [
-            "We keep personal data while your account is active and for as long as needed for the purposes above, including the research period: [RETENTION PERIOD]. After that it is deleted or anonymized. Anonymous ratings and de-identified research data may be kept. Service providers keep data according to their own terms."
+            "We keep personal data while your account is active and for as long as needed for the purposes above, including the research period: [RETENTION PERIOD]. After that, [DELETION OR ANONYMIZATION PROCEDURE — to be confirmed by the controller; today the platform hides most deleted records instead of erasing them]. Anonymous ratings and de-identified research data may be kept. Service providers keep data according to their own terms."
           ]
         },
         {
@@ -1331,7 +1334,7 @@
         {
           "title": "8. Cookies",
           "body": [
-            "We only use essential cookies: one keeps you signed in and one remembers your language. We do not use advertising or analytics cookies."
+            "We only use essential cookies: a session cookie keeps you signed in, a short-lived cookie caches your session so pages load faster, and one remembers your language. Your editor and tutorial preferences are kept in your browser's local storage (see section 2). We do not use advertising or analytics cookies."
           ]
         },
         {
@@ -1362,7 +1365,7 @@
         {
           "title": "1. The service",
           "body": [
-            "TACO-IDE is offered free of charge for teaching and research. Because it is a prototype, features may change, be interrupted or be removed at any time."
+            "TACO-IDE is offered [FREE OF CHARGE — to be confirmed by the controller] for teaching and research. Because it is a prototype, features may change, be interrupted or be removed at any time."
           ]
         },
         {
