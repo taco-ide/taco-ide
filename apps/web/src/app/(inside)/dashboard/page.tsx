@@ -21,6 +21,7 @@ import {
   useGetV1Challenges,
   useGetV1OrganizationsIdMembers,
 } from "@/kubb/hooks";
+import { useHasMinimumRole } from "@/hooks/usePermission";
 import { useTutorial } from "@/hooks/useTutorial";
 
 type RoleKey = "student" | "teacher" | "coordinator" | "admin";
@@ -294,6 +295,7 @@ function DashboardContent() {
   const tour = useTranslations("dashboard.tour");
   const tRatings = useTranslations("taRatings");
   const { user, isLoading, getFirstName } = useUser();
+  const isStaff = useHasMinimumRole("teacher");
 
   const roleKey = user
     ? resolveRole(user.role, user.isPlatformAdmin)
@@ -449,19 +451,15 @@ function DashboardContent() {
             </>
           )}
           {/* Issue #99: anonymous TA rating stats, staff of the active org. */}
-          {user.activeOrganizationId &&
-            (user.isPlatformAdmin ||
-              ["teacher", "coordinator", "admin", "owner"].includes(
-                user.role ?? ""
-              )) && (
-              <QuickAction
-                href="/dashboard/ta-ratings"
-                icon={Star}
-                title={tRatings("quickAction.title")}
-                description={tRatings("quickAction.description")}
-                accent="violet"
-              />
-            )}
+          {user.activeOrganizationId && (isStaff || user.isPlatformAdmin) && (
+            <QuickAction
+              href="/dashboard/ta-ratings"
+              icon={Star}
+              title={tRatings("quickAction.title")}
+              description={tRatings("quickAction.description")}
+              accent="violet"
+            />
+          )}
         </div>
       </section>
 

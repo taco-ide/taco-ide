@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Download, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,16 @@ function toQuery(filters: Filters): string {
   return qs ? `?${qs}` : "";
 }
 
+type Group = { count: number | null; mean: number | null; suppressed: boolean };
+
 function formatMean(mean: number | null): string {
   return mean === null ? "—" : mean.toFixed(2);
+}
+
+/** Count with a * when some ratings were withheld (small-cell suppression). */
+function formatGroupCount(group: Group, withheld: string): string {
+  if (group.count === null) return withheld;
+  return group.suppressed ? `${group.count}*` : String(group.count);
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
@@ -85,8 +94,10 @@ function DistributionChart({
 
 function WeeklyChart({
   weekly,
+  minGroupSize,
 }: {
-  weekly: { week: string; count: number; mean: number }[];
+  weekly: ({ week: string } & Group)[];
+  minGroupSize: number;
 }) {
   const t = useTranslations("taRatings");
   return (
@@ -97,33 +108,48 @@ function WeeklyChart({
       <p className="mb-4 text-xs text-slate-500">{t("weekly.subtitle")}</p>
       <div className="overflow-x-auto">
         <div className="flex h-48 min-w-fit items-end gap-2">
-          {weekly.map((w) => (
-            <div
-              key={w.week}
-              className="flex w-12 shrink-0 flex-col items-center gap-1"
-              title={t("weekly.tooltip", {
-                week: w.week,
-                mean: w.mean.toFixed(2),
-                count: w.count,
-              })}
-            >
-              <span className="text-xs tabular-nums text-slate-300">
-                {w.mean.toFixed(1)}
-              </span>
-              <div className="flex h-32 w-8 items-end rounded bg-slate-700/40">
-                <div
-                  className="w-full rounded bg-sky-400/80"
-                  style={{ height: `${(w.mean / 5) * 100}%` }}
-                />
+          {weekly.map((w) => {
+            const withheld = w.count === null;
+            const title = withheld
+              ? t("suppressed.weekTooltip", { week: w.week, k: minGroupSize })
+              : w.mean === null
+                ? t("weekly.emptyTooltip", { week: w.week })
+                : t("weekly.tooltip", {
+                    week: w.week,
+                    mean: w.mean.toFixed(2),
+                    count: w.count ?? 0,
+                  });
+            return (
+              <div
+                key={w.week}
+                className="flex w-12 shrink-0 flex-col items-center gap-1"
+                title={title}
+                data-suppressed={withheld ? "true" : undefined}
+              >
+                <span className="text-xs tabular-nums text-slate-300">
+                  {w.mean === null ? "—" : w.mean.toFixed(1)}
+                </span>
+                <div className="flex h-32 w-8 items-end rounded bg-slate-700/40">
+                  {withheld ? (
+                    <div className="h-full w-full rounded bg-[repeating-linear-gradient(45deg,rgba(148,163,184,0.25)_0_4px,transparent_4px_8px)]" />
+                  ) : w.mean !== null ? (
+                    <div
+                      className="w-full rounded bg-sky-400/80"
+                      style={{ height: `${(w.mean / 5) * 100}%` }}
+                    />
+                  ) : null}
+                </div>
+                <span className="text-[10px] tabular-nums text-slate-500">
+                  {w.week.slice(5)}
+                </span>
+                <span className="text-[10px] tabular-nums text-slate-500">
+                  {withheld
+                    ? `n<${minGroupSize}`
+                    : `n=${formatGroupCount(w, "")}`}
+                </span>
               </div>
-              <span className="text-[10px] tabular-nums text-slate-500">
-                {w.week.slice(5)}
-              </span>
-              <span className="text-[10px] tabular-nums text-slate-500">
-                n={w.count}
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -139,13 +165,20 @@ export function TaRatingsPanel({ organizationId }: { organizationId: string }) {
   const invalidRange =
     !!filters.from && !!filters.to && filters.from > filters.to;
 
-  const { data, isLoading, error } =
+  // Keep the previous result on screen while new filters load, so the TA
+  // dropdown and table don't vanish mid-refetch.
+  const { data, isLoading, isPlaceholderData, error } =
     useGetV1OrganizationsIdTeachingAssistantEvaluationsStats(
       organizationId,
       filters,
-      { query: { enabled: !invalidRange } }
+      { query: { enabled: !invalidRange, placeholderData: keepPreviousData } }
     );
   const stats = data?.data;
+  const anySuppressed =
+    !!stats &&
+    (stats.suppressed ||
+      stats.weekly.some((w) => w.suppressed) ||
+      stats.teachingAssistants.some((ta) => ta.suppressed));
 
   async function handleExport() {
     setExporting(true);
@@ -256,24 +289,50 @@ export function TaRatingsPanel({ organizationId }: { organizationId: string }) {
         </div>
       ) : error || !stats ? (
         <p className="text-sm text-red-400">{t("loadError")}</p>
-      ) : stats.total === 0 ? (
+      ) : stats.total === 0 && !stats.suppressed ? (
         <div className="rounded-xl border border-dashed border-slate-700 bg-slate-800/30 p-8 text-center text-sm text-slate-400">
           {t("empty")}
         </div>
       ) : (
-        <>
+        <div
+          className={`space-y-6 transition-opacity ${isPlaceholderData ? "opacity-60" : ""}`}
+          aria-busy={isPlaceholderData}
+        >
+          {anySuppressed ? (
+            <p
+              className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200"
+              data-testid="ta-ratings-suppressed-note"
+            >
+              {stats.total === null
+                ? t("suppressed.allNote", { k: stats.minGroupSize })
+                : t("suppressed.partialNote", { k: stats.minGroupSize })}
+            </p>
+          ) : null}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <StatTile label={t("stats.total")} value={String(stats.total)} />
-            <StatTile label={t("stats.mean")} value={formatMean(stats.mean)} />
+            <StatTile
+              label={t("stats.total")}
+              value={formatGroupCount(
+                { count: stats.total, mean: stats.mean, suppressed: stats.suppressed },
+                t("suppressed.value")
+              )}
+            />
+            <StatTile
+              label={t("stats.mean")}
+              value={
+                stats.total === null ? t("suppressed.value") : formatMean(stats.mean)
+              }
+            />
           </div>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <DistributionChart
-              distribution={stats.distribution}
-              total={stats.total}
-            />
-            <WeeklyChart weekly={stats.weekly} />
+            {stats.distribution && stats.total ? (
+              <DistributionChart
+                distribution={stats.distribution}
+                total={stats.total}
+              />
+            ) : null}
+            <WeeklyChart weekly={stats.weekly} minGroupSize={stats.minGroupSize} />
           </div>
-        </>
+        </div>
       )}
 
       {stats && stats.teachingAssistants.length > 0 ? (
@@ -301,10 +360,10 @@ export function TaRatingsPanel({ organizationId }: { organizationId: string }) {
                     ) : null}
                   </td>
                   <td className="py-2 text-right tabular-nums text-slate-300">
-                    {ta.count}
+                    {formatGroupCount(ta, t("suppressed.value"))}
                   </td>
                   <td className="py-2 text-right tabular-nums text-slate-300">
-                    {formatMean(ta.mean)}
+                    {ta.count === null ? t("suppressed.value") : formatMean(ta.mean)}
                   </td>
                 </tr>
               ))}

@@ -1492,7 +1492,7 @@
     },
     "loadError": "Não foi possível carregar as avaliações.",
     "noOrganization": "Selecione uma organização para ver as avaliações dos assistentes de ensino.",
-    "privacyNote": "As avaliações são anônimas: guardamos apenas o assistente, a nota e a semana, nunca o aluno, a sessão ou a turma. As semanas começam na segunda-feira.",
+    "privacyNote": "As avaliações são anônimas: guardamos apenas o assistente, a nota e a semana, nunca o aluno, a sessão ou a turma. O CSV tem uma linha por semana e assistente, nunca uma por avaliação. As semanas começam na segunda-feira.",
     "quickAction": {
       "description": "Veja como os alunos avaliam os assistentes de ensino de IA da sua organização.",
       "title": "Avaliações do assistente"
@@ -1502,8 +1502,15 @@
       "total": "Avaliações"
     },
     "subtitle": "Avaliações anônimas que os alunos dão ao assistente de ensino de IA ao enviar um desafio.",
+    "suppressed": {
+      "allNote": "Todas as avaliações destes filtros pertencem a grupos (uma semana × um assistente de ensino) com menos de {k} avaliações; por isso nada é exibido, para manter o anonimato dos alunos.",
+      "partialNote": "Grupos (uma semana × um assistente de ensino) com menos de {k} avaliações são omitidos de todos os números e do CSV, para manter o anonimato dos alunos. Itens marcados com * incluem avaliações omitidas.",
+      "value": "Omitido",
+      "weekTooltip": "Semana de {week}: omitida (menos de {k} avaliações)"
+    },
     "title": "Avaliações do assistente de ensino",
     "weekly": {
+      "emptyTooltip": "Semana de {week}: sem avaliações",
       "subtitle": "Nota média por semana (1–5); n é o número de avaliações.",
       "title": "Média semanal",
       "tooltip": "Semana de {week}: média {mean} em {count} avaliações"
