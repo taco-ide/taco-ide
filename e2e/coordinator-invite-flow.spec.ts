@@ -8,11 +8,24 @@
  * that teachers cannot reach the screen.
  */
 import { test, expect } from "@playwright/test";
-import { PROFESSOR } from "./helpers/seed";
+import postgres from "postgres";
+import { DEV_DATABASE_URL, PROFESSOR } from "./helpers/seed";
 import { COORDINATOR, login, skipTours, walkTour } from "./helpers/onboarding";
 import { makeShooter } from "./helpers/screenshots";
 
+const EMAIL_PREFIX = "e2e-invite-";
+
 test.describe("Coordinator invite flow", () => {
+  // Cancelling only flips the status, so drop the rows this spec created.
+  test.afterAll(async () => {
+    const sql = postgres(DEV_DATABASE_URL, { max: 1 });
+    try {
+      await sql`DELETE FROM invitation WHERE email LIKE ${`${EMAIL_PREFIX}%@school.test`}`;
+    } finally {
+      await sql.end();
+    }
+  });
+
   test("coordinator follows the tutorial, invites a teacher and cancels it", async ({
     page,
   }, testInfo) => {
@@ -42,7 +55,7 @@ test.describe("Coordinator invite flow", () => {
     ).toBeVisible();
     await shot("team-page");
 
-    const email = `e2e-invite-${Date.now()}@school.test`;
+    const email = `${EMAIL_PREFIX}${Date.now()}@school.test`;
     await page.getByRole("button", { name: "Invite someone" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Email").fill(email);

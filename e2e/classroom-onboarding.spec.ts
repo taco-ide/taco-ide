@@ -5,16 +5,14 @@
  *
  * Covers: the dashboard "New classroom" entry point, the classroom-teacher-add
  * tour on the create form, picking a lead teacher, and the next-steps tour and
- * empty-state CTAs on the freshly created classroom.
+ * empty-state CTAs on the freshly created classroom, including the challenge
+ * wizard opening with that classroom preselected.
  */
 import { test, expect } from "@playwright/test";
 import postgres from "postgres";
 import { COORDINATOR, login, skipTours, walkTour } from "./helpers/onboarding";
 import { makeShooter } from "./helpers/screenshots";
-
-const DEV_DATABASE_URL =
-  process.env.DATABASE_URL ??
-  "postgresql://dbuser:dbpass@localhost:5490/taco_dev";
+import { DEV_DATABASE_URL } from "./helpers/seed";
 const TITLE_PREFIX = "E2E onboarding classroom";
 
 test.afterAll(async () => {
@@ -54,6 +52,7 @@ test("coordinator creates a classroom guided by the tutorial", async ({
   await page.getByRole("button", { name: "Create classroom" }).click();
 
   await page.waitForURL(/\/classrooms\/(?!create)[^/]+$/);
+  const classroomId = new URL(page.url()).pathname.split("/").pop()!;
   await expect(page.getByText(title).first()).toBeVisible();
   await expect(page.getByText("Prof. Prof. Demo")).toBeVisible();
 
@@ -66,8 +65,16 @@ test("coordinator creates a classroom guided by the tutorial", async ({
       "Pick an organization member in the selector above to enroll them."
     )
   ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Create a challenge" })
-  ).toHaveAttribute("href", "/create");
+  const createChallenge = page.getByRole("link", { name: "Create a challenge" });
+  await expect(createChallenge).toHaveAttribute(
+    "href",
+    `/create?classroomId=${classroomId}`
+  );
   await shot("classroom-next-steps");
+
+  // The wizard opens with this classroom already selected.
+  await createChallenge.click();
+  await page.waitForURL(/\/create\?classroomId=/);
+  await expect(page.getByRole("combobox").filter({ hasText: title })).toBeVisible();
+  await shot("challenge-wizard-prefilled");
 });
