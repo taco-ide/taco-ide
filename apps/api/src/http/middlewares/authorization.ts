@@ -39,8 +39,8 @@ export function requirePlatformAdmin() {
  * Middleware factory for routes scoped to an organization in the URL params
  * (e.g. `/v1/organizations/:id/...`). Authorizes the request when the user is:
  *   - authenticated, AND
- *   - either a platform admin, or a current member of the (active)
- *     organization with at least `minimumRole` in that organization.
+ *   - either a platform admin, or a current member of that organization
+ *     (which must have `isActive` set) with at least `minimumRole` in it.
  *
  * The caller's active organization is irrelevant. Better Auth `owner` counts
  * as `admin`; inactive organizations and users never pass the role check.

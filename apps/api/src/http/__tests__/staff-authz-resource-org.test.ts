@@ -13,7 +13,10 @@ import {
   challengeReferenceSolution,
   invitation,
   knowledgeBase,
+  knowledgeBaseChunk,
+  knowledgeBaseDocument,
   member,
+  organization as organizationTable,
   submission,
 } from "@repo/infra/db/schema";
 import { getApp } from "../../test/helpers/app";
@@ -40,6 +43,9 @@ vi.mock("../../services/file-storage", () => ({
   deleteFile: vi.fn(async () => {}),
   saveFile: vi.fn(async () => {}),
 }));
+vi.mock("../../services/document-parser", () => ({
+  parseDocument: vi.fn(async () => "Parsed text"),
+}));
 vi.mock("../../agents/teachers-companion/auto-review", () => ({
   runAutoReview: vi.fn(async () => {}),
   startAutoReview: vi.fn(async (submissionId: string) => {
@@ -52,11 +58,38 @@ vi.mock("../../agents/teachers-companion/auto-review", () => ({
 }));
 vi.mock("../../agents/teachers-companion/reference-solution", () => ({
   generateReferenceSolutions: vi.fn(async () => {}),
-  startReferenceSolutions: vi.fn(async () => ({
-    claimed: [],
-    done: Promise.resolve(),
-  })),
+  // Claims the requested kinds without calling the LLM.
+  startReferenceSolutions: vi.fn(
+    async (challengeId: string, kinds: Array<"brute_force" | "refined">) => {
+      for (const kind of kinds) {
+        await db
+          .update(challengeReferenceSolution)
+          .set({ status: "running" })
+          .where(
+            and(
+              eq(challengeReferenceSolution.challengeId, challengeId),
+              eq(challengeReferenceSolution.kind, kind),
+            ),
+          );
+      }
+      return { claimed: kinds, done: Promise.resolve() };
+    },
+  ),
 }));
+
+const MULTIPART_BOUNDARY = "staff-authz-boundary";
+function multipartFile(filename: string, contentType: string, body: string) {
+  return [
+    `--${MULTIPART_BOUNDARY}`,
+    `Content-Disposition: form-data; name="file"; filename="${filename}"`,
+    `Content-Type: ${contentType}`,
+    "",
+    body,
+    `--${MULTIPART_BOUNDARY}--`,
+    "",
+  ].join("\r\n");
+}
+const MULTIPART_CONTENT_TYPE = `multipart/form-data; boundary=${MULTIPART_BOUNDARY}`;
 
 type App = Awaited<ReturnType<typeof getApp>>;
 type Role = "student" | "teacher" | "coordinator" | "admin";
@@ -69,6 +102,8 @@ describe("staff authorization uses the resource organization (#118)", () => {
   let challengeId: string;
   let submissionId: string;
   let kbId: string;
+  let entryId: string;
+  let documentId: string;
 
   beforeAll(async () => {
     app = await getApp();
@@ -129,6 +164,22 @@ describe("staff authorization uses the resource organization (#118)", () => {
       title: "Org A material",
       createdByUserId: leadId,
     });
+    entryId = randomUUID();
+    await db.insert(knowledgeBaseChunk).values({
+      id: entryId,
+      knowledgeBaseId: kbId,
+      content: "Manual note",
+      chunkIndex: 0,
+    });
+    documentId = randomUUID();
+    await db.insert(knowledgeBaseDocument).values({
+      id: documentId,
+      knowledgeBaseId: kbId,
+      filename: "notes.md",
+      mimeType: "text/markdown",
+      fileSize: 10,
+      status: "ready",
+    });
     await db.insert(challengeReferenceSolution).values({
       id: randomUUID(),
       challengeId: ch.id,
@@ -145,7 +196,8 @@ describe("staff authorization uses the resource organization (#118)", () => {
     name: string;
     method: "GET" | "POST" | "PUT" | "DELETE";
     url: () => string;
-    payload?: () => Record<string, unknown>;
+    payload?: () => Record<string, unknown> | string;
+    contentType?: string;
     ok: number;
   }> {
     const sub = () => `/v1/challenges/${challengeId}/submissions`;
@@ -187,6 +239,12 @@ describe("staff authorization uses the resource organization (#118)", () => {
         ok: 200,
       },
       {
+        name: "regenerate reference solution",
+        method: "POST",
+        url: () => `${ref()}/brute_force/regenerate`,
+        ok: 202,
+      },
+      {
         name: "delete reference solution",
         method: "DELETE",
         url: () => `${ref()}/brute_force`,
@@ -213,6 +271,33 @@ describe("staff authorization uses the resource organization (#118)", () => {
         payload: () => ({ content: "Some note" }),
         ok: 201,
       },
+      {
+        name: "update knowledge-base entry",
+        method: "PUT",
+        url: () => `${kb()}/entries/${entryId}`,
+        payload: () => ({ content: "Edited note" }),
+        ok: 200,
+      },
+      {
+        name: "delete knowledge-base entry",
+        method: "DELETE",
+        url: () => `${kb()}/entries/${entryId}`,
+        ok: 204,
+      },
+      {
+        name: "upload knowledge-base document",
+        method: "POST",
+        url: () => `${kb()}/documents`,
+        payload: () => multipartFile("lesson.md", "text/markdown", "# Lesson"),
+        contentType: MULTIPART_CONTENT_TYPE,
+        ok: 202,
+      },
+      {
+        name: "delete knowledge-base document",
+        method: "DELETE",
+        url: () => `${kb()}/documents/${documentId}`,
+        ok: 204,
+      },
       { name: "delete knowledge base", method: "DELETE", url: kb, ok: 204 },
     ];
   }
@@ -224,7 +309,10 @@ describe("staff authorization uses the resource organization (#118)", () => {
     return app.inject({
       method: req.method,
       url: req.url(),
-      headers: { cookie },
+      headers: {
+        cookie,
+        ...(req.contentType ? { "content-type": req.contentType } : {}),
+      },
       ...(req.payload ? { payload: req.payload() } : {}),
     });
   }
@@ -307,6 +395,138 @@ describe("staff authorization uses the resource organization (#118)", () => {
     }
   });
 
+  it("denies a teacher after being demoted to student in org A", async () => {
+    const { usr, cookie } = await multiOrgUser("teacher", "teacher");
+    await seedOrgAResources(usr.id);
+    await enrollStudent(usr.id, classroomId);
+    await db
+      .update(member)
+      .set({ role: "student" })
+      .where(
+        and(eq(member.userId, usr.id), eq(member.organizationId, orgA.id)),
+      );
+
+    for (const req of staffRequests()) {
+      const res = await send(req, cookie);
+      expect(res.statusCode, `${req.name}: ${res.body}`).toBe(403);
+    }
+  });
+
+  describe("unassigned challenges (no classroom) require current staff membership", () => {
+    async function unassignedChallenge(creatorId: string) {
+      const ch = await createChallenge({
+        createdByUserId: creatorId,
+        classroomId: null,
+      });
+      await db.insert(challengeReferenceSolution).values({
+        id: randomUUID(),
+        challengeId: ch.id,
+        kind: "brute_force",
+        language: "python",
+        status: "complete",
+        code: "print(1)",
+        createdBy: "ai",
+      });
+      return ch.id;
+    }
+
+    function creatorRequests(id: string) {
+      return [
+        {
+          name: "list submissions",
+          method: "GET" as const,
+          url: `/v1/challenges/${id}/submissions`,
+          ok: 200,
+        },
+        {
+          name: "list work sessions",
+          method: "GET" as const,
+          url: `/v1/challenges/${id}/work-sessions`,
+          ok: 200,
+        },
+        {
+          name: "list reference solutions",
+          method: "GET" as const,
+          url: `/v1/challenges/${id}/reference-solutions`,
+          ok: 200,
+        },
+        {
+          name: "regenerate reference solution",
+          method: "POST" as const,
+          url: `/v1/challenges/${id}/reference-solutions/brute_force/regenerate`,
+          ok: 202,
+        },
+        {
+          name: "update challenge",
+          method: "PATCH" as const,
+          url: `/v1/challenges/${id}`,
+          payload: { title: "Renamed" },
+          ok: 200,
+        },
+        {
+          name: "delete challenge",
+          method: "DELETE" as const,
+          url: `/v1/challenges/${id}`,
+          ok: 204,
+        },
+      ];
+    }
+
+    async function expectAll(cookie: string, id: string, status?: number) {
+      for (const req of creatorRequests(id)) {
+        const res = await app.inject({
+          method: req.method,
+          url: req.url,
+          headers: { cookie },
+          ...("payload" in req ? { payload: req.payload } : {}),
+        });
+        expect(res.statusCode, `${req.name}: ${res.body}`).toBe(
+          status ?? req.ok,
+        );
+      }
+    }
+
+    it("lets the creator manage it while a teacher of an active organization", async () => {
+      const { usr, cookie } = await multiOrgUser("teacher", "student");
+      await expectAll(cookie, await unassignedChallenge(usr.id));
+    });
+
+    it("denies the creator after being demoted to student everywhere", async () => {
+      const { usr, cookie } = await multiOrgUser("teacher", "student");
+      const id = await unassignedChallenge(usr.id);
+      await db
+        .update(member)
+        .set({ role: "student" })
+        .where(eq(member.userId, usr.id));
+      await expectAll(cookie, id, 403);
+    });
+
+    it("denies the creator after removal from every organization", async () => {
+      const { usr, cookie } = await multiOrgUser("teacher", "teacher");
+      const id = await unassignedChallenge(usr.id);
+      await db.delete(member).where(eq(member.userId, usr.id));
+      await expectAll(cookie, id, 403);
+    });
+
+    it("denies the creator whose only staff organization is inactive", async () => {
+      const { usr, cookie } = await multiOrgUser("teacher", "student");
+      const id = await unassignedChallenge(usr.id);
+      await db
+        .update(organizationTable)
+        .set({ isActive: false })
+        .where(eq(organizationTable.id, orgA.id));
+      await expectAll(cookie, id, 403);
+    });
+
+    it("denies a teacher who did not create it", async () => {
+      const creator = await createUser();
+      await addMember(creator.id, orgA.id, "teacher");
+      const id = await unassignedChallenge(creator.id);
+      const { cookie } = await multiOrgUser("teacher", "teacher");
+      await expectAll(cookie, id, 403);
+    });
+  });
+
   it("returns 404 for a missing resource regardless of the active-org role", async () => {
     const { cookie } = await multiOrgUser(null, "student");
     const missing = randomUUID();
@@ -375,6 +595,18 @@ describe("staff authorization uses the resource organization (#118)", () => {
           url: `${base}/invitations`,
           ok: 200,
         },
+        {
+          name: "import members from CSV (dry run)",
+          method: "POST" as const,
+          url: `${base}/members/import-csv?dryRun=true`,
+          payload: multipartFile(
+            "members.csv",
+            "text/csv",
+            `name,email,role\nCsv Student,csv-${randomUUID().slice(0, 8)}@test.local,student`,
+          ),
+          contentType: MULTIPART_CONTENT_TYPE,
+          ok: 200,
+        },
       ];
     }
 
@@ -384,7 +616,10 @@ describe("staff authorization uses the resource organization (#118)", () => {
         const res = await app.inject({
           method: req.method,
           url: req.url,
-          headers: { cookie },
+          headers: {
+            cookie,
+            ...("contentType" in req ? { "content-type": req.contentType } : {}),
+          },
           ...("payload" in req ? { payload: req.payload } : {}),
         });
         expect(res.statusCode, `${req.name}: ${res.body}`).toBe(req.ok);
@@ -397,7 +632,10 @@ describe("staff authorization uses the resource organization (#118)", () => {
         const res = await app.inject({
           method: req.method,
           url: req.url,
-          headers: { cookie },
+          headers: {
+            cookie,
+            ...("contentType" in req ? { "content-type": req.contentType } : {}),
+          },
           ...("payload" in req ? { payload: req.payload } : {}),
         });
         expect(res.statusCode, `${req.name}: ${res.body}`).toBe(403);
@@ -410,7 +648,10 @@ describe("staff authorization uses the resource organization (#118)", () => {
         const res = await app.inject({
           method: req.method,
           url: req.url,
-          headers: { cookie },
+          headers: {
+            cookie,
+            ...("contentType" in req ? { "content-type": req.contentType } : {}),
+          },
           ...("payload" in req ? { payload: req.payload } : {}),
         });
         expect(res.statusCode, `${req.name}: ${res.body}`).toBe(403);

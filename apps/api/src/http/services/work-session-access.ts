@@ -1,7 +1,7 @@
 import { eq, and, isNull, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import type { FastifyRequest } from "fastify";
 import type { RoleName } from "@repo/infra/auth";
-import { isValidRole } from "@repo/infra/auth";
+import { hasMinimumRole, isValidRole } from "@repo/infra/auth";
 import { db } from "@repo/infra/db";
 import {
   challenge,
@@ -55,6 +55,33 @@ export async function getMembershipRole(
     )
     .limit(1);
   return row ? normalizeOrgMemberRole(row.role) : null;
+}
+
+/**
+ * True when the user currently holds teacher-or-above in at least one active
+ * organization. Unassigned challenges carry no organization, so this is the
+ * most specific membership check available for their creator.
+ */
+async function hasStaffRoleInAnyActiveOrganization(
+  userId: string
+): Promise<boolean> {
+  const rows = await db
+    .select({ role: member.role })
+    .from(member)
+    .innerJoin(organization, eq(organization.id, member.organizationId))
+    .innerJoin(user, eq(user.id, member.userId))
+    .where(
+      and(
+        eq(member.userId, userId),
+        eq(organization.isActive, true),
+        eq(user.isActive, true),
+        isNull(user.deletedAt)
+      )
+    );
+  return rows.some((row) => {
+    const role = normalizeOrgMemberRole(row.role);
+    return role !== null && hasMinimumRole(role, "teacher");
+  });
 }
 
 export async function loadClassroomAccessContext(
@@ -180,12 +207,18 @@ export async function assertCanListChallengeWorkSessions(
 ): Promise<AccessOk | AccessDenied> {
   if (usr.isPlatformAdmin) return { ok: true };
   if (!ctx.classroomId) {
-    return ctx.createdByUserId === usr.id
+    if (ctx.createdByUserId !== usr.id)
+      return {
+        ok: false,
+        status: 403,
+        message: "You can only manage challenges you created",
+      };
+    return (await hasStaffRoleInAnyActiveOrganization(usr.id))
       ? { ok: true }
       : {
           ok: false,
           status: 403,
-          message: "You can only manage challenges you created",
+          message: "Teacher access in an active organization required",
         };
   }
   const role = ctx.organizationId
