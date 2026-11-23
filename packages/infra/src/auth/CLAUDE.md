@@ -22,6 +22,9 @@ const session = await auth.api.getSession({ headers })
 ### boundaries.ts
 Checks current account eligibility in the database and rejects administrative user fields in self-service requests.
 
+### email-domain-membership.ts
+`applyEmailDomainRule` adds a user with no memberships to the organization whose email-domain rule matches. Called at sign-up, after an invitation is rejected, and when an expired invitation is accepted (a pending invitation holds the rule back at sign-up). See `docs/admin-panel/email-domains.md`.
+
 ### client.ts
 Client-side Better Auth instance with the organization plugin for frontend use:
 

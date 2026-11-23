@@ -2,13 +2,13 @@ import { betterAuth } from "better-auth";
 import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
-import { and, asc, eq, gt, sql } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { and, eq, lte, sql } from "drizzle-orm";
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { env } from "../env";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email";
 import { sendInvitationEmail } from "./invitation-email";
+import { applyEmailDomainRule } from "./email-domain-membership";
 import {
   rejectAdministrativeUserFields,
   requireActiveAccount,
@@ -47,6 +47,43 @@ export { hashPassword } from "better-auth/crypto";
 // Re-export APIError so the API can map Better Auth errors (401/403/...)
 // to clean HTTP responses without depending on `better-auth` directly.
 export { APIError } from "better-auth/api";
+
+/**
+ * Accepting an expired invitation fails inside Better Auth before any
+ * organization hook runs, so the fallback to the email-domain rule (which the
+ * pending invitation held back at sign-up) happens here, before the accept.
+ */
+async function applyEmailDomainRuleIfInvitationExpired(
+  ctx: Parameters<typeof getSessionFromCtx>[0]
+): Promise<void> {
+  try {
+    const invitationId = (ctx.body as { invitationId?: unknown } | undefined)
+      ?.invitationId;
+    if (typeof invitationId !== "string") return;
+    const session = await getSessionFromCtx(ctx);
+    if (!session) return;
+
+    const [expired] = await db
+      .select({ id: schema.invitation.id })
+      .from(schema.invitation)
+      .where(
+        and(
+          eq(schema.invitation.id, invitationId),
+          eq(schema.invitation.status, "pending"),
+          lte(schema.invitation.expiresAt, new Date()),
+          eq(
+            sql`lower(${schema.invitation.email})`,
+            session.user.email.toLowerCase()
+          )
+        )
+      )
+      .limit(1);
+    if (expired) await applyEmailDomainRule(session.user);
+  } catch (err) {
+    // Never block the accept call itself; Better Auth reports the expiry.
+    console.error("[accept-invitation] domain auto-assign failed:", err);
+  }
+}
 
 // ==================== AUTH INSTANCE ====================
 
@@ -149,6 +186,10 @@ export const auth = betterAuth({
 
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === "/organization/accept-invitation") {
+        await applyEmailDomainRuleIfInvitationExpired(ctx);
+        return;
+      }
       if (ctx.path !== "/sign-up/email" && ctx.path !== "/update-user") return;
 
       // Reject every supplied value, including false/null. input:false alone
@@ -183,6 +224,21 @@ export const auth = betterAuth({
         return true;
       },
       creatorRole: "admin",
+      organizationHooks: {
+        // A pending invitation holds back the email-domain rule at sign-up;
+        // once it is declined, fall back to the rule so the person still
+        // lands in an organization.
+        afterRejectInvitation: async ({ user }) => {
+          try {
+            await applyEmailDomainRule(user);
+          } catch (err) {
+            console.error(
+              "[organization.afterRejectInvitation] domain auto-assign failed:",
+              err
+            );
+          }
+        },
+      },
       sendInvitationEmail: async (data) => {
         try {
           await sendInvitationEmail({
@@ -214,89 +270,8 @@ export const auth = betterAuth({
       create: {
         after: async (createdUser) => {
           try {
-            const email = createdUser.email;
-            if (typeof email !== "string") return;
-            // Use lastIndexOf("@") to handle quoted local parts like
-            // `"user@name"@example.com` — split("@")[1] would return the
-            // wrong portion in that (rare, but valid per RFC 5321) case.
-            const atIndex = email.lastIndexOf("@");
-            if (atIndex === -1) return;
-            const domain = email.slice(atIndex + 1).toLowerCase().trim();
-            if (!domain) return;
-
-            // Pick the earliest active rule (createdAt ASC). Multiple rules
-            // for the same domain across different organizations are allowed
-            // by the global UNIQUE(domain, role) only when the role differs;
-            // we still tiebreak by createdAt for predictability.
-            const rules = await db
-              .select({
-                id: schema.organizationEmailDomain.id,
-                organizationId: schema.organizationEmailDomain.organizationId,
-                role: schema.organizationEmailDomain.role,
-                createdAt: schema.organizationEmailDomain.createdAt,
-              })
-              .from(schema.organizationEmailDomain)
-              .innerJoin(
-                schema.organization,
-                eq(
-                  schema.organization.id,
-                  schema.organizationEmailDomain.organizationId
-                )
-              )
-              .where(
-                and(
-                  eq(schema.organizationEmailDomain.domain, domain),
-                  eq(schema.organization.isActive, true)
-                )
-              )
-              .orderBy(asc(schema.organizationEmailDomain.createdAt))
-              .limit(1);
-
-            const rule = rules[0];
-            if (!rule) return;
-
-            // A pending invitation to the same organization wins over the
-            // domain rule: the person is about to accept it with the role the
-            // inviter chose, and an auto-created membership would make that
-            // accept fail on the (organization, user) unique index.
-            const pendingInvites = await db
-              .select({ id: schema.invitation.id })
-              .from(schema.invitation)
-              .where(
-                and(
-                  eq(schema.invitation.organizationId, rule.organizationId),
-                  eq(sql`lower(${schema.invitation.email})`, email.toLowerCase()),
-                  eq(schema.invitation.status, "pending"),
-                  gt(schema.invitation.expiresAt, new Date())
-                )
-              )
-              .limit(1);
-            if (pendingInvites[0]) return;
-
-            // Defense-in-depth: cap the effective auto-link role at
-            // "teacher". Even if a legacy row in `organization_email_domain`
-            // still carries role="admin" (e.g. a seed predating the F10
-            // migration, or a manual SQL fixture), self-service sign-up must
-            // NEVER grant the real org `admin` role to a stranger whose
-            // only credential is owning an email at a matching domain.
-            // Body validation in
-            // apps/api/.../email-domains/create.ts already blocks new
-            // "admin" rules; migration 0005 downgrades existing ones.
-            // This cap is the last line of defense.
-            const effectiveRole: schema.OrganizationEmailDomain["role"] =
-              rule.role === "admin" ? "teacher" : rule.role;
-
-            // Insert the membership directly via Drizzle. Going through
-            // `auth.api.addMember` would enforce the org plugin's
-            // `membershipLimit` (default 100); we want auto-assignment to
-            // bypass that for new sign-ups.
-            await db.insert(schema.member).values({
-              id: randomUUID(),
-              userId: createdUser.id,
-              organizationId: rule.organizationId,
-              role: effectiveRole,
-              createdAt: new Date(),
-            });
+            if (typeof createdUser.email !== "string") return;
+            await applyEmailDomainRule(createdUser);
           } catch (err) {
             console.error(
               "[user.create.after] domain auto-assign failed:",

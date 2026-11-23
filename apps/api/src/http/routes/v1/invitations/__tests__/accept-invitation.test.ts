@@ -337,6 +337,103 @@ describe("accepting an invitation end to end", () => {
     expect(memberships[0]?.role).toBe("teacher");
   });
 
+  /** Org with a coordinator, a `student` domain rule and a pending `teacher` invite. */
+  async function orgWithDomainRuleAndInvitation(domain: string, email: string) {
+    const org = await createOrg();
+    const inviter = await createUser();
+    await addMember(inviter.id, org.id, "coordinator");
+    await db.insert(organizationEmailDomain).values({
+      id: randomUUID(),
+      organizationId: org.id,
+      domain,
+      role: "student",
+    });
+    const inv = await insertInvitation({
+      organizationId: org.id,
+      inviterId: inviter.id,
+      email,
+      role: "teacher",
+    });
+    return { org, inv };
+  }
+
+  it("applies the email-domain rule when the invited user declines", async () => {
+    const { org, inv } = await orgWithDomainRuleAndInvitation(
+      "decline-domain.test",
+      "prof@decline-domain.test"
+    );
+    const cookie = await signUp(app, "prof@decline-domain.test");
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: "/api/auth/organization/reject-invitation",
+      headers: { cookie },
+      payload: { invitationId: inv.id },
+    });
+
+    expect(rejected.statusCode).toBe(200);
+    const [created] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "prof@decline-domain.test"));
+    const memberships = await db.select().from(member).where(eq(member.userId, created!.id));
+    expect(memberships).toHaveLength(1);
+    expect(memberships[0]).toMatchObject({ organizationId: org.id, role: "student" });
+  });
+
+  it("applies the email-domain rule when the invitation expired before it was accepted", async () => {
+    const { org, inv } = await orgWithDomainRuleAndInvitation(
+      "expired-domain.test",
+      "prof@expired-domain.test"
+    );
+    const cookie = await signUp(app, "prof@expired-domain.test");
+    await db
+      .update(invitation)
+      .set({ expiresAt: new Date(Date.now() - DAY_MS) })
+      .where(eq(invitation.id, inv.id));
+
+    const accepted = await app.inject({
+      method: "POST",
+      url: "/api/auth/organization/accept-invitation",
+      headers: { cookie },
+      payload: { invitationId: inv.id },
+    });
+
+    expect(accepted.statusCode).toBe(400);
+    const [created] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "prof@expired-domain.test"));
+    const memberships = await db.select().from(member).where(eq(member.userId, created!.id));
+    expect(memberships).toHaveLength(1);
+    expect(memberships[0]).toMatchObject({ organizationId: org.id, role: "student" });
+  });
+
+  it("does not add a domain membership when a user who already belongs elsewhere declines", async () => {
+    const { org, inv } = await orgWithDomainRuleAndInvitation(
+      "member-elsewhere.test",
+      "prof@member-elsewhere.test"
+    );
+    const invitee = await createUser({ email: "prof@member-elsewhere.test" });
+    const otherOrg = await createOrg();
+    await addMember(invitee.id, otherOrg.id, "teacher");
+    const cookie = await loginAs({ email: invitee.email, password: TEST_PASSWORD });
+
+    const rejected = await app.inject({
+      method: "POST",
+      url: "/api/auth/organization/reject-invitation",
+      headers: { cookie },
+      payload: { invitationId: inv.id },
+    });
+
+    expect(rejected.statusCode).toBe(200);
+    const memberships = await db
+      .select()
+      .from(member)
+      .where(and(eq(member.userId, invitee.id), eq(member.organizationId, org.id)));
+    expect(memberships).toHaveLength(0);
+  });
+
   it("still auto-assigns by email domain when there is no pending invitation", async () => {
     const org = await createOrg();
     await db.insert(organizationEmailDomain).values({

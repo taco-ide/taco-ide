@@ -520,12 +520,13 @@ Detalhes que fazem o fluxo funcionar ponta a ponta:
 
 - `apps/web/src/middleware.ts` redireciona usuarios logados para fora de `/auth/*`, **exceto** `/auth/accept-invitation`.
 - `redirect` so aceita caminhos do mesmo site (`getSafeRedirect` em `apps/web/src/lib/safe-redirect.ts`): URLs absolutas, `//host`, `/\host` e caracteres de controle sao ignorados e o login cai em `/dashboard`.
-- O hook de auto-vinculo por dominio de email (`databaseHooks.user.create.after` em `packages/infra/src/auth/index.ts`) **nao** cria membership quando existe convite `pending` e nao expirado para o mesmo email na mesma organizacao. Sem isso, o cadastro criaria um `member` pelo dominio e o aceite falharia no indice unico `(organization_id, user_id)`.
+- O hook de auto-vinculo por dominio de email (`applyEmailDomainRule`, chamado em `databaseHooks.user.create.after` em `packages/infra/src/auth/index.ts`) **nao** cria membership quando existe convite `pending` e nao expirado para o mesmo email na mesma organizacao. Sem isso, o cadastro criaria um `member` pelo dominio e o aceite falharia no indice unico `(organization_id, user_id)`. O papel do convite vence mesmo quando e menor que o da regra.
+- Se a pessoa **recusa** o convite, ou tenta aceitar um convite ja **expirado**, a regra de dominio e aplicada nesse momento (desde que ela ainda nao seja membro de nenhuma organizacao). Se o convite expira e ninguem tenta aceitar, nada acontece: um coordenador precisa adiciona-la ou reenviar/criar um convite. Detalhes em [`email-domains.md`](./email-domains.md) secao 6.4.
 - O aceite nao exige email verificado: os ids de convite sao gerados pelo Better Auth (opacos) ou por `randomUUID()` (Platform Admin), e `requireEmailVerificationOnInvitation` nao esta configurado. Em producao o login ja exige email verificado.
 
 Testes:
 
-- API: `apps/api/src/http/routes/v1/invitations/__tests__/accept-invitation.test.ts` (previa publica e seus estados, cadastro + aceite de convite de Platform Admin, login + aceite, email errado, recusa, auto-vinculo por dominio).
+- API: `apps/api/src/http/routes/v1/invitations/__tests__/accept-invitation.test.ts` (previa publica e seus estados, cadastro + aceite de convite de Platform Admin, login + aceite, email errado, recusa, auto-vinculo por dominio e sua retomada apos recusa ou expiracao).
 - E2E: `e2e/accept-invitation.spec.ts` (convite -> cadastro -> aceite, login -> aceite, conta diferente, expirado/cancelado/inexistente, `redirect` externo ignorado).
 
 Teste manual em dev:
@@ -664,7 +665,8 @@ Retorna `200 {"data":{"message":"Invitation cancelled successfully"}}` em sucess
 | `apps/web/src/lib/safe-redirect.ts`                                                              | `getSafeRedirect` / `authPageHref`        |
 | `apps/api/src/http/middlewares/authorization.ts`                                                 | `requirePlatformAdminOrOrgRole`           |
 | `packages/infra/src/auth/invitation-email.ts`                                                    | `sendInvitationEmail` + `escapeHtml`      |
-| `packages/infra/src/auth/index.ts`                                                               | Hook `organization.sendInvitationEmail`; auto-vinculo por dominio cede a convite pendente |
+| `packages/infra/src/auth/index.ts`                                                               | Hook `organization.sendInvitationEmail`; auto-vinculo por dominio cede a convite pendente e volta apos recusa/expiracao |
+| `packages/infra/src/auth/email-domain-membership.ts`                                             | `applyEmailDomainRule`                    |
 | `packages/infra/src/auth/permissions.ts`                                                         | `hasMinimumRole`, hierarquia de papeis    |
 | `packages/infra/src/db/schema/auth.ts` (linhas 105-118)                                          | Tabela `invitation`                       |
 | `apps/web/src/app/(inside)/admin/organizations/[id]/invitations/page.tsx`                        | Pagina da aba                             |
